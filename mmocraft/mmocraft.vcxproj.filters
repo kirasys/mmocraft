@@ -8,5 +8,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="config\config.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config\config.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="config\configuration.txt" />
   </ItemGroup>
 </Project>

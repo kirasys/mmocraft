@@ -1,0 +1,3 @@
+# Logging Configuration
+log_level: FATAL
+log_file_path: Logging\log\
