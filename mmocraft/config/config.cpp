@@ -81,8 +81,10 @@ namespace config {
 	}
 
 	const Configuration& get_config() {
-		if (!configuration.loaded)
-			load_config();
+		if (!configuration.loaded) {
+			if (bool fail = !load_config())
+				std::cerr << "Fail to load configuration file at \"" << logging_config_filepath << "\"" << std::endl;
+		}
 		return configuration;
 	}
 }
