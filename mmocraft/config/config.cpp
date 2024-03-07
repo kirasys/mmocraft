@@ -21,7 +21,7 @@ namespace config {
 
 	// global variables
 
-	const char* logging_config_filepath = "config/configures/logging.conf";
+	const char* config_file_path = "config/configuration.txt";
 	Configuration configuration;
 
 	// private functions
@@ -67,7 +67,7 @@ namespace config {
 	// public functions
 
 	bool load_config() {
-		auto [config_map, success] = read_config(logging_config_filepath);
+		auto [config_map, success] = read_config(config_file_path);
 		if (!success) return false;
 
 		configuration.loaded = true;
@@ -83,7 +83,7 @@ namespace config {
 	const Configuration& get_config() {
 		if (!configuration.loaded) {
 			if (bool fail = !load_config())
-				std::cerr << "Fail to load configuration file at \"" << logging_config_filepath << "\"" << std::endl;
+				std::cerr << "Fail to load configuration file at \"" << config_file_path << "\"" << std::endl;
 		}
 		return configuration;
 	}
