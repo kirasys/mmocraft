@@ -22,7 +22,6 @@ namespace config {
 	// global variables
 
 	const char* config_file_path = "config/configuration.txt";
-	Configuration configuration;
 
 	// private functions
 
@@ -66,23 +65,25 @@ namespace config {
 
 	// public functions
 
-	bool load_config() {
+	bool load_config(Configuration& conf) {
 		auto [config_map, success] = read_config(config_file_path);
 		if (!success) return false;
 
-		configuration.loaded = true;
+		conf.loaded = true;
 
 		if (config_map.find("log_level") != config_map.end())
-			configuration.log.level = Logging::string_to_level(config_map["log_level"]);
+			conf.log.level = Logging::string_to_level(config_map["log_level"]);
 		if (config_map.find("log_file_path") != config_map.end())
-			configuration.log.file_path = config_map["log_file_path"];
+			conf.log.file_path = config_map["log_file_path"];
 
 		return true;
 	}
 
 	const Configuration& get_config() {
+		static Configuration configuration;
+
 		if (!configuration.loaded) {
-			if (bool fail = !load_config())
+			if (bool fail = !load_config(configuration))
 				std::cerr << "Fail to load configuration file at \"" << config_file_path << "\"" << std::endl;
 		}
 		return configuration;

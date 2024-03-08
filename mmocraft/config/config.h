@@ -30,7 +30,7 @@ namespace config {
 		Configuration& operator=(Configuration&&) = delete;
 	};
 
-	bool load_config();
+	bool load_config(Configuration&);
 
 	const Configuration& get_config();
 }
