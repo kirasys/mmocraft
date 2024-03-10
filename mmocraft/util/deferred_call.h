@@ -5,31 +5,31 @@
 namespace util
 {
 	template<typename T>
-	class deferred_call
+	class DeferredCall
 	{
 	public:
-		deferred_call(T&& callable)
+		DeferredCall(T&& callable)
 			: m_callable(std::forward<T>(callable))
 		{
 			static_assert(std::is_invocable_v<T>);
 		}
 
-		~deferred_call()
+		~DeferredCall()
 		{
 			m_callable();
 		}
 		
 		// no move/copy
-		deferred_call(deferred_call& dpc) = delete;
-		deferred_call& operator=(deferred_call&) = delete;
-		deferred_call(deferred_call&& dpc) = delete;
-		deferred_call& operator=(deferred_call&&) = delete;
+		DeferredCall(DeferredCall& dpc) = delete;
+		DeferredCall& operator=(DeferredCall&) = delete;
+		DeferredCall(DeferredCall&& dpc) = delete;
+		DeferredCall& operator=(DeferredCall&&) = delete;
 		
 	private:
 		T m_callable;
 	};
 
 	template<typename T>
-	using defer = deferred_call<T>;
+	using defer = DeferredCall<T>;
 }
 
