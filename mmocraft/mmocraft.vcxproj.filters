@@ -10,10 +10,12 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="config\config.cpp" />
     <ClCompile Include="logging\logger.cpp" />
+    <ClCompile Include="logging\error.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
     <ClInclude Include="logging\logger.h" />
+    <ClInclude Include="logging\error.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />

@@ -72,7 +72,7 @@ namespace config {
 		conf.loaded = true;
 
 		if (config_map.find("log_level") != config_map.end())
-			conf.log.level = Logging::string_to_level(config_map["log_level"]);
+			conf.log.level = logging::string_to_level(config_map["log_level"]);
 		if (config_map.find("log_file_path") != config_map.end())
 			conf.log.file_path = config_map["log_file_path"];
 

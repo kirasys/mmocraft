@@ -1,9 +1,9 @@
-#include "Logger.h"
+#include "logger.h"
 
 #include <iostream>
 #include <map>
 
-namespace Logging {
+namespace logging {
 	LogLevel string_to_level(std::string log_level) {
 		static std::map<std::string, LogLevel> log_level_map = {
 			{"DEBUG", LogLevel::Debug},

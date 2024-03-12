@@ -2,7 +2,7 @@
 #pragma once
 #include <fstream>
 
-namespace Logging {
+namespace logging {
 	enum class LogLevel {
 		Debug,
 		Info,
