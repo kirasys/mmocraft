@@ -20,14 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="config\config.cpp" />
-    <ClCompile Include="logging\error.cpp" />
+    <ClCompile Include="io\io_model.cpp" />
     <ClCompile Include="logging\logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="net\socket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
-    <ClInclude Include="logging\error.h" />
+    <ClInclude Include="io\io_model.h" />
     <ClInclude Include="logging\logger.h" />
     <ClInclude Include="net\socket.h" />
     <ClInclude Include="util\deferred_call.h" />
@@ -137,7 +137,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
