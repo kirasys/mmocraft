@@ -28,7 +28,7 @@ namespace logging
 		if (log_output_file) {
 			m_log_stream.open(log_output_file, std::ofstream::out);
 			if (m_log_stream.fail()) {
-				logging::cerr() << "Error opening file: " << log_output_file;
+				logging::cerr() << logging::ErrorMessage::FILE_OPEN_ERROR << log_output_file;
 				return;
 			}
 		}

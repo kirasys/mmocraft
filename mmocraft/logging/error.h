@@ -8,7 +8,8 @@
 namespace logging
 {
 	enum ErrorMessage {
-		INVALID_SOCKET_ERROR
+		FILE_OPEN_ERROR,
+		INVALID_SOCKET_ERROR,
 	};
 
 	class ErrorStream

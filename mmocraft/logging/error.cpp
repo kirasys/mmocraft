@@ -6,7 +6,8 @@
 namespace logging
 {
 	const std::map<ErrorMessage, const char*> error_msg_map = {
-		{ErrorMessage::INVALID_SOCKET_ERROR, "Invalid socket"}
+		{ErrorMessage::FILE_OPEN_ERROR, "Fail to open file: "},
+		{ErrorMessage::INVALID_SOCKET_ERROR, "Invalid socket"},
 	};
 	
 	ErrorStream::ErrorStream(const std::source_location& location)
