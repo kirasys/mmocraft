@@ -8,6 +8,8 @@
 #include <string_view>
 #include <algorithm>
 
+#include "../logging/error.h"
+
 namespace {
 	void trim(std::string_view line) noexcept {
 		line.remove_prefix(std::min(line.find_first_not_of(' '), line.size()));
@@ -84,7 +86,7 @@ namespace config {
 
 		if (!configuration.loaded) {
 			if (bool fail = !load_config(configuration))
-				std::cerr << "Fail to load configuration file at \"" << config_file_path << "\"" << std::endl;
+				logging::cerr() << "Fail to load configuration file at \"" << config_file_path << "\"";
 		}
 		return configuration;
 	}

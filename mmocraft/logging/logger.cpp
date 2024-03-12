@@ -3,6 +3,8 @@
 #include <iostream>
 #include <map>
 
+#include "error.h"
+
 namespace logging
 {
 	LogLevel to_log_level(std::string log_level)
@@ -26,7 +28,7 @@ namespace logging
 		if (log_output_file) {
 			m_log_stream.open(log_output_file, std::ofstream::out);
 			if (m_log_stream.fail()) {
-				std::cerr << "Error opening file: " << log_output_file;
+				logging::cerr() << "Error opening file: " << log_output_file;
 				return;
 			}
 		}

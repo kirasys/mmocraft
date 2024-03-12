@@ -2,13 +2,18 @@
 
 #include <ws2tcpip.h>
 
+#include "../logging/error.h"
+
 net::Socket::Socket() noexcept
 	: m_af(0), m_handle(INVALID_SOCKET)
 { }
 
 net::Socket::Socket(int af, int type, int protocol)
 	: m_af(af), m_handle(WSASocketW(af, type, protocol, NULL, 0, WSA_FLAG_OVERLAPPED))
-{ }
+{ 
+	if (not is_valid())
+		logging::cerr() << logging::ErrorMessage::INVALID_SOCKET_ERROR;
+}
 
 net::Socket::~Socket()
 {
