@@ -12,6 +12,7 @@
     <ClCompile Include="logging\logger.cpp" />
     <ClCompile Include="net\socket.cpp" />
     <ClCompile Include="io\io_model.cpp" />
+    <ClCompile Include="logging\error.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -19,6 +20,7 @@
     <ClInclude Include="net\socket.h" />
     <ClInclude Include="util\deferred_call.h" />
     <ClInclude Include="io\io_model.h" />
+    <ClInclude Include="logging\error.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />
