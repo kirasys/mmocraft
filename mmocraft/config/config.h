@@ -9,7 +9,7 @@ namespace config {
 		bool loaded;
 
 		struct LogConfig {
-			Logging::LogLevel level = Logging::LogLevel::kInfo;
+			log::LogLevel level = log::LogLevel::Info;
 			std::string file_path = "log\\";
 		} log;
 
