@@ -21,8 +21,8 @@ namespace Logging {
 
 	Logger::Logger(const char* log_output_file = nullptr) {
 		if (log_output_file) {
-			_log_stream.open(log_output_file, std::ofstream::out);
-			if (_log_stream.fail()) {
+			m_log_stream.open(log_output_file, std::ofstream::out);
+			if (m_log_stream.fail()) {
 				std::cerr << "Error opening file: " << log_output_file;
 				return;
 			}
@@ -30,8 +30,8 @@ namespace Logging {
 	}
 
 	Logger::~Logger() {
-		if (_log_stream.is_open())
-			_log_stream.close();
+		if (m_log_stream.is_open())
+			m_log_stream.close();
 
 	}
 }

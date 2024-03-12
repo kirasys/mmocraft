@@ -18,6 +18,6 @@ namespace Logging {
 		Logger(const char* log_output_file);
 		~Logger();
 	private:
-		std::ofstream _log_stream;
+		std::ofstream m_log_stream;
 	};
 }
