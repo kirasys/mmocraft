@@ -2,7 +2,7 @@
 #include <string>
 #include <tuple>
 
-#include "../log/logger.h"
+#include "../logging/logger.h"
 
 namespace config {
 	struct Configuration {
