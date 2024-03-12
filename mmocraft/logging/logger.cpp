@@ -1,23 +1,22 @@
 #include "Logger.h"
 
 #include <iostream>
+#include <map>
 
 namespace Logging {
-	LogLevel string_to_level(std::string_view log_level) {
-		if (log_level == "DEBUG")
-			return LogLevel::kDebug;
+	LogLevel string_to_level(std::string log_level) {
+		static std::map<std::string, LogLevel> log_level_map = {
+			{"DEBUG", LogLevel::Debug},
+			{"INFO", LogLevel::Info},
+			{"WARN", LogLevel::Warn},
+			{"ERROR", LogLevel::Error},
+			{"FATAL", LogLevel::Fatal},
+		};
+		
+		if (log_level_map.find(log_level) == log_level_map.end())
+			return LogLevel::Info; // Default
 
-		else if (log_level == "INFO")
-			return LogLevel::kInfo;
-
-		else if (log_level == "WARN")
-			return LogLevel::kWarn;
-
-		else if (log_level == "ERROR")
-			return LogLevel::kError;
-
-		else
-			return LogLevel::kFatal;
+		return log_level_map[log_level];
 	}
 
 	Logger::Logger(const char* log_output_file = nullptr) {

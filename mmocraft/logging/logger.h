@@ -4,14 +4,14 @@
 
 namespace Logging {
 	enum class LogLevel {
-		kDebug,
-		kInfo,
-		kWarn,
-		kError,
-		kFatal,
+		Debug,
+		Info,
+		Warn,
+		Error,
+		Fatal,
 	};
 
-	LogLevel string_to_level(std::string_view log_level);
+	LogLevel string_to_level(std::string log_level);
 
 	class Logger final {
 	public:
