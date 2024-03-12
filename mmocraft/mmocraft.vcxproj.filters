@@ -11,11 +11,14 @@
     <ClCompile Include="config\config.cpp" />
     <ClCompile Include="logging\logger.cpp" />
     <ClCompile Include="logging\error.cpp" />
+    <ClCompile Include="net\socket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
     <ClInclude Include="logging\logger.h" />
     <ClInclude Include="logging\error.h" />
+    <ClInclude Include="net\socket.h" />
+    <ClInclude Include="util\deferred_call.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />
