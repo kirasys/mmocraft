@@ -1,3 +1,7 @@
-# Logging Configuration
+[System]
+# Memory pool size (MB)
+memory_pool_size: 256
+
+[Logging]
 log_level: FATAL
 log_file_path: Logging\log\

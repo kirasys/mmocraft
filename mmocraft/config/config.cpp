@@ -7,6 +7,8 @@
 #include <string>
 #include <string_view>
 #include <algorithm>
+#define NOMINMAX
+#include <Windows.h>
 
 #include "../logging/error.h"
 
@@ -32,7 +34,7 @@ namespace config {
 
 		std::string line;
 		while (std::getline(config_ss >> std::ws, line)) {
-			if (line.size() && line[0] == '#')
+			if (line.size() && (line[0] == '#' || line[0] == '['))
 				continue;
 
 			auto colon_pos = line.find(':');
@@ -65,18 +67,49 @@ namespace config {
 		return { parse_config(config_ss), true };
 	}
 
+	void load_log_config(Configuration::LogConfig& conf, ConfigMap conf_map)
+	{
+		auto end = conf_map.end();
+
+		// Log configuration
+		if (conf_map.find("log_level") != end)
+			conf.level = logging::to_log_level(conf_map.at("log_level"));
+
+		if (conf_map.find("log_file_path") != end)
+			conf.file_path = conf_map.at("log_file_path");
+	}
+
+	void load_system_config(Configuration::SystemConfig conf, ConfigMap conf_map)
+	{
+		auto end = conf_map.end();
+
+		{
+			SYSTEM_INFO sys_info;
+			GetSystemInfo(&sys_info);
+
+			conf.page_size				 = sys_info.dwPageSize;
+			conf.alllocation_granularity = sys_info.dwAllocationGranularity;
+			conf.num_of_processors = sys_info.dwNumberOfProcessors;
+		}
+
+		if (conf_map.find("memory_pool_size") != end)
+			conf.memory_pool_size = MegaBytes{ std::stoi(conf_map.at("memory_pool_size")) };
+	}
+
 	// public functions
 
 	bool load_config(Configuration& conf) {
-		auto [config_map, success] = read_config(config_file_path);
+		auto [conf_map, success] = read_config(config_file_path);
 		if (!success) return false;
 
-		conf.loaded = true;
-
-		if (config_map.find("log_level") != config_map.end())
-			conf.log.level = logging::to_log_level(config_map["log_level"]);
-		if (config_map.find("log_file_path") != config_map.end())
-			conf.log.file_path = config_map["log_file_path"];
+		try {
+			load_log_config(conf.log, conf_map);
+			load_system_config(conf.system, conf_map);
+		}
+		catch (const std::exception& ex) {
+			logging::cerr() << "Fail to setting config: " << ex.what();
+			return false;
+		}
 
 		return true;
 	}
@@ -85,9 +118,10 @@ namespace config {
 		static Configuration configuration;
 
 		if (!configuration.loaded) {
-			if (bool fail = !load_config(configuration))
-				logging::cerr() << "Fail to load configuration file at \"" << config_file_path << "\"";
+			if (configuration.loaded = !load_config(configuration))
+				logging::cfatal() << "Fail to load configuration file at \"" << config_file_path << "\"";
 		}
+
 		return configuration;
 	}
 }

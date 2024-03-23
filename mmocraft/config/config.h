@@ -5,15 +5,32 @@
 #include "../logging/logger.h"
 
 namespace config {
+	struct MegaBytes
+	{
+		int mb = 0;
+		constexpr MegaBytes(int Mb) : mb(Mb) { }
+		constexpr int to_bytes() const { return mb * 1048576; }
+	};
+
 	struct Configuration {
 		bool loaded;
 
-		struct LogConfig {
+		struct SystemConfig
+		{
+			int page_size;
+			int alllocation_granularity;
+			int num_of_processors;
+			MegaBytes memory_pool_size { 128 };
+		} system;
+
+		struct LogConfig
+		{
 			logging::LogLevel level = logging::LogLevel::Info;
 			std::string file_path = "log\\";
 		} log;
 
-		struct LoginConfig {
+		struct LoginConfig
+		{
 
 		} login;
 
