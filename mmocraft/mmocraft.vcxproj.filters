@@ -35,7 +35,7 @@
     <ClInclude Include="win\shared_handle.h" />
     <ClInclude Include="util\noncopyable.h" />
     <ClInclude Include="net\client_session.h" />
-    <ClInclude Include="util\commom_util.h" />
+    <ClInclude Include="util\common_util.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />
