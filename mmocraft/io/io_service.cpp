@@ -26,6 +26,7 @@ namespace io
 			logging::cerr() << "Can't associate handle: CreateIoCompletionPort() with " << ::GetLastError();
 			return false;
 		}
+		return true;
 	}
 
 	bool IoCompletionPort::register_event_source(win::Socket event_source, void* event_owner)
