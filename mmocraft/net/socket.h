@@ -2,28 +2,38 @@
 
 #include <iostream>
 #include <string_view>
-#include <tuple>
 
-#define NOMINMAX
-#include <winsock2.h>
+#include "../io/io_context.h"
+#include "../win/win_type.h"
+#include "../win/win_base_object.h"
 
 namespace net
 {
 	enum SocketType
 	{
+		None,
 		TCPv4,
 		UDPv4
 	};
 
-	class Socket
+	enum SocketErrorCode
+	{
+		SUCCESS = 0, // success must be 0
+		CREATE_SOCKET_ERROR,
+		BIND_ERROR,
+		LISTEN_ERROR,
+		ACCEPTEX_LOAD_ERROR,
+		ACCEPTEX_FAIL_ERROR,
+	};
+
+	std::ostream& operator<<(std::ostream&, SocketErrorCode);
+
+	class Socket : public win::WinBaseObject<win::Socket>
 	{
 	public:
-		using ErrorCode = int;
-		const ErrorCode OpSuccess = 0;
-		
 		// constructor
 		Socket() noexcept;
-		Socket(int af, int type, int protocol);
+		Socket(SocketType);
 
 		// destructor
 		~Socket();
@@ -36,19 +46,30 @@ namespace net
 		Socket(Socket&& sock) noexcept;
 		Socket& operator=(Socket&&) noexcept;
 
-		static Socket create_socket(SocketType);
+		win::Socket get_handle() const {
+			return m_handle;
+		}
 
-		inline bool is_valid() const {
+		bool is_valid() const {
 			return m_handle != INVALID_SOCKET;
 		}
 
-		ErrorCode bind(std::string_view, int);
-
-		ErrorCode listen(int backlog = SOMAXCONN);
-
 		void close() noexcept;
+
+		SocketErrorCode bind(std::string_view, int);
+
+		SocketErrorCode listen(int backlog = SOMAXCONN);
+
+		SocketErrorCode accept(io::AcceptIoContext&);
+
+		int get_address_family() {
+			return AF_INET; // TODO: IPv6
+		}
+
 	private:
-		int m_af;
-		SOCKET m_handle;
+		SocketType m_type;
+		win::Socket m_handle;
 	};
+
+	win::Socket create_windows_socket(SocketType, DWORD flags);
 }
