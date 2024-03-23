@@ -29,13 +29,6 @@ namespace logging
 			std::ofstream m_log_stream;
 	};
 
-
-	enum ErrorMessage {
-		FILE_OPEN_ERROR,
-		INVALID_SOCKET_ERROR,
-	};
-
-
 	class LogStream : util::NonCopyable, util::NonMovable
 	{
 	public:
@@ -50,8 +43,6 @@ namespace logging
 			m_buf << std::forward<T>(value);
 			return *this;
 		}
-
-		LogStream& operator<<(ErrorMessage);
 
 	private:
 		std::ostream& m_os;

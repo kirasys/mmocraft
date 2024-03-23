@@ -29,7 +29,7 @@ namespace logging
 		if (log_output_file) {
 			m_log_stream.open(log_output_file, std::ofstream::out);
 			if (m_log_stream.fail()) {
-				logging::cerr() << logging::ErrorMessage::FILE_OPEN_ERROR << log_output_file;
+				logging::cerr() << "Fail to open file: " << log_output_file;
 				return;
 			}
 		}
@@ -42,11 +42,6 @@ namespace logging
 
 	}
 
-	const std::map<ErrorMessage, const char*> error_msg_map = {
-		{ErrorMessage::FILE_OPEN_ERROR, "Fail to open file: "},
-		{ErrorMessage::INVALID_SOCKET_ERROR, "Invalid socket"},
-	};
-
 	LogStream::LogStream(std::ostream &os, const std::source_location& location, bool exit_after_print)
 		: m_os(os), m_exit_after_print{ exit_after_print }
 	{
@@ -54,16 +49,6 @@ namespace logging
 			<< location.line() << ':'
 			<< location.column() << ") `"
 			<< location.function_name() << "`: ";
-	}
-
-	LogStream& LogStream::operator<<(ErrorMessage type)
-	{
-		if (error_msg_map.find(type) == error_msg_map.end())
-			m_buf << "Unknown error type (" << type << ')';
-		else
-			m_buf << error_msg_map.at(type);
-
-		return *this;
 	}
 
 	LogStream::~LogStream()
