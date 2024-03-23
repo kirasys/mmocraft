@@ -4,4 +4,4 @@ memory_pool_size: 256
 
 [Logging]
 log_level: FATAL
-log_file_path: Logging\log\
+log_file_path: server_log.txt

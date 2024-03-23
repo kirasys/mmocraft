@@ -26,7 +26,7 @@ namespace config {
 		struct LogConfig
 		{
 			logging::LogLevel level = logging::LogLevel::Info;
-			std::string file_path = "log\\";
+			std::string file_path = "server_log.txt";
 		} log;
 
 		struct LoginConfig
