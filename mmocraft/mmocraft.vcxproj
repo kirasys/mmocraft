@@ -20,19 +20,34 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="config\config.cpp" />
-    <ClCompile Include="io\io_model.cpp" />
+    <ClCompile Include="io\io_context.cpp" />
+    <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
     <ClCompile Include="logging\logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="net\server_core.cpp" />
     <ClCompile Include="net\socket.cpp" />
+    <ClCompile Include="util\lock_free_stack.cpp" />
+    <ClCompile Include="win\object_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
-    <ClInclude Include="io\io_model.h" />
+    <ClInclude Include="io\io_context.h" />
+    <ClInclude Include="io\io_service.h" />
     <ClInclude Include="logging\error.h" />
     <ClInclude Include="logging\logger.h" />
+    <ClInclude Include="net\client_session.h" />
+    <ClInclude Include="net\master_server.h" />
     <ClInclude Include="net\socket.h" />
+    <ClInclude Include="net\server_core.h" />
+    <ClInclude Include="util\commom_util.h" />
     <ClInclude Include="util\deferred_call.h" />
+    <ClInclude Include="util\lock_free_stack.h" />
+    <ClInclude Include="util\noncopyable.h" />
+    <ClInclude Include="win\object_pool.h" />
+    <ClInclude Include="win\shared_handle.h" />
+    <ClInclude Include="win\win_base_object.h" />
+    <ClInclude Include="win\win_type.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />
