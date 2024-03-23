@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "server_core.h"
 
 #include "logging/error.h"

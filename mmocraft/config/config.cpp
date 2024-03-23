@@ -1,14 +1,12 @@
+#include "pch.h"
 #include "config.h"
 
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <map>
 #include <string>
 #include <string_view>
 #include <algorithm>
-#define NOMINMAX
-#include <Windows.h>
 
 #include "logging/error.h"
 
