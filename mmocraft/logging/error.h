@@ -15,7 +15,7 @@ namespace logging
 	class ErrorStream
 	{
 	public:
-		ErrorStream(const std::source_location&);
+		ErrorStream(const std::source_location&, bool exit_after_print = false);
 
 		~ErrorStream();
 
@@ -34,9 +34,12 @@ namespace logging
 		ErrorStream(ErrorStream&&) = delete;
 		ErrorStream& operator=(ErrorStream&) = delete;
 		ErrorStream& operator=(ErrorStream&&) = delete;
+
 	private:
+		bool m_exit_after_print;
 		std::stringstream m_buf;
 	};
 
 	ErrorStream cerr(const std::source_location& location = std::source_location::current());
+	ErrorStream cfatal(const std::source_location& location = std::source_location::current());
 }

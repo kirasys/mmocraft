@@ -2,6 +2,7 @@
 
 #include <map>
 #include <filesystem>
+#include <cstdlib>
 
 namespace logging
 {
@@ -10,7 +11,8 @@ namespace logging
 		{ErrorMessage::INVALID_SOCKET_ERROR, "Invalid socket"},
 	};
 	
-	ErrorStream::ErrorStream(const std::source_location& location)
+	ErrorStream::ErrorStream(const std::source_location& location, bool exit_after_print)
+		: m_exit_after_print{ exit_after_print }
 	{
 		m_buf << std::filesystem::path(location.file_name()).filename() << '('
 			<< location.line() << ':'
@@ -32,9 +34,16 @@ namespace logging
 	{
 		// TODO: does it thread-safe?
 		std::cerr << m_buf.str() << std::endl;
+
+		if (m_exit_after_print)
+			std::exit(0);
 	}
 
 	ErrorStream cerr(const std::source_location& location) {
-		return ErrorStream{ location };
+		return ErrorStream{ location, false };
+	}
+
+	ErrorStream cfatal(const std::source_location& location) {
+		return ErrorStream{ location, true };
 	}
 }
