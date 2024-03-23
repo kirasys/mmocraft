@@ -24,26 +24,23 @@ namespace logging
 		return log_level_map.at(log_level);
 	}
 
-	Logger::Logger(const char* log_output_file = nullptr)
+	struct Logger {
+		LogLevel level = LogLevel::Debug;
+		std::ofstream os;
+	} g_logger;
+
+	void init_logger(const char* out_file_path, LogLevel level)
 	{
-		if (log_output_file) {
-			m_log_stream.open(log_output_file, std::ofstream::out);
-			if (m_log_stream.fail()) {
-				logging::cerr() << "Fail to open file: " << log_output_file;
-				return;
-			}
-		}
+		g_logger.level = level;
+		g_logger.os.open(out_file_path, std::ofstream::out);
+		if (not g_logger.os.is_open())
+			logging::cfatal() << "Fail to open file: " << out_file_path;
 	}
 
-	Logger::~Logger()
-	{
-		if (m_log_stream.is_open())
-			m_log_stream.close();
+	/*  LogStream Class */
 
-	}
-
-	LogStream::LogStream(std::ostream &os, const std::source_location& location, bool exit_after_print)
-		: m_os(os), m_exit_after_print{ exit_after_print }
+	LogStream::LogStream(std::ostream &os, const std::source_location &location, bool fatal_flag)
+		: m_os(os), m_fatal_flag{ fatal_flag }
 	{
 		m_buf << std::filesystem::path(location.file_name()).filename() << '('
 			<< location.line() << ':'
@@ -53,18 +50,18 @@ namespace logging
 
 	LogStream::~LogStream()
 	{
-		// TODO: does it thread-safe?
+		// TODO: make it more thread-safe
 		m_os << m_buf.view() << std::endl;
 
-		if (m_exit_after_print)
+		if (m_fatal_flag)
 			std::exit(0);
 	}
 
-	LogStream cerr(const std::source_location& location) {
+	LogStream cerr(const std::source_location &location) {
 		return LogStream{ std::cerr, location, false };
 	}
 
-	LogStream cfatal(const std::source_location& location) {
+	LogStream cfatal(const std::source_location &location) {
 		return LogStream{ std::cerr, location, true };
 	}
 }

@@ -20,19 +20,12 @@ namespace logging
 
 	LogLevel to_log_level(std::string log_level);
 
-	class Logger final
-	{
-		public:
-			Logger(const char* log_output_file);
-			~Logger();
-		private:
-			std::ofstream m_log_stream;
-	};
+	void init_logger(const char* out_file_path, LogLevel level);
 
 	class LogStream : util::NonCopyable, util::NonMovable
 	{
 	public:
-		LogStream(std::ostream& os, const std::source_location&, bool exit_after_print = false);
+		LogStream(std::ostream &os, const std::source_location&, bool m_fatal_flag = false);
 
 		~LogStream();
 
@@ -47,10 +40,11 @@ namespace logging
 	private:
 		std::ostream& m_os;
 
-		bool m_exit_after_print;
+		bool m_fatal_flag;
 		std::stringstream m_buf;
 	};
 
-	LogStream cerr(const std::source_location& location = std::source_location::current());
-	LogStream cfatal(const std::source_location& location = std::source_location::current());
+	// Console log functions
+	LogStream cerr(const std::source_location &location = std::source_location::current());
+	LogStream cfatal(const std::source_location &location = std::source_location::current());
 }
