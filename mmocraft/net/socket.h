@@ -6,6 +6,7 @@
 #include "../io/io_context.h"
 #include "../win/win_type.h"
 #include "../win/win_base_object.h"
+#include "../logging/error.h"
 
 namespace net
 {
@@ -15,18 +16,6 @@ namespace net
 		TCPv4,
 		UDPv4
 	};
-
-	enum SocketErrorCode
-	{
-		SUCCESS = 0, // success must be 0
-		CREATE_SOCKET_ERROR,
-		BIND_ERROR,
-		LISTEN_ERROR,
-		ACCEPTEX_LOAD_ERROR,
-		ACCEPTEX_FAIL_ERROR,
-	};
-
-	std::ostream& operator<<(std::ostream&, SocketErrorCode);
 
 	class Socket : public win::WinBaseObject<win::Socket>
 	{
@@ -56,11 +45,11 @@ namespace net
 
 		void close() noexcept;
 
-		SocketErrorCode bind(std::string_view, int);
+		auto bind(std::string_view, int) -> error::ErrorCode::Network;
 
-		SocketErrorCode listen(int backlog = SOMAXCONN);
+		auto listen(int backlog = SOMAXCONN) -> error::ErrorCode::Network;
 
-		SocketErrorCode accept(io::AcceptIoContext&);
+		auto accept(io::AcceptIoContext&) -> error::ErrorCode::Network;
 
 		int get_address_family() {
 			return AF_INET; // TODO: IPv6

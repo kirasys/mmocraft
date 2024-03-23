@@ -8,6 +8,8 @@
 #include "../io/io_context.h"
 #include "../io/io_service.h"
 
+using namespace error;
+
 net::Socket::Socket() noexcept
 	: m_type{ SocketType::None }, m_handle{ INVALID_SOCKET }
 { }
@@ -19,7 +21,7 @@ net::Socket::Socket(SocketType type)
 	m_handle = create_windows_socket(type, flags);
 
 	if (not is_valid())
-		throw SocketErrorCode::CREATE_SOCKET_ERROR;
+		throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
 }
 
 net::Socket::~Socket()
@@ -47,26 +49,26 @@ auto net::Socket::operator=(net::Socket&& sock) noexcept -> net::Socket& {
 	return *this;
 }
 
-auto net::Socket::bind(std::string_view ip, int port) -> SocketErrorCode {
+auto net::Socket::bind(std::string_view ip, int port) -> ErrorCode::Network {
 	sockaddr_in sock_addr;
 	sock_addr.sin_family = get_address_family();
 	sock_addr.sin_port = ::htons(port);
 	::inet_pton(get_address_family(), ip.data(), &sock_addr.sin_addr);
 
 	if (::bind(m_handle, reinterpret_cast<SOCKADDR*>(&sock_addr), sizeof(sock_addr)) == SOCKET_ERROR)
-		throw SocketErrorCode::BIND_ERROR;
+		throw NetworkException(ErrorCode::Network::BIND_ERROR);
 
-	return SocketErrorCode::SUCCESS;
+	return ErrorCode::Network::SUCCESS;
 }
 
-auto net::Socket::listen(int backlog) -> SocketErrorCode {
+auto net::Socket::listen(int backlog) -> ErrorCode::Network {
 	if (::listen(m_handle, backlog) == SOCKET_ERROR)
-		throw SocketErrorCode::LISTEN_ERROR;
+		throw NetworkException(ErrorCode::Network::LISTEN_ERROR);
 
-	return SocketErrorCode::SUCCESS;
+	return ErrorCode::Network::SUCCESS;
 }
 
-auto net::Socket::accept(io::AcceptIoContext &io_context) -> SocketErrorCode
+auto net::Socket::accept(io::AcceptIoContext &io_context) -> ErrorCode::Network
 {
 	DWORD bytes_received;
 
@@ -83,14 +85,14 @@ auto net::Socket::accept(io::AcceptIoContext &io_context) -> SocketErrorCode
 			sizeof(io_context.fnAcceptEx),
 			&bytes, NULL, NULL) == SOCKET_ERROR)
 		{
-			throw SocketErrorCode::ACCEPTEX_LOAD_ERROR;
+			throw NetworkException(ErrorCode::Network::ACCEPTEX_LOAD_ERROR);
 		}
 	}
 
 	if (not io_context.accepted_socket) {
 		io_context.accepted_socket = create_windows_socket(m_type, WSA_FLAG_OVERLAPPED);
 		if (io_context.accepted_socket == INVALID_SOCKET)
-			throw SocketErrorCode::CREATE_SOCKET_ERROR;
+			throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
 	}
 	
 	io_context.overlapped.Internal = 0;
@@ -111,9 +113,9 @@ auto net::Socket::accept(io::AcceptIoContext &io_context) -> SocketErrorCode
 	);
 
 	if (not success && (ERROR_IO_PENDING != ::WSAGetLastError()))
-		throw ACCEPTEX_FAIL_ERROR;
+		throw NetworkException(ErrorCode::Network::ACCEPTEX_FAIL_ERROR);
 	
-	return SocketErrorCode::SUCCESS;
+	return ErrorCode::Network::SUCCESS;
 }
 
 /*
@@ -142,21 +144,4 @@ win::Socket net::create_windows_socket(SocketType type, DWORD flags)
 	default:
 		return INVALID_SOCKET;
 	}
-}
-
-std::ostream& net::operator<<(std::ostream& os, SocketErrorCode code)
-{
-	static std::map<SocketErrorCode, const char*> error_code_map = {
-		{SocketErrorCode::SUCCESS, "SUCCESS"},
-		{SocketErrorCode::CREATE_SOCKET_ERROR, "CREATE_SOCKET_ERROR"},
-		{SocketErrorCode::BIND_ERROR, "BIND_ERROR"},
-		{SocketErrorCode::LISTEN_ERROR, "LISTEN_ERROR"},
-		{SocketErrorCode::ACCEPTEX_LOAD_ERROR, "ACCEPTEX_LOAD_ERROR"},
-		{SocketErrorCode::ACCEPTEX_FAIL_ERROR, "ACCEPTEX_FAIL_ERROR"},
-	};
-
-	if (error_code_map.find(code) == error_code_map.end())
-		return os << "UNKNOWN ERROR CODE(" << int(code) << ")";
-	
-	return os << error_code_map.at(code);
 }

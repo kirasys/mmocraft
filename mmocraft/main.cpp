@@ -1,9 +1,10 @@
+#include <iostream>
+#include <winsock2.h>
+
 #include "config/config.h"
 #include "util/deferred_call.h"
 #include "net/server_core.h"
-
-#include <iostream>
-#include <winsock2.h>
+#include "logging/error.h"
 
 int main()
 {
@@ -18,10 +19,10 @@ int main()
 	};
 
 	try {
-		auto server_core = net::ServerCore("127.0.0.1", 12345);
+		auto server_core = net::ServerCore("121.0.0.1", 12345);
 		server_core.serve_forever();
 	}
-	catch (net::SocketErrorCode code) {
-		std::cout << code << std::endl;
+	catch (const error::NetworkException &code) {
+		std::cout << code.what() << std::endl;
 	}
 }
