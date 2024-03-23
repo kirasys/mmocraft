@@ -3,10 +3,10 @@
 #include <iostream>
 #include <string_view>
 
-#include "../io/io_context.h"
-#include "../win/win_type.h"
-#include "../win/win_base_object.h"
-#include "../logging/error.h"
+#include "io/io_context.h"
+#include "win/win_type.h"
+#include "win/win_base_object.h"
+#include "logging/error.h"
 
 namespace net
 {

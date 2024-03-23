@@ -2,7 +2,7 @@
 #include <string>
 #include <tuple>
 
-#include "../logging/logger.h"
+#include "logging/logger.h"
 
 namespace config {
 	struct MegaBytes

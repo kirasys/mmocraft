@@ -5,9 +5,9 @@
 #include <winsock2.h>
 #include <mswsock.h>
 
-#include "../config/config.h"
-#include "../logging/error.h"
-#include "../win/win_type.h"
+#include "config/config.h"
+#include "logging/error.h"
+#include "win/win_type.h"
 
 namespace io
 {

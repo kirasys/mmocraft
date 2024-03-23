@@ -4,10 +4,10 @@
 #include <thread>
 #include <memory>
 
-#include "../logging/error.h"
-#include "../win/win_type.h"
-#include "../win/win_base_object.h"
-#include "../win/shared_handle.h"
+#include "logging/error.h"
+#include "win/win_type.h"
+#include "win/win_base_object.h"
+#include "win/shared_handle.h"
 
 namespace io
 {

@@ -1,7 +1,7 @@
 #include "io_service.h"
 
-#include "../logging/error.h"
-#include "../io/io_context.h"
+#include "logging/error.h"
+#include "io/io_context.h"
 
 namespace io
 {

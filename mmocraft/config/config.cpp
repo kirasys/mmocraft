@@ -10,7 +10,7 @@
 #define NOMINMAX
 #include <Windows.h>
 
-#include "../logging/error.h"
+#include "logging/error.h"
 
 namespace {
 	void trim(std::string_view line) noexcept {

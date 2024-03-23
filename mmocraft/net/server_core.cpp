@@ -1,6 +1,6 @@
 #include "server_core.h"
 
-#include "../logging/error.h"
+#include "logging/error.h"
 
 namespace
 {

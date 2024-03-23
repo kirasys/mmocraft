@@ -4,9 +4,9 @@
 #include <memory>
 
 #include "socket.h"
-#include "../io/io_service.h"
-#include "../config/config.h"
-#include "../util/noncopyable.h"
+#include "io/io_service.h"
+#include "config/config.h"
+#include "util/noncopyable.h"
 
 namespace
 {

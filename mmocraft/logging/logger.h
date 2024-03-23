@@ -5,7 +5,7 @@
 #include <fstream>
 #include <source_location>
 
-#include "../util/common_util.h"
+#include "util/common_util.h"
 
 namespace logging
 {

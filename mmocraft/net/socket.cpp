@@ -4,9 +4,9 @@
 #include <cassert>
 #include <ws2tcpip.h>
 
-#include "../logging/error.h"
-#include "../io/io_context.h"
-#include "../io/io_service.h"
+#include "logging/error.h"
+#include "io/io_context.h"
+#include "io/io_service.h"
 
 using namespace error;
 
