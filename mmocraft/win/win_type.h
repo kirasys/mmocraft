@@ -1,6 +1,5 @@
 #pragma once
 
-#define NOMINMAX
 #include <winsock2.h>
 
 namespace win
