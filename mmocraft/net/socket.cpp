@@ -11,7 +11,7 @@
 using namespace error;
 
 net::Socket::Socket() noexcept
-	: m_type{ SocketType::None }, m_handle{ INVALID_SOCKET }
+	: m_type{ SocketType::None }, m_handle{ NULL }
 { }
 
 net::Socket::Socket(SocketType type)
@@ -20,11 +20,6 @@ net::Socket::Socket(SocketType type)
 {
 	if (not is_valid())
 		throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
-}
-
-net::Socket::~Socket()
-{
-	
 }
 
 auto net::Socket::bind(std::string_view ip, int port) -> ErrorCode::Network {

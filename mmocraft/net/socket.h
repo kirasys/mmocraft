@@ -27,7 +27,7 @@ namespace net
 		Socket(SocketType);
 
 		// destructor
-		~Socket();
+		~Socket() = default;
 
 		// move controllers
 		Socket(Socket&& sock) = default;

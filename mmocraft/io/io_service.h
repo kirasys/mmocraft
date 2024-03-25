@@ -33,8 +33,10 @@ namespace io
 	{
 	public:
 		IoCompletionPort() noexcept
-			: m_handle{ INVALID_HANDLE_VALUE }
+			: m_handle{ nullptr }
 		{ }
+
+		~IoCompletionPort() = default;
 
 		IoCompletionPort(int num_of_concurrent_threads);
 		

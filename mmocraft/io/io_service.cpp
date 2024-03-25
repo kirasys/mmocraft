@@ -26,10 +26,7 @@ namespace io
 
 	void IoCompletionPort::close() noexcept
 	{
-		if (is_valid()) {
-			::CloseHandle(m_handle);
-			m_handle.reset();
-		}
+		m_handle.reset();
 	}
 
 	void IoCompletionPort::run_event_loop_forever(DWORD get_event_timeout_ms)
