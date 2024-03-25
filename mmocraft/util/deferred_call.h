@@ -2,10 +2,12 @@
 #include <utility>
 #include <type_traits>
 
+#include "noncopyable.h"
+
 namespace util
 {
 	template<typename T>
-	class DeferredCall
+	class DeferredCall : util::NonCopyable, util::NonMovable
 	{
 	public:
 		DeferredCall(T&& callable)
@@ -18,12 +20,6 @@ namespace util
 		{
 			m_callable();
 		}
-		
-		// no move/copy
-		DeferredCall(DeferredCall& dpc) = delete;
-		DeferredCall& operator=(DeferredCall&) = delete;
-		DeferredCall(DeferredCall&& dpc) = delete;
-		DeferredCall& operator=(DeferredCall&&) = delete;
 		
 	private:
 		T m_callable;
