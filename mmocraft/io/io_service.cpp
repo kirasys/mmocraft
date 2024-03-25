@@ -10,17 +10,6 @@ namespace io
 		: m_handle{ ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, ULONG_PTR(0), num_of_concurrent_threads) }
 	{ }
 
-	IoCompletionPort::IoCompletionPort(IoCompletionPort&& iocp) noexcept
-	{
-		m_handle = std::move(iocp.m_handle);
-	}
-
-	IoCompletionPort& IoCompletionPort::operator=(IoCompletionPort&& iocp) noexcept
-	{
-		m_handle = std::move(iocp.m_handle);
-		return *this;
-	}
-
 	bool IoCompletionPort::register_event_source(win::Handle event_source, void* event_owner)
 	{
 		if (::CreateIoCompletionPort(event_source, m_handle, ULONG_PTR(event_owner), DWORD(0)) == NULL) {

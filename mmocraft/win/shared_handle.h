@@ -28,16 +28,8 @@ namespace win
 		SharedHandle& operator=(SharedHandle&) = default;
 
 		// move controllers
-		SharedHandle(SharedHandle&& handle) noexcept
-		{
-			m_handle = std::move(handle.m_handle);
-		}
-
-		SharedHandle& operator=(SharedHandle&& handle) noexcept
-		{
-			m_handle = std::move(handle.m_handle);
-			return *this;
-		}
+		SharedHandle(SharedHandle&& handle) = default;
+		SharedHandle& operator=(SharedHandle&& handle) = default;
 
 		operator win::Handle()
 		{

@@ -43,8 +43,8 @@ namespace io
 		IoCompletionPort& operator=(IoCompletionPort&) = default;
 
 		// move controllers
-		IoCompletionPort(IoCompletionPort&& iocp) noexcept;
-		IoCompletionPort& operator=(IoCompletionPort&& iocp) noexcept;
+		IoCompletionPort(IoCompletionPort&& iocp) = default;
+		IoCompletionPort& operator=(IoCompletionPort&& iocp) = default;
 
 		bool register_event_source(win::Handle event_source, void* event_owner = nullptr);
 
