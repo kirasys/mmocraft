@@ -17,9 +17,9 @@ namespace config {
 
 		struct SystemConfig
 		{
-			int page_size;
-			int alllocation_granularity;
-			int num_of_processors;
+			int page_size = 0;
+			int alllocation_granularity = 0;
+			int num_of_processors = 0;
 			MegaBytes memory_pool_size { 128 };
 		} system;
 
