@@ -14,7 +14,6 @@
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
     <ClCompile Include="io\io_context.cpp" />
-    <ClCompile Include="win\object_pool.cpp" />
     <ClCompile Include="util\lock_free_stack.cpp" />
     <ClCompile Include="net\server_core.cpp" />
     <ClCompile Include="pch.cpp" />
@@ -33,7 +32,7 @@
     <ClInclude Include="win\win_type.h" />
     <ClInclude Include="net\server_core.h" />
     <ClInclude Include="net\master_server.h" />
-    <ClInclude Include="win\shared_handle.h" />
+    <ClInclude Include="win\smart_handle.h" />
     <ClInclude Include="util\noncopyable.h" />
     <ClInclude Include="net\client_session.h" />
     <ClInclude Include="util\common_util.h" />

@@ -34,7 +34,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="util\lock_free_stack.cpp" />
-    <ClCompile Include="win\object_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -52,7 +51,7 @@
     <ClInclude Include="util\lock_free_stack.h" />
     <ClInclude Include="util\noncopyable.h" />
     <ClInclude Include="win\object_pool.h" />
-    <ClInclude Include="win\shared_handle.h" />
+    <ClInclude Include="win\smart_handle.h" />
     <ClInclude Include="win\win_base_object.h" />
     <ClInclude Include="win\win_type.h" />
   </ItemGroup>
