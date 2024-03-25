@@ -23,7 +23,7 @@ namespace win
 	{
 	public:
 		UniqueSocket() noexcept
-			: m_handle{reinterpret_cast<win::Socket*>(INVALID_SOCKET), invalid_socket_deleter}
+			: m_handle{nullptr, invalid_socket_deleter}
 		{ }
 
 		UniqueSocket(win::Socket handle) noexcept
@@ -68,7 +68,7 @@ namespace win
 	{
 	public:
 		SharedHandle()
-			: m_handle{ INVALID_HANDLE_VALUE, invalid_handle_deleter }
+			: m_handle{ nullptr, invalid_handle_deleter }
 		{ }
 
 		SharedHandle(win::Handle handle)
@@ -101,7 +101,7 @@ namespace win
 		// reset operator
 		void reset()
 		{
-			m_handle.reset(INVALID_HANDLE_VALUE, invalid_handle_deleter);
+			m_handle.reset();
 		}
 
 	private:

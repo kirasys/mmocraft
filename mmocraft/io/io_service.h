@@ -7,7 +7,7 @@
 #include "logging/error.h"
 #include "win/win_type.h"
 #include "win/win_base_object.h"
-#include "win/shared_handle.h"
+#include "win/smart_handle.h"
 
 namespace io
 {
@@ -62,7 +62,7 @@ namespace io
 
 		bool is_valid() const
 		{
-			return m_handle != INVALID_HANDLE_VALUE;
+			return m_handle;
 		}
 
 		void close() noexcept;
