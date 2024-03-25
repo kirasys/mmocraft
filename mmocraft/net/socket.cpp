@@ -15,38 +15,16 @@ net::Socket::Socket() noexcept
 { }
 
 net::Socket::Socket(SocketType type)
-	: m_type{ type }
+	: m_type { type }
+	, m_handle { create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
 {
-	const DWORD flags = WSA_FLAG_OVERLAPPED;
-	m_handle = create_windows_socket(type, flags);
-
 	if (not is_valid())
 		throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
 }
 
 net::Socket::~Socket()
 {
-	close();
-}
-
-net::Socket::Socket(net::Socket&& sock) noexcept {
-	this->close();
-
-	std::swap(m_handle, sock.m_handle);
-	assert(not sock.is_valid());
-
-	m_type = sock.m_type;
-}
-
-auto net::Socket::operator=(net::Socket&& sock) noexcept -> net::Socket& {
-	this->close();
 	
-	std::swap(m_handle, sock.m_handle);
-	assert(not sock.is_valid());
-
-	m_type = sock.m_type;
-
-	return *this;
 }
 
 auto net::Socket::bind(std::string_view ip, int port) -> ErrorCode::Network {
@@ -126,10 +104,7 @@ auto net::Socket::accept_handler() -> Socket::ErrorCode
 */
 
 void net::Socket::close() noexcept {
-	if (is_valid()) {
-		::closesocket(m_handle);
-		m_handle = INVALID_SOCKET;
-	}
+	m_handle.reset();
 }
 
 win::Socket net::create_windows_socket(SocketType type, DWORD flags)

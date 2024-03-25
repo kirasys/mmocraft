@@ -6,6 +6,8 @@
 #include "io/io_context.h"
 #include "win/win_type.h"
 #include "win/win_base_object.h"
+#include "win/smart_handle.h"
+#include "util/common_util.h"
 #include "logging/error.h"
 
 namespace net
@@ -17,7 +19,7 @@ namespace net
 		UDPv4
 	};
 
-	class Socket : public win::WinBaseObject<win::Socket>
+	class Socket : public win::WinBaseObject<win::Socket>, util::NonCopyable
 	{
 	public:
 		// constructor
@@ -27,20 +29,16 @@ namespace net
 		// destructor
 		~Socket();
 
-		// copy controllers (deleted)
-		Socket(Socket& dpc) = delete;
-		Socket& operator=(Socket&) = delete;
-
 		// move controllers
-		Socket(Socket&& sock) noexcept;
-		Socket& operator=(Socket&&) noexcept;
+		Socket(Socket&& sock) = default;
+		Socket& operator=(Socket&&) = default;
 
 		win::Socket get_handle() const {
-			return m_handle;
+			return m_handle.get();
 		}
 
 		bool is_valid() const {
-			return m_handle != INVALID_SOCKET;
+			return m_handle.get();
 		}
 
 		void close() noexcept;
@@ -57,7 +55,7 @@ namespace net
 
 	private:
 		SocketType m_type;
-		win::Socket m_handle;
+		win::UniqueSocket m_handle;
 	};
 
 	win::Socket create_windows_socket(SocketType, DWORD flags);
