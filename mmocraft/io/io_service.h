@@ -40,7 +40,7 @@ namespace io
 
 		IoCompletionPort(int num_of_concurrent_threads);
 		
-		// copy controllers (deleted)
+		// copy controllers
 		IoCompletionPort(IoCompletionPort& iocp) = default;
 		IoCompletionPort& operator=(IoCompletionPort&) = default;
 
