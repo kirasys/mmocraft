@@ -47,6 +47,7 @@
     <ClInclude Include="net\server_core.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="util\common_util.h" />
+    <ClInclude Include="util\custom_unique_ptr.h" />
     <ClInclude Include="util\deferred_call.h" />
     <ClInclude Include="util\lock_free_stack.h" />
     <ClInclude Include="util\noncopyable.h" />
