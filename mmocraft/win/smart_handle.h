@@ -9,12 +9,6 @@
 
 namespace {
 	void invalid_handle_deleter(win::Handle h) { }
-	
-	void invalid_socket_deleter(win::Socket* h) { }
-
-	void socket_deleter(win::Socket* h) {
-		::closesocket(win::Socket(h));
-	}
 }
 
 namespace win
@@ -23,39 +17,73 @@ namespace win
 	{
 	public:
 		UniqueSocket() noexcept
-			: m_handle{nullptr, invalid_socket_deleter}
+			: m_handle{INVALID_SOCKET}
 		{ }
 
 		UniqueSocket(win::Socket handle) noexcept
-			: m_handle(reinterpret_cast<win::Socket*>(handle), socket_deleter)
+			: m_handle(handle)
 		{ }
+
+		~UniqueSocket()
+		{ 
+			clear();
+		}
+
+		UniqueSocket(UniqueSocket&& other) noexcept
+		{
+			m_handle = other.m_handle;
+			other.m_handle = INVALID_SOCKET;
+		}
+
+		UniqueSocket& operator=(UniqueSocket&& other) noexcept
+		{
+			if (m_handle != other.m_handle) {
+				clear();
+				m_handle = other.m_handle;
+				other.m_handle = INVALID_SOCKET;
+			}
+			return *this;
+		}
 
 		operator win::Socket()
 		{
-			return win::Socket(m_handle.get());
+			return m_handle;
 		}
 
 		operator win::Socket() const
 		{
-			return win::Socket(m_handle.get());
+			return m_handle;
+		}
+
+		win::Socket get()
+		{
+			return m_handle;
 		}
 
 		win::Socket get() const
 		{
-			return win::Socket(m_handle.get());
+			return m_handle;
 		}
 		
-		void reset()
+		void reset(win::Socket handle = INVALID_SOCKET)
 		{
-			m_handle.reset();
+			clear();
+			m_handle = handle;
 		}
 
-		// move controllers
-		UniqueSocket(UniqueSocket&& handle) = default;
-		UniqueSocket& operator=(UniqueSocket&& handle) = default;
+		bool is_valid() const
+		{
+			return m_handle != INVALID_SOCKET;
+		}
 
 	private:
-		std::unique_ptr<std::remove_pointer_t<win::Socket>, decltype(socket_deleter)*> m_handle;
+		void clear()
+		{
+			if (is_valid())
+				::closesocket(m_handle);
+		}
+
+		win::Socket m_handle;
 	};
 
 	using UniqueHandle = std::unique_ptr<std::remove_pointer_t<win::Handle>, decltype(::CloseHandle)*>;
