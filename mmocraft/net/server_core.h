@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "socket.h"
+#include "client_session.h"
 #include "io/io_context.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
@@ -32,9 +33,9 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		void create_client_session();
+		bool create_client_session(win::Socket);
 		
-		void request_accept();
+		void try_accept();
 
 		void serve_forever();
 
@@ -56,8 +57,9 @@ namespace net
 		io::IoCompletionPort m_io_service;
 
 		win::ObjectPool<io::IoContext> m_io_context_pool;
-
-		win::ObjectPool<io::IoContext>::ObjectKey m_accept_context_key;
+		win::ObjectPool<io::IoContext>::ObjectKey m_accept_ctx_key;
 		io::IoContext& m_accept_ctx;
+
+		win::ObjectPool<net::ClientSession> m_client_session_pool;
 	};
 }

@@ -9,13 +9,18 @@ namespace
 	{
 		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_accept)>, "Incorrect handler signature");
 		
+		auto& core_server = *static_cast<net::ServerCore*>(event_owner);
+
+		util::defer accept_again = [&core_server] {
+			core_server.try_accept();
+		};
+
 		if (error_code != ERROR_SUCCESS) {
 			logging::cerr() << "handle_accept() failed with " << error_code;
 			return;
 		}
 
-		auto &core_server = *static_cast<net::ServerCore*>(event_owner);
-		auto &io_ctx  = *io_ctx_ptr;
+		auto& io_ctx = *io_ctx_ptr;
 
 		// inherit the properties of the listen socket.
 		win::Socket listen_sock = core_server.get_listen_socket();
@@ -27,8 +32,12 @@ namespace
 		}
 
 		// create client session.
+		if (not core_server.create_client_session(io_ctx.details.accept.accepted_socket)) {
+			logging::cerr() << "fail to create_client_session";
+			return;
+		}
 
-		core_server.request_accept();
+		
 	}
 }
 
@@ -45,25 +54,39 @@ namespace net
 		, m_listen_sock{ net::SocketType::TCPv4 }
 		, m_io_service{ concurrency_hint }
 		, m_io_context_pool{ 2 * max_client_connections }
-		, m_accept_context_key{ m_io_context_pool.new_object_safe() }
-		, m_accept_ctx{ m_accept_context_key.get_object() }
+		, m_accept_ctx_key{ m_io_context_pool.new_object_safe() }
+		, m_accept_ctx{ m_accept_ctx_key.get_object() }
+		, m_client_session_pool{ max_client_connections }
 	{	
-		m_accept_ctx.handler = ServerCoreHandler::handle_accept;
-
-		if (not m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this)) {
-			std::cout << "fail to register handle" << std::endl;
-		}
+		if (not m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this))
+			return;
 
 		m_listen_sock.bind(ip, port);
 		m_listen_sock.listen();
+
+		m_accept_ctx.handler = ServerCoreHandler::handle_accept;
 	}
 
-	void ServerCore::create_client_session()
+	bool ServerCore::create_client_session(win::Socket client_sock)
 	{
+		auto client_session_key = m_client_session_pool.new_object_safe(
+			client_sock,
+			m_io_context_pool.new_object_safe(),
+			m_io_context_pool.new_object_safe()
+		);
 
+		if (not client_session_key.is_valid())
+			return false;
+
+		if (not m_io_service.register_event_source(client_sock,
+													/*.event_owner = */ &client_session_key.get_object())) {
+			return false;
+		}
+
+		return true;
 	}
 
-	void ServerCore::request_accept()
+	void ServerCore::try_accept()
 	{	
 		m_accept_ctx.overlapped.Internal = 0;
 		m_accept_ctx.overlapped.InternalHigh = 0;
@@ -76,7 +99,7 @@ namespace net
 
 	void ServerCore::serve_forever()
 	{
-		this->request_accept();
+		this->try_accept();
 
 		for (unsigned i = 0; i < m_server_info.num_of_event_threads; i++)
 			m_io_service.spawn_event_loop_thread().detach();
