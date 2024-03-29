@@ -68,13 +68,13 @@ namespace net
 	void ServerCore::request_accept()
 	{
 		auto &accept_ctx = m_io_accept_ctx.get_object();
-		/*
+		
 		accept_ctx.overlapped.Internal = 0;
 		accept_ctx.overlapped.InternalHigh = 0;
 		accept_ctx.overlapped.Offset = 0;
 		accept_ctx.overlapped.OffsetHigh = 0;
 		accept_ctx.overlapped.hEvent = NULL;
-		*/
+		
 		m_listen_sock.accept(accept_ctx);
 	}
 
