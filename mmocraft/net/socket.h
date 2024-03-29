@@ -47,7 +47,7 @@ namespace net
 
 		auto listen(int backlog = SOMAXCONN) -> error::ErrorCode::Network;
 
-		auto accept(io::AcceptIoContext&) -> error::ErrorCode::Network;
+		auto accept(io::IoContext&) -> error::ErrorCode::Network;
 
 		int get_address_family() {
 			return AF_INET; // TODO: IPv6

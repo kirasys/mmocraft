@@ -11,7 +11,7 @@
 using namespace error;
 
 net::Socket::Socket() noexcept
-	: m_type{ SocketType::None }, m_handle{ NULL }
+	: m_type{ SocketType::None }, m_handle{ }
 { }
 
 net::Socket::Socket(SocketType type)
@@ -41,11 +41,11 @@ auto net::Socket::listen(int backlog) -> ErrorCode::Network {
 	return ErrorCode::Network::SUCCESS;
 }
 
-auto net::Socket::accept(io::AcceptIoContext &io_context) -> ErrorCode::Network
+auto net::Socket::accept(io::IoContext &io_ctx) -> ErrorCode::Network
 {
-	DWORD bytes_received;
+	auto& accept_ctx = io_ctx.details.accept;
 
-	if (io_context.fnAcceptEx == nullptr) {
+	if (accept_ctx.fnAcceptEx == nullptr) {
 		GUID acceptex_guid = WSAID_ACCEPTEX;
 		DWORD bytes = 0;
 
@@ -54,35 +54,26 @@ auto net::Socket::accept(io::AcceptIoContext &io_context) -> ErrorCode::Network
 			SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&acceptex_guid,
 			sizeof(acceptex_guid),
-			&io_context.fnAcceptEx,
-			sizeof(io_context.fnAcceptEx),
+			&accept_ctx.fnAcceptEx,
+			sizeof(accept_ctx.fnAcceptEx),
 			&bytes, NULL, NULL) == SOCKET_ERROR)
 		{
 			throw NetworkException(ErrorCode::Network::ACCEPTEX_LOAD_ERROR);
 		}
 	}
 
-	if (not io_context.accepted_socket) {
-		io_context.accepted_socket = create_windows_socket(m_type, WSA_FLAG_OVERLAPPED);
-		if (io_context.accepted_socket == INVALID_SOCKET)
-			throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
-	}
-	
-	io_context.overlapped.Internal = 0;
-	io_context.overlapped.InternalHigh = 0;
-	io_context.overlapped.Offset = 0;
-	io_context.overlapped.OffsetHigh = 0;
-	io_context.overlapped.hEvent = NULL;
+	accept_ctx.accepted_socket = create_windows_socket(m_type, WSA_FLAG_OVERLAPPED);
+	if (accept_ctx.accepted_socket == INVALID_SOCKET)
+		throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
 
-	//io_context.callback = 
-
-	BOOL success = io_context.fnAcceptEx(
-		m_handle, io_context.accepted_socket,
-		LPVOID(io_context.buffer),
-		sizeof(io_context.buffer) - (2 * (sizeof(SOCKADDR_STORAGE) + 16)),
+	DWORD bytes_received;
+	BOOL success = accept_ctx.fnAcceptEx(
+		m_handle, accept_ctx.accepted_socket,
+		LPVOID(accept_ctx.buffer),
+		sizeof(accept_ctx.buffer) - (2 * (sizeof(SOCKADDR_STORAGE) + 16)),
 		sizeof(SOCKADDR_STORAGE) + 16, sizeof(SOCKADDR_STORAGE) + 16,
 		&bytes_received,
-		&io_context.overlapped
+		&io_ctx.overlapped
 	);
 
 	if (not success && (ERROR_IO_PENDING != ::WSAGetLastError()))

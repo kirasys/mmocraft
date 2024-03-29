@@ -5,57 +5,84 @@
 
 namespace
 {
-	void ServerCoreHandler::handle_accept(void *event_owner, io::IoContext *io_ctx, DWORD num_of_transferred_bytes, DWORD error_code)
+	void ServerCoreHandler::handle_accept(void *event_owner, io::IoContext *io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
 	{
-		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_accept)>);
+		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_accept)>, "Incorrect handler signature");
 		
 		if (error_code != ERROR_SUCCESS) {
 			logging::cerr() << "handle_accept() failed with " << error_code;
 			return;
 		}
 
-		auto &core_server = *static_cast<net::ServerCore::pointer>(event_owner);
-		auto &accept_ctx  = *static_cast<io::AcceptIoContext*>(io_ctx);
+		auto &core_server = *static_cast<net::ServerCore*>(event_owner);
+		auto &io_ctx  = *io_ctx_ptr;
 
-		// inherit the properties of the listen socket
+		// inherit the properties of the listen socket.
 		win::Socket listen_sock = core_server.get_listen_socket();
-		if (SOCKET_ERROR == ::setsockopt(accept_ctx.accepted_socket,
+		if (SOCKET_ERROR == ::setsockopt(io_ctx.details.accept.accepted_socket,
 						SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 						reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
 			logging::cerr() << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
 			return;
 		}
+
+		// create client session.
+
+		core_server.request_accept();
 	}
 }
 
 namespace net
 {
-	ServerCore::ServerCore(std::string_view ip, int port, int concurrency_hint, int num_of_event_threads) 
-		: m_core_server_info{ .ip = ip, .port = port, .num_of_event_threads = num_of_event_threads }
+	ServerCore::ServerCore(std::string_view ip, int port,
+							unsigned max_client_connections,
+							unsigned num_of_event_threads,
+							int concurrency_hint)
+		: m_server_info{ .ip = ip,
+						 .port = port, 
+						 .max_client_connections = max_client_connections,
+						 .num_of_event_threads = num_of_event_threads}
 		, m_listen_sock{ net::SocketType::TCPv4 }
-		, m_io_service(concurrency_hint)
+		, m_io_service{ concurrency_hint }
+		, m_io_context_pool{ 2 * max_client_connections }
+		, m_io_accept_ctx{ m_io_context_pool.new_object_safe() }
 	{
-		if (num_of_event_threads == io::DEFAULT_NUM_OF_READY_EVENT_THREADS) {
-			decltype(auto) conf = config::get_config();
-			m_core_server_info.num_of_event_threads = conf.system.num_of_processors * 2;
-		}
+		if (not m_io_accept_ctx.is_valid())
+			return; // TODO: throw
+		
+		m_io_accept_ctx.get_object().handler = ServerCoreHandler::handle_accept;
 
-		if (not m_io_service.register_event_source(m_listen_sock.get_handle(), /*.owner = */ this)) {
+		if (not m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this)) {
 			std::cout << "fail to register handle" << std::endl;
 		}
 
-		m_listen_sock.bind(m_core_server_info.ip, m_core_server_info.port);
+		m_listen_sock.bind(ip, port);
 		m_listen_sock.listen();
+	}
+
+	void ServerCore::create_client_session()
+	{
+
+	}
+
+	void ServerCore::request_accept()
+	{
+		auto &accept_ctx = m_io_accept_ctx.get_object();
+		/*
+		accept_ctx.overlapped.Internal = 0;
+		accept_ctx.overlapped.InternalHigh = 0;
+		accept_ctx.overlapped.Offset = 0;
+		accept_ctx.overlapped.OffsetHigh = 0;
+		accept_ctx.overlapped.hEvent = NULL;
+		*/
+		m_listen_sock.accept(accept_ctx);
 	}
 
 	void ServerCore::serve_forever()
 	{
-		io::AcceptIoContext accept_ctx;
-		accept_ctx.handler = ServerCoreHandler::handle_accept;
+		this->request_accept();
 
-		m_listen_sock.accept(accept_ctx);
-
-		for (int i = 0; i < m_core_server_info.num_of_event_threads; i++)
+		for (unsigned i = 0; i < m_server_info.num_of_event_threads; i++)
 			m_io_service.spawn_event_loop_thread().detach();
 
 		m_io_service.run_event_loop_forever();

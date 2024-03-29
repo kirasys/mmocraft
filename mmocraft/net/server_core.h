@@ -4,9 +4,11 @@
 #include <memory>
 
 #include "socket.h"
+#include "io/io_context.h"
 #include "io/io_service.h"
+#include "win/object_pool.h"
+#include "util/common_util.h"
 #include "config/config.h"
-#include "util/noncopyable.h"
 
 namespace
 {
@@ -24,12 +26,15 @@ namespace net
 	class ServerCore : util::NonCopyable, util::NonMovable
 	{
 	public:
-		using pointer = ServerCore*;
-
 		ServerCore(std::string_view ip,
 			int port,
-			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS,
-			int num_of_event_threads = io::DEFAULT_NUM_OF_READY_EVENT_THREADS);
+			unsigned max_client_connections,
+			unsigned num_of_event_threads,
+			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
+
+		void create_client_session();
+		
+		void request_accept();
 
 		void serve_forever();
 
@@ -38,14 +43,20 @@ namespace net
 		}
 		
 	private:
-		struct ServerCoreInfo
+		const struct ServerInfo
 		{
 			std::string_view ip;
 			int port;
-			int num_of_event_threads;
-		} m_core_server_info;
+			unsigned max_client_connections;
+			unsigned num_of_event_threads;
+		} m_server_info;
 
 		net::Socket m_listen_sock;
+
 		io::IoCompletionPort m_io_service;
+
+		win::ObjectPool<io::IoContext> m_io_context_pool;
+
+		win::ObjectPool<io::IoContext>::ObjectKey m_io_accept_ctx;
 	};
 }
