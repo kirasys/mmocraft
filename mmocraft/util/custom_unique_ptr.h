@@ -19,6 +19,7 @@ namespace util
 
 		UniquePtrEmptyDeleter& operator=(UniquePtrEmptyDeleter&& other) noexcept
 		{
+			// no need to delete
 			m_ptr = other.m_ptr;
 			other.m_ptr = nullptr;
 		}

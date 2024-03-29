@@ -13,9 +13,6 @@ namespace io
 {
 	const int DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS = 0;
 	// 0 means the number of threads concurrently running threads as many processors.
-
-	const int DEFAULT_NUM_OF_READY_EVENT_THREADS = 0;
-	// 0 means the number of threads waiting threads as twice processors.
 	
 	class IoService
 	{
@@ -33,7 +30,7 @@ namespace io
 	{
 	public:
 		IoCompletionPort() noexcept
-			: m_handle{ nullptr }
+			: m_handle{ }
 		{ }
 
 		~IoCompletionPort() = default;
