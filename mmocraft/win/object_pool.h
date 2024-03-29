@@ -87,7 +87,8 @@ namespace win
 
 			~ObjectKey()
 			{
-				clear();
+				if (pool_table[object_pool_id()])
+					clear();
 			}
 
 			ObjectKey(ObjectKey&& other) noexcept
