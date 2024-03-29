@@ -17,6 +17,7 @@
     <ClCompile Include="util\lock_free_stack.cpp" />
     <ClCompile Include="net\server_core.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="win\object_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
