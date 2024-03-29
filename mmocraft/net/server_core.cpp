@@ -45,12 +45,10 @@ namespace net
 		, m_listen_sock{ net::SocketType::TCPv4 }
 		, m_io_service{ concurrency_hint }
 		, m_io_context_pool{ 2 * max_client_connections }
-		, m_io_accept_ctx{ m_io_context_pool.new_object_safe() }
-	{
-		if (not m_io_accept_ctx.is_valid())
-			return; // TODO: throw
-		
-		m_io_accept_ctx.get_object().handler = ServerCoreHandler::handle_accept;
+		, m_accept_context_key{ m_io_context_pool.new_object_safe() }
+		, m_accept_ctx{ m_accept_context_key.get_object() }
+	{	
+		m_accept_ctx.handler = ServerCoreHandler::handle_accept;
 
 		if (not m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this)) {
 			std::cout << "fail to register handle" << std::endl;
@@ -66,16 +64,14 @@ namespace net
 	}
 
 	void ServerCore::request_accept()
-	{
-		auto &accept_ctx = m_io_accept_ctx.get_object();
+	{	
+		m_accept_ctx.overlapped.Internal = 0;
+		m_accept_ctx.overlapped.InternalHigh = 0;
+		m_accept_ctx.overlapped.Offset = 0;
+		m_accept_ctx.overlapped.OffsetHigh = 0;
+		m_accept_ctx.overlapped.hEvent = NULL;
 		
-		accept_ctx.overlapped.Internal = 0;
-		accept_ctx.overlapped.InternalHigh = 0;
-		accept_ctx.overlapped.Offset = 0;
-		accept_ctx.overlapped.OffsetHigh = 0;
-		accept_ctx.overlapped.hEvent = NULL;
-		
-		m_listen_sock.accept(accept_ctx);
+		m_listen_sock.accept(m_accept_ctx);
 	}
 
 	void ServerCore::serve_forever()

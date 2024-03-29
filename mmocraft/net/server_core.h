@@ -57,6 +57,7 @@ namespace net
 
 		win::ObjectPool<io::IoContext> m_io_context_pool;
 
-		win::ObjectPool<io::IoContext>::ObjectKey m_io_accept_ctx;
+		win::ObjectPool<io::IoContext>::ObjectKey m_accept_context_key;
+		io::IoContext& m_accept_ctx;
 	};
 }
