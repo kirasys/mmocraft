@@ -28,8 +28,6 @@ namespace win
 		EXCEED_MAX_CAPACITY_ERROR,
 	};
 
-	constexpr int INVALID_OBJECT = -1;
-
 	// ObjectPool
 	// - 미리 할당된 객체를 memory-safe 하게 반환받을 수 있는 클래스.
 	// 
@@ -71,74 +69,68 @@ namespace win
 		static constexpr int MEMORY_PROTECTION_LEVEL = PAGE_READWRITE;
 		static constexpr int SIZE_TYPE_BIT_SIZE = sizeof(size_type) * 8;
 		static constexpr size_type DEFAULT_CAPACITY = 512;
+		static constexpr index_type INVALID_INDEX = std::numeric_limits<index_type>::max();
 
-		class ObjectKey : util::NonCopyable {
-			static constexpr auto INVALID_OBJECT_KEY = 0;
+		using ObjectID = std::uint64_t;
+		static constexpr ObjectID INVALID_OBJECT_ID = 0;
+
+		class ScopedObjectID : util::NonCopyable {
 		public:
-			ObjectKey() noexcept
-				: compound_key{ INVALID_OBJECT_KEY  }
+			ScopedObjectID() noexcept
+				: m_id{ INVALID_OBJECT_ID }
 			{ }
 
-			ObjectKey(index_type object_pool_id, index_type object_id)
-				: compound_key{ (std::uint64_t(object_pool_id) << 32) | object_id }
-			{ 
-				assert(object_pool_id != 0);
-			}
+			ScopedObjectID(ObjectID id)
+				: m_id{ id }
+			{ }
 
-			~ObjectKey()
+			~ScopedObjectID()
 			{
-				if (pool_table[object_pool_id()])
-					clear();
+				clear();
 			}
 
-			ObjectKey(ObjectKey&& other) noexcept
+			ScopedObjectID(ScopedObjectID&& other) noexcept
 			{
-				compound_key = other.compound_key;
-				other.compound_key = INVALID_OBJECT_KEY;
+				m_id = other.m_id;
+				other.m_id = INVALID_OBJECT_ID;
 			}
 
-			ObjectKey& operator=(ObjectKey&& other) noexcept
+			ScopedObjectID& operator=(ScopedObjectID&& other) noexcept
 			{
 				if (this != &other) {
 					clear();
-					compound_key = other.compound_key;
-					other.compound_key = INVALID_OBJECT_KEY;
+					m_id = other.m_id;
+					other.m_id = INVALID_OBJECT_ID;
 				}
-			}
-
-			object_type& get_object()
-			{
-				return get_object_pool().get_object(object_id());
 			}
 
 			void clear()
 			{
-				if (is_valid())
-					get_object_pool().free_object(object_id());
+				ObjectPool::free_object(m_id);
+			}
+
+			inline operator ObjectID()
+			{
+				return m_id;
+			}
+
+			inline operator ObjectID() const
+			{
+				return m_id;
 			}
 
 			inline bool is_valid() const
 			{
-				return compound_key != INVALID_OBJECT_KEY;
+				return m_id != INVALID_OBJECT_ID;
+			}
+
+			inline bool get_id() const
+			{
+				return m_id;
 			}
 
 		private:
-			inline index_type object_pool_id() const
-			{
-				return compound_key >> 32;
-			}
-
-			inline index_type object_id() const
-			{
-				return compound_key & 0xFFFFFFFF;
-			}
-
-			inline ObjectPool& get_object_pool() const
-			{
-				return *static_cast<ObjectPool*>(pool_table[object_pool_id()]);
-			}
-
-			std::uint64_t compound_key;
+			ObjectID m_id;
 		};
 
 		ObjectPool() = delete;
@@ -153,39 +145,40 @@ namespace win
 		// so it is used only when the user guarantees to free.
 
 		template <typename... Args>
-		int new_object(Args&&... args)
+		ObjectID new_object_unsafe(Args&&... args)
 		{
-			auto object_id = get_free_object_index();
-			if (object_id >= m_capacity && not extend_capacity(size_type(object_id) + 1))
-				return INVALID_OBJECT;
+			auto storage_index = new_object_internal(std::forward<Args>(args)...);
+			if (storage_index == INVALID_INDEX)
+				return INVALID_OBJECT_ID;
 
-			auto new_object_storage = &m_storage[object_id];
-			new (new_object_storage) T(std::forward<Args>(args)...);
-			// manually construct using placement new.
-			// new operator may simply returns its second argument unchanged.
-			// ref. https://en.cppreference.com/w/cpp/language/new
-
-			return transition_to_ready(object_id);
+			return (ObjectID(m_pool_index) << 32) | storage_index;
 		}
+
 
 		template <typename... Args>
-		ObjectKey new_object_safe(Args&&... args)
+		ScopedObjectID new_object(Args&&... args)
 		{
-			int object_id = new_object(std::forward<Args>(args)...);
-			if (object_id == INVALID_OBJECT)
-				return ObjectKey{};
-
-			return ObjectKey(m_pool_id, object_id);
+			ObjectID object_id = new_object_unsafe(std::forward<Args>(args)...);
+			return object_id != INVALID_OBJECT_ID ? 
+				ScopedObjectID(object_id) : ScopedObjectID();
 		}
 
-		bool free_object(int object_id)
+		static bool free_object(ObjectID object_id)
 		{
-			return transition_to_free(object_id);
+			if (object_id == INVALID_OBJECT_ID)
+				return false;
+
+			auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)]);
+			return pool ? pool->transition_to_free(storage_index(object_id)) : false;
 		}
 
-		object_type& get_object(int object_id)
+		static object_pointer find_object(ObjectID object_id)
 		{
-			return m_storage[object_id];
+			if (object_id == INVALID_OBJECT_ID)
+				return nullptr;
+
+			auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)]);
+			return pool ? pool->get_storage(storage_index(object_id)) : nullptr;
 		}
 
 		size_type capacity()
@@ -194,28 +187,58 @@ namespace win
 		}
 
 	private:
+		template <typename... Args>
+		index_type new_object_internal(Args&&... args)
+		{
+			auto storage_index = get_free_storage_index();
+			if (storage_index >= m_capacity && not extend_capacity(size_type(storage_index) + 1))
+				return INVALID_INDEX;
+
+			auto new_object_storage = &m_storage[storage_index];
+			new (new_object_storage) T(std::forward<Args>(args)...);
+			// manually construct using placement new.
+			// new operator may simply returns its second argument unchanged.
+			// ref. https://en.cppreference.com/w/cpp/language/new
+
+			return transition_to_ready(storage_index);
+		}
+
+		object_pointer get_storage(index_type storage_index) const
+		{
+			return &m_storage[storage_index];
+		}
 
 		inline bool is_exceed_max_capacity() const
 		{
 			return m_capacity >= m_max_capacity;
 		}
 
+		static inline index_type storage_index(ObjectID id) noexcept
+		{
+			return id & 0xFFFFFFFF;
+		}
+
+		static inline index_type pool_index(ObjectID id) noexcept
+		{
+			return id >> 32;
+		}
+
 		bool extend_capacity(size_type minimum_capacity);
 
-		index_type get_free_object_index() const;
+		index_type get_free_storage_index() const;
 
-		int transition_to_ready(index_type object_id);
+		index_type transition_to_ready(index_type);
 
-		bool transition_to_free(int object_id);
+		bool transition_to_free(index_type);
 		
-		const index_type m_pool_id;
+		const index_type m_pool_index;
 
 		object_pointer m_storage;
 		size_type m_capacity;
 		const size_type m_max_capacity;
 		
 		const size_type m_bitmap_size;
-		std::unique_ptr<size_type[]> m_free_object_bitmaps;
+		std::unique_ptr<size_type[]> m_free_storage_bitmaps;
 	};
 }
 
@@ -225,17 +248,18 @@ namespace win
 {
 	template <typename T>
 	ObjectPool<T>::ObjectPool(size_type max_capacity)
-		: m_pool_id{ num_of_free_object_pool.fetch_sub(1) }
+		: m_pool_index{ num_of_free_object_pool.fetch_sub(1) }
+		, m_storage{ nullptr }
 		, m_capacity{ std::min(DEFAULT_CAPACITY, max_capacity) }
 		, m_max_capacity{ max_capacity }
 		, m_bitmap_size{ 1 + max_capacity / SIZE_TYPE_BIT_SIZE }
-		, m_free_object_bitmaps{ new size_type[m_bitmap_size]}
+		, m_free_storage_bitmaps{ new size_type[m_bitmap_size]}
 	{
-		if (not m_pool_id)
+		if (not m_pool_index)
 			return;
 
 		// register this pool to the table;
-		pool_table[m_pool_id] = this;
+		pool_table[m_pool_index] = this;
 
 		m_storage = static_cast<object_pointer>(
 			::VirtualAlloc(NULL, max_capacity * sizeof(T), MEM_RESERVE, MEMORY_PROTECTION_LEVEL)
@@ -249,14 +273,14 @@ namespace win
 
 		// set bitmaps all object are free.
 		for (index_type i = 0; i < m_bitmap_size; i++)
-			m_free_object_bitmaps[i] = ~size_type(0);
+			m_free_storage_bitmaps[i] = ~size_type(0);
 	}
 
 	template <typename T>
 	ObjectPool<T>::~ObjectPool()
 	{
 		// deregister this pool to the table;
-		pool_table[m_pool_id] = nullptr;
+		pool_table[m_pool_index] = nullptr;
 
 		if (m_storage != nullptr) {
 			if (not ::VirtualFree(m_storage, 0, MEM_RELEASE))
@@ -290,10 +314,10 @@ namespace win
 	}
 
 	template <typename T>
-	auto ObjectPool<T>::get_free_object_index() const -> index_type
+	auto ObjectPool<T>::get_free_storage_index() const -> index_type
 	{
 		for (index_type i = 0; i < m_bitmap_size; i++) {
-			if (auto mask = m_free_object_bitmaps[i]) {
+			if (auto mask = m_free_storage_bitmaps[i]) {
 				unsigned long bit_index;
 				_BitScanForward64(&bit_index, mask);
 				return i * SIZE_TYPE_BIT_SIZE + bit_index;
@@ -302,24 +326,23 @@ namespace win
 		return std::numeric_limits<index_type>::max();
 	}
 
-
 	template <typename T>
-	int ObjectPool<T>::transition_to_ready(index_type object_id)
+	auto ObjectPool<T>::transition_to_ready(index_type storage_index) -> index_type
 	{
-		auto bitmap = &m_free_object_bitmaps[object_id / SIZE_TYPE_BIT_SIZE];
-		auto bitmap_index = object_id % SIZE_TYPE_BIT_SIZE;
+		auto bitmap = &m_free_storage_bitmaps[storage_index / SIZE_TYPE_BIT_SIZE];
+		auto bitmap_index = storage_index % SIZE_TYPE_BIT_SIZE;
 
 		*bitmap &= ~(1ULL << bitmap_index);
-		return int(object_id);
+		return storage_index;
 	}
 
 
 	template <typename T>
-	bool ObjectPool<T>::transition_to_free(int object_id)
+	bool ObjectPool<T>::transition_to_free(index_type storage_index)
 	{
-		assert(object_id >= 0);
-		auto bitmap = &m_free_object_bitmaps[object_id / SIZE_TYPE_BIT_SIZE];
-		auto bitmap_index = object_id % SIZE_TYPE_BIT_SIZE;
+		assert(storage_index >= 0);
+		auto bitmap = &m_free_storage_bitmaps[storage_index / SIZE_TYPE_BIT_SIZE];
+		auto bitmap_index = storage_index % SIZE_TYPE_BIT_SIZE;
 		bool prev_state = *bitmap & (1ULL << bitmap_index);
 
 		*bitmap |= 1ULL << bitmap_index;
