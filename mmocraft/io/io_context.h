@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 
 #include <winsock2.h>
@@ -26,27 +27,22 @@ namespace io
 		using handler_type = void (*)(void*, io::IoContext*, DWORD, DWORD);
 
 		WSAOVERLAPPED overlapped;
+
 		handler_type handler = nullptr;
 
 		union
 		{
-			struct AcceptIoContext
-			{
-				uint8_t buffer[1024];
+			struct AcceptContext {
 				LPFN_ACCEPTEX fnAcceptEx;
 				win::Socket accepted_socket;
 			} accept;
 
-			struct RecvIoContext
-			{
-				RecvBuffer buffer;
-			} recv;
-			
-			struct SendIoContext
-			{
-				SendBuffer buffer;
-			} send;
+			struct SendContext {
+				std::uint64_t client_session_id;
+			} send, recv;
 
 		} details;
+
+		uint8_t buffer[4096];
 	};
 }

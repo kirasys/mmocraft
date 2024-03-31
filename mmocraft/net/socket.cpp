@@ -69,8 +69,8 @@ auto net::Socket::accept(io::IoContext &io_ctx) -> ErrorCode::Network
 	DWORD bytes_received;
 	BOOL success = accept_ctx.fnAcceptEx(
 		m_handle, accept_ctx.accepted_socket,
-		LPVOID(accept_ctx.buffer),
-		sizeof(accept_ctx.buffer) - (2 * (sizeof(SOCKADDR_STORAGE) + 16)),
+		LPVOID(io_ctx.buffer),
+		sizeof(io_ctx.buffer) - (2 * (sizeof(SOCKADDR_STORAGE) + 16)),
 		sizeof(SOCKADDR_STORAGE) + 16, sizeof(SOCKADDR_STORAGE) + 16,
 		&bytes_received,
 		&io_ctx.overlapped
