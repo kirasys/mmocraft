@@ -16,7 +16,7 @@ namespace net
 	{
 		None,
 		TCPv4,
-		UDPv4
+		UDPv4,
 	};
 
 	class Socket : public win::WinBaseObject<win::Socket>, util::NonCopyable
@@ -25,6 +25,7 @@ namespace net
 		// constructor
 		Socket() noexcept;
 		Socket(SocketType);
+		Socket(win::Socket);
 
 		// destructor
 		~Socket() = default;
@@ -58,7 +59,6 @@ namespace net
 		}
 
 	private:
-		SocketType m_type;
 		win::UniqueSocket m_handle;
 	};
 

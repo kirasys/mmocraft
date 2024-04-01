@@ -11,16 +11,19 @@
 using namespace error;
 
 net::Socket::Socket() noexcept
-	: m_type{ SocketType::None }, m_handle{ }
+	: m_handle{ }
 { }
 
 net::Socket::Socket(SocketType type)
-	: m_type { type }
-	, m_handle { create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
+	: m_handle { create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
 {
 	if (not is_valid())
 		throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
 }
+
+net::Socket::Socket(win::Socket sock)
+	: m_handle{ sock }
+{ }
 
 auto net::Socket::bind(std::string_view ip, int port) -> ErrorCode::Network {
 	sockaddr_in sock_addr;
@@ -62,7 +65,7 @@ auto net::Socket::accept(io::IoContext &io_ctx) -> ErrorCode::Network
 		}
 	}
 
-	accept_ctx.accepted_socket = create_windows_socket(m_type, WSA_FLAG_OVERLAPPED);
+	accept_ctx.accepted_socket = create_windows_socket(SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
 	if (accept_ctx.accepted_socket == INVALID_SOCKET)
 		throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
 
