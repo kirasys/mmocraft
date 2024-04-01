@@ -168,8 +168,11 @@ namespace win
 			if (object_id == INVALID_OBJECT_ID)
 				return false;
 
-			auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)]);
-			return pool ? pool->transition_to_free(storage_index(object_id)) : false;
+			if (auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)])) {
+				(pool->get_storage(storage_index(object_id))->~T()); // destruct
+				return pool->transition_to_free(storage_index(object_id));
+			}
+			return false;
 		}
 
 		static object_pointer find_object(ObjectID object_id)
