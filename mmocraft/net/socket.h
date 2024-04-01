@@ -49,6 +49,10 @@ namespace net
 
 		auto accept(io::IoContext&) -> error::ErrorCode::Network;
 
+		bool send(io::IoContext&);
+
+		bool recv(io::IoContext&);
+
 		int get_address_family() {
 			return AF_INET; // TODO: IPv6
 		}

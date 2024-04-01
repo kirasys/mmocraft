@@ -82,12 +82,46 @@ auto net::Socket::accept(io::IoContext &io_ctx) -> ErrorCode::Network
 	return ErrorCode::Network::SUCCESS;
 }
 
-/*
-auto net::Socket::accept_handler() -> Socket::ErrorCode
+bool net::Socket::send(io::IoContext& io_ctx)
 {
+	WSABUF buffer;
+	buffer.buf = io_ctx.details.send.buffer;
+	buffer.len = sizeof(io_ctx.details.send.buffer);
 
+	DWORD flags = 0;
+
+	int ret = ::WSASend(
+		m_handle,
+		&buffer, 1,
+		NULL,
+		flags,
+		&io_ctx.overlapped,
+		NULL
+	);
+
+	return ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError());
 }
-*/
+
+bool net::Socket::recv(io::IoContext& io_ctx)
+{
+	WSABUF buffer;
+	buffer.buf = io_ctx.details.recv.buffer;
+	buffer.len = sizeof(io_ctx.details.recv.buffer);
+
+	DWORD flags = 0;
+
+	int ret = ::WSARecv(
+		m_handle,
+		&buffer, 1,
+		NULL,
+		&flags,
+		&io_ctx.overlapped,
+		NULL
+	);
+
+	return ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError());
+}
+
 
 void net::Socket::close() noexcept {
 	m_handle.reset();
