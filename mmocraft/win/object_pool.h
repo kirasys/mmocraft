@@ -74,28 +74,28 @@ namespace win
 		using ObjectID = std::uint64_t;
 		static constexpr ObjectID INVALID_OBJECT_ID = 0;
 
-		class ScopedObjectID : util::NonCopyable {
+		class ScopedID : util::NonCopyable {
 		public:
-			ScopedObjectID() noexcept
+			ScopedID() noexcept
 				: m_id{ INVALID_OBJECT_ID }
 			{ }
 
-			ScopedObjectID(ObjectID id)
+			ScopedID(ObjectID id)
 				: m_id{ id }
 			{ }
 
-			~ScopedObjectID()
+			~ScopedID()
 			{
 				clear();
 			}
 
-			ScopedObjectID(ScopedObjectID&& other) noexcept
+			ScopedID(ScopedID&& other) noexcept
 			{
 				m_id = other.m_id;
 				other.m_id = INVALID_OBJECT_ID;
 			}
 
-			ScopedObjectID& operator=(ScopedObjectID&& other) noexcept
+			ScopedID& operator=(ScopedID&& other) noexcept
 			{
 				if (this != &other) {
 					clear();
@@ -156,11 +156,11 @@ namespace win
 
 
 		template <typename... Args>
-		ScopedObjectID new_object(Args&&... args)
+		ScopedID new_object(Args&&... args)
 		{
 			ObjectID object_id = new_object_unsafe(std::forward<Args>(args)...);
 			return object_id != INVALID_OBJECT_ID ? 
-				ScopedObjectID(object_id) : ScopedObjectID();
+				ScopedID(object_id) : ScopedID();
 		}
 
 		static bool free_object(ObjectID object_id)
