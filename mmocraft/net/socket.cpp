@@ -106,7 +106,7 @@ bool net::Socket::send(io::IoContext& io_ctx)
 		NULL
 	);
 
-	if (ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError()))
+	if (ret == SOCKET_ERROR && (ERROR_IO_PENDING != ::WSAGetLastError()))
 		throw NetworkException(ErrorCode::SOCKET_SEND);
 
 	return true;
@@ -129,7 +129,7 @@ bool net::Socket::recv(io::IoContext& io_ctx)
 		NULL
 	);
 
-	if (ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError()))
+	if (ret == SOCKET_ERROR && (ERROR_IO_PENDING != ::WSAGetLastError()))
 		throw NetworkException(ErrorCode::SOCKET_RECV);
 
 	return true;
