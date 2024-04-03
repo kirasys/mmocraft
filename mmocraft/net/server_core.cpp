@@ -16,7 +16,7 @@ namespace net
 
 		auto &server = *static_cast<net::ServerCore*>(event_owner);
 
-		util::defer accept_again = [&server] {
+		util::defer accept_next_client = [&server] {
 			if (not server.try_accept()) { 
 				// TODO: accept retry
 				logging::cerr() << "fail to accept again";
