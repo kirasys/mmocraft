@@ -7,26 +7,24 @@
 
 namespace error
 {
-	static std::string_view to_string(Exception::Network code)
+	static std::string_view to_string(ErrorCode code)
 	{
-		static std::map< Exception::Network, const char*> error_code_map = {
-			{ Exception::Network::SUCCESS, "SUCCESS"},
-
+		static std::map<decltype(code), const char*> error_code_map = {
 			// Socket
-			{ Exception::Network::SOCKET_CREATE, "SOCKET_CREATE"},
-			{ Exception::Network::SOCKET_BIND, "SOCKET_BIND"},
-			{ Exception::Network::SOCKET_LISTEN, "SOCKET_LISTEN"},
-			{ Exception::Network::SOCKET_ACCEPTEX_LOAD, "SOCKET_ACCEPTEX_LOAD"},
-			{ Exception::Network::SOCKET_ACCEPTEX, "SOCKET_ACCEPTEX"},
-			{ Exception::Network::SOCKET_SEND, "SOCKET_SEND"},
-			{ Exception::Network::SOCKET_RECV, "SOCKET_RECV"},
+			{ ErrorCode::SOCKET_CREATE, "SOCKET_CREATE"},
+			{ ErrorCode::SOCKET_BIND, "SOCKET_BIND"},
+			{ ErrorCode::SOCKET_LISTEN, "SOCKET_LISTEN"},
+			{ ErrorCode::SOCKET_ACCEPTEX_LOAD, "SOCKET_ACCEPTEX_LOAD"},
+			{ ErrorCode::SOCKET_ACCEPTEX, "SOCKET_ACCEPTEX"},
+			{ ErrorCode::SOCKET_SEND, "SOCKET_SEND"},
+			{ ErrorCode::SOCKET_RECV, "SOCKET_RECV"},
 
 		};
 		return error_code_map[code];
 	}
 
-	std::ostream& operator<<(std::ostream& os, Exception::Network ex)
+	std::ostream& operator<<(std::ostream& os, ErrorCode code)
 	{
-		return os << to_string(ex) << '(' << ::WSAGetLastError() << ')';
+		return os << to_string(code);
 	}
 }
