@@ -13,7 +13,7 @@ namespace net
 		: m_client_socket{ std::move(sock) }
 		, m_main_server{ main_server }
 		, m_send_context_id{ io_context_pool.new_object(ServerCoreHandler::handle_send) }
-		, m_recv_context_id{ io_context_pool.new_object(ServerCoreHandler::handle_send) }
+		, m_recv_context_id{ io_context_pool.new_object(ServerCoreHandler::handle_recv) }
 		, m_send_context{ IoContextPool::find_object(m_send_context_id) }
 		, m_recv_context{ IoContextPool::find_object(m_recv_context_id) }
 	{

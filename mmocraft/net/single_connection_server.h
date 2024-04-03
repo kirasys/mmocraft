@@ -39,9 +39,10 @@ namespace net
 
 		ServerCore &m_main_server;
 
-		io::IoContext* const m_send_context;
-		io::IoContext* const m_recv_context;
 		IoContextPool::ScopedID m_send_context_id;
 		IoContextPool::ScopedID m_recv_context_id;
+
+		io::IoContext* const m_send_context;
+		io::IoContext* const m_recv_context;
 	};
 }
