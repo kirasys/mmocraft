@@ -78,8 +78,7 @@ namespace net
 								m_io_context_pool.new_object_unsafe(ServerCoreHandler::handle_accept)) }
 		, m_single_connection_server_pool{ max_client_connections }
 	{	
-		if (not m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this))
-			return;
+		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this);
 
 		m_listen_sock.bind(ip, port);
 		m_listen_sock.listen();

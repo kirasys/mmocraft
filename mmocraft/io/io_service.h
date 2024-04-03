@@ -18,9 +18,9 @@ namespace io
 	class IoService
 	{
 	public:
-		virtual bool register_event_source(win::Handle event_source, void* event_owner = nullptr) = 0;
+		virtual void register_event_source(win::Handle event_source, void* event_owner = nullptr) = 0;
 
-		virtual bool register_event_source(win::Socket event_source, void* event_owner = nullptr) = 0;
+		virtual void register_event_source(win::Socket event_source, void* event_owner = nullptr) = 0;
 
 		virtual void run_event_loop_forever(DWORD get_event_timeout_ms) = 0;
 
@@ -46,9 +46,9 @@ namespace io
 		IoCompletionPort(IoCompletionPort&& iocp) = default;
 		IoCompletionPort& operator=(IoCompletionPort&& iocp) = default;
 
-		bool register_event_source(win::Handle event_source, void* event_owner = nullptr);
+		void register_event_source(win::Handle event_source, void* event_owner = nullptr);
 
-		bool register_event_source(win::Socket event_source, void* event_owner = nullptr);
+		void register_event_source(win::Socket event_source, void* event_owner = nullptr);
 
 		void run_event_loop_forever(DWORD get_event_timeout_ms = INFINITE);
 

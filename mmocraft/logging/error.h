@@ -17,6 +17,9 @@ namespace error
 		SOCKET_ACCEPTEX,
 		SOCKET_SEND,
 		SOCKET_RECV,
+
+		// IO Service
+		IO_SERVICE_CREATE_COMPLETION_PORT
 	};
 
 	struct Exception
@@ -27,6 +30,13 @@ namespace error
 	struct NetworkException : Exception
 	{
 		NetworkException(ErrorCode code) noexcept
+			: Exception{ code }
+		{ }
+	};
+
+	struct IoException : Exception
+	{
+		IoException(ErrorCode code) noexcept
 			: Exception{ code }
 		{ }
 	};

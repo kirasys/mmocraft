@@ -19,6 +19,8 @@ namespace error
 			{ ErrorCode::SOCKET_SEND, "SOCKET_SEND"},
 			{ ErrorCode::SOCKET_RECV, "SOCKET_RECV"},
 
+			// IO Service
+			{ ErrorCode::IO_SERVICE_CREATE_COMPLETION_PORT, "IO_SERVICE_CREATE_COMPLETION_PORT"},
 		};
 		return error_code_map[code];
 	}

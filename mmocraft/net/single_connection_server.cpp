@@ -18,9 +18,8 @@ namespace net
 		, m_recv_context{ IoContextPool::find_object(m_recv_context_id) }
 	{
 		// allow to service client socket events.
-		if (not io_service.register_event_source(m_client_socket.get_handle(),
-											/*.event_owner = */ reinterpret_cast<void*>(this)))
-			return;
+		io_service.register_event_source(m_client_socket.get_handle(),
+									/*.event_owner = */ reinterpret_cast<void*>(this));
 
 		// init first recv.
 		this->request_recv_client();
