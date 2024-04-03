@@ -7,7 +7,7 @@
 
 namespace error
 {
-	std::string_view to_string(Exception::Network code)
+	static std::string_view to_string(Exception::Network code)
 	{
 		static std::map< Exception::Network, const char*> error_code_map = {
 			{ Exception::Network::SUCCESS, "SUCCESS"},
