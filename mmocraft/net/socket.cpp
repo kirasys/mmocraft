@@ -18,7 +18,7 @@ net::Socket::Socket(SocketType type)
 	: m_handle { create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
 {
 	if (not is_valid())
-		throw Exception::Network::SOCKET_CREATE;
+		throw NetworkException(ErrorCode::SOCKET_CREATE);
 }
 
 net::Socket::Socket(win::Socket sock)
@@ -36,14 +36,14 @@ bool net::Socket::bind(std::string_view ip, int port){
 	::inet_pton(get_address_family(), ip.data(), &sock_addr.sin_addr);
 
 	if (::bind(m_handle, reinterpret_cast<SOCKADDR*>(&sock_addr), sizeof(sock_addr)) == SOCKET_ERROR)
-		throw Exception::Network::SOCKET_BIND;
+		throw NetworkException(ErrorCode::SOCKET_BIND);
 
 	return true;
 }
 
 bool net::Socket::listen(int backlog) {
 	if (::listen(m_handle, backlog) == SOCKET_ERROR)
-		throw Exception::Network::SOCKET_LISTEN;
+		throw NetworkException(ErrorCode::SOCKET_LISTEN);
 
 	return true;
 }
@@ -65,13 +65,13 @@ bool net::Socket::accept(io::IoContext &io_ctx)
 			sizeof(accept_ctx.fnAcceptEx),
 			&bytes, NULL, NULL) == SOCKET_ERROR)
 		{
-			throw Exception::Network::SOCKET_ACCEPTEX_LOAD;
+			throw NetworkException(ErrorCode::SOCKET_ACCEPTEX_LOAD);
 		}
 	}
 
 	accept_ctx.accepted_socket = create_windows_socket(SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
 	if (accept_ctx.accepted_socket == INVALID_SOCKET)
-		throw Exception::Network::SOCKET_CREATE;
+		throw NetworkException(ErrorCode::SOCKET_CREATE);
 
 	DWORD bytes_received;
 	BOOL success = accept_ctx.fnAcceptEx(
@@ -84,7 +84,7 @@ bool net::Socket::accept(io::IoContext &io_ctx)
 	);
 
 	if (not success && (ERROR_IO_PENDING != ::WSAGetLastError()))
-		throw Exception::Network::SOCKET_ACCEPTEX;
+		throw NetworkException(ErrorCode::SOCKET_ACCEPTEX);
 	
 	return true;
 }
@@ -107,7 +107,7 @@ bool net::Socket::send(io::IoContext& io_ctx)
 	);
 
 	if (ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError()))
-		throw Exception::Network::SOCKET_SEND;
+		throw NetworkException(ErrorCode::SOCKET_SEND);
 
 	return true;
 }
@@ -130,7 +130,7 @@ bool net::Socket::recv(io::IoContext& io_ctx)
 	);
 
 	if (ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError()))
-		throw Exception::Network::SOCKET_SEND;
+		throw NetworkException(ErrorCode::SOCKET_RECV);
 
 	return true;
 }
