@@ -32,6 +32,7 @@ namespace error
 	{
 	public:
 		NetworkException(ErrorCode::Network code,
+			int os_error_code = ::WSAGetLastError(),
 			std::string_view summary = "",
 			const std::source_location& location = std::source_location::current());
 

@@ -21,6 +21,7 @@ namespace error
 	}
 
 	NetworkException::NetworkException(ErrorCode::Network code,
+		int os_error_code,
 		std::string_view summary,
 		const std::source_location& location)
 	{
@@ -29,7 +30,9 @@ namespace error
 			<< location.column() << ") :";
 
 		m_message << "Network Exception(" << to_string(code) << ") occcured";
+		if (os_error_code)
+			m_message << "\nos error code:" << os_error_code;
 		if (summary.size())
-			m_message << "- " << summary;
+			m_message << "\nsummary:" << summary;
 	}
 }
