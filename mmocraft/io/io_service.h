@@ -4,6 +4,7 @@
 #include <thread>
 #include <memory>
 
+#include "io/io_context.h"
 #include "logging/error.h"
 #include "win/win_type.h"
 #include "win/win_base_object.h"
