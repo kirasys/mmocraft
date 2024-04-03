@@ -104,6 +104,11 @@ namespace win
 				}
 			}
 
+			void release() noexcept
+			{
+				m_id = INVALID_OBJECT_ID;
+			}
+
 			void clear()
 			{
 				ObjectPool::free_object(m_id);
