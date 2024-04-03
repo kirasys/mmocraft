@@ -15,8 +15,16 @@ namespace net
 		}
 
 		auto &server = *static_cast<net::ServerCore*>(event_owner);
+
+		util::defer accept_again = [&server] {
+			if (not server.try_accept()) { 
+				// TODO: accept retry
+				logging::cerr() << "fail to accept again";
+			}
+		};
+
 		auto &io_ctx = *io_ctx_ptr;
-		auto client_socket = io_ctx.details.accept.accepted_socket;
+		auto client_socket = win::UniqueSocket(io_ctx.details.accept.accepted_socket);
 
 		// inherit the properties of the listen socket.
 		win::Socket listen_sock = server.get_listen_socket();
@@ -28,28 +36,9 @@ namespace net
 		}
 
 		// add a client to the server.
-		auto connection_server_id = server.new_connection(client_socket);
-		if (not connection_server_id) {
+		if (not server.new_connection(std::move(client_socket))) {
 			logging::cerr() << "fail to create a server for single client";
 			return;
-		}
-
-		try {
-			auto connection_server = ConnectionServerPool::find_object(connection_server_id);
-			connection_server->request_recv_client();
-
-			server.accept();
-		}
-		catch (error::Exception::Network ex) {
-			logging::cerr() << ex;
-			switch (ex) {
-			case error::Exception::Network::RECV:
-				server.delete_connection(connection_server_id);
-				break;
-			case error::Exception::Network::ACCEPTEX_FAIL:
-				// TODO: retry accept.
-				break;
-			}
 		}
 	}
 
@@ -97,35 +86,28 @@ namespace net
 		std::cout << "Listening to " << ip << ':' << port << "...\n";
 	}
 
-	auto ServerCore::new_connection(win::Socket client_sock) -> ConnectionServerID
+	bool ServerCore::new_connection(win::UniqueSocket &&client_sock)
 	{
-		// create io contexts(overlapped structures) for send/recv.
-		auto client_send_context_id = m_io_context_pool.new_object(ServerCoreHandler::handle_send);
-		auto client_recv_context_id = m_io_context_pool.new_object(ServerCoreHandler::handle_recv);
-		if (not client_send_context_id.is_valid() || not client_recv_context_id.is_valid())
-			return { 0 };
-
-		// create a user (server manages life cycle of the client session)
-		auto connection_server_id = m_single_connection_server_pool.new_object_unsafe(
-			client_sock,
-			/* server = */ *this,
-			std::move(client_send_context_id),
-			std::move(client_recv_context_id)
+		// create a server for single server.
+		auto connection_server_id = m_single_connection_server_pool.new_object(
+			std::move(client_sock),
+			/* main_server = */ *this,
+			m_io_service,
+			m_io_context_pool
 		);
 
-		if (not connection_server_id)
-			return { 0 };
+		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
+		if (not connection_server || not connection_server->is_valid())
+			return false;
 
-		// allow to service client socket events.
-		if (not m_io_service.register_event_source(client_sock, 
-										/*.event_owner = */ reinterpret_cast<void*>(connection_server_id)))
-			return { 0 };
+		connection_server_id.release();
 
-		return connection_server_id;
+		return true;
 	}
 
 	bool ServerCore::delete_connection(ConnectionServerID connection_server_id)
 	{
+		// TODO: this is not a thread-safe!
 		return ConnectionServerPool::free_object(connection_server_id);
 	}
 
@@ -138,6 +120,17 @@ namespace net
 		m_accept_context.overlapped.hEvent = NULL;
 
 		m_listen_sock.accept(m_accept_context);
+	}
+
+	bool ServerCore::try_accept()
+	{
+		try {
+			this->accept();
+			return true;
+		}
+		catch (...) {
+			return false;
+		}
 	}
 
 	void ServerCore::serve_forever()

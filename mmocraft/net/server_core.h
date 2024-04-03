@@ -16,6 +16,7 @@ namespace
 	using IoContextPool = win::ObjectPool<io::IoContext>;
 	using ConnectionServerPool = win::ObjectPool<net::SingleConnectionServer>;
 	using ConnectionServerID = ConnectionServerPool::ObjectID;
+	using ConnectionServerScopedID = ConnectionServerPool::ScopedID;
 }
 
 namespace net
@@ -42,7 +43,9 @@ namespace net
 
 		void accept();
 
-		ConnectionServerID new_connection(win::Socket);
+		bool try_accept();
+
+		bool new_connection(win::UniqueSocket &&client_sock);
 
 		bool delete_connection(ConnectionServerID);
 
