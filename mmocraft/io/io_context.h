@@ -19,30 +19,34 @@ namespace io
 
 	constexpr int SEND_BUF_SIZE = 4096;
 	constexpr int RECV_BUF_SIZE = 4096;
-	using SendBuffer = uint8_t[SEND_BUF_SIZE];
-	using RecvBuffer = uint8_t[RECV_BUF_SIZE];
 
 	struct IoContext
 	{
 		using handler_type = void (*)(void*, io::IoContext*, DWORD, DWORD);
 
 		WSAOVERLAPPED overlapped;
-
 		handler_type handler = nullptr;
 
-		union
+		IoContext(handler_type handler_)
+			: handler(handler_)
+		{ }
+
+		union Details
 		{
 			struct AcceptContext {
 				LPFN_ACCEPTEX fnAcceptEx;
 				win::Socket accepted_socket;
+				char buffer[1024];
 			} accept;
 
 			struct SendContext {
-				std::uint64_t client_session_id;
-			} send, recv;
+				char buffer[SEND_BUF_SIZE];
+			} send;
+
+			struct RecvContext {
+				char buffer[RECV_BUF_SIZE];
+			} recv;
 
 		} details;
-
-		uint8_t buffer[4096];
 	};
 }
