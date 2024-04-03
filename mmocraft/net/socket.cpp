@@ -18,33 +18,33 @@ net::Socket::Socket(SocketType type)
 	: m_handle { create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
 {
 	if (not is_valid())
-		throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
+		throw Exception::Network::CREATE_SOCKET;
 }
 
 net::Socket::Socket(win::Socket sock)
 	: m_handle{ sock }
 { }
 
-auto net::Socket::bind(std::string_view ip, int port) -> ErrorCode::Network {
+bool net::Socket::bind(std::string_view ip, int port){
 	sockaddr_in sock_addr;
 	sock_addr.sin_family = get_address_family();
 	sock_addr.sin_port = ::htons(port);
 	::inet_pton(get_address_family(), ip.data(), &sock_addr.sin_addr);
 
 	if (::bind(m_handle, reinterpret_cast<SOCKADDR*>(&sock_addr), sizeof(sock_addr)) == SOCKET_ERROR)
-		throw NetworkException(ErrorCode::Network::BIND_ERROR);
+		throw Exception::Network::BIND;
 
-	return ErrorCode::Network::SUCCESS;
+	return true;
 }
 
-auto net::Socket::listen(int backlog) -> ErrorCode::Network {
+bool net::Socket::listen(int backlog) {
 	if (::listen(m_handle, backlog) == SOCKET_ERROR)
-		throw NetworkException(ErrorCode::Network::LISTEN_ERROR);
+		throw Exception::Network::LISTEN;
 
-	return ErrorCode::Network::SUCCESS;
+	return true;
 }
 
-auto net::Socket::accept(io::IoContext &io_ctx) -> ErrorCode::Network
+bool net::Socket::accept(io::IoContext &io_ctx)
 {
 	auto& accept_ctx = io_ctx.details.accept;
 
@@ -61,13 +61,13 @@ auto net::Socket::accept(io::IoContext &io_ctx) -> ErrorCode::Network
 			sizeof(accept_ctx.fnAcceptEx),
 			&bytes, NULL, NULL) == SOCKET_ERROR)
 		{
-			throw NetworkException(ErrorCode::Network::ACCEPTEX_LOAD_ERROR);
+			throw Exception::Network::ACCEPTEX_LOAD;
 		}
 	}
 
 	accept_ctx.accepted_socket = create_windows_socket(SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
 	if (accept_ctx.accepted_socket == INVALID_SOCKET)
-		throw NetworkException(ErrorCode::Network::CREATE_SOCKET_ERROR);
+		throw Exception::Network::CREATE_SOCKET;
 
 	DWORD bytes_received;
 	BOOL success = accept_ctx.fnAcceptEx(
@@ -80,9 +80,9 @@ auto net::Socket::accept(io::IoContext &io_ctx) -> ErrorCode::Network
 	);
 
 	if (not success && (ERROR_IO_PENDING != ::WSAGetLastError()))
-		throw NetworkException(ErrorCode::Network::ACCEPTEX_FAIL_ERROR);
+		throw Exception::Network::ACCEPTEX_FAIL;
 	
-	return ErrorCode::Network::SUCCESS;
+	return true;
 }
 
 bool net::Socket::send(io::IoContext& io_ctx)
@@ -102,7 +102,10 @@ bool net::Socket::send(io::IoContext& io_ctx)
 		NULL
 	);
 
-	return ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError());
+	if (ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError()))
+		throw Exception::Network::SEND;
+
+	return true;
 }
 
 bool net::Socket::recv(io::IoContext& io_ctx)
@@ -122,7 +125,10 @@ bool net::Socket::recv(io::IoContext& io_ctx)
 		NULL
 	);
 
-	return ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError());
+	if (ret != SOCKET_ERROR || (ERROR_IO_PENDING == WSAGetLastError()))
+		throw Exception::Network::SEND;
+
+	return true;
 }
 
 

@@ -19,7 +19,7 @@ namespace net
 	public:
 		SingleConnectionServer(win::Socket, ServerCore&, IoContextPool::ScopedID&&, IoContextPool::ScopedID&&);
 
-		bool request_recv_client();
+		void request_recv_client();
 		
 		//void send_to_client();
 

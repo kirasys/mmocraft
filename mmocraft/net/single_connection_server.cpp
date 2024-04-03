@@ -19,8 +19,8 @@ namespace net
 
 	}
 
-	bool SingleConnectionServer::request_recv_client()
+	void SingleConnectionServer::request_recv_client()
 	{
-		return m_client_socket.recv(m_recv_context);
+		m_client_socket.recv(m_recv_context);
 	}
 }

@@ -44,11 +44,11 @@ namespace net
 
 		void close() noexcept;
 
-		auto bind(std::string_view, int) -> error::ErrorCode::Network;
+		bool bind(std::string_view, int);
 
-		auto listen(int backlog = SOMAXCONN) -> error::ErrorCode::Network;
+		bool listen(int backlog = SOMAXCONN);
 
-		auto accept(io::IoContext&) -> error::ErrorCode::Network;
+		bool accept(io::IoContext&);
 
 		bool send(io::IoContext&);
 

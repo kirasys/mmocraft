@@ -42,8 +42,6 @@ namespace net
 
 		void accept();
 
-		void try_accept();
-
 		ConnectionServerID new_connection(win::Socket);
 
 		bool delete_connection(ConnectionServerID);

@@ -8,18 +8,13 @@ namespace net
 	void ServerCoreHandler::handle_accept(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
 	{
 		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_accept)>, "Incorrect handler signature");
-		
-		auto &server = *static_cast<net::ServerCore*>(event_owner);
-
-		util::defer accept_again = [&server] {
-			server.try_accept();
-		};
 
 		if (error_code != ERROR_SUCCESS) {
 			logging::cerr() << "handle_accept() failed with " << error_code;
 			return;
 		}
 
+		auto &server = *static_cast<net::ServerCore*>(event_owner);
 		auto &io_ctx = *io_ctx_ptr;
 		auto client_socket = io_ctx.details.accept.accepted_socket;
 
@@ -33,16 +28,28 @@ namespace net
 		}
 
 		// add a client to the server.
-		auto client_id = server.new_connection(client_socket);
-		if (not client_id) {
-			logging::cerr() << "fail to create a client";
+		auto connection_server_id = server.new_connection(client_socket);
+		if (not connection_server_id) {
+			logging::cerr() << "fail to create a server for single client";
 			return;
 		}
 
-		auto connection_server = ConnectionServerPool::find_object(client_id);
-		if (connection_server->request_recv_client()) {
-			logging::cerr() << "fail to client first recv()";
-			return;
+		try {
+			auto connection_server = ConnectionServerPool::find_object(connection_server_id);
+			connection_server->request_recv_client();
+
+			server.accept();
+		}
+		catch (error::Exception::Network ex) {
+			logging::cerr() << ex;
+			switch (ex) {
+			case error::Exception::Network::RECV:
+				server.delete_connection(connection_server_id);
+				break;
+			case error::Exception::Network::ACCEPTEX_FAIL:
+				// TODO: retry accept.
+				break;
+			}
 		}
 	}
 
@@ -61,10 +68,7 @@ namespace net
 		std::cout << io_ctx_ptr->details.recv.buffer << '\n';
 
 		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
-		if (connection_server->request_recv_client()) {
-			logging::cerr() << "fail to receive data from the client";
-			return;
-		}
+		connection_server->request_recv_client();
 	}
 }
 
@@ -134,16 +138,6 @@ namespace net
 		m_accept_context.overlapped.hEvent = NULL;
 
 		m_listen_sock.accept(m_accept_context);
-	}
-
-	void ServerCore::try_accept()
-	{
-		try {
-			this->accept();
-		}
-		catch (const error::NetworkException& code) {
-			std::cerr << code.what() << std::endl;
-		}
 	}
 
 	void ServerCore::serve_forever()
