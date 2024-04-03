@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "socket.h"
-#include "client_session.h"
+#include "single_connection_server.h"
 #include "io/io_context.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
@@ -13,17 +13,22 @@
 
 namespace
 {
-	class ServerCoreHandler
-	{
-	public:
-		ServerCoreHandler() = delete;
-
-		static void handle_accept(void *owner, io::IoContext *io_ctx, DWORD num_of_transferred_bytes, DWORD error_code);
-	};
+	using IoContextPool = win::ObjectPool<io::IoContext>;
+	using ConnectionServerPool = win::ObjectPool<net::SingleConnectionServer>;
+	using ConnectionServerID = ConnectionServerPool::ObjectID;
 }
 
 namespace net
 {
+	class ServerCoreHandler
+	{
+	public:
+		ServerCoreHandler() = delete;
+		static void handle_accept(void* event_owner, io::IoContext* io_ctx, DWORD num_of_transferred_bytes, DWORD error_code);
+		static void handle_send(void* event_owner, io::IoContext* io_ctx, DWORD num_of_transferred_bytes, DWORD error_code);
+		static void handle_recv(void* event_owner, io::IoContext* io_ctx, DWORD num_of_transferred_bytes, DWORD error_code);
+	};
+
 	class ServerCore : util::NonCopyable, util::NonMovable
 	{
 	public:
@@ -33,11 +38,17 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		bool create_client_session(win::Socket);
-		
+		void serve_forever();
+
+		void accept();
+
 		void try_accept();
 
-		void serve_forever();
+		ConnectionServerID new_connection(win::Socket);
+
+		bool delete_connection(ConnectionServerID);
+
+		virtual void handle_packet(std::uint8_t buffer) = 0;
 
 		win::Socket get_listen_socket() {
 			return m_listen_sock.get_handle();
@@ -56,10 +67,9 @@ namespace net
 
 		io::IoCompletionPort m_io_service;
 
-		win::ObjectPool<io::IoContext> m_io_context_pool;
-		win::ObjectPool<io::IoContext>::ObjectKey m_accept_ctx_key;
-		io::IoContext& m_accept_ctx;
+		IoContextPool m_io_context_pool;
+		io::IoContext& m_accept_context;
 
-		win::ObjectPool<net::ClientSession> m_client_session_pool;
+		ConnectionServerPool m_single_connection_server_pool;
 	};
 }

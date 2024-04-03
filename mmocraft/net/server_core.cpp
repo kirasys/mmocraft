@@ -3,16 +3,16 @@
 
 #include "logging/error.h"
 
-namespace
+namespace net
 {
-	void ServerCoreHandler::handle_accept(void *event_owner, io::IoContext *io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
+	void ServerCoreHandler::handle_accept(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
 	{
 		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_accept)>, "Incorrect handler signature");
 		
-		auto& core_server = *static_cast<net::ServerCore*>(event_owner);
+		auto &server = *static_cast<net::ServerCore*>(event_owner);
 
-		util::defer accept_again = [&core_server] {
-			core_server.try_accept();
+		util::defer accept_again = [&server] {
+			server.try_accept();
 		};
 
 		if (error_code != ERROR_SUCCESS) {
@@ -20,24 +20,51 @@ namespace
 			return;
 		}
 
-		auto& io_ctx = *io_ctx_ptr;
+		auto &io_ctx = *io_ctx_ptr;
+		auto client_socket = io_ctx.details.accept.accepted_socket;
 
 		// inherit the properties of the listen socket.
-		win::Socket listen_sock = core_server.get_listen_socket();
-		if (SOCKET_ERROR == ::setsockopt(io_ctx.details.accept.accepted_socket,
+		win::Socket listen_sock = server.get_listen_socket();
+		if (SOCKET_ERROR == ::setsockopt(client_socket,
 						SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 						reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
 			logging::cerr() << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
 			return;
 		}
 
-		// create client session.
-		if (not core_server.create_client_session(io_ctx.details.accept.accepted_socket)) {
-			logging::cerr() << "fail to create_client_session";
+		// add a client to the server.
+		auto client_id = server.new_connection(client_socket);
+		if (not client_id) {
+			logging::cerr() << "fail to create a client";
 			return;
 		}
 
+		auto connection_server = ConnectionServerPool::find_object(client_id);
+		if (connection_server->request_recv_client()) {
+			logging::cerr() << "fail to client first recv()";
+			return;
+		}
+	}
+
+	void ServerCoreHandler::handle_send(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
+	{
+		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_send)>, "Incorrect handler signature");
 		
+
+	}
+
+	void ServerCoreHandler::handle_recv(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
+	{
+		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_recv)>, "Incorrect handler signature");
+		
+		auto connection_server_id = reinterpret_cast<ConnectionServerID>(event_owner);
+		std::cout << io_ctx_ptr->details.recv.buffer << '\n';
+
+		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
+		if (connection_server->request_recv_client()) {
+			logging::cerr() << "fail to receive data from the client";
+			return;
+		}
 	}
 }
 
@@ -54,52 +81,74 @@ namespace net
 		, m_listen_sock{ net::SocketType::TCPv4 }
 		, m_io_service{ concurrency_hint }
 		, m_io_context_pool{ 2 * max_client_connections }
-		, m_accept_ctx_key{ m_io_context_pool.new_object_safe() }
-		, m_accept_ctx{ m_accept_ctx_key.get_object() }
-		, m_client_session_pool{ max_client_connections }
+		, m_accept_context{ *IoContextPool::find_object(
+								m_io_context_pool.new_object_unsafe(ServerCoreHandler::handle_accept)) }
+		, m_single_connection_server_pool{ max_client_connections }
 	{	
 		if (not m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this))
 			return;
 
 		m_listen_sock.bind(ip, port);
 		m_listen_sock.listen();
-
-		m_accept_ctx.handler = ServerCoreHandler::handle_accept;
+		std::cout << "Listening to " << ip << ':' << port << "...\n";
 	}
 
-	bool ServerCore::create_client_session(win::Socket client_sock)
+	auto ServerCore::new_connection(win::Socket client_sock) -> ConnectionServerID
 	{
-		auto client_session_key = m_client_session_pool.new_object_safe(
+		// create io contexts(overlapped structures) for send/recv.
+		auto client_send_context_id = m_io_context_pool.new_object(ServerCoreHandler::handle_send);
+		auto client_recv_context_id = m_io_context_pool.new_object(ServerCoreHandler::handle_recv);
+		if (not client_send_context_id.is_valid() || not client_recv_context_id.is_valid())
+			return { 0 };
+
+		// create a user (server manages life cycle of the client session)
+		auto connection_server_id = m_single_connection_server_pool.new_object_unsafe(
 			client_sock,
-			m_io_context_pool.new_object_safe(),
-			m_io_context_pool.new_object_safe()
+			/* server = */ *this,
+			std::move(client_send_context_id),
+			std::move(client_recv_context_id)
 		);
 
-		if (not client_session_key.is_valid())
-			return false;
+		if (not connection_server_id)
+			return { 0 };
 
-		if (not m_io_service.register_event_source(client_sock,
-													/*.event_owner = */ &client_session_key.get_object())) {
-			return false;
-		}
+		// allow to service client socket events.
+		if (not m_io_service.register_event_source(client_sock, 
+										/*.event_owner = */ reinterpret_cast<void*>(connection_server_id)))
+			return { 0 };
 
-		return true;
+		return connection_server_id;
+	}
+
+	bool ServerCore::delete_connection(ConnectionServerID connection_server_id)
+	{
+		return ConnectionServerPool::free_object(connection_server_id);
+	}
+
+	void ServerCore::accept()
+	{
+		m_accept_context.overlapped.Internal = 0;
+		m_accept_context.overlapped.InternalHigh = 0;
+		m_accept_context.overlapped.Offset = 0;
+		m_accept_context.overlapped.OffsetHigh = 0;
+		m_accept_context.overlapped.hEvent = NULL;
+
+		m_listen_sock.accept(m_accept_context);
 	}
 
 	void ServerCore::try_accept()
-	{	
-		m_accept_ctx.overlapped.Internal = 0;
-		m_accept_ctx.overlapped.InternalHigh = 0;
-		m_accept_ctx.overlapped.Offset = 0;
-		m_accept_ctx.overlapped.OffsetHigh = 0;
-		m_accept_ctx.overlapped.hEvent = NULL;
-		
-		m_listen_sock.accept(m_accept_ctx);
+	{
+		try {
+			this->accept();
+		}
+		catch (const error::NetworkException& code) {
+			std::cerr << code.what() << std::endl;
+		}
 	}
 
 	void ServerCore::serve_forever()
 	{
-		this->try_accept();
+		this->accept();
 
 		for (unsigned i = 0; i < m_server_info.num_of_event_threads; i++)
 			m_io_service.spawn_event_loop_thread().detach();
