@@ -25,6 +25,10 @@ net::Socket::Socket(win::Socket sock)
 	: m_handle{ sock }
 { }
 
+net::Socket::Socket(win::UniqueSocket&& sock)
+	: m_handle{ std::move(sock) }
+{ }
+
 bool net::Socket::bind(std::string_view ip, int port){
 	sockaddr_in sock_addr;
 	sock_addr.sin_family = get_address_family();

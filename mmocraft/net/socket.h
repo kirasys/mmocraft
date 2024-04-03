@@ -26,6 +26,7 @@ namespace net
 		Socket() noexcept;
 		Socket(SocketType);
 		Socket(win::Socket);
+		Socket(win::UniqueSocket&&);
 
 		// destructor
 		~Socket() = default;
