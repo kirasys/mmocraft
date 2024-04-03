@@ -11,13 +11,16 @@ namespace error
 	{
 		static std::map< Exception::Network, const char*> error_code_map = {
 			{ Exception::Network::SUCCESS, "SUCCESS"},
-			{ Exception::Network::CREATE_SOCKET, "CREATE_SOCKET_ERROR"},
-			{ Exception::Network::BIND, "BIND_ERROR"},
-			{ Exception::Network::LISTEN, "LISTEN_ERROR"},
-			{ Exception::Network::ACCEPTEX_LOAD, "ACCEPTEX_LOAD_ERROR"},
-			{ Exception::Network::ACCEPTEX_FAIL, "ACCEPTEX_FAIL_ERROR"},
-			{ Exception::Network::SEND, "SEND_ERROR"},
-			{ Exception::Network::RECV, "RECV_ERROR"},
+
+			// Socket
+			{ Exception::Network::SOCKET_CREATE, "SOCKET_CREATE"},
+			{ Exception::Network::SOCKET_BIND, "SOCKET_BIND"},
+			{ Exception::Network::SOCKET_LISTEN, "SOCKET_LISTEN"},
+			{ Exception::Network::SOCKET_ACCEPTEX_LOAD, "SOCKET_ACCEPTEX_LOAD"},
+			{ Exception::Network::SOCKET_ACCEPTEX, "SOCKET_ACCEPTEX"},
+			{ Exception::Network::SOCKET_SEND, "SOCKET_SEND"},
+			{ Exception::Network::SOCKET_RECV, "SOCKET_RECV"},
+
 		};
 		return error_code_map[code];
 	}

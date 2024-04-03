@@ -12,13 +12,15 @@ namespace error
 		enum Network
 		{
 			SUCCESS = 0,			// success must be 0
-			CREATE_SOCKET,
-			BIND,
-			LISTEN,
-			ACCEPTEX_LOAD,
-			ACCEPTEX_FAIL,
-			SEND,
-			RECV,
+			
+			// Socket
+			SOCKET_CREATE,
+			SOCKET_BIND,
+			SOCKET_LISTEN,
+			SOCKET_ACCEPTEX_LOAD,
+			SOCKET_ACCEPTEX,
+			SOCKET_SEND,
+			SOCKET_RECV,
 		};
 	};
 
