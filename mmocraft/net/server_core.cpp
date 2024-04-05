@@ -62,8 +62,12 @@ namespace net
 		, m_accept_context{ *IoContextPool::find_object(
 								m_io_context_pool.new_object_unsafe(ServerHandler::handle_accept)) }
 		, m_single_connection_server_pool{ max_client_connections }
+		, m_interval_task_scheduler{ this }
 	{	
 		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this);
+
+		// schedule interval tasks.
+		m_interval_task_scheduler.schedule(&ServerCore::check_connection_expiration, util::Second(10));
 	}
 
 	bool ServerCore::new_connection(win::UniqueSocket &&client_sock)
@@ -80,15 +84,28 @@ namespace net
 		if (not connection_server || not connection_server->is_valid())
 			return false;
 
-		m_online_connection_server_list.emplace_back(std::move(connection_server_id));
+		m_connection_list.push_back(connection_server);
+		connection_server_id.release();
 
 		return true;
 	}
 
-	bool ServerCore::delete_connection(ConnectionServerID connection_server_id)
+	void ServerCore::check_connection_expiration()
 	{
-		// TODO: this is not a thread-safe!
-		return ConnectionServerPool::free_object(connection_server_id);
+		for (auto it = m_connection_list.begin(); it != m_connection_list.end();) {
+			auto &connection_server = **it;
+
+			if (connection_server.is_safe_delete()) {
+				m_single_connection_server_pool.free_object(&connection_server);
+				it = m_connection_list.erase(it);
+				continue;
+			}
+
+			if (connection_server.is_expired())
+				connection_server.set_offline();
+
+			++it;
+		}
 	}
 
 	bool ServerCore::try_accept()

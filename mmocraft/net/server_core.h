@@ -10,6 +10,7 @@
 #include "io/io_service.h"
 #include "win/object_pool.h"
 #include "util/common_util.h"
+#include "util/interval_task.h"
 #include "config/config.h"
 
 #define DEFINE_HANDLER(x) static void x(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
@@ -39,7 +40,7 @@ namespace net
 
 		bool new_connection(win::UniqueSocket &&client_sock);
 
-		bool delete_connection(ConnectionServerID);
+		void check_connection_expiration();
 
 		virtual void handle_packet(std::uint8_t buffer) = 0;
 
@@ -64,6 +65,8 @@ namespace net
 		io::IoContext& m_accept_context;
 
 		ConnectionServerPool m_single_connection_server_pool;
-		std::list<ConnectionServerScopedID> m_online_connection_server_list;
+		std::list<SingleConnectionServer*> m_connection_list;
+
+		util::IntervalTaskScheduler<ServerCore> m_interval_task_scheduler;
 	};
 }
