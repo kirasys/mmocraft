@@ -41,7 +41,7 @@
     <ClInclude Include="util\common_util.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="util\custom_unique_ptr.h" />
-    <ClInclude Include="util\interval_call.h" />
+    <ClInclude Include="util\interval_task.h" />
     <ClInclude Include="util\time_util.h" />
   </ItemGroup>
   <ItemGroup>
