@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <string>
 #include <memory>
 
@@ -65,5 +66,6 @@ namespace net
 		io::IoContext& m_accept_context;
 
 		ConnectionServerPool m_single_connection_server_pool;
+		std::list<ConnectionServerScopedID> m_online_connection_server_list;
 	};
 }

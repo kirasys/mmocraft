@@ -84,7 +84,7 @@ namespace net
 		if (not connection_server || not connection_server->is_valid())
 			return false;
 
-		connection_server_id.release();
+		m_online_connection_server_list.emplace_back(std::move(connection_server_id));
 
 		return true;
 	}
