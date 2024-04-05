@@ -168,6 +168,12 @@ namespace win
 				ScopedID(object_id) : ScopedID();
 		}
 
+		bool free_object(object_pointer object_ptr)
+		{
+			object_ptr->~T();
+			return transition_to_free(index_type(object_ptr - m_storage) / sizeof(object_type));
+		}
+
 		static bool free_object(ObjectID object_id)
 		{
 			if (object_id == INVALID_OBJECT_ID)
