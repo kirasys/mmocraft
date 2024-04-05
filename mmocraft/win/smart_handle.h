@@ -67,8 +67,10 @@ namespace win
 		
 		void reset(win::Socket handle = INVALID_SOCKET)
 		{
-			clear();
-			m_handle = handle;
+			if (is_valid()) {
+				std::swap(m_handle, handle);
+				::closesocket(handle);
+			}
 		}
 
 		bool is_valid() const
