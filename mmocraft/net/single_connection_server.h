@@ -30,6 +30,11 @@ namespace net
 			return m_send_context != nullptr && m_recv_context != nullptr;
 		}
 
+		auto get_recv_buffer() const
+		{
+			return m_recv_context->details.recv.buffer;
+		}
+
 		void request_recv_client();
 		
 		//void send_to_client();

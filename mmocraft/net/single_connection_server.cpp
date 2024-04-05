@@ -4,8 +4,6 @@
 #include "server_core.h"
 #include "logging/error.h"
 
-#define DEFINE_HANDLER(x) static void x(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
-
 namespace net
 {
 	namespace ServerHandler

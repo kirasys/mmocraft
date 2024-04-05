@@ -11,6 +11,8 @@
 #include "util/common_util.h"
 #include "config/config.h"
 
+#define DEFINE_HANDLER(x) static void x(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
+
 namespace
 {
 	using IoContextPool = win::ObjectPool<io::IoContext>;
