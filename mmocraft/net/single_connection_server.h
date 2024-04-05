@@ -42,10 +42,7 @@ namespace net
 			return m_connection_status.online;
 		}
 
-		void set_offline()
-		{
-			m_connection_status.online = false;
-		}
+		void set_offline();
 
 	private:
 		net::Socket m_client_socket;
@@ -60,12 +57,13 @@ namespace net
 
 		struct ConnectionStatus {
 			bool online	= false;
+			std::time_t offline_time = 0;
 			std::time_t last_interaction_time = 0;
 		} m_connection_status;
 
 		void update_last_interaction_time()
 		{
-			m_connection_status.last_interaction_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+			m_connection_status.last_interaction_time = util::current_timestmap();
 		}
 	};
 }

@@ -19,11 +19,13 @@ namespace net
 		{
 			static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_recv)>, "Incorrect handler signature");
 
-			if (num_of_transferred_bytes == 0) { // client disconnected.
-				return;
-			}
-
 			if (auto connection_server = SingleConnectionServer::try_interact_with_client(event_owner)) {
+
+				if (num_of_transferred_bytes == 0) { // client closes the socket.
+					connection_server->set_offline();
+					return;
+				}
+
 				std::cout << connection_server->get_recv_buffer() << '\n';
 
 				connection_server->request_recv_client();
@@ -66,5 +68,14 @@ namespace net
 			return connection_server;
 		}
 		return nullptr;
+	}
+
+	void SingleConnectionServer::set_offline()
+	{
+		// this lead to close the io completion port.
+		m_client_socket.close();
+
+		m_connection_status.online = false;
+		m_connection_status.offline_time = util::current_timestmap();
 	}
 }
