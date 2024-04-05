@@ -10,7 +10,7 @@
 namespace util
 {
 	template <typename T>
-	struct IntervalCall
+	struct IntervalTask
 	{
 		const Second period;
 		std::time_t expired_at;
@@ -20,7 +20,7 @@ namespace util
 	};
 
 	template <>
-	struct IntervalCall<void>
+	struct IntervalTask<void>
 	{
 		const Second period;
 		std::time_t expired_at;
@@ -30,17 +30,17 @@ namespace util
 	};
 
 	template <typename T>
-	class IntervalCallScheduler : util::NonCopyable, util::NonMovable
+	class IntervalTaskScheduler : util::NonCopyable, util::NonMovable
 	{
 	public:
-		IntervalCallScheduler(T* instance = nullptr)
+		IntervalTaskScheduler(T* instance = nullptr)
 			: m_instance(instance)
 		{ 
 			if constexpr (std::is_class_v<T>)
 				assert(("class type scheduler must have instance.", instance != nullptr));
 		}
 
-		void schedule(IntervalCall<T>::func_type func, Second period)
+		void schedule(IntervalTask<T>::func_type func, Second period)
 		{
 			m_intervals.push_back({
 				.period = period,
@@ -49,7 +49,7 @@ namespace util
 			});
 		}
 
-		void invoke_expired_call()
+		void process_tasks()
 		{
 			auto current_time = util::current_timestmap();
 
@@ -69,6 +69,6 @@ namespace util
 
 	private:
 		T* m_instance;
-		std::vector<IntervalCall<T>> m_intervals;
+		std::vector<IntervalTask<T>> m_intervals;
 	};
 }
