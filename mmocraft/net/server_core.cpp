@@ -72,7 +72,7 @@ namespace net
 
 	bool ServerCore::new_connection(win::UniqueSocket &&client_sock)
 	{
-		// create a server for single server.
+		// create a server for single client.
 		auto connection_server_id = m_single_connection_server_pool.new_object(
 			std::move(client_sock),
 			/* main_server = */ *this,
