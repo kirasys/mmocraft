@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <chrono>
+#include <ctime>
 
 #include "io/io_service.h"
 #include "net/socket.h"
@@ -11,12 +13,6 @@
 namespace net
 {
 	class ServerCore;
-
-	enum ConnectionServerStatus
-	{
-		OFFLINE,
-		ONLINE
-	};
 
 	class SingleConnectionServer : util::NonCopyable, util::NonMovable
 	{
@@ -39,6 +35,18 @@ namespace net
 		
 		//void send_to_client();
 
+		static SingleConnectionServer* try_interact_with_client(void* server_instance);
+
+		bool is_online() const
+		{
+			return m_connection_status.online;
+		}
+
+		void set_offline()
+		{
+			m_connection_status.online = false;
+		}
+
 	private:
 		net::Socket m_client_socket;
 
@@ -49,5 +57,15 @@ namespace net
 
 		io::IoContext* const m_send_context;
 		io::IoContext* const m_recv_context;
+
+		struct ConnectionStatus {
+			bool online	= false;
+			std::time_t last_interaction_time = 0;
+		} m_connection_status;
+
+		void update_last_interaction_time()
+		{
+			m_connection_status.last_interaction_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+		}
 	};
 }

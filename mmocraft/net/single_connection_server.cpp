@@ -23,10 +23,11 @@ namespace net
 				return;
 			}
 
-			auto connection_server = reinterpret_cast<SingleConnectionServer*>(event_owner);
-			std::cout << connection_server->get_recv_buffer() << '\n';
+			if (auto connection_server = SingleConnectionServer::try_interact_with_client(event_owner)) {
+				std::cout << connection_server->get_recv_buffer() << '\n';
 
-			connection_server->request_recv_client();
+				connection_server->request_recv_client();
+			}	
 		}
 	}
 
@@ -47,10 +48,23 @@ namespace net
 
 		// init first recv.
 		this->request_recv_client();
+
+		m_connection_status.online = true;
+		update_last_interaction_time();
 	}
 
 	void SingleConnectionServer::request_recv_client()
 	{
 		m_client_socket.recv(*m_recv_context);
+	}
+
+	auto SingleConnectionServer::try_interact_with_client(void* server_instance) -> SingleConnectionServer*
+	{
+		auto connection_server = reinterpret_cast<SingleConnectionServer*>(server_instance);
+		if (connection_server->is_online()) {
+			connection_server->update_last_interaction_time();
+			return connection_server;
+		}
+		return nullptr;
 	}
 }
