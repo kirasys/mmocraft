@@ -18,12 +18,9 @@ namespace net
 
 			auto& server = *static_cast<net::ServerCore*>(event_owner);
 
-			util::defer accept_next_client = [&server] {
-				if (not server.try_accept()) {
-					// TODO: accept retry
-					logging::cerr() << "fail to accept again";
-				}
-				};
+			util::defer rearm_server = [&server] {
+				server.accept_next_client();
+			};
 
 			auto& io_ctx = *io_ctx_ptr;
 			auto client_socket = win::UniqueSocket(io_ctx.details.accept.accepted_socket);
@@ -67,7 +64,7 @@ namespace net
 		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this);
 
 		// schedule interval tasks.
-		m_interval_task_scheduler.schedule(&ServerCore::check_connection_expiration, util::Second(10));
+		m_interval_task_scheduler.schedule("connection-checker", & ServerCore::check_connection_expiration, util::Second(10));
 	}
 
 	bool ServerCore::new_connection(win::UniqueSocket &&client_sock)
@@ -108,14 +105,17 @@ namespace net
 		}
 	}
 
-	bool ServerCore::try_accept()
+	void ServerCore::accept_next_client()
 	{
+		// check there are expired tasks before accepting next client.
+		m_interval_task_scheduler.process_tasks();
+
 		try {
 			m_listen_sock.accept(m_accept_context);
-			return true;
 		}
 		catch (...) {
-			return false;
+			// TODO: accept scheduling
+			logging::cerr() << "fail to request accept";
 		}
 	}
 

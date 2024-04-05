@@ -36,7 +36,7 @@ namespace net
 
 		void serve_forever();
 
-		bool try_accept();
+		void accept_next_client();
 
 		bool new_connection(win::UniqueSocket &&client_sock);
 
