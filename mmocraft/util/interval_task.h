@@ -1,17 +1,21 @@
 #pragma once
 #include <vector>
+#include <string>
+#include <string_view>
 #include <functional>
 #include <type_traits>
 #include <cassert>
 
 #include "time_util.h"
 #include "noncopyable.h"
+#include "logging/logger.h"
 
 namespace util
 {
 	template <typename T>
 	struct IntervalTask
 	{
+		std::string tag;
 		const Second period;
 		std::time_t expired_at;
 
@@ -22,6 +26,7 @@ namespace util
 	template <>
 	struct IntervalTask<void>
 	{
+		std::string tag;
 		const Second period;
 		std::time_t expired_at;
 
@@ -40,9 +45,10 @@ namespace util
 				assert(("class type scheduler must have instance.", instance != nullptr));
 		}
 
-		void schedule(IntervalTask<T>::func_type func, Second period)
+		void schedule(std::string_view tag, IntervalTask<T>::func_type func, Second period)
 		{
-			m_intervals.push_back({
+			m_interval_tasks.push_back({
+				.tag {tag},
 				.period = period,
 				.expired_at = current_timestmap() + unsigned(period),
 				.func = func
@@ -53,22 +59,28 @@ namespace util
 		{
 			auto current_time = util::current_timestmap();
 
-			for (auto& interval : m_intervals)
+			for (IntervalTask<T>& task : m_interval_tasks)
 			{
-				if (current_time < interval.expired_at)
+				if (current_time < task.expired_at)
 					continue;
 
-				if constexpr (std::is_class_v<T>)
-					std::invoke(interval.func, *m_instance);
-				else
-					std::invoke(interval.func);
+				try {
+					if constexpr (std::is_class_v<T>)
+						std::invoke(task.func, *m_instance);
+					else
+						std::invoke(task.func);
 
-				interval.expired_at = util::current_timestmap() + unsigned(interval.period);
+					task.expired_at = util::current_timestmap() + unsigned(task.period);
+				}
+				catch (...) {
+					logging::cerr() << "Exception occured at " << task.tag << " (Task disabled)";
+					task.expired_at = std::numeric_limits<decltype(task.expired_at)>::max();
+				}
 			}
 		}
 
 	private:
 		T* m_instance;
-		std::vector<IntervalTask<T>> m_intervals;
+		std::vector<IntervalTask<T>> m_interval_tasks;
 	};
 }
