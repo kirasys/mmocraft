@@ -52,8 +52,10 @@
     <ClInclude Include="util\common_util.h" />
     <ClInclude Include="util\custom_unique_ptr.h" />
     <ClInclude Include="util\deferred_call.h" />
+    <ClInclude Include="util\interval_call.h" />
     <ClInclude Include="util\lock_free_stack.h" />
     <ClInclude Include="util\noncopyable.h" />
+    <ClInclude Include="util\time_util.h" />
     <ClInclude Include="win\object_pool.h" />
     <ClInclude Include="win\smart_handle.h" />
     <ClInclude Include="win\win_base_object.h" />
