@@ -4,16 +4,42 @@
 #include "server_core.h"
 #include "logging/error.h"
 
+#define DEFINE_HANDLER(x) static void x(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
+
 namespace net
 {
+	namespace ServerHandler
+	{
+		DEFINE_HANDLER(handle_send)
+		{
+			static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_send)>, "Incorrect handler signature");
+
+
+		}
+
+		DEFINE_HANDLER(handle_recv)
+		{
+			static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_recv)>, "Incorrect handler signature");
+
+			if (num_of_transferred_bytes == 0) { // client disconnected.
+				return;
+			}
+
+			auto connection_server = reinterpret_cast<SingleConnectionServer*>(event_owner);
+			std::cout << connection_server->get_recv_buffer() << '\n';
+
+			connection_server->request_recv_client();
+		}
+	}
+
 	SingleConnectionServer::SingleConnectionServer(win::UniqueSocket&& sock,
 								ServerCore &main_server,
 								io::IoCompletionPort& io_service,
 								IoContextPool &io_context_pool)
 		: m_client_socket{ std::move(sock) }
 		, m_main_server{ main_server }
-		, m_send_context_id{ io_context_pool.new_object(ServerCoreHandler::handle_send) }
-		, m_recv_context_id{ io_context_pool.new_object(ServerCoreHandler::handle_recv) }
+		, m_send_context_id{ io_context_pool.new_object(ServerHandler::handle_send) }
+		, m_recv_context_id{ io_context_pool.new_object(ServerHandler::handle_recv) }
 		, m_send_context{ IoContextPool::find_object(m_send_context_id) }
 		, m_recv_context{ IoContextPool::find_object(m_recv_context_id) }
 	{

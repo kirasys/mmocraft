@@ -21,15 +21,6 @@ namespace
 
 namespace net
 {
-	class ServerCoreHandler
-	{
-	public:
-		ServerCoreHandler() = delete;
-		static void handle_accept(void* event_owner, io::IoContext* io_ctx, DWORD num_of_transferred_bytes, DWORD error_code);
-		static void handle_send(void* event_owner, io::IoContext* io_ctx, DWORD num_of_transferred_bytes, DWORD error_code);
-		static void handle_recv(void* event_owner, io::IoContext* io_ctx, DWORD num_of_transferred_bytes, DWORD error_code);
-	};
-
 	class ServerCore : util::NonCopyable, util::NonMovable
 	{
 	public:

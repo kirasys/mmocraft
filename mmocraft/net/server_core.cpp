@@ -3,61 +3,48 @@
 
 #include "logging/error.h"
 
+#define DEFINE_HANDLER(x) static void x(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
+
 namespace net
 {
-	void ServerCoreHandler::handle_accept(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
+	namespace ServerHandler
 	{
-		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_accept)>, "Incorrect handler signature");
+		DEFINE_HANDLER(handle_accept)
+		{
+			static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_accept)>, "Incorrect handler signature");
 
-		if (error_code != ERROR_SUCCESS) {
-			logging::cerr() << "handle_accept() failed with " << error_code;
-			return;
-		}
-
-		auto &server = *static_cast<net::ServerCore*>(event_owner);
-
-		util::defer accept_next_client = [&server] {
-			if (not server.try_accept()) { 
-				// TODO: accept retry
-				logging::cerr() << "fail to accept again";
+			if (error_code != ERROR_SUCCESS) {
+				logging::cerr() << "handle_accept() failed with " << error_code;
+				return;
 			}
-		};
 
-		auto &io_ctx = *io_ctx_ptr;
-		auto client_socket = win::UniqueSocket(io_ctx.details.accept.accepted_socket);
+			auto& server = *static_cast<net::ServerCore*>(event_owner);
 
-		// inherit the properties of the listen socket.
-		win::Socket listen_sock = server.get_listen_socket();
-		if (SOCKET_ERROR == ::setsockopt(client_socket,
-						SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
-						reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
-			logging::cerr() << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
-			return;
+			util::defer accept_next_client = [&server] {
+				if (not server.try_accept()) {
+					// TODO: accept retry
+					logging::cerr() << "fail to accept again";
+				}
+				};
+
+			auto& io_ctx = *io_ctx_ptr;
+			auto client_socket = win::UniqueSocket(io_ctx.details.accept.accepted_socket);
+
+			// inherit the properties of the listen socket.
+			win::Socket listen_sock = server.get_listen_socket();
+			if (SOCKET_ERROR == ::setsockopt(client_socket,
+				SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
+				reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
+				logging::cerr() << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
+				return;
+			}
+
+			// add a client to the server.
+			if (not server.new_connection(std::move(client_socket))) {
+				logging::cerr() << "fail to create a server for single client";
+				return;
+			}
 		}
-
-		// add a client to the server.
-		if (not server.new_connection(std::move(client_socket))) {
-			logging::cerr() << "fail to create a server for single client";
-			return;
-		}
-	}
-
-	void ServerCoreHandler::handle_send(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
-	{
-		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_send)>, "Incorrect handler signature");
-		
-
-	}
-
-	void ServerCoreHandler::handle_recv(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
-	{
-		static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_recv)>, "Incorrect handler signature");
-		
-		auto connection_server_id = reinterpret_cast<ConnectionServerID>(event_owner);
-		std::cout << io_ctx_ptr->details.recv.buffer << '\n';
-
-		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
-		connection_server->request_recv_client();
 	}
 }
 
@@ -75,7 +62,7 @@ namespace net
 		, m_io_service{ concurrency_hint }
 		, m_io_context_pool{ 2 * max_client_connections }
 		, m_accept_context{ *IoContextPool::find_object(
-								m_io_context_pool.new_object_unsafe(ServerCoreHandler::handle_accept)) }
+								m_io_context_pool.new_object_unsafe(ServerHandler::handle_accept)) }
 		, m_single_connection_server_pool{ max_client_connections }
 	{	
 		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this);
