@@ -64,10 +64,6 @@ namespace net
 		, m_single_connection_server_pool{ max_client_connections }
 	{	
 		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this);
-
-		m_listen_sock.bind(ip, port);
-		m_listen_sock.listen();
-		std::cout << "Listening to " << ip << ':' << port << "...\n";
 	}
 
 	bool ServerCore::new_connection(win::UniqueSocket &&client_sock)
@@ -95,21 +91,10 @@ namespace net
 		return ConnectionServerPool::free_object(connection_server_id);
 	}
 
-	void ServerCore::accept()
-	{
-		m_accept_context.overlapped.Internal = 0;
-		m_accept_context.overlapped.InternalHigh = 0;
-		m_accept_context.overlapped.Offset = 0;
-		m_accept_context.overlapped.OffsetHigh = 0;
-		m_accept_context.overlapped.hEvent = NULL;
-
-		m_listen_sock.accept(m_accept_context);
-	}
-
 	bool ServerCore::try_accept()
 	{
 		try {
-			this->accept();
+			m_listen_sock.accept(m_accept_context);
 			return true;
 		}
 		catch (...) {
@@ -119,7 +104,10 @@ namespace net
 
 	void ServerCore::serve_forever()
 	{
-		this->accept();
+		m_listen_sock.bind(m_server_info.ip, m_server_info.port);
+		m_listen_sock.listen();
+		m_listen_sock.accept(m_accept_context);
+		std::cout << "Listening to " << m_server_info.ip << ':' << m_server_info.port << "...\n";
 
 		for (unsigned i = 0; i < m_server_info.num_of_event_threads; i++)
 			m_io_service.spawn_event_loop_thread().detach();
