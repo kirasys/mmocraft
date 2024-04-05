@@ -78,4 +78,15 @@ namespace net
 		m_connection_status.online = false;
 		m_connection_status.offline_time = util::current_timestmap();
 	}
+
+	bool SingleConnectionServer::is_expired(std::time_t current_time) const
+	{
+		return (current_time - m_connection_status.last_interaction_time) >= REQUIRED_SECONDS_FOR_EXPIRE;
+	}
+
+	bool SingleConnectionServer::is_safe_delete(std::time_t current_time) const
+	{
+		return not is_online()
+			&& (current_time - m_connection_status.offline_time) >= REQUIRED_SECONDS_FOR_SECURE_DELETION;
+	}
 }

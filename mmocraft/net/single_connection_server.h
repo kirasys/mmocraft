@@ -17,6 +17,9 @@ namespace net
 	class SingleConnectionServer : util::NonCopyable, util::NonMovable
 	{
 		using IoContextPool = win::ObjectPool<io::IoContext>;
+		
+		static constexpr unsigned REQUIRED_SECONDS_FOR_EXPIRE = 5 * 60;
+		static constexpr unsigned REQUIRED_SECONDS_FOR_SECURE_DELETION = 5;
 
 	public:
 		SingleConnectionServer(win::UniqueSocket&&, ServerCore&, io::IoCompletionPort& , IoContextPool&);
@@ -35,14 +38,25 @@ namespace net
 		
 		//void send_to_client();
 
+		/* Methods related to connection status */
+
 		static SingleConnectionServer* try_interact_with_client(void* server_instance);
+		
+		void update_last_interaction_time(std::time_t current_time = util::current_timestmap())
+		{
+			m_connection_status.last_interaction_time = current_time;
+		}
+
+		void set_offline();
 
 		bool is_online() const
 		{
 			return m_connection_status.online;
 		}
 
-		void set_offline();
+		bool is_expired(std::time_t current_time = util::current_timestmap()) const;
+
+		bool is_safe_delete(std::time_t current_time = util::current_timestmap()) const;
 
 	private:
 		net::Socket m_client_socket;
@@ -60,10 +74,5 @@ namespace net
 			std::time_t offline_time = 0;
 			std::time_t last_interaction_time = 0;
 		} m_connection_status;
-
-		void update_last_interaction_time()
-		{
-			m_connection_status.last_interaction_time = util::current_timestmap();
-		}
 	};
 }
