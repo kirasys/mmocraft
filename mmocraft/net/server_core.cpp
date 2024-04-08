@@ -63,8 +63,10 @@ namespace net
 	{	
 		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this);
 
-		// schedule interval tasks.
-		m_interval_task_scheduler.schedule("connection-checker", & ServerCore::check_connection_expiration, util::Second(10));
+		//
+		// Schedule interval tasks.
+		// 
+		m_interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::Second(10));
 	}
 
 	bool ServerCore::new_connection(win::UniqueSocket &&client_sock)

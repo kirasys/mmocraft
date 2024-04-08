@@ -18,7 +18,9 @@ namespace net
 	{
 		using IoContextPool = win::ObjectPool<io::IoContext>;
 		
-		static constexpr unsigned REQUIRED_SECONDS_FOR_EXPIRE = 5 * 60;
+		// The minecrft beta server will disconnect a client,
+		// if it doesn't receive at least one packet before 1200 in-game ticks (1200 tick = 60s)
+		static constexpr unsigned REQUIRED_SECONDS_FOR_EXPIRE = 60;
 		static constexpr unsigned REQUIRED_SECONDS_FOR_SECURE_DELETION = 5;
 
 	public:
