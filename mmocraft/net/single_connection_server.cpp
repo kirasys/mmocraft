@@ -44,15 +44,15 @@ namespace net
 		, m_send_context{ IoContextPool::find_object(m_send_context_id) }
 		, m_recv_context{ IoContextPool::find_object(m_recv_context_id) }
 	{
+		m_connection_status.online = true;
+		update_last_interaction_time();
+
 		// allow to service client socket events.
 		io_service.register_event_source(m_client_socket.get_handle(),
 									/*.event_owner = */ reinterpret_cast<void*>(this));
 
 		// init first recv.
 		this->request_recv_client();
-
-		m_connection_status.online = true;
-		update_last_interaction_time();
 	}
 
 	void SingleConnectionServer::request_recv_client()
