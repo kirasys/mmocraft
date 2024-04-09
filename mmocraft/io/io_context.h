@@ -36,15 +36,15 @@ namespace io
 			struct AcceptContext {
 				LPFN_ACCEPTEX fnAcceptEx;
 				win::Socket accepted_socket;
-				char buffer[1024];
+				std::uint8_t buffer[1024];
 			} accept;
 
 			struct SendContext {
-				char buffer[SEND_BUF_SIZE];
+				std::uint8_t buffer[SEND_BUF_SIZE];
 			} send;
 
 			struct RecvContext {
-				char buffer[RECV_BUF_SIZE];
+				std::uint8_t buffer[RECV_BUF_SIZE];
 			} recv;
 
 		} details;

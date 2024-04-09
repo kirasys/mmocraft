@@ -92,7 +92,7 @@ bool net::Socket::accept(io::IoContext &io_ctx)
 bool net::Socket::send(io::IoContext& io_ctx)
 {
 	WSABUF buffer;
-	buffer.buf = io_ctx.details.send.buffer;
+	buffer.buf = reinterpret_cast<char*>(io_ctx.details.send.buffer);
 	buffer.len = sizeof(io_ctx.details.send.buffer);
 
 	DWORD flags = 0;
@@ -115,7 +115,7 @@ bool net::Socket::send(io::IoContext& io_ctx)
 bool net::Socket::recv(io::IoContext& io_ctx)
 {
 	WSABUF buffer;
-	buffer.buf = io_ctx.details.recv.buffer;
+	buffer.buf = reinterpret_cast<char*>(io_ctx.details.recv.buffer);
 	buffer.len = sizeof(io_ctx.details.recv.buffer);
 
 	DWORD flags = 0;
