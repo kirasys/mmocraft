@@ -27,8 +27,8 @@ namespace net
 					return;
 				}
 
-				if (auto remain_bytes = connection_server->dispatch_packets(num_of_transferred_bytes)) {
-
+				if (not connection_server->dispatch_packets(num_of_transferred_bytes)) {
+					// kick
 				}
 
 				connection_server->request_recv_client();
@@ -63,29 +63,30 @@ namespace net
 		m_client_socket.recv(*m_recv_context);
 	}
 
-	std::size_t ConnectionServer::dispatch_packets(std::size_t num_of_received_bytes)
+	bool ConnectionServer::dispatch_packets(std::size_t num_of_received_bytes)
 	{
-		auto buf_start = get_recv_buffer();
-		auto buf_end = buf_start + num_of_received_bytes;
+		auto buf_start = m_recv_context->recv_buffer();
+		auto buf_end = buf_start + num_of_received_bytes + m_recv_context->num_of_unconsumed_bytes();
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
-		while (num_of_received_bytes > 0) {
+		while (buf_start < buf_end) {
 			const auto num_of_parsed_bytes = PacketStructure::parse_packet(buf_start, buf_end, packet_ptr);
 			if (num_of_parsed_bytes == 0) // Insuffcient packet data
-				return num_of_received_bytes;
+				break;
 
 			if (not PacketStructure::validate_packet(packet_ptr)) {
-				// kick
-				return 0;
+				return false;
 			}
 
 			if (not m_main_server.handle_packet(*this, packet_ptr))
 				logging::cerr() << "Unsupported packet id(" << packet_ptr->id << ")";
 
-			num_of_received_bytes -= num_of_parsed_bytes;
+			buf_start += num_of_parsed_bytes;
 		}
-		assert(num_of_received_bytes == 0);
-		return 0;
+
+		assert((buf_end - buf_start < sizeof(m_recv_context->recv_buffer())) && "Parsing error");
+		m_recv_context->num_of_unconsumed_bytes() = buf_end - buf_start;
+		return true;
 	}
 
 	auto ConnectionServer::try_interact_with_client(void* server_instance) -> ConnectionServer*

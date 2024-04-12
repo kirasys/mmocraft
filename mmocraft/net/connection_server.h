@@ -35,7 +35,7 @@ namespace net
 		
 		//void send_to_client();
 
-		std::size_t dispatch_packets(std::size_t num_of_received_bytes);
+		bool dispatch_packets(std::size_t num_of_received_bytes);
 
 		/* Methods related to connection status */
 
@@ -67,11 +67,6 @@ namespace net
 
 		io::IoContext* const m_send_context;
 		io::IoContext* const m_recv_context;
-
-		auto get_recv_buffer() const
-		{
-			return m_recv_context->details.recv.buffer;
-		}
 
 		struct ConnectionStatus {
 			bool online	= false;

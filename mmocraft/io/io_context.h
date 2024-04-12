@@ -27,10 +27,6 @@ namespace io
 		WSAOVERLAPPED overlapped;
 		handler_type handler = nullptr;
 
-		IoContext(handler_type handler_)
-			: handler(handler_)
-		{ }
-
 		union Details
 		{
 			struct AcceptContext {
@@ -45,8 +41,25 @@ namespace io
 
 			struct RecvContext {
 				std::uint8_t buffer[RECV_BUF_SIZE];
+				std::size_t num_of_unconsumed_bytes;
 			} recv;
 
 		} details;
+
+		IoContext(handler_type handler_)
+			: handler(handler_)
+		{ 
+			details.recv.num_of_unconsumed_bytes = 0;
+		}
+
+		auto& recv_buffer()
+		{
+			return details.recv.buffer;
+		}
+
+		auto& num_of_unconsumed_bytes()
+		{
+			return details.recv.num_of_unconsumed_bytes;
+		}
 	};
 }
