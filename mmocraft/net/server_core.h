@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "socket.h"
+#include "packet.h"
 #include "single_connection_server.h"
 #include "io/io_context.h"
 #include "io/io_service.h"
@@ -42,7 +43,7 @@ namespace net
 
 		void check_connection_expiration();
 
-		virtual void handle_packet(std::uint8_t buffer) = 0;
+		virtual bool handle_packet(SingleConnectionServer&, Packet*) = 0;
 
 		win::Socket get_listen_socket() {
 			return m_listen_sock.get_handle();

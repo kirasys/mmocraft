@@ -31,14 +31,11 @@ namespace net
 			return m_send_context != nullptr && m_recv_context != nullptr;
 		}
 
-		auto get_recv_buffer() const
-		{
-			return m_recv_context->details.recv.buffer;
-		}
-
 		void request_recv_client();
 		
 		//void send_to_client();
+
+		std::size_t dispatch_packets(std::size_t num_of_received_bytes);
 
 		/* Methods related to connection status */
 
@@ -70,6 +67,11 @@ namespace net
 
 		io::IoContext* const m_send_context;
 		io::IoContext* const m_recv_context;
+
+		auto get_recv_buffer() const
+		{
+			return m_recv_context->details.recv.buffer;
+		}
 
 		struct ConnectionStatus {
 			bool online	= false;

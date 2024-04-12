@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "single_connection_server.h"
 
+#include "packet.h"
 #include "server_core.h"
 #include "logging/error.h"
 
@@ -26,7 +27,9 @@ namespace net
 					return;
 				}
 
-				std::cout << connection_server->get_recv_buffer() << '\n';
+				if (auto remain_bytes = connection_server->dispatch_packets(num_of_transferred_bytes)) {
+
+				}
 
 				connection_server->request_recv_client();
 			}	
@@ -58,6 +61,31 @@ namespace net
 	void SingleConnectionServer::request_recv_client()
 	{
 		m_client_socket.recv(*m_recv_context);
+	}
+
+	std::size_t SingleConnectionServer::dispatch_packets(std::size_t num_of_received_bytes)
+	{
+		auto buf_start = get_recv_buffer();
+		auto buf_end = buf_start + num_of_received_bytes;
+		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
+
+		while (num_of_received_bytes > 0) {
+			const auto num_of_parsed_bytes = PacketStructure::parse_packet(buf_start, buf_end, packet_ptr);
+			if (num_of_parsed_bytes == 0) // Insuffcient packet data
+				return num_of_received_bytes;
+
+			if (not PacketStructure::validate_packet(packet_ptr)) {
+				// kick
+				return 0;
+			}
+
+			if (not m_main_server.handle_packet(*this, packet_ptr))
+				logging::cerr() << "Unsupported packet id(" << packet_ptr->id << ")";
+
+			num_of_received_bytes -= num_of_parsed_bytes;
+		}
+		assert(num_of_received_bytes == 0);
+		return 0;
 	}
 
 	auto SingleConnectionServer::try_interact_with_client(void* server_instance) -> SingleConnectionServer*
