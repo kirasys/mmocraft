@@ -13,8 +13,8 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		virtual bool handle_packet(SingleConnectionServer&, Packet*);
+		virtual bool handle_packet(ConnectionServer&, Packet*);
 
-		bool handle_handshake_packet(SingleConnectionServer&, PacketHandshake&);
+		bool handle_handshake_packet(ConnectionServer&, PacketHandshake&);
 	};
 }

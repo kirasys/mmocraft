@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "single_connection_server.h"
+#include "connection_server.h"
 
 #include "packet.h"
 #include "server_core.h"
@@ -20,7 +20,7 @@ namespace net
 		{
 			static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_recv)>, "Incorrect handler signature");
 
-			if (auto connection_server = SingleConnectionServer::try_interact_with_client(event_owner)) {
+			if (auto connection_server = ConnectionServer::try_interact_with_client(event_owner)) {
 
 				if (num_of_transferred_bytes == 0) { // client closes the socket.
 					connection_server->set_offline();
@@ -36,7 +36,7 @@ namespace net
 		}
 	}
 
-	SingleConnectionServer::SingleConnectionServer(win::UniqueSocket&& sock,
+	ConnectionServer::ConnectionServer(win::UniqueSocket&& sock,
 								ServerCore &main_server,
 								io::IoCompletionPort& io_service,
 								IoContextPool &io_context_pool)
@@ -58,12 +58,12 @@ namespace net
 		this->request_recv_client();
 	}
 
-	void SingleConnectionServer::request_recv_client()
+	void ConnectionServer::request_recv_client()
 	{
 		m_client_socket.recv(*m_recv_context);
 	}
 
-	std::size_t SingleConnectionServer::dispatch_packets(std::size_t num_of_received_bytes)
+	std::size_t ConnectionServer::dispatch_packets(std::size_t num_of_received_bytes)
 	{
 		auto buf_start = get_recv_buffer();
 		auto buf_end = buf_start + num_of_received_bytes;
@@ -88,9 +88,9 @@ namespace net
 		return 0;
 	}
 
-	auto SingleConnectionServer::try_interact_with_client(void* server_instance) -> SingleConnectionServer*
+	auto ConnectionServer::try_interact_with_client(void* server_instance) -> ConnectionServer*
 	{
-		auto connection_server = reinterpret_cast<SingleConnectionServer*>(server_instance);
+		auto connection_server = reinterpret_cast<ConnectionServer*>(server_instance);
 		if (connection_server->is_online()) {
 			connection_server->update_last_interaction_time();
 			return connection_server;
@@ -98,7 +98,7 @@ namespace net
 		return nullptr;
 	}
 
-	void SingleConnectionServer::set_offline()
+	void ConnectionServer::set_offline()
 	{
 		// this lead to close the io completion port.
 		m_client_socket.close();
@@ -107,12 +107,12 @@ namespace net
 		m_connection_status.offline_time = util::current_timestmap();
 	}
 
-	bool SingleConnectionServer::is_expired(std::time_t current_time) const
+	bool ConnectionServer::is_expired(std::time_t current_time) const
 	{
 		return current_time >= m_connection_status.last_interaction_time + REQUIRED_SECONDS_FOR_EXPIRE;
 	}
 
-	bool SingleConnectionServer::is_safe_delete(std::time_t current_time) const
+	bool ConnectionServer::is_safe_delete(std::time_t current_time) const
 	{
 		return not is_online()
 			&& current_time >= m_connection_status.offline_time + REQUIRED_SECONDS_FOR_SECURE_DELETION;

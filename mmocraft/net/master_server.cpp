@@ -11,7 +11,7 @@ namespace net
 		: ServerCore{ ip, port, max_client_connections, num_of_event_threads, concurrency_hint }
 	{ }
 
-	bool MasterServer::handle_packet(SingleConnectionServer &connection_server, Packet* packet)
+	bool MasterServer::handle_packet(ConnectionServer& connection_server, Packet* packet)
 	{
 		switch (packet->id) {
 		case PacketID::Handshake:
@@ -21,7 +21,7 @@ namespace net
 		}
 	}
 
-	bool MasterServer::handle_handshake_packet(SingleConnectionServer& connection_server, PacketHandshake& packet)
+	bool MasterServer::handle_handshake_packet(ConnectionServer& connection_server, PacketHandshake& packet)
 	{
 		std::cout << packet.username_and_host.size << ' ' << packet.username_and_host.data << '\n';
 		return true;

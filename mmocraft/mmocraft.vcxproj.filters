@@ -18,8 +18,9 @@
     <ClCompile Include="net\server_core.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
-    <ClCompile Include="net\single_connection_server.cpp" />
+    <ClCompile Include="net\connection_server.cpp" />
     <ClCompile Include="net\master_server.cpp" />
+    <ClCompile Include="net\packet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -37,12 +38,13 @@
     <ClInclude Include="net\master_server.h" />
     <ClInclude Include="win\smart_handle.h" />
     <ClInclude Include="util\noncopyable.h" />
-    <ClInclude Include="net\single_connection_server.h" />
+    <ClInclude Include="net\connection_server.h" />
     <ClInclude Include="util\common_util.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="util\custom_unique_ptr.h" />
     <ClInclude Include="util\interval_task.h" />
     <ClInclude Include="util\time_util.h" />
+    <ClInclude Include="net\packet.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />

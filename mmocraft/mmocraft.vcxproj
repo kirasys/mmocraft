@@ -25,7 +25,8 @@
     <ClCompile Include="logging\error.cpp" />
     <ClCompile Include="logging\logger.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="net\single_connection_server.cpp" />
+    <ClCompile Include="net\packet.cpp" />
+    <ClCompile Include="net\connection_server.cpp" />
     <ClCompile Include="net\master_server.cpp" />
     <ClCompile Include="net\server_core.cpp" />
     <ClCompile Include="net\socket.cpp" />
@@ -44,7 +45,8 @@
     <ClInclude Include="io\io_service.h" />
     <ClInclude Include="logging\error.h" />
     <ClInclude Include="logging\logger.h" />
-    <ClInclude Include="net\single_connection_server.h" />
+    <ClInclude Include="net\packet.h" />
+    <ClInclude Include="net\connection_server.h" />
     <ClInclude Include="net\master_server.h" />
     <ClInclude Include="net\socket.h" />
     <ClInclude Include="net\server_core.h" />

@@ -6,7 +6,7 @@
 
 #include "socket.h"
 #include "packet.h"
-#include "single_connection_server.h"
+#include "connection_server.h"
 #include "io/io_context.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
@@ -19,7 +19,7 @@
 namespace
 {
 	using IoContextPool = win::ObjectPool<io::IoContext>;
-	using ConnectionServerPool = win::ObjectPool<net::SingleConnectionServer>;
+	using ConnectionServerPool = win::ObjectPool<net::ConnectionServer>;
 	using ConnectionServerID = ConnectionServerPool::ObjectID;
 	using ConnectionServerScopedID = ConnectionServerPool::ScopedID;
 }
@@ -43,7 +43,7 @@ namespace net
 
 		void check_connection_expiration();
 
-		virtual bool handle_packet(SingleConnectionServer&, Packet*) = 0;
+		virtual bool handle_packet(ConnectionServer&, Packet*) = 0;
 
 		win::Socket get_listen_socket() {
 			return m_listen_sock.get_handle();
@@ -65,8 +65,8 @@ namespace net
 		IoContextPool m_io_context_pool;
 		io::IoContext& m_accept_context;
 
-		ConnectionServerPool m_single_connection_server_pool;
-		std::list<SingleConnectionServer*> m_connection_list;
+		ConnectionServerPool m_connection_server_pool;
+		std::list<ConnectionServer*> m_connection_list;
 
 		util::IntervalTaskScheduler<ServerCore> m_interval_task_scheduler;
 	};

@@ -58,7 +58,7 @@ namespace net
 		, m_io_context_pool{ 2 * max_client_connections }
 		, m_accept_context{ *IoContextPool::find_object(
 								m_io_context_pool.new_object_unsafe(ServerHandler::handle_accept)) }
-		, m_single_connection_server_pool{ max_client_connections }
+		, m_connection_server_pool{ max_client_connections }
 		, m_interval_task_scheduler{ this }
 	{	
 		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this);
@@ -72,7 +72,7 @@ namespace net
 	bool ServerCore::new_connection(win::UniqueSocket &&client_sock)
 	{
 		// create a server for single client.
-		auto connection_server_id = m_single_connection_server_pool.new_object(
+		auto connection_server_id = m_connection_server_pool.new_object(
 			std::move(client_sock),
 			/* main_server = */ *this,
 			m_io_service,
@@ -95,7 +95,7 @@ namespace net
 			auto &connection_server = **it;
 
 			if (connection_server.is_safe_delete()) {
-				m_single_connection_server_pool.free_object(&connection_server);
+				m_connection_server_pool.free_object(&connection_server);
 				it = m_connection_list.erase(it);
 				continue;
 			}

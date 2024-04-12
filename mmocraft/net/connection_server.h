@@ -14,7 +14,7 @@ namespace net
 {
 	class ServerCore;
 
-	class SingleConnectionServer : util::NonCopyable, util::NonMovable
+	class ConnectionServer : util::NonCopyable, util::NonMovable
 	{
 		using IoContextPool = win::ObjectPool<io::IoContext>;
 		
@@ -24,7 +24,7 @@ namespace net
 		static constexpr unsigned REQUIRED_SECONDS_FOR_SECURE_DELETION = 5;
 
 	public:
-		SingleConnectionServer(win::UniqueSocket&&, ServerCore&, io::IoCompletionPort& , IoContextPool&);
+		ConnectionServer(win::UniqueSocket&&, ServerCore&, io::IoCompletionPort& , IoContextPool&);
 
 		bool is_valid() const
 		{
@@ -39,7 +39,7 @@ namespace net
 
 		/* Methods related to connection status */
 
-		static SingleConnectionServer* try_interact_with_client(void* server_instance);
+		static ConnectionServer* try_interact_with_client(void* server_instance);
 		
 		void update_last_interaction_time(std::time_t current_time = util::current_timestmap())
 		{
