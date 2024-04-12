@@ -65,8 +65,8 @@ namespace net
 
 	bool ConnectionServer::dispatch_packets(std::size_t num_of_received_bytes)
 	{
-		auto buf_start = m_recv_context->recv_buffer();
-		auto buf_end = buf_start + num_of_received_bytes + m_recv_context->num_of_unconsumed_bytes();
+		auto buf_start = m_recv_context->begin_recv_buffer();
+		auto buf_end = buf_start + num_of_received_bytes + m_recv_context->size_of_unconsumed_bytes();
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
 		while (buf_start < buf_end) {
@@ -84,8 +84,8 @@ namespace net
 			buf_start += num_of_parsed_bytes;
 		}
 
-		assert((buf_end - buf_start < sizeof(m_recv_context->recv_buffer())) && "Parsing error");
-		m_recv_context->num_of_unconsumed_bytes() = buf_end - buf_start;
+		assert((buf_end - buf_start < sizeof(m_recv_context->begin_recv_buffer())) && "Parsing error");
+		m_recv_context->size_of_unconsumed_bytes() = buf_end - buf_start;
 		return true;
 	}
 

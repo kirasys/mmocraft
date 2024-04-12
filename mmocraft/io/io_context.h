@@ -52,12 +52,12 @@ namespace io
 			details.recv.num_of_unconsumed_bytes = 0;
 		}
 
-		auto& recv_buffer()
+		auto& begin_recv_buffer()
 		{
 			return details.recv.buffer;
 		}
 
-		auto& num_of_unconsumed_bytes()
+		auto& size_of_unconsumed_bytes()
 		{
 			return details.recv.num_of_unconsumed_bytes;
 		}
