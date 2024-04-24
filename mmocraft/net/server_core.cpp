@@ -22,8 +22,8 @@ namespace net
 				server.accept_next_client();
 			};
 
-			auto& io_ctx = *io_ctx_ptr;
-			auto client_socket = win::UniqueSocket(io_ctx.details.accept.accepted_socket);
+			auto& accept_ctx = *static_cast<io::IoAcceptContext*>(io_ctx_ptr);
+			auto client_socket = win::UniqueSocket(accept_ctx.accepted_socket);
 
 			// inherit the properties of the listen socket.
 			win::Socket listen_sock = server.get_listen_socket();
@@ -55,9 +55,8 @@ namespace net
 						 .num_of_event_threads = num_of_event_threads}
 		, m_listen_sock{ net::SocketType::TCPv4 }
 		, m_io_service{ concurrency_hint }
-		, m_io_context_pool{ 2 * max_client_connections }
-		, m_accept_context{ *IoContextPool::find_object(
-								m_io_context_pool.new_object_unsafe(ServerHandler::handle_accept)) }
+		, m_io_context_pool{ 2 * max_client_connections + 1}
+		, m_accept_context{ m_io_context_pool.new_context<io::IoAcceptContext>(ServerHandler::handle_accept) }
 		, m_connection_server_pool{ max_client_connections }
 		, m_interval_task_scheduler{ this }
 	{	
@@ -84,6 +83,8 @@ namespace net
 			return false;
 
 		m_connection_list.push_back(connection_server);
+
+		// connection server wiil be deleted when expired. (see check_connection_expiration)
 		connection_server_id.release();
 
 		return true;
@@ -113,7 +114,7 @@ namespace net
 		m_interval_task_scheduler.process_tasks();
 
 		try {
-			m_listen_sock.accept(m_accept_context);
+			m_listen_sock.accept(*m_accept_context);
 		}
 		catch (...) {
 			// TODO: accept scheduling
@@ -125,7 +126,7 @@ namespace net
 	{
 		m_listen_sock.bind(m_server_info.ip, m_server_info.port);
 		m_listen_sock.listen();
-		m_listen_sock.accept(m_accept_context);
+		m_listen_sock.accept(*m_accept_context);
 		std::cout << "Listening to " << m_server_info.ip << ':' << m_server_info.port << "...\n";
 
 		for (unsigned i = 0; i < m_server_info.num_of_event_threads; i++)

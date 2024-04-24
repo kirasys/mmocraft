@@ -39,13 +39,12 @@ namespace net
 	ConnectionServer::ConnectionServer(win::UniqueSocket&& sock,
 								ServerCore &main_server,
 								io::IoCompletionPort& io_service,
-								IoContextPool &io_context_pool)
+								io::IoContextPool &io_context_pool)
 		: m_client_socket{ std::move(sock) }
 		, m_main_server{ main_server }
-		, m_send_context_id{ io_context_pool.new_object(ServerHandler::handle_send) }
-		, m_recv_context_id{ io_context_pool.new_object(ServerHandler::handle_recv) }
-		, m_send_context{ IoContextPool::find_object(m_send_context_id) }
-		, m_recv_context{ IoContextPool::find_object(m_recv_context_id) }
+		, m_io_context_pool{ io_context_pool }
+		, m_send_context{ io_context_pool.new_context<io::IoSendContext>(ServerHandler::handle_send) }
+		, m_recv_context{ io_context_pool.new_context<io::IoRecvContext>(ServerHandler::handle_recv) }
 	{
 		m_connection_status.online = true;
 		update_last_interaction_time();
@@ -58,6 +57,12 @@ namespace net
 		this->request_recv_client();
 	}
 
+	ConnectionServer::~ConnectionServer()
+	{
+		m_io_context_pool.delete_context(m_send_context);
+		m_io_context_pool.delete_context(m_recv_context);
+	}
+
 	void ConnectionServer::request_recv_client()
 	{
 		m_client_socket.recv(*m_recv_context);
@@ -65,8 +70,8 @@ namespace net
 
 	bool ConnectionServer::dispatch_packets(std::size_t num_of_received_bytes)
 	{
-		auto buf_start = m_recv_context->begin_recv_buffer();
-		auto buf_end = buf_start + num_of_received_bytes + m_recv_context->size_of_unconsumed_bytes();
+		auto buf_start = m_recv_context->buffer;
+		auto buf_end = buf_start + num_of_received_bytes + m_recv_context->num_of_unconsumed_bytes;
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
 		while (buf_start < buf_end) {
@@ -84,8 +89,8 @@ namespace net
 			buf_start += num_of_parsed_bytes;
 		}
 
-		assert((buf_end - buf_start < sizeof(m_recv_context->begin_recv_buffer())) && "Parsing error");
-		m_recv_context->size_of_unconsumed_bytes() = buf_end - buf_start;
+		assert((buf_end - buf_start < sizeof(m_recv_context->buffer)) && "Parsing error");
+		m_recv_context->num_of_unconsumed_bytes = buf_end - buf_start;
 		return true;
 	}
 

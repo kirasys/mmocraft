@@ -23,6 +23,7 @@ namespace win
 	enum ObjectPoolErrorCode
 	{
 		SUCCESS,
+		TOO_MANY_POOL_ERROR,
 		RESERVE_ERROR,
 		COMMIT_ERROR,
 		EXCEED_MAX_CAPACITY_ERROR,
@@ -57,7 +58,7 @@ namespace win
 	//		  - (TODO) 성능 측정 필요
 	//    - (TODO) 나머지 thrad-safe 처리는 필요에 따라 추가 예정.
 
-	template <typename T>
+	template <typename T, std::size_t OBJECT_SIZE = sizeof(T)>
 	class ObjectPool : util::NonCopyable, util::NonMovable
 	{
 	public:
@@ -140,15 +141,67 @@ namespace win
 
 		ObjectPool() = delete;
 
-		ObjectPool(size_type max_capacity);
+		ObjectPool(size_type max_capacity)
+			: m_pool_index{ num_of_free_object_pool.fetch_sub(1) }
+			, m_storage{ nullptr }
+			, m_capacity{ std::min(DEFAULT_CAPACITY, max_capacity) }
+			, m_max_capacity{ max_capacity }
+			, m_bitmap_size{ 1 + max_capacity / SIZE_TYPE_BIT_SIZE }
+			, m_free_storage_bitmaps{ new size_type[m_bitmap_size] }
+		{
+			static_assert(OBJECT_SIZE >= sizeof(T));
 
-		~ObjectPool();
+			if (not m_pool_index)
+				throw ObjectPoolErrorCode::TOO_MANY_POOL_ERROR;
 
-		bool reserve(size_type new_capacity);
+			// register this pool to the table;
+			pool_table[m_pool_index] = this;
 
-		// new_object returns object's id that must manually free.
+			m_storage = static_cast<decltype(m_storage)>(
+				::VirtualAlloc(NULL, max_capacity * OBJECT_SIZE, MEM_RESERVE, MEMORY_PROTECTION_LEVEL)
+				);
+
+			if (m_storage == nullptr)
+				throw ObjectPoolErrorCode::RESERVE_ERROR;
+
+			if (not ::VirtualAlloc(m_storage, m_capacity * OBJECT_SIZE, MEM_COMMIT, MEMORY_PROTECTION_LEVEL))
+				throw ObjectPoolErrorCode::COMMIT_ERROR;
+
+			// set bitmaps all object are free.
+			for (index_type i = 0; i < m_bitmap_size; i++)
+				m_free_storage_bitmaps[i] = ~size_type(0);
+		}
+
+		~ObjectPool()
+		{
+			// deregister this pool to the table;
+			pool_table[m_pool_index] = nullptr;
+
+			if (m_storage != nullptr) {
+				if (not ::VirtualFree(m_storage, 0, MEM_RELEASE))
+					logging::cerr() << "VirtualFree() failed with " << ::GetLastError();
+			}
+		}
+
+		bool reserve(size_type new_capacity)
+		{
+			if (m_capacity >= new_capacity)
+				return true;
+
+			if (is_exceed_max_capacity())
+				return false;
+
+			new_capacity = std::min(new_capacity, m_max_capacity);
+			if (::VirtualAlloc(m_storage, new_capacity * OBJECT_SIZE, MEM_COMMIT, MEMORY_PROTECTION_LEVEL)) {
+				m_capacity = new_capacity;
+				return true;
+			}
+
+			return false;
+		}
+
+		// new_object_unsafe returns object's id that must manually free.
 		// so it is used only when the user guarantees to free.
-
 		template <typename... Args>
 		ObjectID new_object_unsafe(Args&&... args)
 		{
@@ -159,6 +212,17 @@ namespace win
 			return (ObjectID(m_pool_index) << 32) | storage_index;
 		}
 
+		// new_object_raw returns object as pointer that must manually free.
+		// it is used only when the user guarantees to free.
+		template <typename... Args>
+		object_pointer new_object_raw(Args&&... args)
+		{
+			auto storage_index = new_object_internal(std::forward<Args>(args)...);
+			if (storage_index == INVALID_INDEX)
+				return nullptr;
+
+			return get_object_storage(storage_index);
+		}
 
 		template <typename... Args>
 		ScopedID new_object(Args&&... args)
@@ -171,7 +235,7 @@ namespace win
 		bool free_object(object_pointer object_ptr)
 		{
 			object_ptr->~T();
-			return transition_to_free(index_type(object_ptr - m_storage) / sizeof(object_type));
+			return transition_to_free(index_type(object_ptr - get_object_storage(0)));
 		}
 
 		static bool free_object(ObjectID object_id)
@@ -180,7 +244,7 @@ namespace win
 				return false;
 
 			if (auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)])) {
-				(pool->get_storage(storage_index(object_id))->~T()); // destruct
+				(pool->get_object_storage(storage_index(object_id))->~T()); // destruct
 				return pool->transition_to_free(storage_index(object_id));
 			}
 			return false;
@@ -192,7 +256,7 @@ namespace win
 				return nullptr;
 
 			auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)]);
-			return pool ? pool->get_storage(storage_index(object_id)) : nullptr;
+			return pool ? pool->get_object_storage(storage_index(object_id)) : nullptr;
 		}
 
 		size_type capacity()
@@ -208,7 +272,7 @@ namespace win
 			if (storage_index >= m_capacity && not extend_capacity(size_type(storage_index) + 1))
 				return INVALID_INDEX;
 
-			auto new_object_storage = &m_storage[storage_index];
+			auto new_object_storage = get_object_storage(storage_index);
 			new (new_object_storage) T(std::forward<Args>(args)...);
 			// manually construct using placement new.
 			// new operator may simply returns its second argument unchanged.
@@ -217,9 +281,9 @@ namespace win
 			return transition_to_ready(storage_index);
 		}
 
-		object_pointer get_storage(index_type storage_index) const
+		auto get_object_storage(index_type storage_index) const
 		{
-			return &m_storage[storage_index];
+			return reinterpret_cast<object_pointer>(m_storage + OBJECT_SIZE * storage_index);
 		}
 
 		inline bool is_exceed_max_capacity() const
@@ -237,129 +301,51 @@ namespace win
 			return id >> 32;
 		}
 
-		bool extend_capacity(size_type minimum_capacity);
+		bool extend_capacity(size_type minimum_capacity)
+		{
+			assert((m_capacity <= std::numeric_limits<size_type>::max() / 2, "Integer overflow"));
+			return reserve(std::max(m_capacity * 2, minimum_capacity));
+		}
 
-		index_type get_free_storage_index() const;
+		index_type get_free_storage_index() const
+		{
+			for (index_type i = 0; i < m_bitmap_size; i++) {
+				if (auto mask = m_free_storage_bitmaps[i]) {
+					unsigned long bit_index;
+					_BitScanForward64(&bit_index, mask);
+					return i * SIZE_TYPE_BIT_SIZE + bit_index;
+				}
+			}
+			return std::numeric_limits<index_type>::max();
+		}
 
-		index_type transition_to_ready(index_type);
+		index_type transition_to_ready(index_type storage_index)
+		{
+			auto bitmap = &m_free_storage_bitmaps[storage_index / SIZE_TYPE_BIT_SIZE];
+			auto bitmap_index = storage_index % SIZE_TYPE_BIT_SIZE;
 
-		bool transition_to_free(index_type);
+			*bitmap &= ~(1ULL << bitmap_index);
+			return storage_index;
+		}
+
+		bool transition_to_free(index_type storage_index)
+		{
+			assert(storage_index >= 0);
+			auto bitmap = &m_free_storage_bitmaps[storage_index / SIZE_TYPE_BIT_SIZE];
+			auto bitmap_index = storage_index % SIZE_TYPE_BIT_SIZE;
+			bool prev_state = *bitmap & (1ULL << bitmap_index);
+
+			*bitmap |= 1ULL << bitmap_index;
+			return prev_state == false // check it was in use.
+		}
 		
 		const index_type m_pool_index;
 
-		object_pointer m_storage;
+		std::uint8_t *m_storage;
 		size_type m_capacity;
 		const size_type m_max_capacity;
 		
 		const size_type m_bitmap_size;
 		std::unique_ptr<size_type[]> m_free_storage_bitmaps;
 	};
-}
-
-/// Definitions
-
-namespace win
-{
-	template <typename T>
-	ObjectPool<T>::ObjectPool(size_type max_capacity)
-		: m_pool_index{ num_of_free_object_pool.fetch_sub(1) }
-		, m_storage{ nullptr }
-		, m_capacity{ std::min(DEFAULT_CAPACITY, max_capacity) }
-		, m_max_capacity{ max_capacity }
-		, m_bitmap_size{ 1 + max_capacity / SIZE_TYPE_BIT_SIZE }
-		, m_free_storage_bitmaps{ new size_type[m_bitmap_size]}
-	{
-		if (not m_pool_index)
-			return;
-
-		// register this pool to the table;
-		pool_table[m_pool_index] = this;
-
-		m_storage = static_cast<object_pointer>(
-			::VirtualAlloc(NULL, max_capacity * sizeof(T), MEM_RESERVE, MEMORY_PROTECTION_LEVEL)
-			);
-
-		if (m_storage == nullptr)
-			throw ObjectPoolErrorCode::RESERVE_ERROR;
-
-		if (not ::VirtualAlloc(m_storage, m_capacity * sizeof(T), MEM_COMMIT, MEMORY_PROTECTION_LEVEL))
-			throw ObjectPoolErrorCode::COMMIT_ERROR;
-
-		// set bitmaps all object are free.
-		for (index_type i = 0; i < m_bitmap_size; i++)
-			m_free_storage_bitmaps[i] = ~size_type(0);
-	}
-
-	template <typename T>
-	ObjectPool<T>::~ObjectPool()
-	{
-		// deregister this pool to the table;
-		pool_table[m_pool_index] = nullptr;
-
-		if (m_storage != nullptr) {
-			if (not ::VirtualFree(m_storage, 0, MEM_RELEASE))
-				logging::cerr() << "VirtualFree() failed with " << ::GetLastError();
-		}
-	}
-
-	template <typename T>
-	bool ObjectPool<T>::reserve(size_type new_capacity)
-	{
-		if (m_capacity >= new_capacity)
-			return true;
-
-		if (is_exceed_max_capacity())
-			return false;
-
-		new_capacity = std::min(new_capacity, m_max_capacity);
-		if (::VirtualAlloc(m_storage, new_capacity * sizeof(T), MEM_COMMIT, MEMORY_PROTECTION_LEVEL)) {
-			m_capacity = new_capacity;
-			return true;
-		}
-
-		return false;
-	}
-
-	template <typename T>
-	bool ObjectPool<T>::extend_capacity(size_type minimum_capacity)
-	{
-		assert((m_capacity <= std::numeric_limits<size_type>::max() / 2, "Integer overflow"));
-		return reserve(std::max(m_capacity * 2, minimum_capacity));
-	}
-
-	template <typename T>
-	auto ObjectPool<T>::get_free_storage_index() const -> index_type
-	{
-		for (index_type i = 0; i < m_bitmap_size; i++) {
-			if (auto mask = m_free_storage_bitmaps[i]) {
-				unsigned long bit_index;
-				_BitScanForward64(&bit_index, mask);
-				return i * SIZE_TYPE_BIT_SIZE + bit_index;
-			}
-		}
-		return std::numeric_limits<index_type>::max();
-	}
-
-	template <typename T>
-	auto ObjectPool<T>::transition_to_ready(index_type storage_index) -> index_type
-	{
-		auto bitmap = &m_free_storage_bitmaps[storage_index / SIZE_TYPE_BIT_SIZE];
-		auto bitmap_index = storage_index % SIZE_TYPE_BIT_SIZE;
-
-		*bitmap &= ~(1ULL << bitmap_index);
-		return storage_index;
-	}
-
-
-	template <typename T>
-	bool ObjectPool<T>::transition_to_free(index_type storage_index)
-	{
-		assert(storage_index >= 0);
-		auto bitmap = &m_free_storage_bitmaps[storage_index / SIZE_TYPE_BIT_SIZE];
-		auto bitmap_index = storage_index % SIZE_TYPE_BIT_SIZE;
-		bool prev_state = *bitmap & (1ULL << bitmap_index);
-
-		*bitmap |= 1ULL << bitmap_index;
-		return prev_state == false;
-	}
 }

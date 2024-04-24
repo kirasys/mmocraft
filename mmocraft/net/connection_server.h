@@ -4,9 +4,9 @@
 #include <chrono>
 #include <ctime>
 
+#include "io/io_context_pool.h"
 #include "io/io_service.h"
 #include "net/socket.h"
-#include "win/object_pool.h"
 #include "win/smart_handle.h"
 #include "util/common_util.h"
 
@@ -16,15 +16,15 @@ namespace net
 
 	class ConnectionServer : util::NonCopyable, util::NonMovable
 	{
-		using IoContextPool = win::ObjectPool<io::IoContext>;
-		
 		// The minecrft beta server will disconnect a client,
 		// if it doesn't receive at least one packet before 1200 in-game ticks (1200 tick = 60s)
 		static constexpr unsigned REQUIRED_SECONDS_FOR_EXPIRE = 60;
 		static constexpr unsigned REQUIRED_SECONDS_FOR_SECURE_DELETION = 5;
 
 	public:
-		ConnectionServer(win::UniqueSocket&&, ServerCore&, io::IoCompletionPort& , IoContextPool&);
+		ConnectionServer(win::UniqueSocket&&, ServerCore&, io::IoCompletionPort& , io::IoContextPool&);
+
+		~ConnectionServer();
 
 		bool is_valid() const
 		{
@@ -62,11 +62,9 @@ namespace net
 
 		ServerCore &m_main_server;
 
-		IoContextPool::ScopedID m_send_context_id;
-		IoContextPool::ScopedID m_recv_context_id;
-
-		io::IoContext* const m_send_context;
-		io::IoContext* const m_recv_context;
+		io::IoContextPool& m_io_context_pool;
+		io::IoSendContext* const m_send_context;
+		io::IoRecvContext* const m_recv_context;
 
 		struct ConnectionStatus {
 			bool online	= false;

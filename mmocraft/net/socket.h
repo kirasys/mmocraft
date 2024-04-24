@@ -49,11 +49,11 @@ namespace net
 
 		bool listen(int backlog = SOMAXCONN);
 
-		bool accept(io::IoContext&);
+		bool accept(io::IoAcceptContext&);
 
-		bool send(io::IoContext&);
+		bool send(io::IoSendContext&);
 
-		bool recv(io::IoContext&);
+		bool recv(io::IoRecvContext&);
 
 		int get_address_family() {
 			return AF_INET; // TODO: IPv6

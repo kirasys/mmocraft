@@ -27,39 +27,26 @@ namespace io
 		WSAOVERLAPPED overlapped;
 		handler_type handler = nullptr;
 
-		union Details
-		{
-			struct AcceptContext {
-				LPFN_ACCEPTEX fnAcceptEx;
-				win::Socket accepted_socket;
-				std::uint8_t buffer[1024];
-			} accept;
-
-			struct SendContext {
-				std::uint8_t buffer[SEND_BUF_SIZE];
-			} send;
-
-			struct RecvContext {
-				std::uint8_t buffer[RECV_BUF_SIZE];
-				std::size_t num_of_unconsumed_bytes;
-			} recv;
-
-		} details;
-
 		IoContext(handler_type handler_)
 			: handler(handler_)
-		{ 
-			details.recv.num_of_unconsumed_bytes = 0;
-		}
+		{ }
+	};
 
-		auto& begin_recv_buffer()
-		{
-			return details.recv.buffer;
-		}
+	struct IoAcceptContext : IoContext
+	{
+		LPFN_ACCEPTEX fnAcceptEx;
+		win::Socket accepted_socket;
+		std::uint8_t buffer[1024];
+	};
 
-		auto& size_of_unconsumed_bytes()
-		{
-			return details.recv.num_of_unconsumed_bytes;
-		}
+	struct IoRecvContext : IoContext
+	{
+		std::uint8_t buffer[RECV_BUF_SIZE];
+		std::size_t num_of_unconsumed_bytes;
+	};
+
+	struct IoSendContext : IoContext
+	{
+		std::uint8_t buffer[SEND_BUF_SIZE];
 	};
 }

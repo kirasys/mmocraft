@@ -7,7 +7,7 @@
 #include "socket.h"
 #include "packet.h"
 #include "connection_server.h"
-#include "io/io_context.h"
+#include "io/io_context_pool.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
 #include "util/common_util.h"
@@ -18,7 +18,6 @@
 
 namespace
 {
-	using IoContextPool = win::ObjectPool<io::IoContext>;
 	using ConnectionServerPool = win::ObjectPool<net::ConnectionServer>;
 	using ConnectionServerID = ConnectionServerPool::ObjectID;
 	using ConnectionServerScopedID = ConnectionServerPool::ScopedID;
@@ -62,8 +61,8 @@ namespace net
 
 		io::IoCompletionPort m_io_service;
 
-		IoContextPool m_io_context_pool;
-		io::IoContext& m_accept_context;
+		io::IoContextPool m_io_context_pool;
+		io::IoAcceptContext* const m_accept_context; // don't have to delete manually
 
 		ConnectionServerPool m_connection_server_pool;
 		std::list<ConnectionServer*> m_connection_list;
