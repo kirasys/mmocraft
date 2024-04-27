@@ -102,7 +102,7 @@ namespace net
 
 	struct Packet
 	{
-		std::uint8_t  id;
+		PacketID  id;
 	};
 
 	struct PacketKeepAlive : Packet

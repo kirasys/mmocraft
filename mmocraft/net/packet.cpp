@@ -40,14 +40,16 @@ namespace net
 	{
 		assert(buf_start < buf_end);
 
+		// parse packet common header.
 		auto packet_id = PacketID(*buf_start);
-		auto parser = *packet_static_data_by_id[packet_id].parse;
+		auto packet_parser = *packet_static_data_by_id[packet_id].parse;
 
-		out_packet->id = parser ? packet_id : PacketID::INVALID;
-		if (!parser)
+		out_packet->id = packet_parser ? packet_id : PacketID::INVALID;
+		if (out_packet->id == PacketID::INVALID)
 			return 1; // stop parsing invalid packet.
 
-		if (auto new_buf_start = (*parser)(buf_start + 1, buf_end, out_packet))
+		// parse concrete packet structure.
+		if (auto new_buf_start = (*packet_parser)(buf_start + 1, buf_end, out_packet))
 			return new_buf_start - buf_start;
 
 		return 0; // insufficient packet data.
