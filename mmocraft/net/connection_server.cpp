@@ -7,35 +7,6 @@
 
 namespace net
 {
-	namespace ServerHandler
-	{
-		DEFINE_HANDLER(handle_send)
-		{
-			static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_send)>, "Incorrect handler signature");
-
-
-		}
-
-		DEFINE_HANDLER(handle_recv)
-		{
-			static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_recv)>, "Incorrect handler signature");
-
-			if (auto connection_server = ConnectionServer::try_interact_with_client(event_owner)) {
-
-				if (num_of_transferred_bytes == 0) { // client closes the socket.
-					connection_server->set_offline();
-					return;
-				}
-
-				if (not connection_server->dispatch_packets(num_of_transferred_bytes)) {
-					// kick
-				}
-
-				connection_server->request_recv_client();
-			}	
-		}
-	}
-
 	ConnectionServer::ConnectionServer(win::UniqueSocket&& sock,
 								ServerCore &main_server,
 								io::IoCompletionPort& io_service,
@@ -43,8 +14,8 @@ namespace net
 		: m_client_socket{ std::move(sock) }
 		, m_main_server{ main_server }
 		, m_io_context_pool{ io_context_pool }
-		, m_send_context{ io_context_pool.new_context<io::IoSendContext>(ServerHandler::handle_send) }
-		, m_recv_context{ io_context_pool.new_context<io::IoRecvContext>(ServerHandler::handle_recv) }
+		, m_send_context{ io_context_pool.new_context<io::IoSendContext>() }
+		, m_recv_context{ io_context_pool.new_context<io::IoRecvContext>() }
 	{
 		m_connection_status.online = true;
 		update_last_interaction_time();
@@ -68,40 +39,37 @@ namespace net
 		m_client_socket.recv(*m_recv_context);
 	}
 
-	bool ConnectionServer::dispatch_packets(std::size_t num_of_received_bytes)
+	std::optional<std::size_t> ConnectionServer::process_packets()
 	{
-		auto buf_start = m_recv_context->buffer;
-		auto buf_end = buf_start + num_of_received_bytes + m_recv_context->num_of_unconsumed_bytes;
+		auto buf_begin = m_recv_context->buffer_begin(), buf_end = m_recv_context->buffer_end();
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
-		while (buf_start < buf_end) {
-			const auto num_of_parsed_bytes = PacketStructure::parse_packet(buf_start, buf_end, packet_ptr);
-			if (num_of_parsed_bytes == 0) // Insuffcient packet data
+		while (buf_begin < buf_end) {
+			const std::size_t parsed_bytes = PacketStructure::parse_packet(buf_begin, buf_end, packet_ptr);
+			if (parsed_bytes == 0) // Insuffcient packet data
 				break;
 
 			if (not PacketStructure::validate_packet(packet_ptr)) {
-				return false;
+				return std::nullopt;
 			}
 
 			if (not m_main_server.handle_packet(*this, packet_ptr))
 				logging::cerr() << "Unsupported packet id(" << packet_ptr->id << ")";
 
-			buf_start += num_of_parsed_bytes;
+			buf_begin += parsed_bytes;
 		}
 
-		assert((buf_end - buf_start < sizeof(m_recv_context->buffer)) && "Parsing error");
-		m_recv_context->num_of_unconsumed_bytes = buf_end - buf_start;
-		return true;
+		assert(buf_begin <= buf_end && "Parsing error");
+		return buf_begin - m_recv_context->buffer_begin(); // num of total parsed bytes.
 	}
 
-	auto ConnectionServer::try_interact_with_client(void* server_instance) -> ConnectionServer*
+	bool ConnectionServer::try_interact_with_client()
 	{
-		auto connection_server = reinterpret_cast<ConnectionServer*>(server_instance);
-		if (connection_server->is_online()) {
-			connection_server->update_last_interaction_time();
-			return connection_server;
+		if (is_online()) {
+			update_last_interaction_time();
+			return true;
 		}
-		return nullptr;
+		return false;
 	}
 
 	void ConnectionServer::set_offline()
@@ -122,5 +90,42 @@ namespace net
 	{
 		return not is_online()
 			&& current_time >= m_connection_status.offline_time + REQUIRED_SECONDS_FOR_SECURE_DELETION;
+	}
+
+	/* Event Handler Interface */
+
+	void ConnectionServer::on_success()
+	{
+		request_recv_client();
+	}
+
+	void ConnectionServer::on_error()
+	{
+		if (not m_connection_status.online)
+			set_offline();
+	}
+
+	std::optional<std::size_t> ConnectionServer::handle_io_event(io::EventType event_type)
+	{
+		switch (event_type)
+		{
+		case io::EventType::RecvEvent: return handle_recv_event();
+		case io::EventType::SendEvent: return handle_send_event();
+		default: assert(false);
+		}
+		return std::nullopt;
+	}
+
+	std::optional<std::size_t> ConnectionServer::handle_recv_event()
+	{
+		if (not try_interact_with_client())
+			return std::nullopt; // timeout case: connection will be deleted soon.
+
+		return process_packets();
+	}
+
+	std::optional<std::size_t> ConnectionServer::handle_send_event()
+	{
+		return 1;
 	}
 }

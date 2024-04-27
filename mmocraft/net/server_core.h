@@ -25,7 +25,7 @@ namespace
 
 namespace net
 {
-	class ServerCore : util::NonCopyable, util::NonMovable
+	class ServerCore : io::IoEventHandler, util::NonCopyable, util::NonMovable
 	{
 	public:
 		ServerCore(std::string_view ip,
@@ -44,9 +44,15 @@ namespace net
 
 		virtual bool handle_packet(ConnectionServer&, Packet*) = 0;
 
-		win::Socket get_listen_socket() {
-			return m_listen_sock.get_handle();
-		}
+		/* Event handler interface */
+
+		virtual void on_success() override;
+
+		virtual void on_error() override;
+
+		virtual std::optional<std::size_t> handle_io_event(io::EventType) override;
+
+		bool handle_accept_event();
 		
 	private:
 		const struct ServerInfo

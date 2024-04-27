@@ -52,11 +52,11 @@ namespace io
 			}
 
 			if (overlapped) {
-				auto event_owner = reinterpret_cast<void*>(completion_key);
 				auto io_ctx = CONTAINING_RECORD(overlapped, io::IoContext, overlapped);
-				
+
 				try {
-					io_ctx->handler(event_owner, io_ctx, num_of_transferred_bytes, error_code);
+					auto event_handler = reinterpret_cast<IoEventHandler*>(completion_key);
+					io_ctx->invoke_handler(event_handler, num_of_transferred_bytes);
 				}
 				catch (const error::Exception& ex) {
 					logging::cerr() << "Exception(" << ex.code <<") was caught, but suppressed...";

@@ -5,46 +5,6 @@
 
 namespace net
 {
-	namespace ServerHandler
-	{
-		DEFINE_HANDLER(handle_accept)
-		{
-			static_assert(std::is_same_v<io::IoContext::handler_type, decltype(&handle_accept)>, "Incorrect handler signature");
-
-			if (error_code != ERROR_SUCCESS) {
-				logging::cerr() << "handle_accept() failed with " << error_code;
-				return;
-			}
-
-			auto& server = *static_cast<net::ServerCore*>(event_owner);
-
-			util::defer rearm_server = [&server] {
-				server.accept_next_client();
-			};
-
-			auto& accept_ctx = *static_cast<io::IoAcceptContext*>(io_ctx_ptr);
-			auto client_socket = win::UniqueSocket(accept_ctx.accepted_socket);
-
-			// inherit the properties of the listen socket.
-			win::Socket listen_sock = server.get_listen_socket();
-			if (SOCKET_ERROR == ::setsockopt(client_socket,
-				SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
-				reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
-				logging::cerr() << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
-				return;
-			}
-
-			// add a client to the server.
-			if (not server.new_connection(std::move(client_socket))) {
-				logging::cerr() << "fail to create a server for single client";
-				return;
-			}
-		}
-	}
-}
-
-namespace net
-{
 	ServerCore::ServerCore(std::string_view ip, int port,
 							unsigned max_client_connections,
 							unsigned num_of_event_threads,
@@ -56,7 +16,7 @@ namespace net
 		, m_listen_sock{ net::SocketType::TCPv4 }
 		, m_io_service{ concurrency_hint }
 		, m_io_context_pool{ 2 * max_client_connections + 1}
-		, m_accept_context{ m_io_context_pool.new_context<io::IoAcceptContext>(ServerHandler::handle_accept) }
+		, m_accept_context{ m_io_context_pool.new_context<io::IoAcceptContext>() }
 		, m_connection_server_pool{ max_client_connections }
 		, m_interval_task_scheduler{ this }
 	{	
@@ -84,7 +44,7 @@ namespace net
 
 		m_connection_list.push_back(connection_server);
 
-		// connection server wiil be deleted when expired. (see check_connection_expiration)
+		// main server wiil delete connection when expired. (see check_connection_expiration)
 		connection_server_id.release();
 
 		return true;
@@ -133,5 +93,47 @@ namespace net
 			m_io_service.spawn_event_loop_thread().detach();
 
 		m_io_service.run_event_loop_forever();
+	}
+
+	/** 
+	 * Event handler interface
+	 */
+
+	void ServerCore::on_success()
+	{
+		accept_next_client();
+	}
+
+	void ServerCore::on_error()
+	{
+		
+	}
+
+	std::optional<std::size_t> ServerCore::handle_io_event(io::EventType event_type)
+	{
+		assert(event_type == io::EventType::AcceptEvent);
+		return handle_accept_event() ? std::optional<std::size_t>(0) : std::nullopt;
+	}
+
+	bool ServerCore::handle_accept_event()
+	{
+		auto client_socket = win::UniqueSocket(m_accept_context->accepted_socket);
+
+		// inherit the properties of the listen socket.
+		win::Socket listen_sock = m_listen_sock.get_handle();
+		if (SOCKET_ERROR == ::setsockopt(client_socket,
+			SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
+			reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
+			logging::cerr() << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
+			return false;
+		}
+
+		// add a client to the server.
+		if (not new_connection(std::move(client_socket))) {
+			logging::cerr() << "fail to create a server for single client";
+			return false;
+		}
+		
+		return true;
 	}
 }

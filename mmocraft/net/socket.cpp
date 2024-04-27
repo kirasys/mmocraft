@@ -113,8 +113,9 @@ bool net::Socket::send(io::IoSendContext& ctx)
 bool net::Socket::recv(io::IoRecvContext& ctx)
 {
 	WSABUF buffer;
-	buffer.buf = reinterpret_cast<char*>(ctx.buffer) + ctx.num_of_unconsumed_bytes;
-	buffer.len = ULONG(sizeof(ctx.buffer) - ctx.num_of_unconsumed_bytes);
+	buffer.buf = reinterpret_cast<char*>(ctx.unused_buffer_begin());
+	buffer.len = ULONG(ctx.unused_buffer_end() - ctx.unused_buffer_begin());
+	assert(buffer.len > 0);
 
 	DWORD flags = 0;
 

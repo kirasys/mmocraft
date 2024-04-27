@@ -62,7 +62,6 @@ namespace win
 	class ObjectPool : util::NonCopyable, util::NonMovable
 	{
 	public:
-		using object_type = T;
 		using size_type = std::size_t;
 		using index_type = std::uint32_t;
 		using object_pointer = T*;
@@ -336,7 +335,7 @@ namespace win
 			bool prev_state = *bitmap & (1ULL << bitmap_index);
 
 			*bitmap |= 1ULL << bitmap_index;
-			return prev_state == false // check it was in use.
+			return prev_state == false; // check it was in use.
 		}
 		
 		const index_type m_pool_index;

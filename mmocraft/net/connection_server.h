@@ -14,7 +14,7 @@ namespace net
 {
 	class ServerCore;
 
-	class ConnectionServer : util::NonCopyable, util::NonMovable
+	class ConnectionServer : io::IoEventHandler, util::NonCopyable, util::NonMovable
 	{
 		// The minecrft beta server will disconnect a client,
 		// if it doesn't receive at least one packet before 1200 in-game ticks (1200 tick = 60s)
@@ -35,11 +35,13 @@ namespace net
 		
 		//void send_to_client();
 
-		bool dispatch_packets(std::size_t num_of_received_bytes);
+		std::optional<std::size_t> process_packets();
 
-		/* Methods related to connection status */
+		/**
+		 * Methods related to connection status
+		 */
 
-		static ConnectionServer* try_interact_with_client(void* server_instance);
+		bool try_interact_with_client();
 		
 		void update_last_interaction_time(std::time_t current_time = util::current_timestmap())
 		{
@@ -56,6 +58,18 @@ namespace net
 		bool is_expired(std::time_t current_time = util::current_timestmap()) const;
 
 		bool is_safe_delete(std::time_t current_time = util::current_timestmap()) const;
+
+		/* Event Handler Interface */
+
+		virtual void on_success() override;
+
+		virtual void on_error() override;
+
+		virtual std::optional<std::size_t> handle_io_event(io::EventType) override;
+
+		std::optional<std::size_t> handle_recv_event();
+
+		std::optional<std::size_t> handle_send_event();
 
 	private:
 		net::Socket m_client_socket;

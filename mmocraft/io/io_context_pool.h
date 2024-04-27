@@ -17,9 +17,9 @@ namespace io
 		{ }
 
 		template <typename T>
-		auto new_context(IoContext::handler_type func)
+		auto new_context()
 		{
-			return static_cast<T*>(m_pool.new_object_raw(func));
+			return static_cast<T*>(m_pool.new_object_raw());
 		}
 
 		template <typename T>
