@@ -4,7 +4,7 @@
 #include <chrono>
 #include <ctime>
 
-#include "io/io_context_pool.h"
+#include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "net/socket.h"
 #include "win/smart_handle.h"
@@ -22,13 +22,13 @@ namespace net
 		static constexpr unsigned REQUIRED_SECONDS_FOR_SECURE_DELETION = 5;
 
 	public:
-		ConnectionServer(win::UniqueSocket&&, ServerCore&, io::IoCompletionPort& , io::IoContextPool&);
+		ConnectionServer(win::UniqueSocket&&, ServerCore&, io::IoCompletionPort& , io::IoEventPool&);
 
 		~ConnectionServer();
 
 		bool is_valid() const
 		{
-			return m_send_context != nullptr && m_recv_context != nullptr;
+			return m_send_event != nullptr && m_recv_event != nullptr;
 		}
 
 		void request_recv_client();
@@ -76,9 +76,9 @@ namespace net
 
 		ServerCore &m_main_server;
 
-		io::IoContextPool& m_io_context_pool;
-		io::IoSendContext* const m_send_context;
-		io::IoRecvContext* const m_recv_context;
+		io::IoEventPool& m_io_event_pool;
+		io::IoSendEvent* const m_send_event;
+		io::IoRecvEvent* const m_recv_event;
 
 		struct ConnectionStatus {
 			bool online	= false;

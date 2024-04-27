@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="config\config.cpp" />
-    <ClCompile Include="io\io_context.cpp" />
+    <ClCompile Include="io\io_event.cpp" />
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
     <ClCompile Include="logging\logger.cpp" />
@@ -41,8 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
-    <ClInclude Include="io\io_context.h" />
-    <ClInclude Include="io\io_context_pool.h" />
+    <ClInclude Include="io\io_event.h" />
+    <ClInclude Include="io\io_event_pool.h" />
     <ClInclude Include="io\io_service.h" />
     <ClInclude Include="logging\error.h" />
     <ClInclude Include="logging\logger.h" />

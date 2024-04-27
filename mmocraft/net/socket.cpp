@@ -5,7 +5,6 @@
 #include <cassert>
 
 #include "logging/error.h"
-#include "io/io_context.h"
 #include "io/io_service.h"
 
 using namespace error;
@@ -48,9 +47,9 @@ bool net::Socket::listen(int backlog) {
 	return true;
 }
 
-bool net::Socket::accept(io::IoAcceptContext& ctx)
+bool net::Socket::accept(io::IoAcceptEvent& event)
 {
-	if (ctx.fnAcceptEx == nullptr) {
+	if (event.fnAcceptEx == nullptr) {
 		GUID acceptex_guid = WSAID_ACCEPTEX;
 		DWORD bytes = 0;
 
@@ -59,26 +58,26 @@ bool net::Socket::accept(io::IoAcceptContext& ctx)
 			SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&acceptex_guid,
 			sizeof(acceptex_guid),
-			&ctx.fnAcceptEx,
-			sizeof(ctx.fnAcceptEx),
+			&event.fnAcceptEx,
+			sizeof(event.fnAcceptEx),
 			&bytes, NULL, NULL) == SOCKET_ERROR)
 		{
 			throw NetworkException(ErrorCode::SOCKET_ACCEPTEX_LOAD);
 		}
 	}
 
-	ctx.accepted_socket = create_windows_socket(SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
-	if (ctx.accepted_socket == INVALID_SOCKET)
+	event.accepted_socket = create_windows_socket(SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
+	if (event.accepted_socket == INVALID_SOCKET)
 		throw NetworkException(ErrorCode::SOCKET_CREATE);
 
 	DWORD bytes_received;
-	BOOL success = ctx.fnAcceptEx(
-		m_handle, ctx.accepted_socket,
-		LPVOID(ctx.buffer),
+	BOOL success = event.fnAcceptEx(
+		m_handle, event.accepted_socket,
+		LPVOID(event.buffer),
 		0, // does not recevice packet data.
 		sizeof(SOCKADDR_STORAGE) + 16, sizeof(SOCKADDR_STORAGE) + 16,
 		&bytes_received,
-		&ctx.overlapped
+		&event.overlapped
 	);
 
 	if (not success && (ERROR_IO_PENDING != ::WSAGetLastError()))
@@ -87,11 +86,11 @@ bool net::Socket::accept(io::IoAcceptContext& ctx)
 	return true;
 }
 
-bool net::Socket::send(io::IoSendContext& ctx)
+bool net::Socket::send(io::IoSendEvent& event)
 {
 	WSABUF buffer;
-	buffer.buf = reinterpret_cast<char*>(ctx.buffer);
-	buffer.len = sizeof(ctx.buffer);
+	buffer.buf = reinterpret_cast<char*>(event.buffer);
+	buffer.len = sizeof(event.buffer);
 
 	DWORD flags = 0;
 
@@ -100,7 +99,7 @@ bool net::Socket::send(io::IoSendContext& ctx)
 		&buffer, 1,
 		NULL,
 		flags,
-		&ctx.overlapped,
+		&event.overlapped,
 		NULL
 	);
 
@@ -110,11 +109,11 @@ bool net::Socket::send(io::IoSendContext& ctx)
 	return true;
 }
 
-bool net::Socket::recv(io::IoRecvContext& ctx)
+bool net::Socket::recv(io::IoRecvEvent& event)
 {
 	WSABUF buffer;
-	buffer.buf = reinterpret_cast<char*>(ctx.unused_buffer_begin());
-	buffer.len = ULONG(ctx.unused_buffer_end() - ctx.unused_buffer_begin());
+	buffer.buf = reinterpret_cast<char*>(event.unused_buffer_begin());
+	buffer.len = ULONG(event.unused_buffer_end() - event.unused_buffer_begin());
 	assert(buffer.len > 0);
 
 	DWORD flags = 0;
@@ -124,7 +123,7 @@ bool net::Socket::recv(io::IoRecvContext& ctx)
 		&buffer, 1,
 		NULL,
 		&flags,
-		&ctx.overlapped,
+		&event.overlapped,
 		NULL
 	);
 

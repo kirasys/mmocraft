@@ -15,8 +15,8 @@ namespace net
 						 .num_of_event_threads = num_of_event_threads}
 		, m_listen_sock{ net::SocketType::TCPv4 }
 		, m_io_service{ concurrency_hint }
-		, m_io_context_pool{ 2 * max_client_connections + 1}
-		, m_accept_context{ m_io_context_pool.new_context<io::IoAcceptContext>() }
+		, m_io_event_pool{ 2 * max_client_connections + 1}
+		, m_accept_event{ m_io_event_pool.new_event<io::IoAcceptEvent>() }
 		, m_connection_server_pool{ max_client_connections }
 		, m_interval_task_scheduler{ this }
 	{	
@@ -35,7 +35,7 @@ namespace net
 			std::move(client_sock),
 			/* main_server = */ *this,
 			m_io_service,
-			m_io_context_pool
+			m_io_event_pool
 		);
 
 		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
@@ -74,7 +74,7 @@ namespace net
 		m_interval_task_scheduler.process_tasks();
 
 		try {
-			m_listen_sock.accept(*m_accept_context);
+			m_listen_sock.accept(*m_accept_event);
 		}
 		catch (...) {
 			// TODO: accept scheduling
@@ -86,7 +86,7 @@ namespace net
 	{
 		m_listen_sock.bind(m_server_info.ip, m_server_info.port);
 		m_listen_sock.listen();
-		m_listen_sock.accept(*m_accept_context);
+		m_listen_sock.accept(*m_accept_event);
 		std::cout << "Listening to " << m_server_info.ip << ':' << m_server_info.port << "...\n";
 
 		for (unsigned i = 0; i < m_server_info.num_of_event_threads; i++)
@@ -117,7 +117,7 @@ namespace net
 
 	bool ServerCore::handle_accept_event()
 	{
-		auto client_socket = win::UniqueSocket(m_accept_context->accepted_socket);
+		auto client_socket = win::UniqueSocket(m_accept_event->accepted_socket);
 
 		// inherit the properties of the listen socket.
 		win::Socket listen_sock = m_listen_sock.get_handle();

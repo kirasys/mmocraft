@@ -30,7 +30,7 @@ namespace io
 		SendEvent,
 	};
 
-	struct IoContext;
+	struct IoEvent;
 
 	class IoEventHandler
 	{
@@ -42,16 +42,16 @@ namespace io
 		virtual std::optional<std::size_t> handle_io_event(EventType) = 0;
 	};
 
-	struct IoContext
+	struct IoEvent
 	{
 		WSAOVERLAPPED overlapped;
 
-		IoContext() = default;
+		IoEvent() = default;
 
 		virtual void invoke_handler(IoEventHandler*, DWORD) { } // TODO: should be pure virtual function?
 	};
 
-	struct IoAcceptContext : IoContext
+	struct IoAcceptEvent : IoEvent
 	{
 		static const EventType event_type = AcceptEvent;
 
@@ -69,7 +69,7 @@ namespace io
 		}
 	};
 
-	struct IoRecvContext : IoContext
+	struct IoRecvEvent : IoEvent
 	{
 		static const EventType event_type = RecvEvent;
 
@@ -118,7 +118,7 @@ namespace io
 		}
 	};
 
-	struct IoSendContext : IoContext
+	struct IoSendEvent : IoEvent
 	{
 		static const EventType event_type = SendEvent;
 

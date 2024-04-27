@@ -10,12 +10,12 @@ namespace net
 	ConnectionServer::ConnectionServer(win::UniqueSocket&& sock,
 								ServerCore &main_server,
 								io::IoCompletionPort& io_service,
-								io::IoContextPool &io_context_pool)
+								io::IoEventPool &io_event_pool)
 		: m_client_socket{ std::move(sock) }
 		, m_main_server{ main_server }
-		, m_io_context_pool{ io_context_pool }
-		, m_send_context{ io_context_pool.new_context<io::IoSendContext>() }
-		, m_recv_context{ io_context_pool.new_context<io::IoRecvContext>() }
+		, m_io_event_pool{ io_event_pool }
+		, m_send_event{ io_event_pool.new_event<io::IoSendEvent>() }
+		, m_recv_event{ io_event_pool.new_event<io::IoRecvEvent>() }
 	{
 		m_connection_status.online = true;
 		update_last_interaction_time();
@@ -30,18 +30,18 @@ namespace net
 
 	ConnectionServer::~ConnectionServer()
 	{
-		m_io_context_pool.delete_context(m_send_context);
-		m_io_context_pool.delete_context(m_recv_context);
+		m_io_event_pool.delete_event(m_send_event);
+		m_io_event_pool.delete_event(m_recv_event);
 	}
 
 	void ConnectionServer::request_recv_client()
 	{
-		m_client_socket.recv(*m_recv_context);
+		m_client_socket.recv(*m_recv_event);
 	}
 
 	std::optional<std::size_t> ConnectionServer::process_packets()
 	{
-		auto buf_begin = m_recv_context->buffer_begin(), buf_end = m_recv_context->buffer_end();
+		auto buf_begin = m_recv_event->buffer_begin(), buf_end = m_recv_event->buffer_end();
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
 		while (buf_begin < buf_end) {
@@ -60,7 +60,7 @@ namespace net
 		}
 
 		assert(buf_begin <= buf_end && "Parsing error");
-		return buf_begin - m_recv_context->buffer_begin(); // num of total parsed bytes.
+		return buf_begin - m_recv_event->buffer_begin(); // num of total parsed bytes.
 	}
 
 	bool ConnectionServer::try_interact_with_client()

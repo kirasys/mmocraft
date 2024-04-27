@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string_view>
 
-#include "io/io_context.h"
+#include "io/io_event.h"
 #include "win/win_type.h"
 #include "win/win_base_object.h"
 #include "win/smart_handle.h"
@@ -49,11 +49,11 @@ namespace net
 
 		bool listen(int backlog = SOMAXCONN);
 
-		bool accept(io::IoAcceptContext&);
+		bool accept(io::IoAcceptEvent&);
 
-		bool send(io::IoSendContext&);
+		bool send(io::IoSendEvent&);
 
-		bool recv(io::IoRecvContext&);
+		bool recv(io::IoRecvEvent&);
 
 		int get_address_family() {
 			return AF_INET; // TODO: IPv6

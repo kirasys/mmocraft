@@ -13,7 +13,7 @@
     <ClCompile Include="net\socket.cpp" />
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
-    <ClCompile Include="io\io_context.cpp" />
+    <ClCompile Include="io\io_event.cpp" />
     <ClCompile Include="util\lock_free_stack.cpp" />
     <ClCompile Include="net\server_core.cpp" />
     <ClCompile Include="pch.cpp" />
@@ -29,7 +29,7 @@
     <ClInclude Include="util\deferred_call.h" />
     <ClInclude Include="io\io_service.h" />
     <ClInclude Include="logging\error.h" />
-    <ClInclude Include="io\io_context.h" />
+    <ClInclude Include="io\io_event.h" />
     <ClInclude Include="win\object_pool.h" />
     <ClInclude Include="util\lock_free_stack.h" />
     <ClInclude Include="win\win_base_object.h" />
@@ -45,7 +45,7 @@
     <ClInclude Include="util\interval_task.h" />
     <ClInclude Include="util\time_util.h" />
     <ClInclude Include="net\packet.h" />
-    <ClInclude Include="io\io_context_pool.h" />
+    <ClInclude Include="io\io_event_pool.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />

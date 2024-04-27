@@ -7,14 +7,12 @@
 #include "socket.h"
 #include "packet.h"
 #include "connection_server.h"
-#include "io/io_context_pool.h"
+#include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
 #include "util/common_util.h"
 #include "util/interval_task.h"
 #include "config/config.h"
-
-#define DEFINE_HANDLER(x) static void x(void* event_owner, io::IoContext* io_ctx_ptr, DWORD num_of_transferred_bytes, DWORD error_code)
 
 namespace
 {
@@ -67,8 +65,8 @@ namespace net
 
 		io::IoCompletionPort m_io_service;
 
-		io::IoContextPool m_io_context_pool;
-		io::IoAcceptContext* const m_accept_context; // don't have to delete manually
+		io::IoEventPool m_io_event_pool;
+		io::IoAcceptEvent* const m_accept_event; // don't have to delete manually
 
 		ConnectionServerPool m_connection_server_pool;
 		std::list<ConnectionServer*> m_connection_list;
