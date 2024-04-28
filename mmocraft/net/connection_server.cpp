@@ -39,13 +39,13 @@ namespace net
 		m_client_socket.recv(*m_recv_event);
 	}
 
-	std::optional<std::size_t> ConnectionServer::process_packets()
+	std::optional<std::size_t> ConnectionServer::process_packets(std::uint8_t* data_begin, std::uint8_t* data_end)
 	{
-		auto buf_begin = m_recv_event->data.begin(), buf_end = m_recv_event->data.end();
+		auto data_cur = data_begin;
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
-		while (buf_begin < buf_end) {
-			const std::size_t parsed_bytes = PacketStructure::parse_packet(buf_begin, buf_end, packet_ptr);
+		while (data_cur < data_end) {
+			const std::size_t parsed_bytes = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
 			if (parsed_bytes == 0) // Insuffcient packet data
 				break;
 
@@ -56,11 +56,11 @@ namespace net
 			if (not m_main_server.handle_packet(*this, packet_ptr))
 				logging::cerr() << "Unsupported packet id(" << packet_ptr->id << ")";
 
-			buf_begin += parsed_bytes;
+			data_cur += parsed_bytes;
 		}
 
-		assert(buf_begin <= buf_end && "Parsing error");
-		return buf_begin - m_recv_event->data.begin(); // num of total parsed bytes.
+		assert(data_cur <= data_end && "Parsing error");
+		return data_cur - data_begin; // num of total parsed bytes.
 	}
 
 	bool ConnectionServer::try_interact_with_client()
@@ -105,26 +105,26 @@ namespace net
 			set_offline();
 	}
 
-	std::optional<std::size_t> ConnectionServer::handle_io_event(io::EventType event_type)
+	std::optional<std::size_t> ConnectionServer::handle_io_event(io::EventType event_type, io::IoEvent& event)
 	{
 		switch (event_type)
 		{
-		case io::EventType::RecvEvent: return handle_recv_event();
-		case io::EventType::SendEvent: return handle_send_event();
+		case io::EventType::RecvEvent: return handle_recv_event(*static_cast<io::IoRecvEvent*>(&event));
+		case io::EventType::SendEvent: return handle_send_event(*static_cast<io::IoSendEvent*>(&event));
 		default: assert(false);
 		}
 		return std::nullopt;
 	}
 
-	std::optional<std::size_t> ConnectionServer::handle_recv_event()
+	std::optional<std::size_t> ConnectionServer::handle_recv_event(io::IoRecvEvent& event)
 	{
 		if (not try_interact_with_client())
 			return std::nullopt; // timeout case: connection will be deleted soon.
 
-		return process_packets();
+		return process_packets(event.data.begin(), event.data.end());
 	}
 
-	std::optional<std::size_t> ConnectionServer::handle_send_event()
+	std::optional<std::size_t> ConnectionServer::handle_send_event(io::IoSendEvent& event)
 	{
 		return 1;
 	}

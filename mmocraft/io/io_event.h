@@ -29,17 +29,8 @@ namespace io
 		SendEvent,
 	};
 
-	class IoEventHandler
-	{
-	public:
-		virtual void on_error() = 0;
-
-		virtual void on_success() = 0;
-
-		virtual std::optional<std::size_t> handle_io_event(EventType) = 0;
-	};
-
 	class IoEventData;
+	class IoEventHandler;
 
 	struct IoEvent
 	{
@@ -128,5 +119,15 @@ namespace io
 		friend IoRecvEvent;
 		std::uint8_t data[DEFAULT_BUFFER_SIZE];
 		std::size_t size = 0;
+	};
+
+	class IoEventHandler
+	{
+	public:
+		virtual void on_error() = 0;
+
+		virtual void on_success() = 0;
+
+		virtual std::optional<std::size_t> handle_io_event(EventType, IoEvent&) = 0;
 	};
 }

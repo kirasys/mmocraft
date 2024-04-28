@@ -48,9 +48,9 @@ namespace net
 
 		virtual void on_error() override;
 
-		virtual std::optional<std::size_t> handle_io_event(io::EventType) override;
+		virtual std::optional<std::size_t> handle_io_event(io::EventType, io::IoEvent&) override;
 
-		bool handle_accept_event();
+		bool handle_accept_event(io::IoAcceptEvent&);
 		
 	private:
 		const struct ServerInfo

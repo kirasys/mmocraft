@@ -35,7 +35,7 @@ namespace net
 		
 		//void send_to_client();
 
-		std::optional<std::size_t> process_packets();
+		std::optional<std::size_t> process_packets(std::uint8_t*, std::uint8_t*);
 
 		/**
 		 * Methods related to connection status
@@ -65,11 +65,11 @@ namespace net
 
 		virtual void on_error() override;
 
-		virtual std::optional<std::size_t> handle_io_event(io::EventType) override;
+		virtual std::optional<std::size_t> handle_io_event(io::EventType, io::IoEvent&) override;
 
-		std::optional<std::size_t> handle_recv_event();
+		std::optional<std::size_t> handle_recv_event(io::IoRecvEvent&);
 
-		std::optional<std::size_t> handle_send_event();
+		std::optional<std::size_t> handle_send_event(io::IoSendEvent&);
 
 	private:
 		net::Socket m_client_socket;

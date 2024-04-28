@@ -112,15 +112,16 @@ namespace net
 		
 	}
 
-	std::optional<std::size_t> ServerCore::handle_io_event(io::EventType event_type)
+	std::optional<std::size_t> ServerCore::handle_io_event(io::EventType event_type, io::IoEvent& event)
 	{
 		assert(event_type == io::EventType::AcceptEvent);
-		return handle_accept_event() ? std::optional<std::size_t>(0) : std::nullopt;
+		return handle_accept_event(*static_cast<io::IoAcceptEvent*>(&event)) 
+					? std::optional<std::size_t>(0) : std::nullopt;
 	}
 
-	bool ServerCore::handle_accept_event()
+	bool ServerCore::handle_accept_event(io::IoAcceptEvent& event)
 	{
-		auto client_socket = win::UniqueSocket(m_accept_event.accepted_socket);
+		auto client_socket = win::UniqueSocket(event.accepted_socket);
 
 		// inherit the properties of the listen socket.
 		win::Socket listen_sock = m_listen_sock.get_handle();
