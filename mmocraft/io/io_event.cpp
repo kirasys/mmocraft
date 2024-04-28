@@ -26,7 +26,7 @@ namespace io
 		if (not processed_bytes.has_value())
 			return event_handler.on_error();
 
-		if (data.size - processed_bytes.value())
+		if (data.size -= processed_bytes.value())
 			std::memmove(data.begin(), data.begin() + processed_bytes.value(), data.size);
 
 		event_handler.on_success();
