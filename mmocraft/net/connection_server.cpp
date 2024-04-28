@@ -105,12 +105,12 @@ namespace net
 			set_offline();
 	}
 
-	std::optional<std::size_t> ConnectionServer::handle_io_event(io::EventType event_type, io::IoEvent& event)
+	std::optional<std::size_t> ConnectionServer::handle_io_event(io::EventType event_type, io::IoEvent* event)
 	{
 		switch (event_type)
 		{
-		case io::EventType::RecvEvent: return handle_recv_event(*static_cast<io::IoRecvEvent*>(&event));
-		case io::EventType::SendEvent: return handle_send_event(*static_cast<io::IoSendEvent*>(&event));
+		case io::EventType::RecvEvent: return handle_recv_event(*static_cast<io::IoRecvEvent*>(event));
+		case io::EventType::SendEvent: return handle_send_event(*static_cast<io::IoSendEvent*>(event));
 		default: assert(false);
 		}
 		return std::nullopt;

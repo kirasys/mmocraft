@@ -65,7 +65,7 @@ namespace net
 
 		virtual void on_error() override;
 
-		virtual std::optional<std::size_t> handle_io_event(io::EventType, io::IoEvent&) override;
+		virtual std::optional<std::size_t> handle_io_event(io::EventType, io::IoEvent*) override;
 
 		std::optional<std::size_t> handle_recv_event(io::IoRecvEvent&);
 

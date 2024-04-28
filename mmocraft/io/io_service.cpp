@@ -56,7 +56,7 @@ namespace io
 
 				try {
 					auto event_handler = reinterpret_cast<IoEventHandler*>(completion_key);
-					io_event->invoke_handler(event_handler, num_of_transferred_bytes);
+					io_event->invoke_handler(*event_handler, num_of_transferred_bytes);
 				}
 				catch (const error::Exception& ex) {
 					logging::cerr() << "Exception(" << ex.code <<") was caught, but suppressed...";

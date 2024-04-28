@@ -112,10 +112,10 @@ namespace net
 		
 	}
 
-	std::optional<std::size_t> ServerCore::handle_io_event(io::EventType event_type, io::IoEvent& event)
+	std::optional<std::size_t> ServerCore::handle_io_event(io::EventType event_type, io::IoEvent* event)
 	{
 		assert(event_type == io::EventType::AcceptEvent);
-		return handle_accept_event(*static_cast<io::IoAcceptEvent*>(&event)) 
+		return handle_accept_event(*static_cast<io::IoAcceptEvent*>(event)) 
 					? std::optional<std::size_t>(0) : std::nullopt;
 	}
 

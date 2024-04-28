@@ -44,7 +44,7 @@ namespace io
 			: data{*a_data }
 		{ }
 
-		virtual void invoke_handler(IoEventHandler*, DWORD) = 0;
+		virtual void invoke_handler(IoEventHandler&, DWORD) = 0;
 	};
 
 	struct IoAcceptEvent : IoEvent
@@ -56,7 +56,7 @@ namespace io
 
 		using IoEvent::IoEvent;
 
-		void invoke_handler(IoEventHandler* event_handler, DWORD transferred_bytes) override;
+		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
 	};
 
 	struct IoRecvEvent : IoEvent
@@ -65,7 +65,7 @@ namespace io
 
 		using IoEvent::IoEvent;
 
-		void invoke_handler(IoEventHandler* event_handler, DWORD transferred_bytes) override;
+		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
 	};
 
 	struct IoSendEvent : IoEvent
@@ -74,7 +74,7 @@ namespace io
 
 		using IoEvent::IoEvent;
 
-		void invoke_handler(IoEventHandler*, DWORD) override
+		void invoke_handler(IoEventHandler&, DWORD) override
 		{
 
 		}
@@ -128,6 +128,6 @@ namespace io
 
 		virtual void on_success() = 0;
 
-		virtual std::optional<std::size_t> handle_io_event(EventType, IoEvent&) = 0;
+		virtual std::optional<std::size_t> handle_io_event(EventType, IoEvent*) = 0;
 	};
 }
