@@ -73,7 +73,7 @@ bool net::Socket::accept(io::IoAcceptEvent& event)
 	DWORD bytes_received;
 	BOOL success = event.fnAcceptEx(
 		m_handle, event.accepted_socket,
-		LPVOID(event.buffer),
+		LPVOID(event.data.begin()),
 		0, // does not recevice packet data.
 		sizeof(SOCKADDR_STORAGE) + 16, sizeof(SOCKADDR_STORAGE) + 16,
 		&bytes_received,
@@ -89,8 +89,9 @@ bool net::Socket::accept(io::IoAcceptEvent& event)
 bool net::Socket::send(io::IoSendEvent& event)
 {
 	WSABUF buffer;
-	buffer.buf = reinterpret_cast<char*>(event.buffer);
-	buffer.len = sizeof(event.buffer);
+	buffer.buf = reinterpret_cast<char*>(event.data.begin_unused());
+	buffer.len = sizeof(event.data.unused_size());
+	assert(buffer.len > 0);
 
 	DWORD flags = 0;
 
@@ -112,8 +113,8 @@ bool net::Socket::send(io::IoSendEvent& event)
 bool net::Socket::recv(io::IoRecvEvent& event)
 {
 	WSABUF buffer;
-	buffer.buf = reinterpret_cast<char*>(event.unused_buffer_begin());
-	buffer.len = ULONG(event.unused_buffer_end() - event.unused_buffer_begin());
+	buffer.buf = reinterpret_cast<char*>(event.data.begin_unused());
+	buffer.len = ULONG(event.data.unused_size());
 	assert(buffer.len > 0);
 
 	DWORD flags = 0;

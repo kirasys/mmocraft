@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <cstdlib>
 
 #include "io_event.h"
@@ -7,41 +8,74 @@
 
 namespace io
 {
+	class IoEventPool
+	{
+	public:
+		virtual IoAcceptEvent* new_accept_event() = 0;
+		virtual void delete_event(IoAcceptEvent*) = 0;
+
+		virtual IoSendEvent* new_send_event() = 0;
+		virtual void delete_event(IoSendEvent*) = 0;
+
+		virtual IoRecvEvent* new_recv_event() = 0;
+		virtual void delete_event(IoRecvEvent*) = 0;
+	};
+
 	/// 오브젝트 풀을 통해 IoContext 구조체를 할당하는 클래스.
-	/// IoContext 타입마다 별개의 풀을 사용하지 않고, 하나의 풀로 연속된(Sequential) 공간에 할당. 
-	class IoEventSequentialPool
+	/// 각각의 풀은 VirtualAlloc으로 연속된 공간에 할당된다.
+	class IoEventObjectPool : public IoEventPool
 	{	
 	public:
-		IoEventSequentialPool(std::size_t max_capacity)
-			: m_pool{max_capacity}
+		IoEventObjectPool(std::size_t max_capacity)
+			: m_accept_event_pool{ 1 }
+			, m_send_event_pool{ max_capacity }
+			, m_recv_event_pool{ max_capacity }
+			, m_event_data_pool{ 2 * max_capacity + 1}
 		{ }
 
-		template <typename T>
-		auto new_event()
+		IoAcceptEvent* new_accept_event()
 		{
-			return static_cast<T*>(m_pool.new_object_raw());
+			auto io_buf = m_event_data_pool.new_object_raw();
+			return m_accept_event_pool.new_object_raw(io_buf);
 		}
 
-		template <typename T>
-		void delete_event(T* ctx)
+		void delete_event(IoAcceptEvent* event)
 		{
-			m_pool.free_object(static_cast<IoEvent*>(ctx));
+			m_event_data_pool.free_object(&event->data);
+			m_accept_event_pool.free_object(event);
+		}
+
+		IoSendEvent* new_send_event()
+		{
+			auto io_buf = m_event_data_pool.new_object_raw();
+			return m_send_event_pool.new_object_raw(io_buf);
+		}
+
+		void delete_event(IoSendEvent* event)
+		{
+			m_event_data_pool.free_object(&event->data);
+			m_send_event_pool.free_object(event);
+		}
+
+		IoRecvEvent* new_recv_event()
+		{
+			auto io_buf = m_event_data_pool.new_object_raw();
+			return m_recv_event_pool.new_object_raw(io_buf);
+		}
+
+		void delete_event(IoRecvEvent* event)
+		{
+			m_event_data_pool.free_object(&event->data);
+			m_recv_event_pool.free_object(event);
 		}
 
 	private:
-		struct IoEventSpan : IoEvent
-		{
-			union OperationContext
-			{
-				IoAcceptEvent ev_accept;
-				IoRecvEvent ev_recv;
-				IoSendEvent ec_send;
-			} ev_operation;
-		};
-
-		win::ObjectPool<IoEvent, sizeof(IoEventSpan)> m_pool;
+		win::ObjectPool<IoAcceptEvent> m_accept_event_pool;
+		win::ObjectPool<IoSendEvent> m_send_event_pool;
+		win::ObjectPool<IoRecvEvent> m_recv_event_pool;
+		win::ObjectPool<IoEventData> m_event_data_pool;
 	};
 
 	// default IoContextPool class
-	using IoEventPool = IoEventSequentialPool;
+	using IoEventDefaultPool = IoEventObjectPool;
 }

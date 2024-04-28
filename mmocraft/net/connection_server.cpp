@@ -14,8 +14,8 @@ namespace net
 		: m_client_socket{ std::move(sock) }
 		, m_main_server{ main_server }
 		, m_io_event_pool{ io_event_pool }
-		, m_send_event{ io_event_pool.new_event<io::IoSendEvent>() }
-		, m_recv_event{ io_event_pool.new_event<io::IoRecvEvent>() }
+		, m_send_event{ io_event_pool.new_send_event() }
+		, m_recv_event{ io_event_pool.new_recv_event() }
 	{
 		m_connection_status.online = true;
 		update_last_interaction_time();
@@ -41,7 +41,7 @@ namespace net
 
 	std::optional<std::size_t> ConnectionServer::process_packets()
 	{
-		auto buf_begin = m_recv_event->buffer_begin(), buf_end = m_recv_event->buffer_end();
+		auto buf_begin = m_recv_event->data.begin(), buf_end = m_recv_event->data.end();
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
 		while (buf_begin < buf_end) {
@@ -60,7 +60,7 @@ namespace net
 		}
 
 		assert(buf_begin <= buf_end && "Parsing error");
-		return buf_begin - m_recv_event->buffer_begin(); // num of total parsed bytes.
+		return buf_begin - m_recv_event->data.begin(); // num of total parsed bytes.
 	}
 
 	bool ConnectionServer::try_interact_with_client()

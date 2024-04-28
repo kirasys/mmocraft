@@ -16,7 +16,7 @@ namespace net
 		, m_listen_sock{ net::SocketType::TCPv4 }
 		, m_io_service{ concurrency_hint }
 		, m_io_event_pool{ 2 * max_client_connections + 1}
-		, m_accept_event{ m_io_event_pool.new_event<io::IoAcceptEvent>() }
+		, m_accept_event{ m_io_event_pool.new_accept_event() }
 		, m_connection_server_pool{ max_client_connections }
 		, m_interval_task_scheduler{ this }
 	{	

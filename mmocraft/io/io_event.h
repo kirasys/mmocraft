@@ -19,8 +19,7 @@ namespace io
 	//constexpr int SEND_MEDIUM_BUF_SIZE = SEND_SMALL_BUF_SIZE * 8;
 	//constexpr int SEND_LARGE_BUF_SIZE  = SEND_MEDIUM_BUF_SIZE * 8;
 
-	constexpr int SEND_BUF_SIZE = 4096;
-	constexpr int RECV_BUF_SIZE = 4096;
+	constexpr int DEFAULT_BUFFER_SIZE = 4096;
 
 	enum EventType
 	{
@@ -29,8 +28,6 @@ namespace io
 		RecvEvent,
 		SendEvent,
 	};
-
-	struct IoEvent;
 
 	class IoEventHandler
 	{
@@ -42,13 +39,21 @@ namespace io
 		virtual std::optional<std::size_t> handle_io_event(EventType) = 0;
 	};
 
+	class IoEventData;
+
 	struct IoEvent
 	{
 		WSAOVERLAPPED overlapped;
+		
+		// NOTE: separate buffer space for better locality.
+		//       the allocator(may be pool) responsible for release.
+		IoEventData& data;
 
-		IoEvent() = default;
+		IoEvent(IoEventData* a_data)
+			: data{*a_data }
+		{ }
 
-		virtual void invoke_handler(IoEventHandler*, DWORD) { } // TODO: should be pure virtual function?
+		virtual void invoke_handler(IoEventHandler*, DWORD) = 0;
 	};
 
 	struct IoAcceptEvent : IoEvent
@@ -58,7 +63,7 @@ namespace io
 		LPFN_ACCEPTEX fnAcceptEx;
 		win::Socket accepted_socket;
 
-		std::uint8_t buffer[1024];
+		using IoEvent::IoEvent;
 
 		void invoke_handler(IoEventHandler* event_handler, DWORD transferred_bytes) override;
 	};
@@ -67,29 +72,8 @@ namespace io
 	{
 		static const EventType event_type = RecvEvent;
 
-		std::size_t buffer_size = 0;
-		std::uint8_t buffer[RECV_BUF_SIZE];
+		using IoEvent::IoEvent;
 
-		std::uint8_t* buffer_begin()
-		{
-			return buffer;
-		}
-
-		std::uint8_t* buffer_end()
-		{
-			return buffer + buffer_size;
-		}
-
-		std::uint8_t* unused_buffer_begin()
-		{
-			return buffer_end();
-		}
-
-		std::uint8_t* unused_buffer_end()
-		{
-			return buffer + sizeof(buffer);
-		}
-		
 		void invoke_handler(IoEventHandler* event_handler, DWORD transferred_bytes) override;
 	};
 
@@ -97,11 +81,52 @@ namespace io
 	{
 		static const EventType event_type = SendEvent;
 
-		std::uint8_t buffer[SEND_BUF_SIZE];
+		using IoEvent::IoEvent;
 
 		void invoke_handler(IoEventHandler*, DWORD) override
 		{
 
 		}
+	};
+
+	class IoEventData
+	{
+	public:
+		// data points to used space.
+
+		std::uint8_t* begin()
+		{
+			return data;
+		}
+
+		std::uint8_t* end()
+		{
+			return data + size;
+		}
+
+		// buffer points to free space.
+
+		std::uint8_t* begin_unused()
+		{
+			return end();
+		}
+
+		std::uint8_t* end_unused()
+		{
+			return data + sizeof(data);
+		}
+
+		std::size_t unused_size() const
+		{
+			return sizeof(data) - size;
+		}
+
+	private:
+		// Only IoEvent class can access internals. (especially size)
+		friend IoAcceptEvent;
+		friend IoSendEvent;
+		friend IoRecvEvent;
+		std::uint8_t data[DEFAULT_BUFFER_SIZE];
+		std::size_t size = 0;
 	};
 }
