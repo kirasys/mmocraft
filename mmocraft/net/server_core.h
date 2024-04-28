@@ -65,8 +65,8 @@ namespace net
 
 		io::IoCompletionPort m_io_service;
 
-		io::IoEventDefaultPool m_io_event_pool;
-		io::IoAcceptEvent* const m_accept_event; // don't have to delete manually
+		io::IoEventPool& m_io_event_pool;
+		io::IoAcceptEvent& m_accept_event;
 
 		ConnectionServerPool m_connection_server_pool;
 		std::list<ConnectionServer*> m_connection_list;

@@ -75,7 +75,4 @@ namespace io
 		win::ObjectPool<IoRecvEvent> m_recv_event_pool;
 		win::ObjectPool<IoEventData> m_event_data_pool;
 	};
-
-	// default IoContextPool class
-	using IoEventDefaultPool = IoEventObjectPool;
 }
