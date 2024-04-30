@@ -17,7 +17,7 @@ namespace io
 		if (transferred_bytes == 0)	// EOF
 			return event_handler.on_error();
 
-		data.size += transferred_bytes;
+		data.push(nullptr, transferred_bytes); // data was already appended by I/O.
 
 		// deliver events to the owner.
 		auto processed_bytes = event_handler.handle_io_event(event_type, this);
@@ -26,9 +26,53 @@ namespace io
 		if (not processed_bytes.has_value())
 			return event_handler.on_error();
 
-		if (data.size -= processed_bytes.value())
-			std::memmove(data.begin(), data.begin() + processed_bytes.value(), data.size);
+		data.pop(processed_bytes.value());
 
 		event_handler.on_success();
+	}
+
+	bool IoRecvEventData::push(std::uint8_t*, std::size_t n)
+	{
+		// data was already appended by I/O.
+		_size += n;
+		return true;
+	}
+
+	void IoRecvEventData::pop(std::size_t n)
+	{
+		if (_size -= n)
+			std::memmove(_data, _data + n, _size); // move remaining data ahead.
+	}
+
+	void IoSendEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes)
+	{
+		// pre-processing
+		if (transferred_bytes == 0)	// EOF
+			return event_handler.on_error();
+
+		data.pop(transferred_bytes);
+
+		// deliver events to the owner.
+		// auto processed_bytes = event_handler.handle_io_event(event_type, this);
+	}
+
+	bool IoSendEventData::push(std::uint8_t* data, std::size_t n)
+	{
+		if (n > unused_size())
+			return false;
+
+		std::memcpy(begin_unused(), data, n);
+		used_data_tail += n;
+
+		return true;
+	}
+
+	void IoSendEventData::pop(std::size_t n)
+	{
+		used_data_head += n;
+		assert(used_data_head <= sizeof(_data));
+
+		if (used_data_head == used_data_tail)
+			used_data_head = used_data_tail = 0;
 	}
 }

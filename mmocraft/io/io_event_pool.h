@@ -27,52 +27,56 @@ namespace io
 	{	
 	public:
 		IoEventObjectPool(std::size_t max_capacity)
-			: m_accept_event_pool{ 1 }
-			, m_send_event_pool{ max_capacity }
-			, m_recv_event_pool{ max_capacity }
-			, m_event_data_pool{ 2 * max_capacity + 1}
+			: accept_event_pool{ 1 }
+			, send_event_pool{ max_capacity }
+			, send_event_data_pool { max_capacity }
+			, recv_event_pool{ max_capacity }
+			, recv_event_data_pool{ max_capacity + 1}
 		{ }
 
 		IoAcceptEvent* new_accept_event()
 		{
-			auto io_buf = m_event_data_pool.new_object_raw();
-			return m_accept_event_pool.new_object_raw(io_buf);
+			auto io_buf = recv_event_data_pool.new_object_raw();
+			return accept_event_pool.new_object_raw(io_buf);
 		}
 
 		void delete_event(IoAcceptEvent* event)
 		{
-			m_event_data_pool.free_object(&event->data);
-			m_accept_event_pool.free_object(event);
+			recv_event_data_pool.free_object(static_cast<IoRecvEventData*>(&event->data));
+			accept_event_pool.free_object(event);
 		}
 
 		IoSendEvent* new_send_event()
 		{
-			auto io_buf = m_event_data_pool.new_object_raw();
-			return m_send_event_pool.new_object_raw(io_buf);
+			auto io_buf = send_event_data_pool.new_object_raw();
+			return send_event_pool.new_object_raw(io_buf);
 		}
 
 		void delete_event(IoSendEvent* event)
 		{
-			m_event_data_pool.free_object(&event->data);
-			m_send_event_pool.free_object(event);
+			send_event_data_pool.free_object(static_cast<IoSendEventData*>(&event->data));
+			send_event_pool.free_object(event);
 		}
 
 		IoRecvEvent* new_recv_event()
 		{
-			auto io_buf = m_event_data_pool.new_object_raw();
-			return m_recv_event_pool.new_object_raw(io_buf);
+			auto io_buf = recv_event_data_pool.new_object_raw();
+			return recv_event_pool.new_object_raw(io_buf);
 		}
 
 		void delete_event(IoRecvEvent* event)
 		{
-			m_event_data_pool.free_object(&event->data);
-			m_recv_event_pool.free_object(event);
+			recv_event_data_pool.free_object(static_cast<IoRecvEventData*>(&event->data));
+			recv_event_pool.free_object(event);
 		}
 
 	private:
-		win::ObjectPool<IoAcceptEvent> m_accept_event_pool;
-		win::ObjectPool<IoSendEvent> m_send_event_pool;
-		win::ObjectPool<IoRecvEvent> m_recv_event_pool;
-		win::ObjectPool<IoEventData> m_event_data_pool;
+		win::ObjectPool<IoAcceptEvent> accept_event_pool;
+
+		win::ObjectPool<IoSendEvent> send_event_pool;
+		win::ObjectPool<IoSendEventData> send_event_data_pool;
+
+		win::ObjectPool<IoRecvEvent> recv_event_pool;
+		win::ObjectPool<IoRecvEventData> recv_event_data_pool;
 	};
 }

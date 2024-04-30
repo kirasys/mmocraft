@@ -31,9 +31,9 @@ namespace net
 			return m_send_event != nullptr && m_recv_event != nullptr;
 		}
 
-		void request_recv_client();
+		void request_recv();
 		
-		//void send_to_client();
+		void request_send();
 
 		std::optional<std::size_t> process_packets(std::uint8_t*, std::uint8_t*);
 

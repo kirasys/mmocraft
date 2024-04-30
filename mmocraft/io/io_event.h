@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <cstdint>
+#include <cassert>
 #include <memory>
 #include <optional>
 
@@ -74,10 +75,7 @@ namespace io
 
 		using IoEvent::IoEvent;
 
-		void invoke_handler(IoEventHandler&, DWORD) override
-		{
-
-		}
+		void invoke_handler(IoEventHandler&, DWORD) override;
 	};
 
 	class IoEventData
@@ -85,14 +83,43 @@ namespace io
 	public:
 		// data points to used space.
 
+		virtual std::uint8_t* begin() = 0;
+
+		virtual std::uint8_t* end() = 0;
+
+		virtual std::size_t size() const = 0;
+
+		// buffer points to free space.
+
+		virtual std::uint8_t* begin_unused() = 0;
+
+		virtual std::uint8_t* end_unused() = 0;
+
+		virtual std::size_t unused_size() const = 0;
+		
+		virtual bool push(std::uint8_t* data, std::size_t n) = 0;
+
+		virtual void pop(std::size_t n) = 0;
+	};
+
+	class IoRecvEventData : public IoEventData
+	{
+	public:
+		// data points to used space.
+
 		std::uint8_t* begin()
 		{
-			return data;
+			return _data;
 		}
 
 		std::uint8_t* end()
 		{
-			return data + size;
+			return _data + _size;
+		}
+
+		std::size_t size() const
+		{
+			return _size;
 		}
 
 		// buffer points to free space.
@@ -104,21 +131,67 @@ namespace io
 
 		std::uint8_t* end_unused()
 		{
-			return data + sizeof(data);
+			return _data + sizeof(_data);
 		}
 
 		std::size_t unused_size() const
 		{
-			return sizeof(data) - size;
+			return sizeof(_data) - _size;
 		}
 
+		bool push(std::uint8_t*, std::size_t n) override;
+
+		void pop(std::size_t n) override;
+
 	private:
-		// Only IoEvent class can access internals. (especially size)
-		friend IoAcceptEvent;
-		friend IoSendEvent;
-		friend IoRecvEvent;
-		std::uint8_t data[DEFAULT_BUFFER_SIZE];
-		std::size_t size = 0;
+		std::uint8_t _data[DEFAULT_BUFFER_SIZE];
+		std::size_t _size = 0;
+	};
+
+	class IoSendEventData : public IoEventData
+	{
+		// data points to used space.
+
+		std::uint8_t* begin()
+		{
+			return _data + used_data_head;
+		}
+
+		std::uint8_t* end()
+		{
+			return _data + used_data_tail;
+		}
+
+		std::size_t size() const
+		{
+			return used_data_tail - used_data_head;
+		}
+
+		// buffer points to free space.
+
+		std::uint8_t* begin_unused()
+		{
+			return end();
+		}
+
+		std::uint8_t* end_unused()
+		{
+			return _data + sizeof(_data);
+		}
+
+		std::size_t unused_size() const
+		{
+			return sizeof(_data) - used_data_tail;
+		}
+
+		bool push(std::uint8_t* data, std::size_t n) override;
+
+		void pop(std::size_t n) override;
+
+	private:
+		std::uint8_t _data[DEFAULT_BUFFER_SIZE];
+		std::size_t used_data_head = 0;
+		std::size_t used_data_tail = 0;
 	};
 
 	class IoEventHandler

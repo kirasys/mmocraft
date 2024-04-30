@@ -25,7 +25,7 @@ namespace net
 									/*.event_owner = */ reinterpret_cast<void*>(this));
 
 		// init first recv.
-		this->request_recv_client();
+		this->request_recv();
 	}
 
 	ConnectionServer::~ConnectionServer()
@@ -34,9 +34,14 @@ namespace net
 		m_io_event_pool.delete_event(m_recv_event);
 	}
 
-	void ConnectionServer::request_recv_client()
+	void ConnectionServer::request_recv()
 	{
 		m_client_socket.recv(*m_recv_event);
+	}
+
+	void ConnectionServer::request_send()
+	{
+
 	}
 
 	std::optional<std::size_t> ConnectionServer::process_packets(std::uint8_t* data_begin, std::uint8_t* data_end)
@@ -96,7 +101,7 @@ namespace net
 
 	void ConnectionServer::on_success()
 	{
-		request_recv_client();
+		request_recv();
 	}
 
 	void ConnectionServer::on_error()
@@ -126,6 +131,11 @@ namespace net
 
 	std::optional<std::size_t> ConnectionServer::handle_send_event(io::IoSendEvent& event)
 	{
+		if (not is_online())
+			return std::nullopt;
+
+
+
 		return 1;
 	}
 }
