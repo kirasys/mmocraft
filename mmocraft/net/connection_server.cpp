@@ -21,8 +21,7 @@ namespace net
 		update_last_interaction_time();
 
 		// allow to service client socket events.
-		io_service.register_event_source(m_client_socket.get_handle(),
-									/*.event_owner = */ reinterpret_cast<void*>(this));
+		io_service.register_event_source(m_client_socket.get_handle(), this);
 
 		// init first recv.
 		this->request_recv();

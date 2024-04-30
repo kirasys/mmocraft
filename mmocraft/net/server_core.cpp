@@ -23,7 +23,7 @@ namespace net
 		, m_connection_server_pool{ max_client_connections }
 		, m_interval_task_scheduler{ this }
 	{	
-		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_owner = */ this);
+		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_handler = */ this);
 
 		//
 		// Schedule interval tasks.

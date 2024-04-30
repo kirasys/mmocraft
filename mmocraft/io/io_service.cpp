@@ -9,15 +9,15 @@ namespace io
 		: m_handle{ ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, ULONG_PTR(0), num_of_concurrent_threads) }
 	{ }
 
-	void IoCompletionPort::register_event_source(win::Handle event_source, void* event_owner)
+	void IoCompletionPort::register_event_source(win::Handle event_source, IoEventHandler* event_handler)
 	{
-		if (::CreateIoCompletionPort(event_source, m_handle, ULONG_PTR(event_owner), DWORD(0)) == NULL)
+		if (::CreateIoCompletionPort(event_source, m_handle, ULONG_PTR(event_handler), DWORD(0)) == NULL)
 			throw error::IoException(error::ErrorCode::IO_SERVICE_CREATE_COMPLETION_PORT);
 	}
 
-	void IoCompletionPort::register_event_source(win::Socket event_source, void* event_owner)
+	void IoCompletionPort::register_event_source(win::Socket event_source, IoEventHandler* event_handler)
 	{
-		register_event_source(win::Handle(event_source), event_owner);
+		register_event_source(win::Handle(event_source), event_handler);
 	}
 
 	void IoCompletionPort::close() noexcept
