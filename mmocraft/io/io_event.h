@@ -16,11 +16,10 @@
 
 namespace io
 {
-	//constexpr int SEND_SMALL_BUF_SIZE  = 128;
-	//constexpr int SEND_MEDIUM_BUF_SIZE = SEND_SMALL_BUF_SIZE * 8;
-	//constexpr int SEND_LARGE_BUF_SIZE  = SEND_MEDIUM_BUF_SIZE * 8;
 
-	constexpr int DEFAULT_BUFFER_SIZE = 4096;
+	constexpr int RECV_BUFFER_SIZE = 4096;
+	constexpr int SEND_BUFFER_SIZE = 4096;
+	constexpr int SEND_SMALL_BUFFER_SIZE = 1024;
 
 	enum EventType
 	{
@@ -81,6 +80,8 @@ namespace io
 	class IoEventData
 	{
 	public:
+		virtual ~IoEventData() = default;
+
 		// data points to used space.
 
 		virtual std::uint8_t* begin() = 0;
@@ -144,11 +145,12 @@ namespace io
 		void pop(std::size_t n) override;
 
 	private:
-		std::uint8_t _data[DEFAULT_BUFFER_SIZE];
+		std::uint8_t _data[RECV_BUFFER_SIZE];
 		std::size_t _size = 0;
 	};
 
-	class IoSendEventData : public IoEventData
+	template <std::size_t N>
+	class IoSendEventVariableData : public IoEventData
 	{
 		// data points to used space.
 
@@ -176,24 +178,43 @@ namespace io
 
 		std::uint8_t* end_unused()
 		{
-			return _data + sizeof(_data);
+			return _data + N;
 		}
 
 		std::size_t unused_size() const
 		{
-			return sizeof(_data) - used_data_tail;
+			return N - used_data_tail;
 		}
 
-		bool push(std::uint8_t* data, std::size_t n) override;
+		bool push(std::uint8_t* data, std::size_t n) override
+		{
+			if (used_data_head == used_data_tail)
+				used_data_head = used_data_tail = 0;
 
-		void pop(std::size_t n) override;
+			if (n > unused_size())
+				return false;
+
+			std::memcpy(begin_unused(), data, n);
+			used_data_tail += n;
+
+			return true;
+		}
+
+		void pop(std::size_t n) override
+		{
+			used_data_head += n;
+			assert(used_data_head <= N);
+		}
 
 	private:
-		std::uint8_t _data[DEFAULT_BUFFER_SIZE];
+		std::uint8_t _data[N];
 		std::size_t used_data_head = 0;
 		std::size_t used_data_tail = 0;
 	};
 
+	using IoSendEventShortData = IoSendEventVariableData<SEND_SMALL_BUFFER_SIZE>;
+	using IoSendEventData = IoSendEventVariableData<SEND_BUFFER_SIZE>;
+	
 	class IoEventHandler
 	{
 	public:

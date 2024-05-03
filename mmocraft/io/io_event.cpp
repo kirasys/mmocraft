@@ -55,24 +55,4 @@ namespace io
 		// deliver events to the owner.
 		// auto processed_bytes = event_handler.handle_io_event(event_type, this);
 	}
-
-	bool IoSendEventData::push(std::uint8_t* data, std::size_t n)
-	{
-		if (n > unused_size())
-			return false;
-
-		std::memcpy(begin_unused(), data, n);
-		used_data_tail += n;
-
-		return true;
-	}
-
-	void IoSendEventData::pop(std::size_t n)
-	{
-		used_data_head += n;
-		assert(used_data_head <= sizeof(_data));
-
-		if (used_data_head == used_data_tail)
-			used_data_head = used_data_tail = 0;
-	}
 }

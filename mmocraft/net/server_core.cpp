@@ -17,8 +17,8 @@ namespace net
 		, m_io_service{ concurrency_hint }
 
 		// No need to release. server core long live until program termination.
-		, m_io_event_pool{ *new io::IoEventObjectPool(2 * max_client_connections + 1) }
-		, m_accept_event{ *m_io_event_pool.new_accept_event() }
+		, m_io_event_pool{ *new io::IoEventPool(max_client_connections) }
+		, m_accept_event{ m_io_event_pool.new_accept_event() }
 
 		, m_connection_server_pool{ max_client_connections }
 		, m_interval_task_scheduler{ this }
@@ -77,7 +77,7 @@ namespace net
 		m_interval_task_scheduler.process_tasks();
 
 		try {
-			m_listen_sock.accept(m_accept_event);
+			m_listen_sock.accept(*m_accept_event.get());
 		}
 		catch (...) {
 			// TODO: accept scheduling
@@ -89,7 +89,7 @@ namespace net
 	{
 		m_listen_sock.bind(m_server_info.ip, m_server_info.port);
 		m_listen_sock.listen();
-		m_listen_sock.accept(m_accept_event);
+		m_listen_sock.accept(*m_accept_event.get());
 		std::cout << "Listening to " << m_server_info.ip << ':' << m_server_info.port << "...\n";
 
 		for (unsigned i = 0; i < m_server_info.num_of_event_threads; i++)

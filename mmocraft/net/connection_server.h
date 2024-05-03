@@ -4,10 +4,12 @@
 #include <chrono>
 #include <ctime>
 
+
+#include "net/socket.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
-#include "net/socket.h"
 #include "win/smart_handle.h"
+#include "game/player.h"
 #include "util/common_util.h"
 
 namespace net
@@ -28,7 +30,7 @@ namespace net
 
 		bool is_valid() const
 		{
-			return m_send_event != nullptr && m_recv_event != nullptr;
+			return m_send_event.is_valid() && m_recv_event.is_valid();
 		}
 
 		void request_recv();
@@ -76,9 +78,8 @@ namespace net
 
 		ServerCore &m_main_server;
 
-		io::IoEventPool& m_io_event_pool;
-		io::IoSendEvent* const m_send_event;
-		io::IoRecvEvent* const m_recv_event;
+		io::IoSendEventPtr m_send_event;
+		io::IoRecvEventPtr m_recv_event;
 
 		struct ConnectionStatus {
 			bool online	= false;

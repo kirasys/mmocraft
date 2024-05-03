@@ -13,7 +13,6 @@ namespace net
 								io::IoEventPool &io_event_pool)
 		: m_client_socket{ std::move(sock) }
 		, m_main_server{ main_server }
-		, m_io_event_pool{ io_event_pool }
 		, m_send_event{ io_event_pool.new_send_event() }
 		, m_recv_event{ io_event_pool.new_recv_event() }
 	{
@@ -29,13 +28,12 @@ namespace net
 
 	ConnectionServer::~ConnectionServer()
 	{
-		m_io_event_pool.delete_event(m_send_event);
-		m_io_event_pool.delete_event(m_recv_event);
+		
 	}
 
 	void ConnectionServer::request_recv()
 	{
-		m_client_socket.recv(*m_recv_event);
+		m_client_socket.recv(*m_recv_event.get());
 	}
 
 	void ConnectionServer::request_send()
