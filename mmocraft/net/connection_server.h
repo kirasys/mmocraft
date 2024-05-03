@@ -30,7 +30,7 @@ namespace net
 
 		bool is_valid() const
 		{
-			return m_send_event.is_valid() && m_recv_event.is_valid();
+			return io_send_event.is_valid() && io_recv_event.is_valid();
 		}
 
 		//void request_recv();
@@ -47,14 +47,14 @@ namespace net
 		
 		void update_last_interaction_time(std::time_t current_time = util::current_timestmap())
 		{
-			m_connection_status.last_interaction_time = current_time;
+			connection_status.last_interaction_time = current_time;
 		}
 
 		void set_offline();
 
 		bool is_online() const
 		{
-			return m_connection_status.online;
+			return connection_status.online;
 		}
 
 		bool is_expired(std::time_t current_time = util::current_timestmap()) const;
@@ -77,17 +77,17 @@ namespace net
 		const unsigned online_key;
 
 	private:
-		net::Socket m_client_socket;
+		net::Socket _client_socket;
 
-		ServerCore &m_main_server;
+		ServerCore &main_server;
 
-		io::IoSendEventPtr m_send_event;
-		io::IoRecvEventPtr m_recv_event;
+		io::IoSendEventPtr io_send_event;
+		io::IoRecvEventPtr io_recv_event;
 
 		struct ConnectionStatus {
 			bool online	= false;
 			std::time_t offline_time = 0;
 			std::time_t last_interaction_time = 0;
-		} m_connection_status;
+		} connection_status;
 	};
 }

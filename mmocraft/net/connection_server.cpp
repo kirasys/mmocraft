@@ -12,22 +12,22 @@ namespace net
 								io::IoCompletionPort& io_service,
 								io::IoEventPool &io_event_pool)
 		: online_key{ main_server.issue_online_connection_key() }
-		, m_client_socket{ std::move(sock) }
-		, m_main_server{ main_server }
-		, m_send_event{ io_event_pool.new_send_event() }
-		, m_recv_event{ io_event_pool.new_recv_event() }
+		, _client_socket{ std::move(sock) }
+		, main_server{ main_server }
+		, io_send_event{ io_event_pool.new_send_event() }
+		, io_recv_event{ io_event_pool.new_recv_event() }
 	{
 		if (not is_valid())
 			throw error::ErrorCode::CONNECTION_CREATE;
 
-		m_connection_status.online = true;
+		connection_status.online = true;
 		update_last_interaction_time();
 
 		// allow to service client socket events.
-		io_service.register_event_source(m_client_socket.get_handle(), this);
+		io_service.register_event_source(_client_socket.get_handle(), this);
 
 		// init first recv.
-		m_client_socket.recv(*m_recv_event.get());
+		_client_socket.recv(*io_recv_event.get());
 	}
 
 	ConnectionServer::~ConnectionServer()
@@ -54,7 +54,7 @@ namespace net
 				return std::nullopt;
 			}
 
-			if (not m_main_server.handle_packet(*this, packet_ptr))
+			if (not main_server.handle_packet(*this, packet_ptr))
 				logging::cerr() << "Unsupported packet id(" << packet_ptr->id << ")";
 
 			data_cur += parsed_bytes;
@@ -75,36 +75,36 @@ namespace net
 
 	void ConnectionServer::set_offline()
 	{
-		m_main_server.delete_online_connection_key(online_key);
+		main_server.delete_online_connection_key(online_key);
 
 		// this lead to close the io completion port.
-		m_client_socket.close();
+		_client_socket.close();
 
-		m_connection_status.online = false;
-		m_connection_status.offline_time = util::current_timestmap();
+		connection_status.online = false;
+		connection_status.offline_time = util::current_timestmap();
 	}
 
 	bool ConnectionServer::is_expired(std::time_t current_time) const
 	{
-		return current_time >= m_connection_status.last_interaction_time + REQUIRED_SECONDS_FOR_EXPIRE;
+		return current_time >= connection_status.last_interaction_time + REQUIRED_SECONDS_FOR_EXPIRE;
 	}
 
 	bool ConnectionServer::is_safe_delete(std::time_t current_time) const
 	{
 		return not is_online()
-			&& current_time >= m_connection_status.offline_time + REQUIRED_SECONDS_FOR_SECURE_DELETION;
+			&& current_time >= connection_status.offline_time + REQUIRED_SECONDS_FOR_SECURE_DELETION;
 	}
 
 	/* Event Handler Interface */
 
 	void ConnectionServer::on_success(io::IoEvent* event)
 	{
-		m_client_socket.recv(*static_cast<io::IoRecvEvent*>(event));
+		_client_socket.recv(*static_cast<io::IoRecvEvent*>(event));
 	}
 
 	void ConnectionServer::on_error(io::IoEvent* event)
 	{
-		if (not m_connection_status.online)
+		if (not connection_status.online)
 			set_offline();
 	}
 
