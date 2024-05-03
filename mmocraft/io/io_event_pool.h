@@ -45,8 +45,8 @@ namespace io
 		IoEventObjectPool(std::size_t max_capacity)
 			: accept_event_pool{ 1 }
 			, send_event_pool{ max_capacity }
-			, send_event_short_data_pool{ max_capacity }
 			, send_event_data_pool{ max_capacity }
+			, send_event_short_data_pool{ max_capacity }
 			, recv_event_pool{ max_capacity }
 			, recv_event_data_pool{ max_capacity + 1}
 		{ }
@@ -56,6 +56,13 @@ namespace io
 			auto io_buf = recv_event_data_pool.new_object();
 			auto io_event = accept_event_pool.new_object(win::ObjectPool<IoRecvEventData>::find_object(io_buf));
 			return IoAcceptEventPtr{ std::move(io_event), std::move(io_buf) };
+		}
+
+		auto new_recv_event()
+		{
+			auto io_buf = recv_event_data_pool.new_object();
+			auto io_event = recv_event_pool.new_object(win::ObjectPool<IoRecvEventData>::find_object(io_buf));
+			return IoRecvEventPtr{ std::move(io_event), std::move(io_buf) };
 		}
 
 		auto new_send_event()
@@ -70,13 +77,6 @@ namespace io
 			auto io_buf = send_event_short_data_pool.new_object();
 			auto io_event = send_event_pool.new_object(win::ObjectPool<IoSendEventShortData>::find_object(io_buf));
 			return IoSendShortEventPtr{ std::move(io_event), std::move(io_buf) };
-		}
-
-		auto new_recv_event()
-		{
-			auto io_buf = recv_event_data_pool.new_object();
-			auto io_event = recv_event_pool.new_object(win::ObjectPool<IoRecvEventData>::find_object(io_buf));
-			return IoRecvEventPtr{ std::move(io_event), std::move(io_buf) };
 		}
 
 	private:
