@@ -111,7 +111,9 @@ namespace win
 
 			void clear()
 			{
-				ObjectPool::free_object(m_id);
+				ObjectID id = INVALID_OBJECT_ID;
+				std::swap(m_id, id)
+				ObjectPool::free_object(id);
 			}
 
 			inline operator ObjectID()
