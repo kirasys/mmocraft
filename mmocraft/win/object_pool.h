@@ -112,7 +112,7 @@ namespace win
 			void clear()
 			{
 				ObjectID id = INVALID_OBJECT_ID;
-				std::swap(m_id, id)
+				std::swap(m_id, id);
 				ObjectPool::free_object(id);
 			}
 
@@ -206,11 +206,11 @@ namespace win
 		template <typename... Args>
 		ObjectID new_object_unsafe(Args&&... args)
 		{
-			auto storage_index = new_object_internal(std::forward<Args>(args)...);
-			if (storage_index == INVALID_INDEX)
+			auto object_index = new_object_internal(std::forward<Args>(args)...);
+			if (object_index == INVALID_INDEX)
 				return INVALID_OBJECT_ID;
 
-			return (ObjectID(m_pool_index) << 32) | storage_index;
+			return (ObjectID(m_pool_index) << 32) | object_index;
 		}
 
 		// new_object_raw returns object as pointer that must manually free.
@@ -218,11 +218,11 @@ namespace win
 		template <typename... Args>
 		object_pointer new_object_raw(Args&&... args)
 		{
-			auto storage_index = new_object_internal(std::forward<Args>(args)...);
-			if (storage_index == INVALID_INDEX)
+			auto object_index = new_object_internal(std::forward<Args>(args)...);
+			if (object_index == INVALID_INDEX)
 				return nullptr;
 
-			return get_object_storage(storage_index);
+			return get_object_storage(object_index);
 		}
 
 		template <typename... Args>
@@ -245,8 +245,8 @@ namespace win
 				return false;
 
 			if (auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)])) {
-				(pool->get_object_storage(storage_index(object_id))->~T()); // destruct
-				return pool->transition_to_free(storage_index(object_id));
+				(pool->get_object_storage(get_object_index(object_id))->~T()); // destruct
+				return pool->transition_to_free(get_object_index(object_id));
 			}
 			return false;
 		}
@@ -257,7 +257,7 @@ namespace win
 				return nullptr;
 
 			auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)]);
-			return pool ? pool->get_object_storage(storage_index(object_id)) : nullptr;
+			return pool ? pool->get_object_storage(get_object_index(object_id)) : nullptr;
 		}
 
 		size_type capacity()
@@ -265,36 +265,36 @@ namespace win
 			return m_capacity;
 		}
 
+		static inline index_type get_object_index(ObjectID id) noexcept
+		{
+			return id & 0xFFFFFFFF;
+		}
+
 	private:
 		template <typename... Args>
 		index_type new_object_internal(Args&&... args)
 		{
-			auto storage_index = get_free_storage_index();
-			if (storage_index >= m_capacity && not extend_capacity(size_type(storage_index) + 1))
+			auto object_index = get_free_object_index();
+			if (object_index >= m_capacity && not extend_capacity(size_type(object_index) + 1))
 				return INVALID_INDEX;
 
-			auto new_object_storage = get_object_storage(storage_index);
+			auto new_object_storage = get_object_storage(object_index);
 			new (new_object_storage) T(std::forward<Args>(args)...);
 			// manually construct using placement new.
 			// new operator may simply returns its second argument unchanged.
 			// ref. https://en.cppreference.com/w/cpp/language/new
 
-			return transition_to_ready(storage_index);
+			return transition_to_ready(object_index);
 		}
 
-		auto get_object_storage(index_type storage_index) const
+		auto get_object_storage(index_type object_index) const
 		{
-			return reinterpret_cast<object_pointer>(m_storage + OBJECT_SIZE * storage_index);
+			return reinterpret_cast<object_pointer>(m_storage + OBJECT_SIZE * object_index);
 		}
 
 		inline bool is_exceed_max_capacity() const
 		{
 			return m_capacity >= m_max_capacity;
-		}
-
-		static inline index_type storage_index(ObjectID id) noexcept
-		{
-			return id & 0xFFFFFFFF;
 		}
 
 		static inline index_type pool_index(ObjectID id) noexcept
@@ -308,7 +308,7 @@ namespace win
 			return reserve(std::max(m_capacity * 2, minimum_capacity));
 		}
 
-		index_type get_free_storage_index() const
+		index_type get_free_object_index() const
 		{
 			for (index_type i = 0; i < m_bitmap_size; i++) {
 				if (auto mask = m_free_storage_bitmaps[i]) {
@@ -320,20 +320,20 @@ namespace win
 			return std::numeric_limits<index_type>::max();
 		}
 
-		index_type transition_to_ready(index_type storage_index)
+		index_type transition_to_ready(index_type object_index)
 		{
-			auto bitmap = &m_free_storage_bitmaps[storage_index / SIZE_TYPE_BIT_SIZE];
-			auto bitmap_index = storage_index % SIZE_TYPE_BIT_SIZE;
+			auto bitmap = &m_free_storage_bitmaps[object_index / SIZE_TYPE_BIT_SIZE];
+			auto bitmap_index = object_index % SIZE_TYPE_BIT_SIZE;
 
 			*bitmap &= ~(1ULL << bitmap_index);
-			return storage_index;
+			return object_index;
 		}
 
-		bool transition_to_free(index_type storage_index)
+		bool transition_to_free(index_type object_index)
 		{
-			assert(storage_index >= 0);
-			auto bitmap = &m_free_storage_bitmaps[storage_index / SIZE_TYPE_BIT_SIZE];
-			auto bitmap_index = storage_index % SIZE_TYPE_BIT_SIZE;
+			assert(object_index >= 0);
+			auto bitmap = &m_free_storage_bitmaps[object_index / SIZE_TYPE_BIT_SIZE];
+			auto bitmap_index = object_index % SIZE_TYPE_BIT_SIZE;
 			bool prev_state = *bitmap & (1ULL << bitmap_index);
 
 			*bitmap |= 1ULL << bitmap_index;
