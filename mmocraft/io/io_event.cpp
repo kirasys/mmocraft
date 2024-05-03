@@ -6,16 +6,16 @@ namespace io
 	void IoAcceptEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes)
 	{
 		if (event_handler.handle_io_event(event_type, this).has_value())
-			event_handler.on_success();
+			event_handler.on_success(this);
 		else
-			event_handler.on_error();
+			event_handler.on_error(this);
 	}
 
 	void IoRecvEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes)
 	{
 		// pre-processing
 		if (transferred_bytes == 0)	// EOF
-			return event_handler.on_error();
+			return event_handler.on_error(this);
 
 		data.push(nullptr, transferred_bytes); // data was already appended by I/O.
 
@@ -24,11 +24,11 @@ namespace io
 
 		// post-processing
 		if (not processed_bytes.has_value())
-			return event_handler.on_error();
+			return event_handler.on_error(this);
 
 		data.pop(processed_bytes.value());
 
-		event_handler.on_success();
+		event_handler.on_success(this);
 	}
 
 	bool IoRecvEventData::push(std::uint8_t*, std::size_t n)
@@ -48,7 +48,7 @@ namespace io
 	{
 		// pre-processing
 		if (transferred_bytes == 0)	// EOF
-			return event_handler.on_error();
+			return event_handler.on_error(this);
 
 		data.pop(transferred_bytes);
 

@@ -34,8 +34,6 @@ namespace net
 
 		void serve_forever();
 
-		void accept_next_client();
-
 		bool new_connection(win::UniqueSocket &&client_sock);
 
 		void check_connection_expiration();
@@ -44,9 +42,9 @@ namespace net
 
 		/* Event handler interface */
 
-		virtual void on_success() override;
+		virtual void on_success(io::IoEvent*) override;
 
-		virtual void on_error() override;
+		virtual void on_error(io::IoEvent*) override;
 
 		virtual std::optional<std::size_t> handle_io_event(io::EventType, io::IoEvent*) override;
 

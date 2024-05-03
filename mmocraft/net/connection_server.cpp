@@ -23,17 +23,12 @@ namespace net
 		io_service.register_event_source(m_client_socket.get_handle(), this);
 
 		// init first recv.
-		this->request_recv();
+		m_client_socket.recv(*m_recv_event.get());
 	}
 
 	ConnectionServer::~ConnectionServer()
 	{
 		
-	}
-
-	void ConnectionServer::request_recv()
-	{
-		m_client_socket.recv(*m_recv_event.get());
 	}
 
 	void ConnectionServer::request_send()
@@ -96,12 +91,12 @@ namespace net
 
 	/* Event Handler Interface */
 
-	void ConnectionServer::on_success()
+	void ConnectionServer::on_success(io::IoEvent* event)
 	{
-		request_recv();
+		m_client_socket.recv(*static_cast<io::IoRecvEvent*>(event));
 	}
 
-	void ConnectionServer::on_error()
+	void ConnectionServer::on_error(io::IoEvent* event)
 	{
 		if (not m_connection_status.online)
 			set_offline();

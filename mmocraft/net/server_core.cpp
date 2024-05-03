@@ -71,20 +71,6 @@ namespace net
 		}
 	}
 
-	void ServerCore::accept_next_client()
-	{
-		// check there are expired tasks before accepting next client.
-		m_interval_task_scheduler.process_tasks();
-
-		try {
-			m_listen_sock.accept(*m_accept_event.get());
-		}
-		catch (...) {
-			// TODO: accept scheduling
-			logging::cerr() << "fail to request accept";
-		}
-	}
-
 	void ServerCore::serve_forever()
 	{
 		m_listen_sock.bind(m_server_info.ip, m_server_info.port);
@@ -102,12 +88,21 @@ namespace net
 	 * Event handler interface
 	 */
 
-	void ServerCore::on_success()
+	void ServerCore::on_success(io::IoEvent* event)
 	{
-		accept_next_client();
+		// check there are expired tasks before accepting next client.
+		m_interval_task_scheduler.process_tasks();
+
+		try {
+			m_listen_sock.accept(*static_cast<io::IoAcceptEvent*>(event));
+		}
+		catch (...) {
+			// TODO: accept scheduling
+			logging::cerr() << "fail to request accept";
+		}
 	}
 
-	void ServerCore::on_error()
+	void ServerCore::on_error(io::IoEvent* event)
 	{
 		
 	}

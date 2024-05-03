@@ -218,9 +218,9 @@ namespace io
 	class IoEventHandler
 	{
 	public:
-		virtual void on_error() = 0;
+		virtual void on_error(IoEvent*) = 0;
 
-		virtual void on_success() = 0;
+		virtual void on_success(IoEvent*) = 0;
 
 		virtual std::optional<std::size_t> handle_io_event(EventType, IoEvent*) = 0;
 	};

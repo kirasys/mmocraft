@@ -63,9 +63,9 @@ namespace net
 
 		/* Event Handler Interface */
 
-		virtual void on_success() override;
+		virtual void on_success(io::IoEvent*) override;
 
-		virtual void on_error() override;
+		virtual void on_error(io::IoEvent*) override;
 
 		virtual std::optional<std::size_t> handle_io_event(io::EventType, io::IoEvent*) override;
 
