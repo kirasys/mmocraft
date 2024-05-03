@@ -148,7 +148,7 @@ namespace win
 			, m_capacity{ std::min(DEFAULT_CAPACITY, max_capacity) }
 			, m_max_capacity{ max_capacity }
 			, m_bitmap_size{ 1 + max_capacity / SIZE_TYPE_BIT_SIZE }
-			, m_free_storage_bitmaps{ new size_type[m_bitmap_size] }
+			, m_free_storage_bitmaps{ new size_type[m_bitmap_size]}
 		{
 			static_assert(OBJECT_SIZE >= sizeof(T));
 
@@ -168,9 +168,7 @@ namespace win
 			if (not ::VirtualAlloc(m_storage, m_capacity * OBJECT_SIZE, MEM_COMMIT, MEMORY_PROTECTION_LEVEL))
 				throw ObjectPoolErrorCode::COMMIT_ERROR;
 
-			// set bitmaps all object are free.
-			for (index_type i = 0; i < m_bitmap_size; i++)
-				m_free_storage_bitmaps[i] = ~size_type(0);
+			std::fill_n(m_free_storage_bitmaps.get(), m_bitmap_size, ~0);
 		}
 
 		~ObjectPool()
