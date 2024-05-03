@@ -11,7 +11,7 @@ namespace net
 								ServerCore &main_server,
 								io::IoCompletionPort& io_service,
 								io::IoEventPool &io_event_pool)
-		: online_key{ main_server.issue_online_connection_key() }
+		: online_key{ main_server.issue_online_key() }
 		, _client_socket{ std::move(sock) }
 		, main_server{ main_server }
 		, io_send_event{ io_event_pool.new_send_event() }
@@ -75,7 +75,7 @@ namespace net
 
 	void ConnectionServer::set_offline()
 	{
-		main_server.delete_online_connection_key(online_key);
+		main_server.delete_online_key(online_key);
 
 		// this lead to close the io completion port.
 		_client_socket.close();

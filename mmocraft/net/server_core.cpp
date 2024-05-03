@@ -21,7 +21,7 @@ namespace net
 		, io_event_pool{ *new io::IoEventPool(max_client_connections) }
 		, io_accept_event{ io_event_pool.new_accept_event() }
 		, connection_server_pool{ max_client_connections }
-		, max_online_connection_key{ 0 }
+		, max_online_key{ 0 }
 		, online_connection_table{ new ConnectionServer*[max_client_connections + 1]() }
 		, interval_task_scheduler{ this }
 	{	
@@ -33,33 +33,33 @@ namespace net
 		interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::Second(10));
 	}
 
-	unsigned ServerCore::issue_online_connection_key()
+	unsigned ServerCore::issue_online_key()
 	{
-		shrink_max_online_connection_key();
+		shrink_max_online_key();
 
-		for (unsigned i = 0; i < max_online_connection_key; i++) // find free slot.
+		for (unsigned i = 0; i < max_online_key; i++) // find free slot.
 			if (online_connection_table[i] == nullptr) return i;
 
-		max_online_connection_key += 1;
-		assert(max_online_connection_key <= server_info.max_client_connections);
-		return max_online_connection_key;
+		max_online_key += 1;
+		assert(max_online_key <= server_info.max_client_connections);
+		return max_online_key;
 	}
 
-	void ServerCore::delete_online_connection_key(unsigned key)
+	void ServerCore::delete_online_key(unsigned key)
 	{
 		online_connection_table[key] = nullptr;
 		
 	}
 
-	void ServerCore::shrink_max_online_connection_key()
+	void ServerCore::shrink_max_online_key()
 	{
-		for (unsigned i = max_online_connection_key; i > 0; i--) {
+		for (unsigned i = max_online_key; i > 0; i--) {
 			if (online_connection_table[i]) {
-				max_online_connection_key = i;
+				max_online_key = i;
 				return;
 			}
 		}
-		max_online_connection_key = 0;
+		max_online_key = 0;
 	}
 
 	void ServerCore::new_connection(win::UniqueSocket &&client_sock)

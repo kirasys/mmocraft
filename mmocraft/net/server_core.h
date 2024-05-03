@@ -33,9 +33,9 @@ namespace net
 
 		void serve_forever();
 
-		unsigned issue_online_connection_key();
+		unsigned issue_online_key();
 
-		void delete_online_connection_key(unsigned);
+		void delete_online_key(unsigned);
 
 		void new_connection(win::UniqueSocket &&client_sock);
 
@@ -54,7 +54,7 @@ namespace net
 		bool handle_accept_event(io::IoAcceptEvent&);
 		
 	private:
-		void shrink_max_online_connection_key();
+		void shrink_max_online_key();
 
 		const struct ServerInfo
 		{
@@ -74,7 +74,7 @@ namespace net
 		ConnectionServerPool connection_server_pool;
 		std::list<ConnectionServerPool::ScopedID> connection_server_ids;
 
-		unsigned max_online_connection_key;
+		unsigned max_online_key;
 		std::unique_ptr<ConnectionServer*[]> online_connection_table;
 
 		util::IntervalTaskScheduler<ServerCore> interval_task_scheduler;
