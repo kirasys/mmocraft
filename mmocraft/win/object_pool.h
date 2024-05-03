@@ -131,9 +131,9 @@ namespace win
 				return m_id != INVALID_OBJECT_ID;
 			}
 
-			inline bool get_id() const
+			inline bool to_index() const
 			{
-				return m_id;
+				return ObjectPool::get_object_index(m_id);
 			}
 
 		private:
@@ -265,11 +265,6 @@ namespace win
 			return m_capacity;
 		}
 
-		static inline index_type get_object_index(ObjectID id) noexcept
-		{
-			return id & 0xFFFFFFFF;
-		}
-
 	private:
 		template <typename... Args>
 		index_type new_object_internal(Args&&... args)
@@ -290,6 +285,11 @@ namespace win
 		auto get_object_storage(index_type object_index) const
 		{
 			return reinterpret_cast<object_pointer>(m_storage + OBJECT_SIZE * object_index);
+		}
+
+		static inline index_type get_object_index(ObjectID id) noexcept
+		{
+			return id & 0xFFFFFFFF;
 		}
 
 		inline bool is_exceed_max_capacity() const
