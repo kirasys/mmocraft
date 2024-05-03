@@ -36,11 +36,11 @@ namespace net
 		Socket& operator=(Socket&&) = default;
 
 		win::Socket get_handle() const {
-			return m_handle.get();
+			return _handle.get();
 		}
 
 		bool is_valid() const {
-			return m_handle.get();
+			return _handle.get();
 		}
 
 		void close() noexcept;
@@ -60,7 +60,7 @@ namespace net
 		}
 
 	private:
-		win::UniqueSocket m_handle;
+		win::UniqueSocket _handle;
 	};
 
 	win::Socket create_windows_socket(SocketType, DWORD flags);

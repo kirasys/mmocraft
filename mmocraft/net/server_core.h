@@ -62,21 +62,21 @@ namespace net
 			int port;
 			unsigned max_client_connections;
 			unsigned num_of_event_threads;
-		} m_server_info;
+		} server_info;
 
-		net::Socket m_listen_sock;
+		net::Socket _listen_sock;
 
-		io::IoCompletionPort m_io_service;
+		io::IoCompletionPort io_service;
 
-		io::IoEventPool& m_io_event_pool;
-		io::IoAcceptEventPtr m_accept_event;
+		io::IoEventPool& io_event_pool;
+		io::IoAcceptEventPtr io_accept_event;
 
-		ConnectionServerPool m_connection_server_pool;
-		std::list<ConnectionServerPool::ScopedID> m_connection_list;
+		ConnectionServerPool connection_server_pool;
+		std::list<ConnectionServerPool::ScopedID> connection_server_ids;
 
 		unsigned max_online_connection_key;
 		std::unique_ptr<ConnectionServer*[]> online_connection_table;
 
-		util::IntervalTaskScheduler<ServerCore> m_interval_task_scheduler;
+		util::IntervalTaskScheduler<ServerCore> interval_task_scheduler;
 	};
 }

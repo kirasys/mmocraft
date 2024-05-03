@@ -11,26 +11,26 @@ namespace net
 							unsigned max_client_connections,
 							unsigned num_of_event_threads,
 							int concurrency_hint)
-		: m_server_info{ .ip = ip,
+		: server_info{ .ip = ip,
 						 .port = port, 
 						 .max_client_connections = max_client_connections,
 						 .num_of_event_threads = num_of_event_threads}
-		, m_listen_sock{ net::SocketType::TCPv4 }
-		, m_io_service{ concurrency_hint }
+		, _listen_sock{ net::SocketType::TCPv4 }
+		, io_service{ concurrency_hint }
 		// No need to release. server core long live until program termination.
-		, m_io_event_pool{ *new io::IoEventPool(max_client_connections) }
-		, m_accept_event{ m_io_event_pool.new_accept_event() }
-		, m_connection_server_pool{ max_client_connections }
+		, io_event_pool{ *new io::IoEventPool(max_client_connections) }
+		, io_accept_event{ io_event_pool.new_accept_event() }
+		, connection_server_pool{ max_client_connections }
 		, max_online_connection_key{ 0 }
 		, online_connection_table{ new ConnectionServer*[max_client_connections + 1]() }
-		, m_interval_task_scheduler{ this }
+		, interval_task_scheduler{ this }
 	{	
-		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_handler = */ this);
+		io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
 
 		//
 		// Schedule interval tasks.
 		// 
-		m_interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::Second(10));
+		interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::Second(10));
 	}
 
 	unsigned ServerCore::issue_online_connection_key()
@@ -41,7 +41,7 @@ namespace net
 			if (online_connection_table[i] == nullptr) return i;
 
 		max_online_connection_key += 1;
-		assert(max_online_connection_key <= m_server_info.max_client_connections);
+		assert(max_online_connection_key <= server_info.max_client_connections);
 		return max_online_connection_key;
 	}
 
@@ -65,25 +65,25 @@ namespace net
 	void ServerCore::new_connection(win::UniqueSocket &&client_sock)
 	{
 		// create a server for single client.
-		auto connection_server_id = m_connection_server_pool.new_object(
+		auto connection_server_id = connection_server_pool.new_object(
 			std::move(client_sock),
 			/* main_server = */ *this,
-			m_io_service,
-			m_io_event_pool
+			io_service,
+			io_event_pool
 		);
 
 		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
 		online_connection_table[connection_server->online_key] = connection_server;
-		m_connection_list.emplace_back(std::move(connection_server_id));
+		connection_server_ids.emplace_back(std::move(connection_server_id));
 	}
 
 	void ServerCore::check_connection_expiration()
 	{
-		for (auto it = m_connection_list.begin(); it != m_connection_list.end();) {
+		for (auto it = connection_server_ids.begin(); it != connection_server_ids.end();) {
 			auto &connection_server = *ConnectionServerPool::find_object(*it);
 
 			if (connection_server.is_safe_delete()) {
-				it = m_connection_list.erase(it);
+				it = connection_server_ids.erase(it);
 				continue;
 			}
 
@@ -96,15 +96,15 @@ namespace net
 
 	void ServerCore::serve_forever()
 	{
-		m_listen_sock.bind(m_server_info.ip, m_server_info.port);
-		m_listen_sock.listen();
-		m_listen_sock.accept(*m_accept_event.get());
-		std::cout << "Listening to " << m_server_info.ip << ':' << m_server_info.port << "...\n";
+		_listen_sock.bind(server_info.ip, server_info.port);
+		_listen_sock.listen();
+		_listen_sock.accept(*io_accept_event.get());
+		std::cout << "Listening to " << server_info.ip << ':' << server_info.port << "...\n";
 
-		for (unsigned i = 0; i < m_server_info.num_of_event_threads; i++)
-			m_io_service.spawn_event_loop_thread().detach();
+		for (unsigned i = 0; i < server_info.num_of_event_threads; i++)
+			io_service.spawn_event_loop_thread().detach();
 
-		m_io_service.run_event_loop_forever();
+		io_service.run_event_loop_forever();
 	}
 
 	/** 
@@ -114,10 +114,10 @@ namespace net
 	void ServerCore::on_success(io::IoEvent* event)
 	{
 		// check there are expired tasks before accepting next client.
-		m_interval_task_scheduler.process_tasks();
+		interval_task_scheduler.process_tasks();
 
 		try {
-			m_listen_sock.accept(*static_cast<io::IoAcceptEvent*>(event));
+			_listen_sock.accept(*static_cast<io::IoAcceptEvent*>(event));
 		}
 		catch (...) {
 			// TODO: accept scheduling
@@ -139,7 +139,7 @@ namespace net
 
 	bool ServerCore::handle_accept_event(io::IoAcceptEvent& event)
 	{
-		if (m_connection_list.size() > m_server_info.max_client_connections) {
+		if (connection_server_ids.size() > server_info.max_client_connections) {
 			logging::cerr() << "full connection reached. skip to accept new client";
 			return false;
 		}
@@ -147,7 +147,7 @@ namespace net
 		auto client_socket = win::UniqueSocket(event.accepted_socket);
 
 		// inherit the properties of the listen socket.
-		win::Socket listen_sock = m_listen_sock.get_handle();
+		win::Socket listen_sock = _listen_sock.get_handle();
 		if (SOCKET_ERROR == ::setsockopt(client_socket,
 			SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 			reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {

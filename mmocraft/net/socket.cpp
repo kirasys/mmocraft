@@ -10,22 +10,22 @@
 using namespace error;
 
 net::Socket::Socket() noexcept
-	: m_handle{ }
+	: _handle{ }
 { }
 
 net::Socket::Socket(SocketType type)
-	: m_handle { create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
+	: _handle{ create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
 {
 	if (not is_valid())
 		throw NetworkException(ErrorCode::SOCKET_CREATE);
 }
 
 net::Socket::Socket(win::Socket sock)
-	: m_handle{ sock }
+	: _handle{ sock }
 { }
 
 net::Socket::Socket(win::UniqueSocket&& sock)
-	: m_handle{ std::move(sock) }
+	: _handle{ std::move(sock) }
 { }
 
 bool net::Socket::bind(std::string_view ip, int port){
@@ -34,14 +34,14 @@ bool net::Socket::bind(std::string_view ip, int port){
 	sock_addr.sin_port = ::htons(port);
 	::inet_pton(get_address_family(), ip.data(), &sock_addr.sin_addr);
 
-	if (::bind(m_handle, reinterpret_cast<SOCKADDR*>(&sock_addr), sizeof(sock_addr)) == SOCKET_ERROR)
+	if (::bind(_handle, reinterpret_cast<SOCKADDR*>(&sock_addr), sizeof(sock_addr)) == SOCKET_ERROR)
 		throw NetworkException(ErrorCode::SOCKET_BIND);
 
 	return true;
 }
 
 bool net::Socket::listen(int backlog) {
-	if (::listen(m_handle, backlog) == SOCKET_ERROR)
+	if (::listen(_handle, backlog) == SOCKET_ERROR)
 		throw NetworkException(ErrorCode::SOCKET_LISTEN);
 
 	return true;
@@ -54,7 +54,7 @@ bool net::Socket::accept(io::IoAcceptEvent& event)
 		DWORD bytes = 0;
 
 		if (::WSAIoctl(
-			m_handle,
+			_handle,
 			SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&acceptex_guid,
 			sizeof(acceptex_guid),
@@ -72,7 +72,7 @@ bool net::Socket::accept(io::IoAcceptEvent& event)
 
 	DWORD bytes_received;
 	BOOL success = event.fnAcceptEx(
-		m_handle, event.accepted_socket,
+		_handle, event.accepted_socket,
 		LPVOID(event.data.begin()),
 		0, // does not recevice packet data.
 		sizeof(SOCKADDR_STORAGE) + 16, sizeof(SOCKADDR_STORAGE) + 16,
@@ -96,7 +96,7 @@ bool net::Socket::send(io::IoSendEvent& event)
 	DWORD flags = 0;
 
 	int ret = ::WSASend(
-		m_handle,
+		_handle,
 		&buffer, 1,
 		NULL,
 		flags,
@@ -120,7 +120,7 @@ bool net::Socket::recv(io::IoRecvEvent& event)
 	DWORD flags = 0;
 
 	int ret = ::WSARecv(
-		m_handle,
+		_handle,
 		&buffer, 1,
 		NULL,
 		&flags,
@@ -136,7 +136,7 @@ bool net::Socket::recv(io::IoRecvEvent& event)
 
 
 void net::Socket::close() noexcept {
-	m_handle.reset();
+	_handle.reset();
 }
 
 win::Socket net::create_windows_socket(SocketType type, DWORD flags)
