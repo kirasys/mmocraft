@@ -73,7 +73,7 @@ namespace net
 
 		std::optional<std::size_t> handle_send_event(io::IoSendEvent&);
 
-		// used to find this instance.
+		// main server maintains online connection table through this key.
 		const unsigned online_key;
 
 	private:
