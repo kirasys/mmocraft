@@ -21,6 +21,9 @@ namespace error
 
 			// IO Service
 			{ ErrorCode::IO_SERVICE_CREATE_COMPLETION_PORT, "IO_SERVICE_CREATE_COMPLETION_PORT"},
+
+			// Connection
+			{ ErrorCode::CONNECTION_CREATE, "CONNECTION_CREATE"},
 		};
 		return error_code_map[code];
 	}

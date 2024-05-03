@@ -33,7 +33,7 @@ namespace net
 			return m_send_event.is_valid() && m_recv_event.is_valid();
 		}
 
-		void request_recv();
+		//void request_recv();
 		
 		void request_send();
 
@@ -72,6 +72,9 @@ namespace net
 		std::optional<std::size_t> handle_recv_event(io::IoRecvEvent&);
 
 		std::optional<std::size_t> handle_send_event(io::IoSendEvent&);
+
+		// used to find this instance.
+		const unsigned online_key;
 
 	private:
 		net::Socket m_client_socket;

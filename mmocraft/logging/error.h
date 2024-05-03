@@ -19,7 +19,10 @@ namespace error
 		SOCKET_RECV,
 
 		// IO Service
-		IO_SERVICE_CREATE_COMPLETION_PORT
+		IO_SERVICE_CREATE_COMPLETION_PORT,
+
+		// Connection
+		CONNECTION_CREATE,
 	};
 
 	struct Exception

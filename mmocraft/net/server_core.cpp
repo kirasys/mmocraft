@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "server_core.h"
 
+#include <cassert>
+
 #include "logging/error.h"
 
 namespace net
@@ -15,12 +17,12 @@ namespace net
 						 .num_of_event_threads = num_of_event_threads}
 		, m_listen_sock{ net::SocketType::TCPv4 }
 		, m_io_service{ concurrency_hint }
-
 		// No need to release. server core long live until program termination.
 		, m_io_event_pool{ *new io::IoEventPool(max_client_connections) }
 		, m_accept_event{ m_io_event_pool.new_accept_event() }
-
 		, m_connection_server_pool{ max_client_connections }
+		, max_online_connection_key{ 0 }
+		, online_connection_table{ new ConnectionServer*[max_client_connections + 1]() }
 		, m_interval_task_scheduler{ this }
 	{	
 		m_io_service.register_event_source(m_listen_sock.get_handle(), /*.event_handler = */ this);
@@ -31,7 +33,36 @@ namespace net
 		m_interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::Second(10));
 	}
 
-	bool ServerCore::new_connection(win::UniqueSocket &&client_sock)
+	unsigned ServerCore::issue_online_connection_key()
+	{
+		shrink_max_online_connection_key();
+
+		for (unsigned i = 0; i < max_online_connection_key; i++) // find free slot.
+			if (online_connection_table[i] == nullptr) return i;
+
+		max_online_connection_key += 1;
+		assert(max_online_connection_key <= m_server_info.max_client_connections);
+		return max_online_connection_key;
+	}
+
+	void ServerCore::delete_online_connection_key(unsigned key)
+	{
+		online_connection_table[key] = nullptr;
+		
+	}
+
+	void ServerCore::shrink_max_online_connection_key()
+	{
+		for (unsigned i = max_online_connection_key; i > 0; i--) {
+			if (online_connection_table[i]) {
+				max_online_connection_key = i;
+				return;
+			}
+		}
+		max_online_connection_key = 0;
+	}
+
+	void ServerCore::new_connection(win::UniqueSocket &&client_sock)
 	{
 		// create a server for single client.
 		auto connection_server_id = m_connection_server_pool.new_object(
@@ -42,24 +73,16 @@ namespace net
 		);
 
 		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
-		if (not connection_server || not connection_server->is_valid())
-			return false;
-
-		m_connection_list.push_back(connection_server);
-
-		// main server wiil delete connection when expired. (see check_connection_expiration)
-		connection_server_id.release();
-
-		return true;
+		online_connection_table[connection_server->online_key] = connection_server;
+		m_connection_list.emplace_back(std::move(connection_server_id));
 	}
 
 	void ServerCore::check_connection_expiration()
 	{
 		for (auto it = m_connection_list.begin(); it != m_connection_list.end();) {
-			auto &connection_server = **it;
+			auto &connection_server = *ConnectionServerPool::find_object(*it);
 
 			if (connection_server.is_safe_delete()) {
-				m_connection_server_pool.free_object(&connection_server);
 				it = m_connection_list.erase(it);
 				continue;
 			}
@@ -116,6 +139,11 @@ namespace net
 
 	bool ServerCore::handle_accept_event(io::IoAcceptEvent& event)
 	{
+		if (m_connection_list.size() > m_server_info.max_client_connections) {
+			logging::cerr() << "full connection reached. skip to accept new client";
+			return false;
+		}
+
 		auto client_socket = win::UniqueSocket(event.accepted_socket);
 
 		// inherit the properties of the listen socket.
@@ -128,11 +156,7 @@ namespace net
 		}
 
 		// add a client to the server.
-		if (not new_connection(std::move(client_socket))) {
-			logging::cerr() << "fail to create a server for single client";
-			return false;
-		}
-		
+		new_connection(std::move(client_socket));
 		return true;
 	}
 }

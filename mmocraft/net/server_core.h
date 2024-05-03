@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <vector>
 #include <string>
 #include <memory>
 
@@ -17,8 +18,6 @@
 namespace
 {
 	using ConnectionServerPool = win::ObjectPool<net::ConnectionServer>;
-	using ConnectionServerID = ConnectionServerPool::ObjectID;
-	using ConnectionServerScopedID = ConnectionServerPool::ScopedID;
 }
 
 namespace net
@@ -34,7 +33,11 @@ namespace net
 
 		void serve_forever();
 
-		bool new_connection(win::UniqueSocket &&client_sock);
+		unsigned issue_online_connection_key();
+
+		void delete_online_connection_key(unsigned);
+
+		void new_connection(win::UniqueSocket &&client_sock);
 
 		void check_connection_expiration();
 
@@ -51,6 +54,8 @@ namespace net
 		bool handle_accept_event(io::IoAcceptEvent&);
 		
 	private:
+		void shrink_max_online_connection_key();
+
 		const struct ServerInfo
 		{
 			std::string_view ip;
@@ -67,7 +72,10 @@ namespace net
 		io::IoAcceptEventPtr m_accept_event;
 
 		ConnectionServerPool m_connection_server_pool;
-		std::list<ConnectionServer*> m_connection_list;
+		std::list<ConnectionServerPool::ScopedID> m_connection_list;
+
+		unsigned max_online_connection_key;
+		std::unique_ptr<ConnectionServer*[]> online_connection_table;
 
 		util::IntervalTaskScheduler<ServerCore> m_interval_task_scheduler;
 	};
