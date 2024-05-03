@@ -40,9 +40,9 @@ namespace logging
 	/*  LogStream Class */
 
 	LogStream::LogStream(std::ostream &os, const std::source_location &location, bool fatal_flag)
-		: m_os(os), m_fatal_flag{ fatal_flag }
+		: _os(os), _fatal_flag{ fatal_flag }
 	{
-		m_buf << std::filesystem::path(location.file_name()).filename() << '('
+		_buf << std::filesystem::path(location.file_name()).filename() << '('
 			<< location.line() << ':'
 			<< location.column() << ") `"
 			<< location.function_name() << "`: ";
@@ -51,9 +51,9 @@ namespace logging
 	LogStream::~LogStream()
 	{
 		// TODO: make it more thread-safe
-		m_os << m_buf.view() << std::endl;
+		_os << _buf.view() << std::endl;
 
-		if (m_fatal_flag)
+		if (_fatal_flag)
 			std::exit(0);
 	}
 

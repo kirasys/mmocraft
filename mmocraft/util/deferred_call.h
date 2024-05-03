@@ -11,18 +11,18 @@ namespace util
 	{
 	public:
 		DeferredCall(T&& callable)
-			: m_callable(std::forward<T>(callable))
+			: _callable(std::forward<T>(callable))
 		{
 			static_assert(std::is_invocable_v<T>);
 		}
 
 		~DeferredCall()
 		{
-			m_callable();
+			_callable();
 		}
 		
 	private:
-		T m_callable;
+		T _callable;
 	};
 
 	template<typename T>

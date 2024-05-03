@@ -31,7 +31,7 @@ namespace io
 	{
 	public:
 		IoCompletionPort() noexcept
-			: m_handle{ }
+			: _handle{ }
 		{ }
 
 		~IoCompletionPort() = default;
@@ -57,16 +57,16 @@ namespace io
 	private:
 		win::Handle get_handle() const
 		{
-			return m_handle;
+			return _handle;
 		}
 
 		bool is_valid() const
 		{
-			return m_handle;
+			return _handle;
 		}
 
 		void close() noexcept;
 
-		win::SharedHandle m_handle;
+		win::SharedHandle _handle;
 	};
 }

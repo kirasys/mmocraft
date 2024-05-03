@@ -77,11 +77,11 @@ namespace win
 		class ScopedID : util::NonCopyable {
 		public:
 			ScopedID() noexcept
-				: m_id{ INVALID_OBJECT_ID }
+				: _id{ INVALID_OBJECT_ID }
 			{ }
 
 			ScopedID(ObjectID id)
-				: m_id{ id }
+				: _id{ id }
 			{ }
 
 			~ScopedID()
@@ -91,108 +91,108 @@ namespace win
 
 			ScopedID(ScopedID&& other) noexcept
 			{
-				m_id = other.m_id;
-				other.m_id = INVALID_OBJECT_ID;
+				_id = other._id;
+				other._id = INVALID_OBJECT_ID;
 			}
 
 			ScopedID& operator=(ScopedID&& other) noexcept
 			{
 				if (this != &other) {
 					clear();
-					m_id = other.m_id;
-					other.m_id = INVALID_OBJECT_ID;
+					_id = other._id;
+					other._id = INVALID_OBJECT_ID;
 				}
 			}
 
 			void release() noexcept
 			{
-				m_id = INVALID_OBJECT_ID;
+				_id = INVALID_OBJECT_ID;
 			}
 
 			void clear()
 			{
 				ObjectID id = INVALID_OBJECT_ID;
-				std::swap(m_id, id);
+				std::swap(_id, id);
 				ObjectPool::free_object(id);
 			}
 
 			inline operator ObjectID()
 			{
-				return m_id;
+				return _id;
 			}
 
 			inline operator ObjectID() const
 			{
-				return m_id;
+				return _id;
 			}
 
 			inline bool is_valid() const
 			{
-				return m_id != INVALID_OBJECT_ID;
+				return _id != INVALID_OBJECT_ID;
 			}
 
 			inline bool to_index() const
 			{
-				return ObjectPool::get_object_index(m_id);
+				return ObjectPool::get_object_index(_id);
 			}
 
 		private:
-			ObjectID m_id;
+			ObjectID _id;
 		};
 
 		ObjectPool() = delete;
 
 		ObjectPool(size_type max_capacity)
-			: m_pool_index{ num_of_free_object_pool.fetch_sub(1) }
-			, m_storage{ nullptr }
-			, m_capacity{ std::min(DEFAULT_CAPACITY, max_capacity) }
-			, m_max_capacity{ max_capacity }
-			, m_bitmap_size{ 1 + max_capacity / SIZE_TYPE_BIT_SIZE }
-			, m_free_storage_bitmaps{ new size_type[m_bitmap_size]}
+			: _pool_index{ num_of_free_object_pool.fetch_sub(1) }
+			, _storage{ nullptr }
+			, _capacity{ std::min(DEFAULT_CAPACITY, max_capacity) }
+			, _max_capacity{ max_capacity }
+			, _bitmap_size{ 1 + max_capacity / SIZE_TYPE_BIT_SIZE }
+			, free_storage_bitmaps{ new size_type[_bitmap_size]}
 		{
 			static_assert(OBJECT_SIZE >= sizeof(T));
 
-			if (not m_pool_index)
+			if (not _pool_index)
 				throw ObjectPoolErrorCode::TOO_MANY_POOL_ERROR;
 
 			// register this pool to the table;
-			pool_table[m_pool_index] = this;
+			pool_table[_pool_index] = this;
 
-			m_storage = static_cast<decltype(m_storage)>(
+			_storage = static_cast<decltype(_storage)>(
 				::VirtualAlloc(NULL, max_capacity * OBJECT_SIZE, MEM_RESERVE, MEMORY_PROTECTION_LEVEL)
 				);
 
-			if (m_storage == nullptr)
+			if (_storage == nullptr)
 				throw ObjectPoolErrorCode::RESERVE_ERROR;
 
-			if (not ::VirtualAlloc(m_storage, m_capacity * OBJECT_SIZE, MEM_COMMIT, MEMORY_PROTECTION_LEVEL))
+			if (not ::VirtualAlloc(_storage, _capacity * OBJECT_SIZE, MEM_COMMIT, MEMORY_PROTECTION_LEVEL))
 				throw ObjectPoolErrorCode::COMMIT_ERROR;
 
-			std::fill_n(m_free_storage_bitmaps.get(), m_bitmap_size, ~0);
+			std::fill_n(free_storage_bitmaps.get(), _bitmap_size, ~0);
 		}
 
 		~ObjectPool()
 		{
 			// deregister this pool to the table;
-			pool_table[m_pool_index] = nullptr;
+			pool_table[_pool_index] = nullptr;
 
-			if (m_storage != nullptr) {
-				if (not ::VirtualFree(m_storage, 0, MEM_RELEASE))
+			if (_storage != nullptr) {
+				if (not ::VirtualFree(_storage, 0, MEM_RELEASE))
 					logging::cerr() << "VirtualFree() failed with " << ::GetLastError();
 			}
 		}
 
 		bool reserve(size_type new_capacity)
 		{
-			if (m_capacity >= new_capacity)
+			if (_capacity >= new_capacity)
 				return true;
 
 			if (is_exceed_max_capacity())
 				return false;
 
-			new_capacity = std::min(new_capacity, m_max_capacity);
-			if (::VirtualAlloc(m_storage, new_capacity * OBJECT_SIZE, MEM_COMMIT, MEMORY_PROTECTION_LEVEL)) {
-				m_capacity = new_capacity;
+			new_capacity = std::min(new_capacity, _max_capacity);
+			if (::VirtualAlloc(_storage, new_capacity * OBJECT_SIZE, MEM_COMMIT, MEMORY_PROTECTION_LEVEL)) {
+				_capacity = new_capacity;
 				return true;
 			}
 
@@ -208,7 +208,7 @@ namespace win
 			if (object_index == INVALID_INDEX)
 				return INVALID_OBJECT_ID;
 
-			return (ObjectID(m_pool_index) << 32) | object_index;
+			return (ObjectID(_pool_index) << 32) | object_index;
 		}
 
 		// new_object_raw returns object as pointer that must manually free.
@@ -260,7 +260,7 @@ namespace win
 
 		size_type capacity()
 		{
-			return m_capacity;
+			return _capacity;
 		}
 
 	private:
@@ -268,7 +268,7 @@ namespace win
 		index_type new_object_internal(Args&&... args)
 		{
 			auto object_index = get_free_object_index();
-			if (object_index >= m_capacity && not extend_capacity(size_type(object_index) + 1))
+			if (object_index >= _capacity && not extend_capacity(size_type(object_index) + 1))
 				return INVALID_INDEX;
 
 			auto new_object_storage = get_object_storage(object_index);
@@ -282,7 +282,7 @@ namespace win
 
 		auto get_object_storage(index_type object_index) const
 		{
-			return reinterpret_cast<object_pointer>(m_storage + OBJECT_SIZE * object_index);
+			return reinterpret_cast<object_pointer>(_storage + OBJECT_SIZE * object_index);
 		}
 
 		static inline index_type get_object_index(ObjectID id) noexcept
@@ -292,7 +292,7 @@ namespace win
 
 		inline bool is_exceed_max_capacity() const
 		{
-			return m_capacity >= m_max_capacity;
+			return _capacity >= _max_capacity;
 		}
 
 		static inline index_type pool_index(ObjectID id) noexcept
@@ -302,14 +302,14 @@ namespace win
 
 		bool extend_capacity(size_type minimum_capacity)
 		{
-			assert((m_capacity <= std::numeric_limits<size_type>::max() / 2, "Integer overflow"));
-			return reserve(std::max(m_capacity * 2, minimum_capacity));
+			assert((_capacity <= std::numeric_limits<size_type>::max() / 2, "Integer overflow"));
+			return reserve(std::max(_capacity * 2, minimum_capacity));
 		}
 
 		index_type get_free_object_index() const
 		{
-			for (index_type i = 0; i < m_bitmap_size; i++) {
-				if (auto mask = m_free_storage_bitmaps[i]) {
+			for (index_type i = 0; i < _bitmap_size; i++) {
+				if (auto mask = free_storage_bitmaps[i]) {
 					unsigned long bit_index;
 					_BitScanForward64(&bit_index, mask);
 					return i * SIZE_TYPE_BIT_SIZE + bit_index;
@@ -320,7 +320,7 @@ namespace win
 
 		index_type transition_to_ready(index_type object_index)
 		{
-			auto bitmap = &m_free_storage_bitmaps[object_index / SIZE_TYPE_BIT_SIZE];
+			auto bitmap = &free_storage_bitmaps[object_index / SIZE_TYPE_BIT_SIZE];
 			auto bitmap_index = object_index % SIZE_TYPE_BIT_SIZE;
 
 			*bitmap &= ~(1ULL << bitmap_index);
@@ -330,7 +330,7 @@ namespace win
 		bool transition_to_free(index_type object_index)
 		{
 			assert(object_index >= 0);
-			auto bitmap = &m_free_storage_bitmaps[object_index / SIZE_TYPE_BIT_SIZE];
+			auto bitmap = &free_storage_bitmaps[object_index / SIZE_TYPE_BIT_SIZE];
 			auto bitmap_index = object_index % SIZE_TYPE_BIT_SIZE;
 			bool prev_state = *bitmap & (1ULL << bitmap_index);
 
@@ -338,13 +338,13 @@ namespace win
 			return prev_state == false; // check it was in use.
 		}
 		
-		const index_type m_pool_index;
+		const index_type _pool_index;
 
-		std::uint8_t *m_storage;
-		size_type m_capacity;
-		const size_type m_max_capacity;
+		std::uint8_t *_storage;
+		size_type _capacity;
+		const size_type _max_capacity;
 		
-		const size_type m_bitmap_size;
-		std::unique_ptr<size_type[]> m_free_storage_bitmaps;
+		const size_type _bitmap_size;
+		std::unique_ptr<size_type[]> free_storage_bitmaps;
 	};
 }

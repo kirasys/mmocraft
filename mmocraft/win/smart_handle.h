@@ -17,11 +17,11 @@ namespace win
 	{
 	public:
 		UniqueSocket() noexcept
-			: m_handle{INVALID_SOCKET}
+			: _handle{INVALID_SOCKET}
 		{ }
 
 		UniqueSocket(win::Socket handle) noexcept
-			: m_handle(handle)
+			: _handle(handle)
 		{ }
 
 		~UniqueSocket()
@@ -31,61 +31,61 @@ namespace win
 
 		UniqueSocket(UniqueSocket&& other) noexcept
 		{
-			m_handle = other.m_handle;
-			other.m_handle = INVALID_SOCKET;
+			_handle = other._handle;
+			other._handle = INVALID_SOCKET;
 		}
 
 		UniqueSocket& operator=(UniqueSocket&& other) noexcept
 		{
-			if (m_handle != other.m_handle) {
+			if (_handle != other._handle) {
 				clear();
-				m_handle = other.m_handle;
-				other.m_handle = INVALID_SOCKET;
+				_handle = other._handle;
+				other._handle = INVALID_SOCKET;
 			}
 			return *this;
 		}
 
 		operator win::Socket()
 		{
-			return m_handle;
+			return _handle;
 		}
 
 		operator win::Socket() const
 		{
-			return m_handle;
+			return _handle;
 		}
 
 		win::Socket get()
 		{
-			return m_handle;
+			return _handle;
 		}
 
 		win::Socket get() const
 		{
-			return m_handle;
+			return _handle;
 		}
 		
 		void reset(win::Socket handle = INVALID_SOCKET)
 		{
 			if (is_valid()) {
-				std::swap(m_handle, handle);
+				std::swap(_handle, handle);
 				::closesocket(handle);
 			}
 		}
 
 		bool is_valid() const
 		{
-			return m_handle != INVALID_SOCKET;
+			return _handle != INVALID_SOCKET;
 		}
 
 	private:
 		void clear()
 		{
 			if (is_valid())
-				::closesocket(m_handle);
+				::closesocket(_handle);
 		}
 
-		win::Socket m_handle;
+		win::Socket _handle;
 	};
 
 	using UniqueHandle = std::unique_ptr<std::remove_pointer_t<win::Handle>, decltype(::CloseHandle)*>;
@@ -98,11 +98,11 @@ namespace win
 	{
 	public:
 		SharedHandle()
-			: m_handle{ nullptr, invalid_handle_deleter }
+			: _handle{ nullptr, invalid_handle_deleter }
 		{ }
 
 		SharedHandle(win::Handle handle)
-			: m_handle{ handle, ::CloseHandle }
+			: _handle{ handle, ::CloseHandle }
 		{ }
 
 		// copy controllers
@@ -115,26 +115,26 @@ namespace win
 
 		operator win::Handle()
 		{
-			return m_handle.get();
+			return _handle.get();
 		}
 
 		operator win::Handle() const
 		{
-			return m_handle.get();
+			return _handle.get();
 		}
 
 		win::Handle get() const
 		{
-			return m_handle.get();
+			return _handle.get();
 		}
 
 		// reset operator
 		void reset()
 		{
-			m_handle.reset();
+			_handle.reset();
 		}
 
 	private:
-		std::shared_ptr<std::remove_pointer_t<win::Handle>> m_handle;
+		std::shared_ptr<std::remove_pointer_t<win::Handle>> _handle;
 	};
 }

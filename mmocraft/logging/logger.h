@@ -33,15 +33,15 @@ namespace logging
 		template <typename T>
 		LogStream& operator<<(T&& value)
 		{
-			m_buf << std::forward<T>(value);
+			_buf << std::forward<T>(value);
 			return *this;
 		}
 
 	private:
-		std::ostream& m_os;
+		std::ostream& _os;
 
-		bool m_fatal_flag;
-		std::stringstream m_buf;
+		bool _fatal_flag;
+		std::stringstream _buf;
 	};
 
 	// Console log functions

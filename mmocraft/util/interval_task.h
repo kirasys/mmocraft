@@ -39,7 +39,7 @@ namespace util
 	{
 	public:
 		IntervalTaskScheduler(T* instance = nullptr)
-			: m_instance(instance)
+			: _instance{ instance }
 		{ 
 			if constexpr (std::is_class_v<T>)
 				assert(("class type scheduler must have instance.", instance != nullptr));
@@ -47,7 +47,7 @@ namespace util
 
 		void schedule(std::string_view tag, IntervalTask<T>::func_type func, Second period)
 		{
-			m_interval_tasks.push_back({
+			interval_tasks.push_back({
 				.tag {tag},
 				.period = period,
 				.expired_at = current_timestmap() + unsigned(period),
@@ -59,14 +59,14 @@ namespace util
 		{
 			auto current_time = util::current_timestmap();
 
-			for (IntervalTask<T>& task : m_interval_tasks)
+			for (IntervalTask<T>& task : interval_tasks)
 			{
 				if (current_time < task.expired_at)
 					continue;
 
 				try {
 					if constexpr (std::is_class_v<T>)
-						std::invoke(task.func, *m_instance);
+						std::invoke(task.func, *_instance);
 					else
 						std::invoke(task.func);
 
@@ -80,7 +80,7 @@ namespace util
 		}
 
 	private:
-		T* m_instance;
-		std::vector<IntervalTask<T>> m_interval_tasks;
+		T* _instance;
+		std::vector<IntervalTask<T>> interval_tasks;
 	};
 }

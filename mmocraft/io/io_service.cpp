@@ -6,12 +6,12 @@
 namespace io
 {
 	IoCompletionPort::IoCompletionPort(int num_of_concurrent_threads)
-		: m_handle{ ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, ULONG_PTR(0), num_of_concurrent_threads) }
+		: _handle{ ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, ULONG_PTR(0), num_of_concurrent_threads) }
 	{ }
 
 	void IoCompletionPort::register_event_source(win::Handle event_source, IoEventHandler* event_handler)
 	{
-		if (::CreateIoCompletionPort(event_source, m_handle, ULONG_PTR(event_handler), DWORD(0)) == NULL)
+		if (::CreateIoCompletionPort(event_source, _handle, ULONG_PTR(event_handler), DWORD(0)) == NULL)
 			throw error::IoException(error::ErrorCode::IO_SERVICE_CREATE_COMPLETION_PORT);
 	}
 
@@ -22,7 +22,7 @@ namespace io
 
 	void IoCompletionPort::close() noexcept
 	{
-		m_handle.reset();
+		_handle.reset();
 	}
 
 	void IoCompletionPort::run_event_loop_forever(DWORD get_event_timeout_ms)
@@ -33,7 +33,7 @@ namespace io
 			LPOVERLAPPED overlapped = nullptr;
 
 			BOOL ok = ::GetQueuedCompletionStatus(
-				m_handle,
+				_handle,
 				&num_of_transferred_bytes,
 				&completion_key,
 				&overlapped,
