@@ -65,7 +65,7 @@ namespace io
 			return IoSendEventPtr{ std::move(io_event), std::move(io_buf) };
 		}
 
-		auto new_short_send_event()
+		auto new_send_short_event()
 		{
 			auto io_buf = send_event_short_data_pool.new_object();
 			auto io_event = send_event_pool.new_object(win::ObjectPool<IoSendEventShortData>::find_object(io_buf));
