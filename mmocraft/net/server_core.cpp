@@ -21,8 +21,8 @@ namespace net
 		, io_event_pool{ *new io::IoEventPool(max_client_connections) }
 		, io_accept_event{ io_event_pool.new_accept_event() }
 		, connection_server_pool{ max_client_connections }
-		, max_online_key{ 0 }
-		, online_connection_table{ new ConnectionServer*[max_client_connections + 1]() }
+		, max_connection_descriptor{ 0 }
+		, connection_descriptor_table{ new ConnectionServer*[max_client_connections + 1]() }
 		, interval_task_scheduler{ this }
 	{	
 		io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
@@ -33,33 +33,33 @@ namespace net
 		interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::Second(10));
 	}
 
-	unsigned ServerCore::issue_online_key()
+	unsigned ServerCore::issue_connection_descriptor()
 	{
-		shrink_max_online_key();
+		shrink_max_connection_descriptor();
 
-		for (unsigned i = 0; i < max_online_key; i++) // find free slot.
-			if (online_connection_table[i] == nullptr) return i;
+		for (unsigned i = 0; i < max_connection_descriptor; i++) // find free slot.
+			if (connection_descriptor_table[i] == nullptr) return i;
 
-		max_online_key += 1;
-		assert(max_online_key <= server_info.max_client_connections);
-		return max_online_key;
+		max_connection_descriptor += 1;
+		assert(max_connection_descriptor <= server_info.max_client_connections);
+		return max_connection_descriptor;
 	}
 
-	void ServerCore::delete_online_key(unsigned key)
+	void ServerCore::delete_connection_descriptor(unsigned key)
 	{
-		online_connection_table[key] = nullptr;
+		connection_descriptor_table[key] = nullptr;
 		
 	}
 
-	void ServerCore::shrink_max_online_key()
+	void ServerCore::shrink_max_connection_descriptor()
 	{
-		for (unsigned i = max_online_key; i > 0; i--) {
-			if (online_connection_table[i]) {
-				max_online_key = i;
+		for (unsigned i = max_connection_descriptor; i > 0; i--) {
+			if (connection_descriptor_table[i]) {
+				max_connection_descriptor = i;
 				return;
 			}
 		}
-		max_online_key = 0;
+		max_connection_descriptor = 0;
 	}
 
 	void ServerCore::new_connection(win::UniqueSocket &&client_sock)
@@ -73,7 +73,7 @@ namespace net
 		);
 
 		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
-		online_connection_table[connection_server->online_key] = connection_server;
+		connection_descriptor_table[connection_server->descriptor_number] = connection_server;
 		connection_server_ids.emplace_back(std::move(connection_server_id));
 	}
 
