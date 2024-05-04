@@ -40,13 +40,11 @@ namespace io
 		using IoAcceptEventPtr = IoEventPtr<IoAcceptEvent, IoRecvEventData>;
 		using IoRecvEventPtr = IoEventPtr<IoRecvEvent, IoRecvEventData>;
 		using IoSendEventPtr = IoEventPtr<IoSendEvent, IoSendEventData>;
-		using IoSendShortEventPtr = IoEventPtr<IoSendEvent, IoSendEventShortData>;
 
 		IoEventObjectPool(std::size_t max_capacity)
 			: accept_event_pool{ 1 }
 			, send_event_pool{ max_capacity }
 			, send_event_data_pool{ max_capacity }
-			, send_event_short_data_pool{ max_capacity }
 			, recv_event_pool{ max_capacity }
 			, recv_event_data_pool{ max_capacity + 1}
 		{ }
@@ -72,19 +70,11 @@ namespace io
 			return IoSendEventPtr{ std::move(io_event), std::move(io_buf) };
 		}
 
-		auto new_send_short_event()
-		{
-			auto io_buf = send_event_short_data_pool.new_object();
-			auto io_event = send_event_pool.new_object(win::ObjectPool<IoSendEventShortData>::find_object(io_buf));
-			return IoSendShortEventPtr{ std::move(io_event), std::move(io_buf) };
-		}
-
 	private:
 		win::ObjectPool<IoAcceptEvent> accept_event_pool;
 
 		win::ObjectPool<IoSendEvent> send_event_pool;
 		win::ObjectPool<IoSendEventData> send_event_data_pool;
-		win::ObjectPool<IoSendEventShortData> send_event_short_data_pool;
 
 		win::ObjectPool<IoRecvEvent> recv_event_pool;
 		win::ObjectPool<IoRecvEventData> recv_event_data_pool;
@@ -95,5 +85,4 @@ namespace io
 	using IoAcceptEventPtr = IoEventPool::IoAcceptEventPtr;
 	using IoRecvEventPtr = IoEventPool::IoRecvEventPtr;
 	using IoSendEventPtr = IoEventPool::IoSendEventPtr;
-	using IoSendShortEventPtr = IoEventPool::IoSendShortEventPtr;
 }

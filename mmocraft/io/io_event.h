@@ -19,7 +19,6 @@ namespace io
 
 	constexpr int RECV_BUFFER_SIZE = 4096;
 	constexpr int SEND_BUFFER_SIZE = 4096;
-	constexpr int SEND_SMALL_BUFFER_SIZE = 1024;
 
 	enum EventType
 	{
@@ -149,8 +148,7 @@ namespace io
 		std::size_t _size = 0;
 	};
 
-	template <std::size_t N>
-	class IoSendEventVariableData : public IoEventData
+	class IoSendEventData : public IoEventData
 	{
 		// data points to used space.
 
@@ -178,42 +176,23 @@ namespace io
 
 		std::uint8_t* end_unused()
 		{
-			return _data + N;
+			return _data + sizeof(_data);
 		}
 
 		std::size_t unused_size() const
 		{
-			return N - used_data_tail;
+			return sizeof(_data) - used_data_tail;
 		}
 
-		bool push(std::uint8_t* data, std::size_t n) override
-		{
-			if (used_data_head == used_data_tail)
-				used_data_head = used_data_tail = 0;
+		bool push(std::uint8_t* data, std::size_t n) override;
 
-			if (n > unused_size())
-				return false;
-
-			std::memcpy(begin_unused(), data, n);
-			used_data_tail += n;
-
-			return true;
-		}
-
-		void pop(std::size_t n) override
-		{
-			used_data_head += n;
-			assert(used_data_head <= N);
-		}
+		void pop(std::size_t n) override;
 
 	private:
-		std::uint8_t _data[N];
+		std::uint8_t _data[SEND_BUFFER_SIZE];
 		std::size_t used_data_head = 0;
 		std::size_t used_data_tail = 0;
 	};
-
-	using IoSendEventShortData = IoSendEventVariableData<SEND_SMALL_BUFFER_SIZE>;
-	using IoSendEventData = IoSendEventVariableData<SEND_BUFFER_SIZE>;
 	
 	class IoEventHandler
 	{
