@@ -197,6 +197,7 @@ namespace net
 	void OnlineDescriptorTable::request_recv(unsigned desc)
 	{
 		auto& data = descriptor_table[desc];
-		Socket::recv(data.raw_socket, *data.io_recv_event);
+		if (data.valid)
+			Socket::recv(data.raw_socket, *data.io_recv_event);
 	}
 }
