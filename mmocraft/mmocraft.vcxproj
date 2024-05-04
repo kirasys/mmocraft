@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
+    <ClInclude Include="game\entity.h" />
+    <ClInclude Include="game\player.h" />
     <ClInclude Include="io\io_event.h" />
     <ClInclude Include="io\io_event_pool.h" />
     <ClInclude Include="io\io_service.h" />

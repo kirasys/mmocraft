@@ -53,6 +53,8 @@ namespace net
 
 		bool send(io::IoSendEvent&);
 
+		static bool recv(win::Socket, io::IoRecvEvent&);
+
 		bool recv(io::IoRecvEvent&);
 
 		int get_address_family() {

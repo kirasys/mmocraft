@@ -33,10 +33,6 @@ namespace net
 
 		void serve_forever();
 
-		unsigned issue_connection_descriptor();
-
-		void delete_connection_descriptor(unsigned);
-
 		void new_connection(win::UniqueSocket &&client_sock);
 
 		void check_connection_expiration();
@@ -54,8 +50,6 @@ namespace net
 		bool handle_accept_event(io::IoAcceptEvent&);
 		
 	private:
-		void shrink_max_connection_descriptor();
-
 		const struct ServerInfo
 		{
 			std::string_view ip;
@@ -73,9 +67,6 @@ namespace net
 
 		ConnectionServerPool connection_server_pool;
 		std::list<ConnectionServerPool::ScopedID> connection_server_ids;
-
-		unsigned max_connection_descriptor;
-		std::unique_ptr<ConnectionServer*[]> connection_descriptor_table;
 
 		util::IntervalTaskScheduler<ServerCore> interval_task_scheduler;
 	};

@@ -110,7 +110,7 @@ bool net::Socket::send(io::IoSendEvent& event)
 	return true;
 }
 
-bool net::Socket::recv(io::IoRecvEvent& event)
+bool net::Socket::recv(win::Socket sock, io::IoRecvEvent& event)
 {
 	WSABUF buffer;
 	buffer.buf = reinterpret_cast<char*>(event.data.begin_unused());
@@ -120,7 +120,7 @@ bool net::Socket::recv(io::IoRecvEvent& event)
 	DWORD flags = 0;
 
 	int ret = ::WSARecv(
-		_handle,
+		sock,
 		&buffer, 1,
 		NULL,
 		&flags,
@@ -132,6 +132,11 @@ bool net::Socket::recv(io::IoRecvEvent& event)
 		throw NetworkException(ErrorCode::SOCKET_RECV);
 
 	return true;
+}
+
+bool net::Socket::recv(io::IoRecvEvent& event)
+{
+	return recv(_handle, event);
 }
 
 

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <chrono>
 #include <ctime>
-
 
 #include "net/socket.h"
 #include "io/io_event_pool.h"
@@ -30,10 +30,8 @@ namespace net
 
 		bool is_valid() const
 		{
-			return io_send_event.is_valid() && io_recv_event.is_valid();
+			return io_send_event_ptr.is_valid() && io_recv_event_ptr.is_valid();
 		}
-
-		//void request_recv();
 		
 		void request_send();
 
@@ -81,13 +79,48 @@ namespace net
 
 		ServerCore &main_server;
 
-		io::IoSendEventPtr io_send_event;
-		io::IoRecvEventPtr io_recv_event;
+		io::IoSendEventPtr io_send_event_ptr;
+		io::IoRecvEventPtr io_recv_event_ptr;
 
 		struct ConnectionStatus {
 			bool online	= false;
 			std::time_t offline_time = 0;
 			std::time_t last_interaction_time = 0;
 		} connection_status;
+	};
+
+	class OnlineDescriptorTable
+	{
+	public:
+		struct DescriptorData
+		{
+			bool valid = false;
+			ConnectionServer* connection;
+			win::Socket raw_socket;
+			io::IoSendEvent* io_send_event;
+			io::IoRecvEvent* io_recv_event;
+		};
+
+		OnlineDescriptorTable() = delete;
+
+		static void initialize(unsigned max_client_connections);
+
+		static void request_recv(unsigned);
+
+	private:
+		// only connection server can modify descriptor table.
+		friend ConnectionServer;
+
+		static unsigned issue_descriptor_number();
+
+		static void delete_descriptor(unsigned);
+
+		static void set_descriptor_data(unsigned, DescriptorData);
+
+		static void shrink_max_descriptor();
+
+		static unsigned max_client_connections;
+		static unsigned max_descriptor;
+		static std::unique_ptr<DescriptorData[]> descriptor_table;
 	};
 }
