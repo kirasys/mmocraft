@@ -95,7 +95,7 @@ namespace net
 		struct String
 		{
 			Short size = 0;
-			std::uint8_t *data = nullptr;
+			const char *data = nullptr;
 		};
 	};
 

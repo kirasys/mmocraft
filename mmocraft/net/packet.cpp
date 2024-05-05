@@ -14,7 +14,7 @@
 		OVERFLOW_CHECK(buf_start, buf_end, sizeof(PacketFieldType::Short)) \
 		PARSE_FIELD(buf_start, &(out)->size, PacketFieldType::Short) \
 		OVERFLOW_CHECK(buf_start, buf_end, (out)->size); \
-		(out)->data = buf_start; \
+		(out)->data = reinterpret_cast<const char*>(buf_start); \
 		buf_start += (out)->size;
 
 namespace
