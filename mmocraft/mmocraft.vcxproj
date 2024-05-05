@@ -48,6 +48,7 @@
     <ClInclude Include="io\io_service.h" />
     <ClInclude Include="logging\error.h" />
     <ClInclude Include="logging\logger.h" />
+    <ClInclude Include="net\application_server.h" />
     <ClInclude Include="net\packet.h" />
     <ClInclude Include="net\connection_server.h" />
     <ClInclude Include="net\master_server.h" />

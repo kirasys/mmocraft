@@ -48,6 +48,7 @@
     <ClInclude Include="io\io_event_pool.h" />
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\player.h" />
+    <ClInclude Include="net\application_server.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />
