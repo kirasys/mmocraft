@@ -79,7 +79,7 @@ namespace net
 	}
 
 	/** 
-	 * Event handler interface
+	 *  Event handler interface
 	 */
 
 	void ServerCore::on_success(io::IoEvent* event)

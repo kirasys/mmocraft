@@ -39,7 +39,9 @@ namespace net
 
 		void check_connection_expiration();
 
-		/* Event handler interface */
+		/**
+		 *  Event handler interface 
+		 */
 
 		virtual void on_success(io::IoEvent*) override;
 

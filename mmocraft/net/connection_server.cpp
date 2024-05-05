@@ -103,7 +103,9 @@ namespace net
 			&& current_time >= connection_status.offline_time + REQUIRED_SECONDS_FOR_SECURE_DELETION;
 	}
 
-	/* Event Handler Interface */
+	/**
+	 *  Event Handler Interface
+	 */
 
 	void ConnectionServer::on_success(io::IoEvent* event)
 	{
@@ -144,7 +146,9 @@ namespace net
 		return 1;
 	}
 
-	/* ConnectionDescriptorTable */
+	/**
+	 *  Connection Descriptor Table 
+	 */
 
 	unsigned OnlineDescriptorTable::max_client_connections;
 	unsigned OnlineDescriptorTable::max_descriptor;

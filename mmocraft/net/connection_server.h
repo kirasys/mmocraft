@@ -37,7 +37,7 @@ namespace net
 		std::optional<std::size_t> process_packets(std::uint8_t*, std::uint8_t*);
 
 		/**
-		 * Methods related to connection status
+		 *  Methods related to connection status
 		 */
 
 		bool try_interact_with_client();
@@ -58,7 +58,9 @@ namespace net
 
 		bool is_safe_delete(std::time_t current_time = util::current_timestmap()) const;
 
-		/* Event Handler Interface */
+		/**
+		 *  Event Handler Interface
+		 */
 
 		virtual void on_success(io::IoEvent*) override;
 
@@ -70,7 +72,7 @@ namespace net
 
 		std::optional<std::size_t> handle_send_event(io::IoSendEvent&);
 
-		// main server maintains online connection table through this key.
+		// connection register to the online descriptor table by this number.
 		const unsigned descriptor_number;
 
 	private:
