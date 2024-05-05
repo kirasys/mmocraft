@@ -66,7 +66,7 @@ namespace net
 
 		io::IoCompletionPort io_service;
 
-		io::IoEventPool& io_event_pool;
+		io::IoEventPool io_event_pool;
 		io::IoAcceptEventPtr io_accept_event;
 
 		ConnectionServerPool connection_server_pool;

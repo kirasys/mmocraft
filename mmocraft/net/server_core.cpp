@@ -18,8 +18,7 @@ namespace net
 						 .num_of_event_threads = num_of_event_threads}
 		, _listen_sock{ net::SocketType::TCPv4 }
 		, io_service{ concurrency_hint }
-		// No need to release. server core long live until program termination.
-		, io_event_pool{ *new io::IoEventPool(max_client_connections) }
+		, io_event_pool{ max_client_connections }
 		, io_accept_event{ io_event_pool.new_accept_event() }
 		, connection_server_pool{ max_client_connections }
 		, interval_task_scheduler{ this }
