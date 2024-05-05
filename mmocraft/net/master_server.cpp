@@ -14,17 +14,17 @@ namespace net
 		: server_core{ *this, ip, port, max_client_connections, num_of_event_threads, concurrency_hint }
 	{ }
 
-	bool MasterServer::handle_packet(unsigned connection_desc, Packet* packet)
+	bool MasterServer::handle_packet(unsigned conn_descriptor, Packet* packet)
 	{
 		switch (packet->id) {
 		case PacketID::Handshake:
-			return handle_handshake_packet(connection_desc, *static_cast<PacketHandshake*>(packet));
+			return handle_handshake_packet(conn_descriptor, *static_cast<PacketHandshake*>(packet));
 		default:
 			return false;
 		}
 	}
 
-	bool MasterServer::handle_handshake_packet(unsigned connection_desc, PacketHandshake& packet)
+	bool MasterServer::handle_handshake_packet(unsigned conn_descriptor, PacketHandshake& packet)
 	{
 		if (const char* spliter = std::strchr(packet.username_and_host.data, ';')) {
 			//connection_server
