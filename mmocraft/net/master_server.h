@@ -1,10 +1,10 @@
 #pragma once
-#include "server_core.h"
-#include "packet.h"
+#include "net/server_core.h"
+#include "net/packet.h"
 
 namespace net
 {
-	class MasterServer : public ServerCore
+	class MasterServer : public ApplicationServer
 	{
 	public:
 		MasterServer(std::string_view ip,
@@ -13,8 +13,13 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		bool handle_packet(ConnectionServer&, Packet*) override;
+		bool handle_packet(unsigned, Packet*);
 
-		bool handle_handshake_packet(ConnectionServer&, PacketHandshake&);
+		bool handle_handshake_packet(unsigned, PacketHandshake&);
+
+		void serve_forever();
+
+	private:
+		ServerCore server_core;
 	};
 }

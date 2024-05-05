@@ -6,6 +6,7 @@
 #include <ctime>
 
 #include "net/socket.h"
+#include "net/application_server.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "win/smart_handle.h"
@@ -14,8 +15,6 @@
 
 namespace net
 {
-	class ServerCore;
-
 	class ConnectionServer : io::IoEventHandler, util::NonCopyable, util::NonMovable
 	{
 		// The minecrft beta server will disconnect a client,
@@ -24,7 +23,7 @@ namespace net
 		static constexpr unsigned REQUIRED_SECONDS_FOR_SECURE_DELETION = 5;
 
 	public:
-		ConnectionServer(win::UniqueSocket&&, ServerCore&, io::IoCompletionPort& , io::IoEventPool&);
+		ConnectionServer(ApplicationServer&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
 
 		~ConnectionServer();
 
@@ -75,9 +74,9 @@ namespace net
 		const unsigned descriptor_number;
 
 	private:
-		net::Socket _client_socket;
+		ApplicationServer& app_server;
 
-		ServerCore &main_server;
+		net::Socket _client_socket;
 
 		io::IoSendEventPtr io_send_event_ptr;
 		io::IoRecvEventPtr io_recv_event_ptr;

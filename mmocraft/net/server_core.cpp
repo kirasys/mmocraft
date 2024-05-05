@@ -7,11 +7,12 @@
 
 namespace net
 {
-	ServerCore::ServerCore(std::string_view ip, int port,
+	ServerCore::ServerCore(ApplicationServer& a_app_server, std::string_view ip, int port,
 							unsigned max_client_connections,
 							unsigned num_of_event_threads,
 							int concurrency_hint)
-		: server_info{ .ip = ip,
+		: app_server{ a_app_server }
+		, server_info{ .ip = ip,
 						 .port = port, 
 						 .max_client_connections = max_client_connections,
 						 .num_of_event_threads = num_of_event_threads}
@@ -37,8 +38,8 @@ namespace net
 	{
 		// create a server for single client.
 		auto connection_server_id = connection_server_pool.new_object(
+			app_server,
 			std::move(client_sock),
-			/* main_server = */ *this,
 			io_service,
 			io_event_pool
 		);

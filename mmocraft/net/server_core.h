@@ -5,9 +5,10 @@
 #include <string>
 #include <memory>
 
-#include "socket.h"
-#include "packet.h"
-#include "connection_server.h"
+#include "net/socket.h"
+#include "net/packet.h"
+#include "net/connection_server.h"
+#include "net/application_server.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
@@ -22,10 +23,11 @@ namespace
 
 namespace net
 {
-	class ServerCore : io::IoEventHandler, util::NonCopyable, util::NonMovable
+	class ServerCore final : io::IoEventHandler
 	{
 	public:
-		ServerCore(std::string_view ip,
+		ServerCore(ApplicationServer&,
+			std::string_view ip,
 			int port,
 			unsigned max_client_connections,
 			unsigned num_of_event_threads,
@@ -36,8 +38,6 @@ namespace net
 		void new_connection(win::UniqueSocket &&client_sock);
 
 		void check_connection_expiration();
-
-		virtual bool handle_packet(ConnectionServer&, Packet*) = 0;
 
 		/* Event handler interface */
 
@@ -50,6 +50,8 @@ namespace net
 		bool handle_accept_event(io::IoAcceptEvent&);
 		
 	private:
+		ApplicationServer& app_server;
+
 		const struct ServerInfo
 		{
 			std::string_view ip;

@@ -1,19 +1,17 @@
 #include "pch.h"
 #include "connection_server.h"
 
-#include "packet.h"
-#include "server_core.h"
 #include "logging/error.h"
 
 namespace net
 {
-	ConnectionServer::ConnectionServer(win::UniqueSocket&& sock,
-								ServerCore &main_server,
+	ConnectionServer::ConnectionServer(ApplicationServer& a_app_server,
+								win::UniqueSocket&& sock,
 								io::IoCompletionPort& io_service,
 								io::IoEventPool &io_event_pool)
 		: descriptor_number{ OnlineDescriptorTable::issue_descriptor_number() }
+		, app_server{ a_app_server }
 		, _client_socket{ std::move(sock) }
-		, main_server{ main_server }
 		, io_send_event_ptr{ io_event_pool.new_send_event() }
 		, io_recv_event_ptr{ io_event_pool.new_recv_event() }
 	{
@@ -64,7 +62,7 @@ namespace net
 				return std::nullopt;
 			}
 
-			if (not main_server.handle_packet(*this, packet_ptr))
+			if (not app_server.handle_packet(descriptor_number, packet_ptr))
 				logging::cerr() << "Unsupported packet id(" << packet_ptr->id << ")";
 
 			data_cur += parsed_bytes;
