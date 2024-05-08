@@ -90,19 +90,19 @@ namespace net
 		} connection_status;
 	};
 
-	class OnlineDescriptorTable
+	class ConnectionDescriptorTable
 	{
 	public:
 		struct DescriptorData
 		{
-			bool valid = false;
+			bool is_online = false;
 			ConnectionServer* connection;
 			win::Socket raw_socket;
 			io::IoSendEvent* io_send_event;
 			io::IoRecvEvent* io_recv_event;
 		};
 
-		OnlineDescriptorTable() = delete;
+		ConnectionDescriptorTable() = delete;
 
 		static void initialize(unsigned max_client_connections);
 

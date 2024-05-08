@@ -9,7 +9,7 @@ namespace net
 								win::UniqueSocket&& sock,
 								io::IoCompletionPort& io_service,
 								io::IoEventPool &io_event_pool)
-		: descriptor_number{ OnlineDescriptorTable::issue_descriptor_number() }
+		: descriptor_number{ ConnectionDescriptorTable::issue_descriptor_number() }
 		, app_server{ a_app_server }
 		, _client_socket{ std::move(sock) }
 		, io_send_event_ptr{ io_event_pool.new_send_event() }
@@ -25,8 +25,8 @@ namespace net
 		io_service.register_event_source(_client_socket.get_handle(), this);
 
 		// register to the global descriptor table.
-		OnlineDescriptorTable::set_descriptor_data(descriptor_number,
-			OnlineDescriptorTable::DescriptorData{
+		ConnectionDescriptorTable::set_descriptor_data(descriptor_number,
+			ConnectionDescriptorTable::DescriptorData{
 				.connection = this,
 				.raw_socket = _client_socket.get_handle(),
 				.io_send_event = io_send_event_ptr.get(),
@@ -35,7 +35,7 @@ namespace net
 		);
 
 		// init first recv.
-		OnlineDescriptorTable::request_recv(descriptor_number);
+		ConnectionDescriptorTable::request_recv(descriptor_number);
 	}
 
 	ConnectionServer::~ConnectionServer()
@@ -83,7 +83,7 @@ namespace net
 
 	void ConnectionServer::set_offline()
 	{
-		OnlineDescriptorTable::delete_descriptor(descriptor_number);
+		ConnectionDescriptorTable::delete_descriptor(descriptor_number);
 
 		// this lead to close the io completion port.
 		_client_socket.close();
@@ -150,38 +150,38 @@ namespace net
 	 *  Connection Descriptor Table 
 	 */
 
-	unsigned OnlineDescriptorTable::max_client_connections;
-	unsigned OnlineDescriptorTable::max_descriptor;
-	std::unique_ptr<OnlineDescriptorTable::DescriptorData[]> OnlineDescriptorTable::descriptor_table;
+	unsigned ConnectionDescriptorTable::max_client_connections;
+	unsigned ConnectionDescriptorTable::max_descriptor;
+	std::unique_ptr<ConnectionDescriptorTable::DescriptorData[]> ConnectionDescriptorTable::descriptor_table;
 
-	void OnlineDescriptorTable::initialize(unsigned a_max_client_connections)
+	void ConnectionDescriptorTable::initialize(unsigned a_max_client_connections)
 	{
 		max_client_connections = a_max_client_connections;
 		max_descriptor = 0;
 		descriptor_table.reset(new DescriptorData[a_max_client_connections + 1]());
 	}
 
-	unsigned OnlineDescriptorTable::issue_descriptor_number()
+	unsigned ConnectionDescriptorTable::issue_descriptor_number()
 	{
 		shrink_max_descriptor();
 
 		for (unsigned i = 0; i < max_descriptor; i++) // find free slot.
-			if (descriptor_table[i].valid) return i;
+			if (descriptor_table[i].is_online) return i;
 
 		max_descriptor += 1;
 		assert(max_descriptor <= max_client_connections);
 		return max_descriptor;
 	}
 
-	void OnlineDescriptorTable::delete_descriptor(unsigned desc)
+	void ConnectionDescriptorTable::delete_descriptor(unsigned desc)
 	{
-		descriptor_table[desc].valid = false;
+		descriptor_table[desc].is_online = false;
 	}
 
-	void OnlineDescriptorTable::shrink_max_descriptor()
+	void ConnectionDescriptorTable::shrink_max_descriptor()
 	{
 		for (unsigned i = max_descriptor; i > 0; i--) {
-			if (descriptor_table[i].valid) {
+			if (descriptor_table[i].is_online) {
 				max_descriptor = i;
 				return;
 			}
@@ -189,17 +189,17 @@ namespace net
 		max_descriptor = 0;
 	}
 
-	void OnlineDescriptorTable::set_descriptor_data(unsigned desc, DescriptorData data)
+	void ConnectionDescriptorTable::set_descriptor_data(unsigned desc, DescriptorData data)
 	{
 		descriptor_table[desc] = data;
 		std::atomic_thread_fence(std::memory_order_release);
-		descriptor_table[desc].valid = true;
+		descriptor_table[desc].is_online = true;
 	}
 
-	void OnlineDescriptorTable::request_recv(unsigned desc)
+	void ConnectionDescriptorTable::request_recv(unsigned desc)
 	{
 		auto& data = descriptor_table[desc];
-		if (data.valid)
+		if (data.is_online)
 			Socket::recv(data.raw_socket, *data.io_recv_event);
 	}
 }

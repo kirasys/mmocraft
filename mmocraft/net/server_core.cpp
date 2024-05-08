@@ -25,7 +25,7 @@ namespace net
 	{	
 		io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
 
-		OnlineDescriptorTable::initialize(max_client_connections);
+		ConnectionDescriptorTable::initialize(max_client_connections);
 
 		//
 		// Schedule interval tasks.
