@@ -166,7 +166,7 @@ namespace net
 		shrink_max_descriptor();
 
 		for (unsigned i = 0; i < max_descriptor; i++) // find free slot.
-			if (descriptor_table[i].is_online) return i;
+			if (not descriptor_table[i].is_online) return i;
 
 		max_descriptor += 1;
 		assert(max_descriptor <= max_client_connections);
