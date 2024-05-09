@@ -109,12 +109,13 @@ namespace net
 
 	bool ServerCore::handle_accept_event(io::IoAcceptEvent& event)
 	{
+		// creates unique accept socket first to avoid resource leak.
+		auto client_socket = win::UniqueSocket(event.accepted_socket);
+
 		if (connection_server_ids.size() > server_info.max_client_connections) {
 			logging::cerr() << "full connection reached. skip to accept new client";
 			return false;
 		}
-
-		auto client_socket = win::UniqueSocket(event.accepted_socket);
 
 		// inherit the properties of the listen socket.
 		win::Socket listen_sock = _listen_sock.get_handle();
