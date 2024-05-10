@@ -26,12 +26,10 @@ namespace net
 
 	bool MasterServer::handle_handshake_packet(unsigned conn_descriptor, PacketHandshake& packet)
 	{
-		if (const char* spliter = std::strchr(packet.username_and_host.data, ';')) {
-			//connection_server
-			return true;
-		}
-
-		return false;
+		// TODO: online authentication.
+		std::byte message[] = { std::byte('-') };
+		ConnectionDescriptorTable::push_server_short_message(conn_descriptor, message, sizeof(message));
+		return true;
 	}
 
 	void MasterServer::serve_forever()
