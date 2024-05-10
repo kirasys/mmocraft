@@ -58,21 +58,41 @@ namespace io
 
 	bool IoSendEventData::push(std::byte* data, std::size_t n)
 	{
-		if (used_data_head == used_data_tail)
-			used_data_head = used_data_tail = 0;
+		if (data_head == data_tail)
+			data_head = data_tail = 0;
 
 		if (n > unused_size())
 			return false;
 
 		std::memcpy(begin_unused(), data, n);
-		used_data_tail += n;
+		data_tail += n;
 
 		return true;
 	}
 
 	void IoSendEventData::pop(std::size_t n)
 	{
-		used_data_head += n;
-		assert(used_data_head <= sizeof(_data));
+		data_head += n;
+		assert(data_head <= sizeof(_data));
+	}
+
+	bool IoSendEventData::push_auxiliary(std::byte* data, std::size_t n)
+	{
+		if (short_data_head == short_data_tail)
+			short_data_head = short_data_tail = 0;
+
+		if (n > unused_auxiliary_size())
+			return false;
+
+		std::memcpy(end_auxiliary(), data, n);
+		short_data_tail += n;
+
+		return true;
+	}
+
+	void IoSendEventData::pop_auxiliary(std::size_t n)
+	{
+		short_data_head += n;
+		assert(short_data_head <= sizeof(_short_data));
 	}
 }

@@ -192,14 +192,27 @@ namespace net
 	void ConnectionDescriptorTable::set_descriptor_data(unsigned desc, DescriptorData data)
 	{
 		descriptor_table[desc] = data;
+		descriptor_table[desc].io_send_data = static_cast<io::IoSendEventData*>(&descriptor_table[desc].io_send_event->data);
 		std::atomic_thread_fence(std::memory_order_release);
 		descriptor_table[desc].is_online = true;
 	}
 
 	void ConnectionDescriptorTable::request_recv(unsigned desc)
 	{
-		auto& data = descriptor_table[desc];
-		if (data.is_online)
-			Socket::recv(data.raw_socket, *data.io_recv_event);
+		auto& desc_entry = descriptor_table[desc];
+		if (desc_entry.is_online)
+			Socket::recv(desc_entry.raw_socket, *desc_entry.io_recv_event);
+	}
+
+	bool ConnectionDescriptorTable::push_server_message(unsigned desc, std::byte* message, std::size_t n)
+	{
+		auto& desc_entry = descriptor_table[desc];
+		return desc_entry.is_online ? desc_entry.io_send_data->push(message, n) : false;
+	}
+
+	bool ConnectionDescriptorTable::push_server_short_message(unsigned desc, std::byte* message, std::size_t n)
+	{
+		auto& desc_entry = descriptor_table[desc];
+		return desc_entry.is_online ? desc_entry.io_send_data->push_auxiliary(message, n) : false;
 	}
 }

@@ -99,6 +99,7 @@ namespace net
 			ConnectionServer* connection;
 			win::Socket raw_socket;
 			io::IoSendEvent* io_send_event;
+			io::IoSendEventData* io_send_data = nullptr;
 			io::IoRecvEvent* io_recv_event;
 		};
 
@@ -107,6 +108,10 @@ namespace net
 		static void initialize(unsigned max_client_connections);
 
 		static void request_recv(unsigned);
+
+		static bool push_server_message(unsigned, std::byte*, std::size_t);
+
+		static bool push_server_short_message(unsigned, std::byte*, std::size_t);
 
 	private:
 		// only connection server can modify descriptor table.

@@ -20,6 +20,7 @@ namespace io
 
 	constexpr int RECV_BUFFER_SIZE = 4096;
 	constexpr int SEND_BUFFER_SIZE = 4096;
+	constexpr int SEND_SMALL_BUFFER_SIZE = 1024;
 
 	enum EventType
 	{
@@ -151,21 +152,37 @@ namespace io
 
 	class IoSendEventData : public IoEventData
 	{
+	public:
 		// data points to used space.
 
 		std::byte* begin()
 		{
-			return _data + used_data_head;
+			return _data + data_head;
+		}
+
+		std::byte* begin_auxiliary()
+		{
+			return _short_data + short_data_head;
 		}
 
 		std::byte* end()
 		{
-			return _data + used_data_tail;
+			return _data + data_tail;
+		}
+
+		std::byte* end_auxiliary()
+		{
+			return _short_data + short_data_tail;
 		}
 
 		std::size_t size() const
 		{
-			return used_data_tail - used_data_head;
+			return std::size_t(data_tail - data_head);
+		}
+
+		std::size_t size_auxiliary() const
+		{
+			return std::size_t(short_data_tail - short_data_head);
 		}
 
 		// buffer points to free space.
@@ -182,17 +199,30 @@ namespace io
 
 		std::size_t unused_size() const
 		{
-			return sizeof(_data) - used_data_tail;
+			return sizeof(_data) - data_tail;
+		}
+
+		std::size_t unused_auxiliary_size() const
+		{
+			return sizeof(_short_data) - short_data_tail;
 		}
 
 		bool push(std::byte* data, std::size_t n) override;
 
 		void pop(std::size_t n) override;
 
+		bool push_auxiliary(std::byte* data, std::size_t n);
+
+		void pop_auxiliary(std::size_t n);
+
 	private:
 		std::byte _data[SEND_BUFFER_SIZE];
-		std::size_t used_data_head = 0;
-		std::size_t used_data_tail = 0;
+		int data_head = 0;
+		int data_tail = 0;
+
+		std::byte _short_data[SEND_SMALL_BUFFER_SIZE];
+		int short_data_head = 0;
+		int short_data_tail = 0;
 	};
 	
 	class IoEventHandler
