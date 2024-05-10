@@ -21,7 +21,7 @@ namespace
 {
 	struct PacketStaticData
 	{
-		std::uint8_t* (*parse)(std::uint8_t*, std::uint8_t*, net::Packet*) = nullptr;
+		std::byte* (*parse)(std::byte*, std::byte*, net::Packet*) = nullptr;
 	};
 
 	constinit const std::array<PacketStaticData, 0x100> packet_static_data_by_id = [] {
@@ -36,7 +36,7 @@ namespace net
 {
 	/* Common Packet Static Methods */
 
-	std::size_t PacketStructure::parse_packet(std::uint8_t* buf_start, std::uint8_t* buf_end, Packet* out_packet)
+	std::size_t PacketStructure::parse_packet(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
 	{
 		assert(buf_start < buf_end);
 
@@ -65,7 +65,7 @@ namespace net
 
 	/* Concrete Packet Static Methods */
 
-	std::uint8_t* PacketHandshake::parse(std::uint8_t* buf_start, std::uint8_t* buf_end, Packet* out_packet)
+	std::byte* PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
 	{
 		auto packet = static_cast<PacketHandshake*>(out_packet);
 		PARSE_STRING_FIELD(buf_start, buf_end, &packet->username_and_host);

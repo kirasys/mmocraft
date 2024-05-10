@@ -114,7 +114,7 @@ namespace net
 	{
 		PacketFieldType::String username_and_host;
 
-		static std::uint8_t* parse(std::uint8_t* buf_start, std::uint8_t* buf_end, Packet*);
+		static std::byte* parse(std::byte* buf_start, std::byte* buf_end, Packet*);
 	};
 
 	struct PacketStructure
@@ -124,7 +124,7 @@ namespace net
 			return std::max(sizeof(PacketKeepAlive), sizeof(PacketHandshake));
 		}
 
-		static std::size_t parse_packet(std::uint8_t* buf_start, std::uint8_t* buf_end, Packet*);
+		static std::size_t parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*);
 
 		static bool validate_packet(Packet*);
 	};

@@ -31,7 +31,7 @@ namespace io
 		event_handler.on_success(this);
 	}
 
-	bool IoRecvEventData::push(std::uint8_t*, std::size_t n)
+	bool IoRecvEventData::push(std::byte*, std::size_t n)
 	{
 		// data was already appended by I/O.
 		_size += n;
@@ -56,7 +56,7 @@ namespace io
 		// auto processed_bytes = event_handler.handle_io_event(event_type, this);
 	}
 
-	bool IoSendEventData::push(std::uint8_t* data, std::size_t n)
+	bool IoSendEventData::push(std::byte* data, std::size_t n)
 	{
 		if (used_data_head == used_data_tail)
 			used_data_head = used_data_tail = 0;

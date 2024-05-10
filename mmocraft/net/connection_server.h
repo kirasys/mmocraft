@@ -34,7 +34,7 @@ namespace net
 		
 		void request_send();
 
-		std::optional<std::size_t> process_packets(std::uint8_t*, std::uint8_t*);
+		std::optional<std::size_t> process_packets(std::byte*, std::byte*);
 
 		/**
 		 *  Methods related to connection status

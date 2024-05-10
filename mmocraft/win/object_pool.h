@@ -242,7 +242,7 @@ namespace win
 			if (object_id == INVALID_OBJECT_ID)
 				return false;
 
-			if (auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)])) {
+			if (auto pool = find_pool(object_id)) {
 				(pool->get_object_storage(get_object_index(object_id))->~T()); // destruct
 				return pool->transition_to_free(get_object_index(object_id));
 			}
@@ -254,7 +254,7 @@ namespace win
 			if (object_id == INVALID_OBJECT_ID)
 				return nullptr;
 
-			auto pool = static_cast<ObjectPool*>(pool_table[pool_index(object_id)]);
+			auto pool = find_pool(object_id);
 			return pool ? pool->get_object_storage(get_object_index(object_id)) : nullptr;
 		}
 
@@ -295,9 +295,9 @@ namespace win
 			return _capacity >= _max_capacity;
 		}
 
-		static inline index_type pool_index(ObjectID id) noexcept
+		static auto find_pool(ObjectID id) noexcept
 		{
-			return id >> 32;
+			return static_cast<ObjectPool*>(pool_table[id >> 32]);
 		}
 
 		bool extend_capacity(size_type minimum_capacity)
@@ -340,7 +340,7 @@ namespace win
 		
 		const index_type _pool_index;
 
-		std::uint8_t *_storage;
+		std::byte *_storage;
 		size_type _capacity;
 		const size_type _max_capacity;
 		

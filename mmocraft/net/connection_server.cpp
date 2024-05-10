@@ -48,7 +48,7 @@ namespace net
 
 	}
 
-	std::optional<std::size_t> ConnectionServer::process_packets(std::uint8_t* data_begin, std::uint8_t* data_end)
+	std::optional<std::size_t> ConnectionServer::process_packets(std::byte* data_begin, std::byte* data_end)
 	{
 		auto data_cur = data_begin;
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));

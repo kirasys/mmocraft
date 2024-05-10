@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdint>
 #include <cassert>
+#include <cstddef>
 #include <memory>
 #include <optional>
 
@@ -83,21 +84,21 @@ namespace io
 
 		// data points to used space.
 
-		virtual std::uint8_t* begin() = 0;
+		virtual std::byte* begin() = 0;
 
-		virtual std::uint8_t* end() = 0;
+		virtual std::byte* end() = 0;
 
 		virtual std::size_t size() const = 0;
 
 		// buffer points to free space.
 
-		virtual std::uint8_t* begin_unused() = 0;
+		virtual std::byte* begin_unused() = 0;
 
-		virtual std::uint8_t* end_unused() = 0;
+		virtual std::byte* end_unused() = 0;
 
 		virtual std::size_t unused_size() const = 0;
 		
-		virtual bool push(std::uint8_t* data, std::size_t n) = 0;
+		virtual bool push(std::byte* data, std::size_t n) = 0;
 
 		virtual void pop(std::size_t n) = 0;
 	};
@@ -107,12 +108,12 @@ namespace io
 	public:
 		// data points to used space.
 
-		std::uint8_t* begin()
+		std::byte* begin()
 		{
 			return _data;
 		}
 
-		std::uint8_t* end()
+		std::byte* end()
 		{
 			return _data + _size;
 		}
@@ -124,12 +125,12 @@ namespace io
 
 		// buffer points to free space.
 
-		std::uint8_t* begin_unused()
+		std::byte* begin_unused()
 		{
 			return end();
 		}
 
-		std::uint8_t* end_unused()
+		std::byte* end_unused()
 		{
 			return _data + sizeof(_data);
 		}
@@ -139,12 +140,12 @@ namespace io
 			return sizeof(_data) - _size;
 		}
 
-		bool push(std::uint8_t*, std::size_t n) override;
+		bool push(std::byte*, std::size_t n) override;
 
 		void pop(std::size_t n) override;
 
 	private:
-		std::uint8_t _data[RECV_BUFFER_SIZE];
+		std::byte _data[RECV_BUFFER_SIZE];
 		std::size_t _size = 0;
 	};
 
@@ -152,12 +153,12 @@ namespace io
 	{
 		// data points to used space.
 
-		std::uint8_t* begin()
+		std::byte* begin()
 		{
 			return _data + used_data_head;
 		}
 
-		std::uint8_t* end()
+		std::byte* end()
 		{
 			return _data + used_data_tail;
 		}
@@ -169,12 +170,12 @@ namespace io
 
 		// buffer points to free space.
 
-		std::uint8_t* begin_unused()
+		std::byte* begin_unused()
 		{
 			return end();
 		}
 
-		std::uint8_t* end_unused()
+		std::byte* end_unused()
 		{
 			return _data + sizeof(_data);
 		}
@@ -184,12 +185,12 @@ namespace io
 			return sizeof(_data) - used_data_tail;
 		}
 
-		bool push(std::uint8_t* data, std::size_t n) override;
+		bool push(std::byte* data, std::size_t n) override;
 
 		void pop(std::size_t n) override;
 
 	private:
-		std::uint8_t _data[SEND_BUFFER_SIZE];
+		std::byte _data[SEND_BUFFER_SIZE];
 		std::size_t used_data_head = 0;
 		std::size_t used_data_tail = 0;
 	};
