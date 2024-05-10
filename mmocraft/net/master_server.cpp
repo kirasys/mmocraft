@@ -34,6 +34,10 @@ namespace net
 
 	void MasterServer::serve_forever()
 	{
-		server_core.serve_forever();
+		server_core.start_network_io_service();
+
+		while (1) {
+
+		}
 	}
 }

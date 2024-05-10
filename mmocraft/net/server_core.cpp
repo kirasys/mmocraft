@@ -64,7 +64,7 @@ namespace net
 		}
 	}
 
-	void ServerCore::serve_forever()
+	void ServerCore::start_network_io_service()
 	{
 		_listen_sock.bind(server_info.ip, server_info.port);
 		_listen_sock.listen();
@@ -73,8 +73,6 @@ namespace net
 
 		for (unsigned i = 0; i < server_info.num_of_event_threads; i++)
 			io_service.spawn_event_loop_thread().detach();
-
-		io_service.run_event_loop_forever();
 	}
 
 	/** 

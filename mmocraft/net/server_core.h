@@ -33,7 +33,7 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		void serve_forever();
+		void start_network_io_service();
 
 		void new_connection(win::UniqueSocket &&client_sock);
 
