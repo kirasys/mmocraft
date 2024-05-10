@@ -31,6 +31,8 @@ namespace net
 		// Schedule interval tasks.
 		// 
 		interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::Second(10));
+
+		_state = ServerCore::State::Initialized;
 	}
 
 	void ServerCore::new_connection(win::UniqueSocket &&client_sock)
@@ -73,6 +75,8 @@ namespace net
 
 		for (unsigned i = 0; i < server_info.num_of_event_threads; i++)
 			io_service.spawn_event_loop_thread().detach();
+
+		_state = ServerCore::State::Running;
 	}
 
 	/** 
@@ -88,14 +92,14 @@ namespace net
 			_listen_sock.accept(*static_cast<io::IoAcceptEvent*>(event));
 		}
 		catch (...) {
-			// TODO: accept scheduling
 			logging::cerr() << "fail to request accept";
+			on_error(event);
 		}
 	}
 
 	void ServerCore::on_error(io::IoEvent* event)
 	{
-		
+		_state = ServerCore::State::Stopped;
 	}
 
 	std::optional<std::size_t> ServerCore::handle_io_event(io::EventType event_type, io::IoEvent* event)

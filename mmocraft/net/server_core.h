@@ -26,12 +26,24 @@ namespace net
 	class ServerCore final : io::IoEventHandler
 	{
 	public:
+		enum State
+		{
+			Initialized,
+			Running,
+			Stopped,
+		};
+
 		ServerCore(ApplicationServer&,
 			std::string_view ip,
 			int port,
 			unsigned max_client_connections,
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
+
+		ServerCore::State status()
+		{
+			return _state;
+		}
 
 		void start_network_io_service();
 
@@ -52,6 +64,8 @@ namespace net
 		bool handle_accept_event(io::IoAcceptEvent&);
 		
 	private:
+		ServerCore::State _state;
+
 		ApplicationServer& app_server;
 
 		const struct ServerInfo
