@@ -65,14 +65,14 @@ namespace io
 			return false;
 
 		std::memcpy(begin_unused(), data, n);
-		data_tail += n;
+		data_tail += int(n);
 
 		return true;
 	}
 
 	void IoSendEventData::pop(std::size_t n)
 	{
-		data_head += n;
+		data_head += int(n);
 		assert(data_head <= sizeof(_data));
 	}
 
@@ -85,14 +85,14 @@ namespace io
 			return false;
 
 		std::memcpy(end_auxiliary(), data, n);
-		short_data_tail += n;
+		short_data_tail += int(n);
 
 		return true;
 	}
 
 	void IoSendEventData::pop_auxiliary(std::size_t n)
 	{
-		short_data_head += n;
+		short_data_head += int(n);
 		assert(short_data_head <= sizeof(_short_data));
 	}
 }
