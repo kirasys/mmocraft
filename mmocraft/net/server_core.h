@@ -40,7 +40,7 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		ServerCore::State status()
+		ServerCore::State status() const
 		{
 			return _state;
 		}
