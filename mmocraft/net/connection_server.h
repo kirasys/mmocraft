@@ -107,7 +107,7 @@ namespace net
 
 		static void initialize(unsigned max_client_connections);
 
-		static void request_recv(unsigned);
+		static void request_recv_client_message(unsigned);
 
 		static bool push_server_message(unsigned, std::byte*, std::size_t);
 

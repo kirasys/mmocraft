@@ -35,7 +35,7 @@ namespace net
 		);
 
 		// init first recv.
-		ConnectionDescriptorTable::request_recv(descriptor_number);
+		ConnectionDescriptorTable::request_recv_client_message(descriptor_number);
 	}
 
 	ConnectionServer::~ConnectionServer()
@@ -197,7 +197,7 @@ namespace net
 		descriptor_table[desc].is_online = true;
 	}
 
-	void ConnectionDescriptorTable::request_recv(unsigned desc)
+	void ConnectionDescriptorTable::request_recv_client_message(unsigned desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		if (desc_entry.is_online)
