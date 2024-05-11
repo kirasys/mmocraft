@@ -63,7 +63,7 @@ namespace net
 			}
 
 			if (not app_server.handle_packet(descriptor_number, packet_ptr))
-				logging::cerr() << "Unsupported packet id(" << packet_ptr->id << ")";
+				break;
 
 			data_cur += parsed_bytes;
 		}
@@ -109,7 +109,7 @@ namespace net
 
 	void ConnectionServer::on_success(io::IoEvent* event)
 	{
-		_client_socket.recv(*static_cast<io::IoRecvEvent*>(event));
+		ConnectionDescriptorTable::request_recv_client_message(descriptor_number);
 	}
 
 	void ConnectionServer::on_error(io::IoEvent* event)
@@ -200,8 +200,13 @@ namespace net
 	void ConnectionDescriptorTable::request_recv_client_message(unsigned desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		if (desc_entry.is_online)
-			Socket::recv(desc_entry.raw_socket, *desc_entry.io_recv_event);
+		if (desc_entry.is_online) {
+			WSABUF wbuf[1];
+			wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_recv_event->data.begin_unused());
+			wbuf[0].len = ULONG(desc_entry.io_recv_event->data.unused_size());
+
+			Socket::recv(desc_entry.raw_socket, wbuf, &desc_entry.io_recv_event->overlapped);
+		}
 	}
 
 	bool ConnectionDescriptorTable::push_server_message(unsigned desc, std::byte* message, std::size_t n)
@@ -214,5 +219,10 @@ namespace net
 	{
 		auto& desc_entry = descriptor_table[desc];
 		return desc_entry.is_online ? desc_entry.io_send_data->push_auxiliary(message, n) : false;
+	}
+
+	void ConnectionDescriptorTable::flush_server_message()
+	{
+
 	}
 }

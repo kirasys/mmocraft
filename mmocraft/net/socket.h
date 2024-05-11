@@ -53,9 +53,9 @@ namespace net
 
 		bool send(io::IoSendEvent&);
 
-		static bool recv(win::Socket, io::IoRecvEvent&);
+		static bool recv(win::Socket sock, WSABUF[1], WSAOVERLAPPED*);
 
-		bool recv(io::IoRecvEvent&);
+		bool recv(WSABUF[1], WSAOVERLAPPED*);
 
 		int get_address_family() {
 			return AF_INET; // TODO: IPv6

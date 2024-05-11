@@ -23,6 +23,12 @@ namespace net
 		static constexpr unsigned REQUIRED_SECONDS_FOR_SECURE_DELETION = 5;
 
 	public:
+		enum State
+		{
+			Initialized,
+			
+		};
+
 		ConnectionServer(ApplicationServer&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
 
 		~ConnectionServer();
@@ -85,6 +91,8 @@ namespace net
 
 		struct ConnectionStatus {
 			bool online	= false;
+			bool recv_event_requested = false;
+			bool send_event_requested = false;
 			std::time_t offline_time = 0;
 			std::time_t last_interaction_time = 0;
 		} connection_status;
@@ -112,6 +120,8 @@ namespace net
 		static bool push_server_message(unsigned, std::byte*, std::size_t);
 
 		static bool push_server_short_message(unsigned, std::byte*, std::size_t);
+
+		static void flush_server_message();
 
 	private:
 		// only connection server can modify descriptor table.

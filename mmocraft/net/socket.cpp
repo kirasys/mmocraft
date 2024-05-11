@@ -110,33 +110,28 @@ bool net::Socket::send(io::IoSendEvent& event)
 	return true;
 }
 
-bool net::Socket::recv(win::Socket sock, io::IoRecvEvent& event)
+bool net::Socket::recv(win::Socket sock, WSABUF wsa_buf[1], WSAOVERLAPPED* overlapped)
 {
-	WSABUF buffer;
-	buffer.buf = reinterpret_cast<char*>(event.data.begin_unused());
-	buffer.len = ULONG(event.data.unused_size());
-	assert(buffer.len > 0);
-
 	DWORD flags = 0;
 
 	int ret = ::WSARecv(
 		sock,
-		&buffer, 1,
+		wsa_buf, 1,
 		NULL,
 		&flags,
-		&event.overlapped,
+		overlapped,
 		NULL
 	);
 
 	if (ret == SOCKET_ERROR && (ERROR_IO_PENDING != ::WSAGetLastError()))
-		throw NetworkException(ErrorCode::SOCKET_RECV);
+		return false;
 
 	return true;
 }
 
-bool net::Socket::recv(io::IoRecvEvent& event)
+bool net::Socket::recv(WSABUF wsa_buf[1], WSAOVERLAPPED* overlapped)
 {
-	return recv(_handle, event);
+	return recv(_handle, wsa_buf, overlapped);
 }
 
 
