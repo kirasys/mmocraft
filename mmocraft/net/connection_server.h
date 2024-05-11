@@ -35,7 +35,7 @@ namespace net
 
 		bool is_valid() const
 		{
-			return io_send_event_ptr.is_valid() && io_recv_event_ptr.is_valid();
+			return io_send_event && io_recv_event;
 		}
 		
 		void request_send();
@@ -78,7 +78,7 @@ namespace net
 
 		virtual void on_error(io::IoSendEvent*) override;
 
-		virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
+		//virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
 
 		// connection register to the online descriptor table by this number.
 		const unsigned descriptor_number;
@@ -88,8 +88,12 @@ namespace net
 
 		net::Socket _client_socket;
 
-		io::IoSendEventPtr io_send_event_ptr;
-		io::IoRecvEventPtr io_recv_event_ptr;
+		win::ObjectPool<io::IoSendEventSmallData>::Pointer io_send_event_small_data;
+		win::ObjectPool<io::IoSendEventData>::Pointer io_send_event_data;
+		win::ObjectPool<io::IoSendEvent>::Pointer io_send_event;
+
+		win::ObjectPool<io::IoRecvEventData>::Pointer io_recv_event_data;
+		win::ObjectPool<io::IoRecvEvent>::Pointer io_recv_event;
 
 		struct ConnectionStatus {
 			bool online	= false;
@@ -108,8 +112,10 @@ namespace net
 			bool is_online = false;
 			ConnectionServer* connection;
 			win::Socket raw_socket;
+
+			io::IoSendEventSmallData* io_send_event_small_data;
+			io::IoSendEventData* io_send_event_data;
 			io::IoSendEvent* io_send_event;
-			io::IoSendEventData* io_send_data = nullptr;
 			io::IoRecvEvent* io_recv_event;
 		};
 
@@ -123,7 +129,7 @@ namespace net
 
 		static bool push_server_message(unsigned, std::byte*, std::size_t);
 
-		static bool push_server_short_message(unsigned, std::byte*, std::size_t);
+		static bool push_short_server_message(unsigned, std::byte*, std::size_t);
 
 		static void flush_server_message();
 

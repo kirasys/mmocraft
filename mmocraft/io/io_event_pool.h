@@ -14,75 +14,62 @@ namespace io
 	class IoEventObjectPool
 	{	
 	public:
-		template <typename EventType, typename EventDataType>
-		class IoEventPtr
-		{
-		public:
-			IoEventPtr(win::ObjectPool<EventType>::ScopedID&& io_event, win::ObjectPool<EventDataType>::ScopedID&& io_buf)
-				: _io_event{ std::move(io_event) }, _io_buf{ std::move(io_buf) }
-			{ }
-
-			auto get()
-			{
-				return win::ObjectPool<EventType>::find_object(_io_event);
-			}
-
-			bool is_valid() const
-			{
-				return _io_event.is_valid() && _io_buf.is_valid();
-			}
-
-		private:
-			win::ObjectPool<EventType>::ScopedID _io_event;
-			win::ObjectPool<EventDataType>::ScopedID _io_buf;
-		};
-
-		using IoAcceptEventPtr = IoEventPtr<IoAcceptEvent, IoRecvEventData>;
-		using IoRecvEventPtr = IoEventPtr<IoRecvEvent, IoRecvEventData>;
-		using IoSendEventPtr = IoEventPtr<IoSendEvent, IoSendEventData>;
 
 		IoEventObjectPool(std::size_t max_capacity)
 			: accept_event_pool{ 1 }
-			, send_event_pool{ max_capacity }
-			, send_event_data_pool{ max_capacity }
 			, recv_event_pool{ max_capacity }
 			, recv_event_data_pool{ max_capacity + 1}
+			, send_event_pool{ max_capacity }
+			, send_event_data_pool{ max_capacity }
+			, send_event_small_data_pool{ max_capacity }
 		{ }
 
-		auto new_accept_event()
+		auto new_accept_event_data()
 		{
-			auto io_buf = recv_event_data_pool.new_object();
-			auto io_event = accept_event_pool.new_object(win::ObjectPool<IoRecvEventData>::find_object(io_buf));
-			return IoAcceptEventPtr{ std::move(io_event), std::move(io_buf) };
+			return recv_event_data_pool.new_object();
 		}
 
-		auto new_recv_event()
+		auto new_accept_event(IoAcceptEventData *io_data)
 		{
-			auto io_buf = recv_event_data_pool.new_object();
-			auto io_event = recv_event_pool.new_object(win::ObjectPool<IoRecvEventData>::find_object(io_buf));
-			return IoRecvEventPtr{ std::move(io_event), std::move(io_buf) };
+			return accept_event_pool.new_object(io_data);
 		}
 
-		auto new_send_event()
+		auto new_recv_event_data()
 		{
-			auto io_buf = send_event_data_pool.new_object();
-			auto io_event = send_event_pool.new_object(win::ObjectPool<IoSendEventData>::find_object(io_buf));
-			return IoSendEventPtr{ std::move(io_event), std::move(io_buf) };
+			return recv_event_data_pool.new_object();
+		}
+
+		auto new_recv_event(IoRecvEventData* io_data)
+		{
+			return recv_event_pool.new_object(io_data);
+		}
+
+		auto new_send_event_data()
+		{
+			return send_event_data_pool.new_object();
+		}
+
+		auto new_send_event_small_data()
+		{
+			return send_event_small_data_pool.new_object();
+		}
+
+		auto new_send_event(IoSendEventData* io_data, IoSendEventSmallData* io_small_data)
+		{
+			return send_event_pool.new_object(io_data, io_small_data);
 		}
 
 	private:
 		win::ObjectPool<IoAcceptEvent> accept_event_pool;
 
-		win::ObjectPool<IoSendEvent> send_event_pool;
-		win::ObjectPool<IoSendEventData> send_event_data_pool;
-
 		win::ObjectPool<IoRecvEvent> recv_event_pool;
 		win::ObjectPool<IoRecvEventData> recv_event_data_pool;
+
+		
+		win::ObjectPool<IoSendEvent> send_event_pool;
+		win::ObjectPool<IoSendEventData> send_event_data_pool;
+		win::ObjectPool<IoSendEventSmallData> send_event_small_data_pool;
 	};
 
 	using IoEventPool = IoEventObjectPool;
-
-	using IoAcceptEventPtr = IoEventPool::IoAcceptEventPtr;
-	using IoRecvEventPtr = IoEventPool::IoRecvEventPtr;
-	using IoSendEventPtr = IoEventPool::IoSendEventPtr;
 }

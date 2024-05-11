@@ -19,7 +19,8 @@ namespace net
 		, _listen_sock{ net::SocketType::TCPv4 }
 		, io_service{ concurrency_hint }
 		, io_event_pool{ max_client_connections }
-		, io_accept_event{ io_event_pool.new_accept_event() }
+		, io_accept_event_data { io_event_pool.new_accept_event_data() }
+		, io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
 		, connection_server_pool{ max_client_connections }
 		, interval_task_scheduler{ this }
 	{	
@@ -38,24 +39,23 @@ namespace net
 	void ServerCore::new_connection(win::UniqueSocket &&client_sock)
 	{
 		// create a server for single client.
-		auto connection_server_id = connection_server_pool.new_object(
+		auto connection_server_ptr = connection_server_pool.new_object(
 			app_server,
 			std::move(client_sock),
 			io_service,
 			io_event_pool
 		);
 
-		auto connection_server = ConnectionServerPool::find_object(connection_server_id);
-		connection_server_ids.emplace_back(std::move(connection_server_id));
+		connection_server_ptrs.emplace_back(std::move(connection_server_ptr));
 	}
 
 	void ServerCore::check_connection_expiration()
 	{
-		for (auto it = connection_server_ids.begin(); it != connection_server_ids.end();) {
-			auto &connection_server = *ConnectionServerPool::find_object(*it);
+		for (auto it = connection_server_ptrs.begin(); it != connection_server_ptrs.end();) {
+			auto &connection_server = *(*it).get();
 
 			if (connection_server.is_safe_delete()) {
-				it = connection_server_ids.erase(it);
+				it = connection_server_ptrs.erase(it);
 				continue;
 			}
 
@@ -107,7 +107,7 @@ namespace net
 		// creates unique accept socket first to avoid resource leak.
 		auto client_socket = win::UniqueSocket(event->accepted_socket);
 
-		if (connection_server_ids.size() > server_info.max_client_connections) {
+		if (connection_server_ptrs.size() > server_info.max_client_connections) {
 			logging::cerr() << "full connection reached. skip to accept new client";
 			return std::nullopt;
 		}

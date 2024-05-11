@@ -12,8 +12,13 @@ namespace net
 		: descriptor_number{ ConnectionDescriptorTable::issue_descriptor_number() }
 		, app_server{ a_app_server }
 		, _client_socket{ std::move(sock) }
-		, io_send_event_ptr{ io_event_pool.new_send_event() }
-		, io_recv_event_ptr{ io_event_pool.new_recv_event() }
+
+		, io_send_event_small_data{ io_event_pool.new_send_event_small_data() }
+		, io_send_event_data{ io_event_pool.new_send_event_data() }
+		, io_send_event{ io_event_pool.new_send_event(io_send_event_data.get(), io_send_event_small_data.get()) }
+
+		, io_recv_event_data{ io_event_pool.new_recv_event_data() }
+		, io_recv_event{ io_event_pool.new_recv_event(io_recv_event_data.get()) }
 	{
 		if (not is_valid())
 			throw error::ErrorCode::CONNECTION_CREATE;
@@ -29,8 +34,10 @@ namespace net
 			ConnectionDescriptorTable::DescriptorData{
 				.connection = this,
 				.raw_socket = _client_socket.get_handle(),
-				.io_send_event = io_send_event_ptr.get(),
-				.io_recv_event = io_recv_event_ptr.get(),
+				.io_send_event_small_data = io_send_event_small_data.get(),
+				.io_send_event_data = io_send_event_data.get(),
+				.io_send_event = io_send_event.get(),
+				.io_recv_event = io_recv_event.get(),
 			}
 		);
 
@@ -132,22 +139,13 @@ namespace net
 
 	void ConnectionServer::on_success(io::IoSendEvent* event)
 	{
-		
+		connection_status.send_event_running = ConnectionDescriptorTable::request_send_server_message(descriptor_number);
 	}
 
 	void ConnectionServer::on_error(io::IoSendEvent* event)
 	{
 		if (not connection_status.online)
 			set_offline();
-	}
-
-	std::optional<std::size_t> ConnectionServer::handle_io_event(io::IoSendEvent* event)
-	{
-		if (not is_online())
-			return std::nullopt;
-
-
-		return 1;
 	}
 
 	/**
@@ -196,7 +194,6 @@ namespace net
 	void ConnectionDescriptorTable::set_descriptor_data(unsigned desc, DescriptorData data)
 	{
 		descriptor_table[desc] = data;
-		descriptor_table[desc].io_send_data = static_cast<io::IoSendEventData*>(&descriptor_table[desc].io_send_event->data);
 		std::atomic_thread_fence(std::memory_order_release);
 		descriptor_table[desc].is_online = true;
 	}
@@ -219,14 +216,17 @@ namespace net
 	{
 		auto& desc_entry = descriptor_table[desc];
 		if (not desc_entry.is_online ||
-			desc_entry.io_send_data->size() + desc_entry.io_send_data->size_auxiliary() == 0)
+			desc_entry.io_send_event_data->size() + desc_entry.io_send_event_small_data->size() == 0)
 			return false;
 
 		WSABUF wbuf[2];
-		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_send_data->begin());
-		wbuf[0].len = ULONG(desc_entry.io_send_data->size());
-		wbuf[1].buf = reinterpret_cast<char*>(desc_entry.io_send_data->begin_auxiliary());
-		wbuf[1].len = ULONG(desc_entry.io_send_data->size_auxiliary());
+		// send first short send buffer.
+		desc_entry.io_send_event->transferred_small_data_bytes = desc_entry.io_send_event_small_data->size();
+		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_send_event_small_data->begin());
+		wbuf[0].len = ULONG(desc_entry.io_send_event->transferred_small_data_bytes);
+
+		wbuf[1].buf = reinterpret_cast<char*>(desc_entry.io_send_event_data->begin());
+		wbuf[1].len = ULONG(desc_entry.io_send_event_data->size());
 
 		return Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
 	}
@@ -234,13 +234,13 @@ namespace net
 	bool ConnectionDescriptorTable::push_server_message(unsigned desc, std::byte* message, std::size_t n)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		return desc_entry.is_online ? desc_entry.io_send_data->push(message, n) : false;
+		return desc_entry.is_online ? desc_entry.io_send_event_data->push(message, n) : false;
 	}
 
-	bool ConnectionDescriptorTable::push_server_short_message(unsigned desc, std::byte* message, std::size_t n)
+	bool ConnectionDescriptorTable::push_short_server_message(unsigned desc, std::byte* message, std::size_t n)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		return desc_entry.is_online ? desc_entry.io_send_data->push_auxiliary(message, n) : false;
+		return desc_entry.is_online ? desc_entry.io_send_event_small_data->push(message, n) : false;
 	}
 
 	void ConnectionDescriptorTable::flush_server_message()

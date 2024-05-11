@@ -16,11 +16,6 @@
 #include "util/interval_task.h"
 #include "config/config.h"
 
-namespace
-{
-	using ConnectionServerPool = win::ObjectPool<net::ConnectionServer>;
-}
-
 namespace net
 {
 	class ServerCore final : io::IoEventHandler
@@ -79,10 +74,11 @@ namespace net
 		io::IoCompletionPort io_service;
 
 		io::IoEventPool io_event_pool;
-		io::IoAcceptEventPtr io_accept_event;
+		win::ObjectPool<io::IoAcceptEventData>::Pointer io_accept_event_data;
+		win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
 
-		ConnectionServerPool connection_server_pool;
-		std::list<ConnectionServerPool::ScopedID> connection_server_ids;
+		win::ObjectPool<net::ConnectionServer> connection_server_pool;
+		std::list<win::ObjectPool<net::ConnectionServer>::Pointer> connection_server_ptrs;
 
 		util::IntervalTaskScheduler<ServerCore> interval_task_scheduler;
 	};

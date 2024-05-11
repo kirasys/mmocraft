@@ -22,47 +22,7 @@ namespace io
 	constexpr int SEND_BUFFER_SIZE = 4096;
 	constexpr int SEND_SMALL_BUFFER_SIZE = 1024;
 
-	class IoEventData;
 	class IoEventHandler;
-
-	struct IoEvent
-	{
-		WSAOVERLAPPED overlapped;
-		
-		// NOTE: separate buffer space for better locality.
-		//       the allocator(may be pool) responsible for release.
-		IoEventData& data;
-
-		IoEvent(IoEventData* a_data)
-			: data{*a_data }
-		{ }
-
-		virtual void invoke_handler(IoEventHandler&, DWORD) = 0;
-	};
-
-	struct IoAcceptEvent : IoEvent
-	{
-		LPFN_ACCEPTEX fnAcceptEx;
-		win::Socket accepted_socket;
-
-		using IoEvent::IoEvent;
-
-		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
-	};
-
-	struct IoRecvEvent : IoEvent
-	{
-		using IoEvent::IoEvent;
-
-		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
-	};
-
-	struct IoSendEvent : IoEvent
-	{
-		using IoEvent::IoEvent;
-
-		void invoke_handler(IoEventHandler&, DWORD) override;
-	};
 
 	class IoEventData
 	{
@@ -136,7 +96,10 @@ namespace io
 		std::size_t _size = 0;
 	};
 
-	class IoSendEventData : public IoEventData
+	using IoAcceptEventData = IoRecvEventData;
+
+	template <std::size_t N>
+	class IoSendEventVariableData : public IoEventData
 	{
 	public:
 		// data points to used space.
@@ -146,29 +109,14 @@ namespace io
 			return _data + data_head;
 		}
 
-		std::byte* begin_auxiliary()
-		{
-			return _short_data + short_data_head;
-		}
-
 		std::byte* end()
 		{
 			return _data + data_tail;
 		}
 
-		std::byte* end_auxiliary()
-		{
-			return _short_data + short_data_tail;
-		}
-
 		std::size_t size() const
 		{
 			return std::size_t(data_tail - data_head);
-		}
-
-		std::size_t size_auxiliary() const
-		{
-			return std::size_t(short_data_tail - short_data_head);
 		}
 
 		// buffer points to free space.
@@ -188,27 +136,78 @@ namespace io
 			return sizeof(_data) - data_tail;
 		}
 
-		std::size_t unused_auxiliary_size() const
+		bool push(std::byte* data, std::size_t n) override
 		{
-			return sizeof(_short_data) - short_data_tail;
+			if (data_head == data_tail)
+				data_head = data_tail = 0;
+
+			if (n > unused_size())
+				return false;
+
+			std::memcpy(begin_unused(), data, n);
+			data_tail += int(n);
+
+			return true;
 		}
 
-		bool push(std::byte* data, std::size_t n) override;
-
-		void pop(std::size_t n) override;
-
-		bool push_auxiliary(std::byte* data, std::size_t n);
-
-		void pop_auxiliary(std::size_t n);
+		void pop(std::size_t n) override
+		{
+			data_head += int(n);
+			assert(data_head <= sizeof(_data));
+		}
 
 	private:
-		std::byte _data[SEND_BUFFER_SIZE];
+		std::byte _data[N];
 		int data_head = 0;
 		int data_tail = 0;
+	};
 
-		std::byte _short_data[SEND_SMALL_BUFFER_SIZE];
-		int short_data_head = 0;
-		int short_data_tail = 0;
+	using IoSendEventData = IoSendEventVariableData<SEND_BUFFER_SIZE>;
+	using IoSendEventSmallData = IoSendEventVariableData<SEND_SMALL_BUFFER_SIZE>;
+
+	struct IoEvent
+	{
+		WSAOVERLAPPED overlapped;
+
+		// NOTE: separate buffer space for better locality.
+		//       the allocator(may be pool) responsible for release.
+		IoEventData& data;
+
+		IoEvent(IoEventData* a_data)
+			: data{ *a_data }
+		{ }
+
+		virtual void invoke_handler(IoEventHandler&, DWORD) = 0;
+	};
+
+	struct IoAcceptEvent : IoEvent
+	{
+		LPFN_ACCEPTEX fnAcceptEx;
+		win::Socket accepted_socket;
+
+		using IoEvent::IoEvent;
+
+		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
+	};
+
+	struct IoRecvEvent : IoEvent
+	{
+		using IoEvent::IoEvent;
+
+		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
+	};
+
+	struct IoSendEvent : IoEvent
+	{
+		std::size_t transferred_small_data_bytes = 0;
+		IoSendEventSmallData& small_data;
+
+		IoSendEvent(IoSendEventData* a_data, IoSendEventSmallData* a_small_data)
+			: IoEvent{ a_data }
+			, small_data{ *a_small_data }
+		{ }
+
+		void invoke_handler(IoEventHandler&, DWORD) override;
 	};
 	
 	class IoEventHandler

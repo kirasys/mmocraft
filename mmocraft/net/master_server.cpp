@@ -28,7 +28,7 @@ namespace net
 	{
 		// TODO: online authentication.
 		std::byte message[] = { std::byte('-') };
-		ConnectionDescriptorTable::push_server_short_message(conn_descriptor, message, sizeof(message));
+		ConnectionDescriptorTable::push_short_server_message(conn_descriptor, message, sizeof(message));
 		return true;
 	}
 

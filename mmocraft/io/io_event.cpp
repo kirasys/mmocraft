@@ -50,49 +50,12 @@ namespace io
 		if (transferred_bytes == 0)	// EOF
 			return event_handler.on_error(this);
 
-		data.pop(transferred_bytes);
+		auto processed_small_data_bytes = std::min(size_t(transferred_bytes), transferred_small_data_bytes);
+		small_data.pop(processed_small_data_bytes);
 
-		// deliver events to the owner.
-		// auto processed_bytes = event_handler.handle_io_event(event_type, this);
-	}
+		if (auto process_data_bytes = transferred_bytes - processed_small_data_bytes)
+			data.pop(process_data_bytes);
 
-	bool IoSendEventData::push(std::byte* data, std::size_t n)
-	{
-		if (data_head == data_tail)
-			data_head = data_tail = 0;
-
-		if (n > unused_size())
-			return false;
-
-		std::memcpy(begin_unused(), data, n);
-		data_tail += int(n);
-
-		return true;
-	}
-
-	void IoSendEventData::pop(std::size_t n)
-	{
-		data_head += int(n);
-		assert(data_head <= sizeof(_data));
-	}
-
-	bool IoSendEventData::push_auxiliary(std::byte* data, std::size_t n)
-	{
-		if (short_data_head == short_data_tail)
-			short_data_head = short_data_tail = 0;
-
-		if (n > unused_auxiliary_size())
-			return false;
-
-		std::memcpy(end_auxiliary(), data, n);
-		short_data_tail += int(n);
-
-		return true;
-	}
-
-	void IoSendEventData::pop_auxiliary(std::size_t n)
-	{
-		short_data_head += int(n);
-		assert(short_data_head <= sizeof(_short_data));
+		event_handler.on_success(this);
 	}
 }
