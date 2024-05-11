@@ -93,8 +93,8 @@ namespace net
 
 		struct ConnectionStatus {
 			bool online	= false;
-			bool recv_event_requested = false;
-			bool send_event_requested = false;
+			bool recv_event_running = false;
+			bool send_event_running = false;
 			std::time_t offline_time = 0;
 			std::time_t last_interaction_time = 0;
 		} connection_status;
@@ -117,7 +117,7 @@ namespace net
 
 		static void initialize(unsigned max_client_connections);
 
-		static void request_recv_client_message(unsigned);
+		static bool request_recv_client_message(unsigned);
 
 		static bool push_server_message(unsigned, std::byte*, std::size_t);
 
