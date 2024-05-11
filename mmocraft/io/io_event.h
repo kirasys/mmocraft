@@ -22,14 +22,6 @@ namespace io
 	constexpr int SEND_BUFFER_SIZE = 4096;
 	constexpr int SEND_SMALL_BUFFER_SIZE = 1024;
 
-	enum EventType
-	{
-		Invalid,
-		AcceptEvent,
-		RecvEvent,
-		SendEvent,
-	};
-
 	class IoEventData;
 	class IoEventHandler;
 
@@ -50,8 +42,6 @@ namespace io
 
 	struct IoAcceptEvent : IoEvent
 	{
-		static const EventType event_type = AcceptEvent;
-
 		LPFN_ACCEPTEX fnAcceptEx;
 		win::Socket accepted_socket;
 
@@ -62,8 +52,6 @@ namespace io
 
 	struct IoRecvEvent : IoEvent
 	{
-		static const EventType event_type = RecvEvent;
-
 		using IoEvent::IoEvent;
 
 		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
@@ -71,8 +59,6 @@ namespace io
 
 	struct IoSendEvent : IoEvent
 	{
-		static const EventType event_type = SendEvent;
-
 		using IoEvent::IoEvent;
 
 		void invoke_handler(IoEventHandler&, DWORD) override;
@@ -228,10 +214,22 @@ namespace io
 	class IoEventHandler
 	{
 	public:
-		virtual void on_error(IoEvent*) = 0;
+		virtual void on_error(IoAcceptEvent*) { assert(false); };
 
-		virtual void on_success(IoEvent*) = 0;
+		virtual void on_error(IoRecvEvent*) { assert(false); };
 
-		virtual std::optional<std::size_t> handle_io_event(EventType, IoEvent*) = 0;
+		virtual void on_error(IoSendEvent*) { assert(false); };
+
+		virtual void on_success(IoAcceptEvent*) { assert(false); };
+
+		virtual void on_success(IoRecvEvent*) { assert(false); };
+
+		virtual void on_success(IoSendEvent*) { assert(false); };
+
+		virtual std::optional<std::size_t> handle_io_event(IoAcceptEvent*) { assert(false); return std::nullopt;};
+
+		virtual std::optional<std::size_t> handle_io_event(IoRecvEvent*) { assert(false); return std::nullopt;};
+
+		virtual std::optional<std::size_t> handle_io_event(IoSendEvent*) { assert(false); return std::nullopt;};
 	};
 }

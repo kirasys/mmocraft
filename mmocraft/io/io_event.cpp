@@ -5,7 +5,7 @@ namespace io
 {
 	void IoAcceptEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes)
 	{
-		if (event_handler.handle_io_event(event_type, this).has_value())
+		if (event_handler.handle_io_event(this).has_value())
 			event_handler.on_success(this);
 		else
 			event_handler.on_error(this);
@@ -20,7 +20,7 @@ namespace io
 		data.push(nullptr, transferred_bytes); // data was already appended by I/O.
 
 		// deliver events to the owner.
-		auto processed_bytes = event_handler.handle_io_event(event_type, this);
+		auto processed_bytes = event_handler.handle_io_event(this);
 
 		// post-processing
 		if (not processed_bytes.has_value())

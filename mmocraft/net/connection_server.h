@@ -68,15 +68,17 @@ namespace net
 		 *  Event Handler Interface
 		 */
 
-		virtual void on_success(io::IoEvent*) override;
+		virtual void on_success(io::IoRecvEvent*) override;
 
-		virtual void on_error(io::IoEvent*) override;
+		virtual void on_error(io::IoRecvEvent*) override;
 
-		virtual std::optional<std::size_t> handle_io_event(io::EventType, io::IoEvent*) override;
+		virtual std::optional<std::size_t> handle_io_event(io::IoRecvEvent*) override;
 
-		std::optional<std::size_t> handle_recv_event(io::IoRecvEvent&);
+		virtual void on_success(io::IoSendEvent*) override;
 
-		std::optional<std::size_t> handle_send_event(io::IoSendEvent&);
+		virtual void on_error(io::IoSendEvent*) override;
+
+		virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
 
 		// connection register to the online descriptor table by this number.
 		const unsigned descriptor_number;

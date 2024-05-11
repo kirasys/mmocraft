@@ -106,38 +106,41 @@ namespace net
 	/**
 	 *  Event Handler Interface
 	 */
+	
+	/// recv event handler
 
-	void ConnectionServer::on_success(io::IoEvent* event)
+	void ConnectionServer::on_success(io::IoRecvEvent* event)
 	{
 		ConnectionDescriptorTable::request_recv_client_message(descriptor_number);
 	}
 
-	void ConnectionServer::on_error(io::IoEvent* event)
+	void ConnectionServer::on_error(io::IoRecvEvent* event)
 	{
 		if (not connection_status.online)
 			set_offline();
 	}
 
-	std::optional<std::size_t> ConnectionServer::handle_io_event(io::EventType event_type, io::IoEvent* event)
-	{
-		switch (event_type)
-		{
-		case io::EventType::RecvEvent: return handle_recv_event(*static_cast<io::IoRecvEvent*>(event));
-		case io::EventType::SendEvent: return handle_send_event(*static_cast<io::IoSendEvent*>(event));
-		default: assert(false);
-		}
-		return std::nullopt;
-	}
-
-	std::optional<std::size_t> ConnectionServer::handle_recv_event(io::IoRecvEvent& event)
+	std::optional<std::size_t> ConnectionServer::handle_io_event(io::IoRecvEvent* event)
 	{
 		if (not try_interact_with_client())
 			return std::nullopt; // timeout case: connection will be deleted soon.
 
-		return process_packets(event.data.begin(), event.data.end());
+		return process_packets(event->data.begin(), event->data.end());
 	}
 
-	std::optional<std::size_t> ConnectionServer::handle_send_event(io::IoSendEvent& event)
+	/// send event handler
+
+	void ConnectionServer::on_success(io::IoSendEvent* event)
+	{
+		
+	}
+
+	void ConnectionServer::on_error(io::IoSendEvent* event)
+	{
+		
+	}
+
+	std::optional<std::size_t> ConnectionServer::handle_io_event(io::IoSendEvent* event)
 	{
 		if (not is_online())
 			return std::nullopt;
