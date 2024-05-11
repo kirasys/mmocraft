@@ -51,11 +51,13 @@ namespace net
 
 		bool accept(io::IoAcceptEvent&);
 
-		bool send(io::IoSendEvent&);
+		static bool send(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 
-		static bool recv(win::Socket sock, WSABUF[1], WSAOVERLAPPED*);
+		bool send(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 
-		bool recv(WSABUF[1], WSAOVERLAPPED*);
+		static bool recv(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
+
+		bool recv(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 
 		int get_address_family() {
 			return AF_INET; // TODO: IPv6

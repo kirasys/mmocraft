@@ -137,7 +137,8 @@ namespace net
 
 	void ConnectionServer::on_error(io::IoSendEvent* event)
 	{
-		
+		if (not connection_status.online)
+			set_offline();
 	}
 
 	std::optional<std::size_t> ConnectionServer::handle_io_event(io::IoSendEvent* event)
@@ -211,7 +212,23 @@ namespace net
 		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_recv_event->data.begin_unused());
 		wbuf[0].len = ULONG(desc_entry.io_recv_event->data.unused_size());
 
-		return Socket::recv(desc_entry.raw_socket, wbuf, &desc_entry.io_recv_event->overlapped);
+		return Socket::recv(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 1);
+	}
+
+	bool ConnectionDescriptorTable::request_send_server_message(unsigned desc)
+	{
+		auto& desc_entry = descriptor_table[desc];
+		if (not desc_entry.is_online ||
+			desc_entry.io_send_data->size() + desc_entry.io_send_data->size_auxiliary() == 0)
+			return false;
+
+		WSABUF wbuf[2];
+		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_send_data->begin());
+		wbuf[0].len = ULONG(desc_entry.io_send_data->size());
+		wbuf[1].buf = reinterpret_cast<char*>(desc_entry.io_send_data->begin_auxiliary());
+		wbuf[1].len = ULONG(desc_entry.io_send_data->size_auxiliary());
+
+		return Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
 	}
 
 	bool ConnectionDescriptorTable::push_server_message(unsigned desc, std::byte* message, std::size_t n)

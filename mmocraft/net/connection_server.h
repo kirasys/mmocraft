@@ -119,6 +119,8 @@ namespace net
 
 		static bool request_recv_client_message(unsigned);
 
+		static bool request_send_server_message(unsigned);
+
 		static bool push_server_message(unsigned, std::byte*, std::size_t);
 
 		static bool push_server_short_message(unsigned, std::byte*, std::size_t);
