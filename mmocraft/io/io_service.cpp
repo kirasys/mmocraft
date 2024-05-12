@@ -53,6 +53,8 @@ namespace io
 
 			if (overlapped) {
 				auto io_event = CONTAINING_RECORD(overlapped, io::IoEvent, overlapped);
+				// data was already appended by I/O. just update size only.
+				io_event->data.push(nullptr, num_of_transferred_bytes); 
 
 				try {
 					auto event_handler = reinterpret_cast<IoEventHandler*>(completion_key);

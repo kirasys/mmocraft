@@ -15,7 +15,7 @@
 
 namespace net
 {
-	class ConnectionServer : io::IoEventHandler, util::NonCopyable, util::NonMovable
+	class ConnectionServer : public io::IoEventHandler, util::NonCopyable, util::NonMovable
 	{
 		// The minecrft beta server will disconnect a client,
 		// if it doesn't receive at least one packet before 1200 in-game ticks (1200 tick = 60s)
@@ -97,8 +97,6 @@ namespace net
 
 		struct ConnectionStatus {
 			bool online	= false;
-			bool recv_event_running = false;
-			bool send_event_running = false;
 			std::time_t offline_time = 0;
 			std::time_t last_interaction_time = 0;
 		} connection_status;
@@ -117,21 +115,26 @@ namespace net
 			io::IoSendEventData* io_send_event_data;
 			io::IoSendEvent* io_send_event;
 			io::IoRecvEvent* io_recv_event;
+
+			bool is_send_event_running = false;
+			bool is_recv_event_running = false;
 		};
 
 		ConnectionDescriptorTable() = delete;
 
 		static void initialize(unsigned max_client_connections);
 
-		static bool request_recv_client_message(unsigned);
+		static void request_recv_client_message(unsigned);
 
-		static bool request_send_server_message(unsigned);
+		static void request_send_server_message(unsigned);
 
 		static bool push_server_message(unsigned, std::byte*, std::size_t);
 
 		static bool push_short_server_message(unsigned, std::byte*, std::size_t);
 
 		static void flush_server_message();
+
+		static void flush_client_message();
 
 	private:
 		// only connection server can modify descriptor table.

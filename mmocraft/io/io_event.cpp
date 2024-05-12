@@ -17,8 +17,6 @@ namespace io
 		if (transferred_bytes == 0)	// EOF
 			return event_handler.on_error(this);
 
-		data.push(nullptr, transferred_bytes); // data was already appended by I/O.
-
 		// deliver events to the owner.
 		auto processed_bytes = event_handler.handle_io_event(this);
 

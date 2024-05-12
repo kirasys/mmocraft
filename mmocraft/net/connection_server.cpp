@@ -42,7 +42,7 @@ namespace net
 		);
 
 		// init first recv.
-		connection_status.recv_event_running = ConnectionDescriptorTable::request_recv_client_message(descriptor_number);
+		ConnectionDescriptorTable::request_recv_client_message(descriptor_number);
 	}
 
 	ConnectionServer::~ConnectionServer()
@@ -118,7 +118,7 @@ namespace net
 
 	void ConnectionServer::on_success(io::IoRecvEvent* event)
 	{
-		connection_status.recv_event_running = ConnectionDescriptorTable::request_recv_client_message(descriptor_number);
+		ConnectionDescriptorTable::request_recv_client_message(descriptor_number);
 	}
 
 	void ConnectionServer::on_error(io::IoRecvEvent* event)
@@ -139,7 +139,7 @@ namespace net
 
 	void ConnectionServer::on_success(io::IoSendEvent* event)
 	{
-		connection_status.send_event_running = ConnectionDescriptorTable::request_send_server_message(descriptor_number);
+		ConnectionDescriptorTable::request_send_server_message(descriptor_number);
 	}
 
 	void ConnectionServer::on_error(io::IoSendEvent* event)
@@ -198,26 +198,28 @@ namespace net
 		descriptor_table[desc].is_online = true;
 	}
 
-	bool ConnectionDescriptorTable::request_recv_client_message(unsigned desc)
+	void ConnectionDescriptorTable::request_recv_client_message(unsigned desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		if (not desc_entry.is_online
-			|| desc_entry.io_recv_event->data.unused_size() < PacketStructure::size_of_max_packet_struct())
-			return false;
+		if (desc_entry.io_recv_event->data.unused_size() < PacketStructure::size_of_max_packet_struct()) {
+			desc_entry.is_recv_event_running = false;
+			return;
+		}
 
 		WSABUF wbuf[1];
 		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_recv_event->data.begin_unused());
 		wbuf[0].len = ULONG(desc_entry.io_recv_event->data.unused_size());
 
-		return Socket::recv(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 1);
+		desc_entry.is_recv_event_running = Socket::recv(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 1);
 	}
 
-	bool ConnectionDescriptorTable::request_send_server_message(unsigned desc)
+	void ConnectionDescriptorTable::request_send_server_message(unsigned desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		if (not desc_entry.is_online ||
-			desc_entry.io_send_event_data->size() + desc_entry.io_send_event_small_data->size() == 0)
-			return false;
+		if (desc_entry.io_send_event_data->size() + desc_entry.io_send_event_small_data->size() == 0) {
+			desc_entry.is_send_event_running = false;
+			return;
+		}
 
 		WSABUF wbuf[2];
 		// send first short send buffer.
@@ -228,7 +230,7 @@ namespace net
 		wbuf[1].buf = reinterpret_cast<char*>(desc_entry.io_send_event_data->begin());
 		wbuf[1].len = ULONG(desc_entry.io_send_event_data->size());
 
-		return Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
+		desc_entry.is_send_event_running = Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
 	}
 
 	bool ConnectionDescriptorTable::push_server_message(unsigned desc, std::byte* message, std::size_t n)
@@ -245,6 +247,24 @@ namespace net
 
 	void ConnectionDescriptorTable::flush_server_message()
 	{
+		for (unsigned desc = 0; desc < max_descriptor; ++desc) {
+			auto& desc_entry = descriptor_table[desc];
 
+			if (desc_entry.is_online && not desc_entry.is_send_event_running)
+				request_send_server_message(desc);
+		}
+	}
+
+	void ConnectionDescriptorTable::flush_client_message()
+	{
+		for (unsigned desc = 0; desc < max_descriptor; ++desc) {
+			auto& desc_entry = descriptor_table[desc];
+
+			if (desc_entry.is_online && not desc_entry.is_recv_event_running) {
+				// if there are no unprocessed packets, connection will be close.
+				// (because it is unusual situation)
+				desc_entry.io_recv_event->invoke_handler(*desc_entry.connection, DWORD(desc_entry.io_recv_event->data.size()));
+			}
+		}
 	}
 }
