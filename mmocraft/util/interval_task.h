@@ -16,8 +16,8 @@ namespace util
 	struct IntervalTask
 	{
 		std::string tag;
-		const Second period;
-		std::time_t expired_at;
+		std::size_t period;
+		std::size_t expired_at;
 
 		using func_type = void (T::*const)();
 		func_type func = nullptr;
@@ -27,8 +27,8 @@ namespace util
 	struct IntervalTask<void>
 	{
 		std::string tag;
-		const Second period;
-		std::time_t expired_at;
+		std::size_t period;
+		std::size_t expired_at;
 
 		using func_type = void (*const)();
 		func_type func = nullptr;
@@ -45,23 +45,23 @@ namespace util
 				assert(("class type scheduler must have instance.", instance != nullptr));
 		}
 
-		void schedule(std::string_view tag, IntervalTask<T>::func_type func, Second period)
+		void schedule(std::string_view tag, IntervalTask<T>::func_type func, MilliSecond period)
 		{
 			interval_tasks.push_back({
 				.tag {tag},
-				.period = period,
-				.expired_at = current_timestmap() + unsigned(period),
+				.period = std::size_t(period),
+				.expired_at = util::current_monotonic_tick() + std::size_t(period),
 				.func = func
 			});
 		}
 
 		void process_tasks()
 		{
-			auto current_time = util::current_timestmap();
+			auto current_tick = util::current_monotonic_tick();
 
 			for (IntervalTask<T>& task : interval_tasks)
 			{
-				if (current_time < task.expired_at)
+				if (current_tick < task.expired_at)
 					continue;
 
 				try {
@@ -70,11 +70,11 @@ namespace util
 					else
 						std::invoke(task.func);
 
-					task.expired_at = util::current_timestmap() + unsigned(task.period);
+					task.expired_at = util::current_monotonic_tick() + task.period;
 				}
 				catch (...) {
-					logging::cerr() << "Exception occured at " << task.tag << " (Task disabled)";
-					task.expired_at = std::numeric_limits<decltype(task.expired_at)>::max();
+					logging::cerr() << "Exception occured at " << task.tag << " (Task deferred)";
+					task.expired_at = util::current_monotonic_tick() + (task.period << 2);
 				}
 			}
 		}

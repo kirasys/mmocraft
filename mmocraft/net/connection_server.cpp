@@ -96,18 +96,18 @@ namespace net
 		_client_socket.close();
 
 		connection_status.online = false;
-		connection_status.offline_time = util::current_timestmap();
+		connection_status.offline_tick = util::current_monotonic_tick();
 	}
 
-	bool ConnectionServer::is_expired(std::time_t current_time) const
+	bool ConnectionServer::is_expired(std::size_t current_tick) const
 	{
-		return current_time >= connection_status.last_interaction_time + REQUIRED_SECONDS_FOR_EXPIRE;
+		return current_tick >= connection_status.last_interaction_tick + REQUIRED_MILLISECONDS_FOR_EXPIRE;
 	}
 
-	bool ConnectionServer::is_safe_delete(std::time_t current_time) const
+	bool ConnectionServer::is_safe_delete(std::size_t current_tick) const
 	{
 		return not is_online()
-			&& current_time >= connection_status.offline_time + REQUIRED_SECONDS_FOR_SECURE_DELETION;
+			&& current_tick >= connection_status.offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
 	}
 
 	/**

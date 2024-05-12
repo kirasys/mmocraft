@@ -19,8 +19,8 @@ namespace net
 	{
 		// The minecrft beta server will disconnect a client,
 		// if it doesn't receive at least one packet before 1200 in-game ticks (1200 tick = 60s)
-		static constexpr unsigned REQUIRED_SECONDS_FOR_EXPIRE = 60;
-		static constexpr unsigned REQUIRED_SECONDS_FOR_SECURE_DELETION = 5;
+		static constexpr unsigned REQUIRED_MILLISECONDS_FOR_EXPIRE = 60 * 1000;
+		static constexpr unsigned REQUIRED_MILLISECONDS_FOR_SECURE_DELETION = 5 * 1000;
 
 	public:
 		enum State
@@ -48,9 +48,9 @@ namespace net
 
 		bool try_interact_with_client();
 		
-		void update_last_interaction_time(std::time_t current_time = util::current_timestmap())
+		void update_last_interaction_time(std::size_t current_tick = util::current_monotonic_tick())
 		{
-			connection_status.last_interaction_time = current_time;
+			connection_status.last_interaction_tick = current_tick;
 		}
 
 		void set_offline();
@@ -60,9 +60,9 @@ namespace net
 			return connection_status.online;
 		}
 
-		bool is_expired(std::time_t current_time = util::current_timestmap()) const;
+		bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;
 
-		bool is_safe_delete(std::time_t current_time = util::current_timestmap()) const;
+		bool is_safe_delete(std::size_t current_tick = util::current_monotonic_tick()) const;
 
 		/**
 		 *  Event Handler Interface
@@ -97,8 +97,8 @@ namespace net
 
 		struct ConnectionStatus {
 			bool online	= false;
-			std::time_t offline_time = 0;
-			std::time_t last_interaction_time = 0;
+			std::size_t offline_tick = 0;
+			std::size_t last_interaction_tick = 0;
 		} connection_status;
 	};
 

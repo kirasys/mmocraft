@@ -31,7 +31,7 @@ namespace net
 		//
 		// Schedule interval tasks.
 		// 
-		interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::Second(10));
+		interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::MilliSecond(10000));
 
 		_state = ServerCore::State::Initialized;
 	}
@@ -51,15 +51,17 @@ namespace net
 
 	void ServerCore::check_connection_expiration()
 	{
+		auto current_tick = util::current_monotonic_tick();
+
 		for (auto it = connection_server_ptrs.begin(); it != connection_server_ptrs.end();) {
 			auto &connection_server = *(*it).get();
 
-			if (connection_server.is_safe_delete()) {
+			if (connection_server.is_safe_delete(current_tick)) {
 				it = connection_server_ptrs.erase(it);
 				continue;
 			}
 
-			if (connection_server.is_expired())
+			if (connection_server.is_expired(current_tick))
 				connection_server.set_offline();
 
 			++it;
