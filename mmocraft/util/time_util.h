@@ -20,4 +20,9 @@ namespace util
 	{
 		return std::size_t(::GetTickCount64());
 	}
+
+	inline auto sleep_ms(std::size_t ms)
+	{
+		::Sleep(DWORD(ms));
+	}
 }

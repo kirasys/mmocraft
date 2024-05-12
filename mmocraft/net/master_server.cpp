@@ -45,7 +45,7 @@ namespace net
 			std::size_t end_tick = util::current_monotonic_tick();
 
 			if (auto diff = end_tick - start_tick; diff < 1000)
-				::Sleep(std::max(1000 - diff, std::size_t(100)));
+				util::sleep_ms(std::max(1000 - diff, std::size_t(100)));
 		}
 	}
 }
