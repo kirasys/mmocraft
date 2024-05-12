@@ -74,34 +74,39 @@ namespace win
 		using ObjectID = std::uint64_t;
 		static constexpr ObjectID INVALID_OBJECT_ID = 0;
 
-		class ScopedID : util::NonCopyable {
+		class Pointer : util::NonCopyable {
 		public:
-			ScopedID() noexcept
+			Pointer() noexcept
 				: _id{ INVALID_OBJECT_ID }
 			{ }
 
-			ScopedID(ObjectID id)
+			Pointer(ObjectID id)
 				: _id{ id }
 			{ }
 
-			~ScopedID()
+			~Pointer()
 			{
-				clear();
+				reset();
 			}
 
-			ScopedID(ScopedID&& other) noexcept
+			Pointer(Pointer&& other) noexcept
 			{
 				_id = other._id;
 				other._id = INVALID_OBJECT_ID;
 			}
 
-			ScopedID& operator=(ScopedID&& other) noexcept
+			Pointer& operator=(Pointer&& other) noexcept
 			{
 				if (this != &other) {
-					clear();
+					reset();
 					_id = other._id;
 					other._id = INVALID_OBJECT_ID;
 				}
+			}
+
+			object_pointer get()
+			{
+				return ObjectPool::find_object(_id);
 			}
 
 			void release() noexcept
@@ -109,11 +114,11 @@ namespace win
 				_id = INVALID_OBJECT_ID;
 			}
 
-			void clear()
+			bool reset()
 			{
 				ObjectID id = INVALID_OBJECT_ID;
 				std::swap(_id, id);
-				ObjectPool::free_object(id);
+				return ObjectPool::free_object(id);
 			}
 
 			inline operator ObjectID()
@@ -126,7 +131,7 @@ namespace win
 				return _id;
 			}
 
-			inline bool is_valid() const
+			inline operator bool() const
 			{
 				return _id != INVALID_OBJECT_ID;
 			}
@@ -224,11 +229,11 @@ namespace win
 		}
 
 		template <typename... Args>
-		ScopedID new_object(Args&&... args)
+		Pointer new_object(Args&&... args)
 		{
 			ObjectID object_id = new_object_unsafe(std::forward<Args>(args)...);
 			return object_id != INVALID_OBJECT_ID ? 
-				ScopedID(object_id) : ScopedID();
+				Pointer(object_id) : Pointer();
 		}
 
 		bool free_object(object_pointer object_ptr)
