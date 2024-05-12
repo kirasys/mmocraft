@@ -37,7 +37,15 @@ namespace net
 		server_core.start_network_io_service();
 
 		while (1) {
+			std::size_t start_tick = util::current_monotonic_tick();
 
+			ConnectionDescriptorTable::flush_server_message();
+			ConnectionDescriptorTable::flush_client_message();
+
+			std::size_t end_tick = util::current_monotonic_tick();
+
+			if (auto diff = end_tick - start_tick; diff < 1000)
+				::Sleep(std::max(1000 - diff, std::size_t(100)));
 		}
 	}
 }
