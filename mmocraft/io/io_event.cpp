@@ -11,11 +11,14 @@ namespace io
 			event_handler.on_error(this);
 	}
 
-	void IoRecvEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes)
+	void IoRecvEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal)
 	{
 		// pre-processing
-		if (transferred_bytes == 0)	// EOF
+		if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
 			return event_handler.on_error(this);
+
+		if (transferred_bytes_or_signal != RETRY_SIGNAL)
+			data.push(nullptr, transferred_bytes_or_signal); // data was already appended by I/O. just update size only.
 
 		// deliver events to the owner.
 		auto processed_bytes = event_handler.handle_io_event(this);
@@ -42,16 +45,16 @@ namespace io
 			std::memmove(_data, _data + n, _size); // move remaining data ahead.
 	}
 
-	void IoSendEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes)
+	void IoSendEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal)
 	{
 		// pre-processing
-		if (transferred_bytes == 0)	// EOF
+		if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
 			return event_handler.on_error(this);
 
-		auto processed_small_data_bytes = std::min(size_t(transferred_bytes), transferred_small_data_bytes);
+		auto processed_small_data_bytes = std::min(size_t(transferred_bytes_or_signal), transferred_small_data_bytes);
 		small_data.pop(processed_small_data_bytes);
 
-		if (auto process_data_bytes = transferred_bytes - processed_small_data_bytes)
+		if (auto process_data_bytes = transferred_bytes_or_signal - processed_small_data_bytes)
 			data.pop(process_data_bytes);
 
 		event_handler.on_success(this);

@@ -263,7 +263,8 @@ namespace net
 			if (desc_entry.is_online && not desc_entry.is_recv_event_running) {
 				// if there are no unprocessed packets, connection will be close.
 				// (because it is unusual situation)
-				desc_entry.io_recv_event->invoke_handler(*desc_entry.connection, DWORD(desc_entry.io_recv_event->data.size()));
+				desc_entry.io_recv_event->invoke_handler(*desc_entry.connection, 
+					desc_entry.io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
 			}
 		}
 	}
