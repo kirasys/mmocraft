@@ -136,8 +136,6 @@ namespace net
 
 		static std::size_t parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*);
 
-		static bool validate_packet(Packet*);
-
 		static void write_byte(std::byte* buf, PacketFieldType::Byte value)
 		{
 			buf[0] = std::byte(value);

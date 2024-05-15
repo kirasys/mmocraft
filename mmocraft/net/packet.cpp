@@ -6,12 +6,12 @@
 #define OVERFLOW_CHECK(buf_start, buf_end, size) \
 		if (buf_start + size > buf_end) return nullptr;
 
-#define PARSE_PRIMITIVE_TYPE_FIELD(buf_start, buf_end, out) \
+#define PARSE_SCALAR_FIELD(buf_start, buf_end, out) \
 		OVERFLOW_CHECK(buf_start, buf_end, sizeof(decltype(out))); \
 		out = *reinterpret_cast<decltype(out)*>(buf_start); \
 		buf_start += sizeof(decltype(out));
 
-#define PARSE_STRING_TYPE_FIELD(buf_start, buf_end, out) \
+#define PARSE_STRING_FIELD(buf_start, buf_end, out) \
 		OVERFLOW_CHECK(buf_start, buf_end, 64) \
 		{ \
 			std::uint16_t padding_size = 0; \
@@ -59,14 +59,6 @@ namespace net
 		return 0; // insufficient packet data.
 	}
 
-	bool PacketStructure::validate_packet(Packet* packet)
-	{
-		if (packet->id == PacketID::INVALID)
-			return false;
-
-		return true;
-	}
-
 	void PacketStructure::write_string(std::byte* buf, const PacketFieldType::String& cstr)
 	{
 		//write_short(buf, cstr.size);
@@ -77,10 +69,10 @@ namespace net
 	std::byte* PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
 	{
 		auto packet = static_cast<PacketHandshake*>(out_packet);
-		PARSE_PRIMITIVE_TYPE_FIELD(buf_start, buf_end, packet->protocol_version);
-		PARSE_STRING_TYPE_FIELD(buf_start, buf_end, packet->username);
-		PARSE_STRING_TYPE_FIELD(buf_start, buf_end, packet->verification_key);
-		PARSE_PRIMITIVE_TYPE_FIELD(buf_start, buf_end, packet->unused);
+		PARSE_SCALAR_FIELD(buf_start, buf_end, packet->protocol_version);
+		PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
+		PARSE_STRING_FIELD(buf_start, buf_end, packet->verification_key);
+		PARSE_SCALAR_FIELD(buf_start, buf_end, packet->unused);
 		return buf_start;
 	}
 

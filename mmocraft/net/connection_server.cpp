@@ -65,10 +65,6 @@ namespace net
 			if (parsed_bytes == 0) // Insuffcient packet data
 				break;
 
-			if (not PacketStructure::validate_packet(packet_ptr)) {
-				return std::nullopt;
-			}
-
 			if (not app_server.handle_packet(descriptor_number, packet_ptr))
 				break; // Couldn't handle right now. try again later.
 
