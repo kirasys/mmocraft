@@ -6,16 +6,20 @@
 #define OVERFLOW_CHECK(buf_start, buf_end, size) \
 		if (buf_start + size > buf_end) return nullptr;
 
-#define PARSE_FIELD(buf_start, out, type) \
-		*out = *reinterpret_cast<type*>(buf_start); \
-		buf_start += sizeof(type);
+#define PARSE_PRIMITIVE_TYPE_FIELD(buf_start, buf_end, out) \
+		OVERFLOW_CHECK(buf_start, buf_end, sizeof(decltype(out))); \
+		out = *reinterpret_cast<decltype(out)*>(buf_start); \
+		buf_start += sizeof(decltype(out));
 
-#define PARSE_STRING_FIELD(buf_start, buf_end, out) \
-		OVERFLOW_CHECK(buf_start, buf_end, sizeof(PacketFieldType::Short)) \
-		PARSE_FIELD(buf_start, &(out)->size, PacketFieldType::Short) \
-		OVERFLOW_CHECK(buf_start, buf_end, (out)->size); \
-		(out)->data = reinterpret_cast<const char*>(buf_start); \
-		buf_start += (out)->size;
+#define PARSE_STRING_TYPE_FIELD(buf_start, buf_end, out) \
+		OVERFLOW_CHECK(buf_start, buf_end, 64) \
+		{ \
+			std::uint16_t padding_size = 0; \
+			for (;padding_size < 64 && buf_start[63-padding_size] == std::byte(' '); padding_size++) { } \
+			(out).size = 64 - padding_size; \
+		} \
+		(out).data = reinterpret_cast<const char*>(buf_start); \
+		buf_start += 64;
 
 namespace
 {
@@ -24,10 +28,10 @@ namespace
 		std::byte* (*parse)(std::byte*, std::byte*, net::Packet*) = nullptr;
 	};
 
-	constinit const std::array<PacketStaticData, 0x100> packet_static_data_by_id = [] {
+	constinit const std::array<PacketStaticData, 0x100> packet_metadata_db = [] {
 		using namespace net;
 		std::array<PacketStaticData, 0x100> arr{};
-		arr[PacketID::Handshake] = { &PacketHandshake::parse};
+		arr[PacketID::Handshake] = { &PacketHandshake::parse };
 		return arr;
 	}();
 }
@@ -42,7 +46,7 @@ namespace net
 
 		// parse packet common header.
 		auto packet_id = PacketID(*buf_start);
-		auto packet_parser = *packet_static_data_by_id[packet_id].parse;
+		auto packet_parser = *packet_metadata_db[packet_id].parse;
 
 		out_packet->id = packet_parser ? packet_id : PacketID::INVALID;
 		if (out_packet->id == PacketID::INVALID)
@@ -63,12 +67,42 @@ namespace net
 		return true;
 	}
 
+	void PacketStructure::write_string(std::byte* buf, const PacketFieldType::String& cstr)
+	{
+		//write_short(buf, cstr.size);
+	}
+
 	/* Concrete Packet Static Methods */
 
 	std::byte* PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
 	{
 		auto packet = static_cast<PacketHandshake*>(out_packet);
-		PARSE_STRING_FIELD(buf_start, buf_end, &packet->username_and_host);
+		PARSE_PRIMITIVE_TYPE_FIELD(buf_start, buf_end, packet->protocol_version);
+		PARSE_STRING_TYPE_FIELD(buf_start, buf_end, packet->username);
+		PARSE_STRING_TYPE_FIELD(buf_start, buf_end, packet->verification_key);
+		PARSE_PRIMITIVE_TYPE_FIELD(buf_start, buf_end, packet->unused);
 		return buf_start;
 	}
+
+	/*
+	std::byte* PacketKick::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+	{
+		auto packet = static_cast<PacketKick*>(out_packet);
+		PARSE_STRING_FIELD(buf_start, buf_end, &packet->reason);
+		return buf_start;
+	}
+
+	bool PacketKick::serialize(io::IoEventStreamData& out_stream) const
+	{
+		if (this->size_of_serialized() > out_stream.unused_size())
+			return false;
+
+		std::byte* out_data = out_stream.data();
+		PacketStructure::write_byte(out_data, id);
+		PacketStructure::write_string(out_data, reason);
+
+		out_stream.commit(this->size_of_serialized());
+		return true;
+	}
+	*/
 }
