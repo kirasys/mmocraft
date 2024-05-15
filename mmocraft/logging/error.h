@@ -23,6 +23,9 @@ namespace error
 
 		// Connection
 		CONNECTION_CREATE,
+
+		// Indicate size of the enum class.
+		SIZE,
 	};
 
 	struct Exception
