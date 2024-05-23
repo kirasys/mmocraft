@@ -45,7 +45,7 @@ namespace net
 		assert(buf_start < buf_end);
 
 		// parse packet common header.
-		auto packet_id = PacketID(*buf_start);
+		auto packet_id = decltype(Packet::id)(*buf_start);
 		auto packet_parser = *packet_metadata_db[packet_id].parse;
 
 		out_packet->id = packet_parser ? packet_id : PacketID::INVALID;
@@ -59,9 +59,22 @@ namespace net
 		return 0; // insufficient packet data.
 	}
 
-	void PacketStructure::write_string(std::byte* buf, const PacketFieldType::String& cstr)
+	void PacketStructure::write_byte(std::byte* &buf, PacketFieldType::Byte value)
 	{
-		//write_short(buf, cstr.size);
+		*buf++ = std::byte(value);
+	}
+
+	void PacketStructure::write_short(std::byte* &buf, PacketFieldType::Short value)
+	{
+		*reinterpret_cast<decltype(value)*>(buf) = _byteswap_ushort(value);
+		buf += sizeof(value);
+	}
+
+	void PacketStructure::write_string(std::byte* &buf, const PacketFieldType::String& str)
+	{
+		std::memcpy(buf, str.data, str.size);
+		std::memset(buf + str.size, ' ', str.size_with_padding - str.size);
+		buf += str.size_with_padding;
 	}
 
 	/* Concrete Packet Static Methods */
@@ -76,25 +89,16 @@ namespace net
 		return buf_start;
 	}
 
-	/*
-	std::byte* PacketKick::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+	bool PacketKick::serialize(io::IoEventRawData& out_stream) const
 	{
-		auto packet = static_cast<PacketKick*>(out_packet);
-		PARSE_STRING_FIELD(buf_start, buf_end, &packet->reason);
-		return buf_start;
-	}
-
-	bool PacketKick::serialize(io::IoEventStreamData& out_stream) const
-	{
-		if (this->size_of_serialized() > out_stream.unused_size())
+		if (size_of_serialized() > out_stream.unused_size())
 			return false;
 
 		std::byte* out_data = out_stream.data();
 		PacketStructure::write_byte(out_data, id);
 		PacketStructure::write_string(out_data, reason);
 
-		out_stream.commit(this->size_of_serialized());
+		out_stream.commit(size_of_serialized());
 		return true;
 	}
-	*/
 }

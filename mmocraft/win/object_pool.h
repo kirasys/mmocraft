@@ -307,7 +307,6 @@ namespace win
 
 		bool extend_capacity(size_type minimum_capacity)
 		{
-			assert((_capacity <= std::numeric_limits<size_type>::max() / 2, "Integer overflow"));
 			return reserve(std::max(_capacity * 2, minimum_capacity));
 		}
 

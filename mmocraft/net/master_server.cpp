@@ -26,9 +26,10 @@ namespace net
 
 	bool MasterServer::handle_handshake_packet(unsigned conn_descriptor, PacketHandshake& packet)
 	{
-		// TODO: online authentication.
-		std::byte message[] = { std::byte('-') };
-		ConnectionDescriptorTable::push_short_server_message(conn_descriptor, message, sizeof(message));
+		if (packet.protocol_version != 7) {
+			return false;
+		}
+
 		return true;
 	}
 

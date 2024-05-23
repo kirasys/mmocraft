@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cassert>
+#include <string_view>
 
 #include "io/io_event.h"
 
@@ -80,20 +81,20 @@ namespace net
 		using SByte = std::int8_t;
 		using FByte = std::int8_t;
 		using Short = std::int16_t;
-		using UShort = std::uint16_t;
 		using FShort = std::uint16_t;
 
 		struct String
 		{
 			const char *data = nullptr;
-			UShort size;
+			std::size_t size = 0;
+			static constexpr unsigned size_with_padding = 64;
 		};
 	};
 
 
 	struct Packet
 	{
-		PacketID  id;
+		PacketFieldType::Byte id;
 	};
 
 	struct PacketHandshake : Packet
@@ -106,26 +107,23 @@ namespace net
 		static std::byte* parse(std::byte* buf_start, std::byte* buf_end, Packet*);
 	};
 
-	/*
+	
 	struct PacketKick : Packet
 	{
-		PacketKick(PacketFieldType::String a_reason)
+		PacketKick(std::string_view a_reason)
 			: Packet{ PacketID::Kick }
-			, reason{ a_reason }
+			, reason{ a_reason.data(), a_reason.size() }
 		{ }
 
 		std::size_t size_of_serialized() const
 		{
-			return 1 + 2 + reason.size;
+			return sizeof(Packet::id) + reason.size_with_padding;
 		}
 
-		bool serialize(io::IoEventStreamData&) const;
-
-		static std::byte* parse(std::byte* buf_start, std::byte* buf_end, Packet*);
+		bool serialize(io::IoEventRawData&) const;
 
 		PacketFieldType::String reason;
 	};
-	*/
 
 	struct PacketStructure
 	{
@@ -136,16 +134,10 @@ namespace net
 
 		static std::size_t parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*);
 
-		static void write_byte(std::byte* buf, PacketFieldType::Byte value)
-		{
-			buf[0] = std::byte(value);
-		}
+		static void write_byte(std::byte*&, PacketFieldType::Byte);
 
-		static void write_short(std::byte* buf, PacketFieldType::Short value)
-		{
-			*reinterpret_cast<PacketFieldType::Short*>(buf) = _byteswap_ushort(value);
-		}
+		static void write_short(std::byte*&, PacketFieldType::Short);
 
-		static void write_string(std::byte* buf, const PacketFieldType::String& str);
+		static void write_string(std::byte*&, const PacketFieldType::String&);
 	};
 }

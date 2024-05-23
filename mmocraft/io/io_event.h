@@ -53,6 +53,14 @@ namespace io
 		virtual void pop(std::size_t n) = 0;
 	};
 
+	class IoEventRawData : public IoEventData
+	{
+	public:
+		virtual std::byte* data() = 0;
+
+		virtual void commit(std::size_t n) = 0;
+	};
+
 	class IoRecvEventData : public IoEventData
 	{
 	public:
@@ -102,7 +110,7 @@ namespace io
 	using IoAcceptEventData = IoRecvEventData;
 
 	template <std::size_t N>
-	class IoSendEventVariableData : public IoEventData
+	class IoSendEventVariableData : public IoEventRawData
 	{
 	public:
 		// data points to used space.
@@ -157,6 +165,21 @@ namespace io
 		{
 			data_head += int(n);
 			assert(data_head <= sizeof(_data));
+		}
+
+
+		/**
+		 *  IoEventRawData interface. 
+		 */
+
+		std::byte* data() override
+		{
+			return _data;
+		}
+
+		void commit(std::size_t n) override
+		{
+			data_tail += int(n);
 		}
 
 	private:
