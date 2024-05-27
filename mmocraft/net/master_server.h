@@ -26,5 +26,7 @@ namespace net
 	private:
 		net::ServerCore server_core;
 		database::DatabaseCore database_core;
+
+		WorkerLevelDescriptor worker_permission = WorkerLevelDescriptor(0);
 	};
 }

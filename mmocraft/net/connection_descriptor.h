@@ -46,9 +46,9 @@ namespace net
 
 		static bool push_server_message(WorkerLevelDescriptor, std::byte*, std::size_t);
 
-		static void flush_server_message();
+		static void flush_server_message(WorkerLevelDescriptor);
 
-		static void flush_client_message();
+		static void flush_client_message(WorkerLevelDescriptor);
 
 
 		/// Admin level apis.

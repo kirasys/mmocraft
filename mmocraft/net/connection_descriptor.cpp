@@ -96,13 +96,7 @@ namespace net
 		return desc_entry.is_online ? desc_entry.io_send_event_data->push(message, n) : false;
 	}
 
-	bool ConnectionDescriptorTable::push_server_message(ConnectionLevelDescriptor desc, std::byte* message, std::size_t n)
-	{
-		auto& desc_entry = descriptor_table[desc];
-		return desc_entry.is_online ? desc_entry.io_send_event_small_data->push(message, n) : false;
-	}
-
-	void ConnectionDescriptorTable::flush_server_message()
+	void ConnectionDescriptorTable::flush_server_message(WorkerLevelDescriptor)
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
@@ -112,7 +106,7 @@ namespace net
 		}
 	}
 
-	void ConnectionDescriptorTable::flush_client_message()
+	void ConnectionDescriptorTable::flush_client_message(WorkerLevelDescriptor)
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
@@ -124,6 +118,12 @@ namespace net
 					desc_entry.io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
 			}
 		}
+	}
+
+	bool ConnectionDescriptorTable::push_server_message(ConnectionLevelDescriptor desc, std::byte* message, std::size_t n)
+	{
+		auto& desc_entry = descriptor_table[desc];
+		return desc_entry.is_online ? desc_entry.io_send_event_small_data->push(message, n) : false;
 	}
 
 	bool ConnectionDescriptorTable::push_disconnect_message(ConnectionLevelDescriptor desc, std::string_view reason)
