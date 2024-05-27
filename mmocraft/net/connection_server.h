@@ -8,6 +8,7 @@
 
 #include "net/socket.h"
 #include "net/application_server.h"
+#include "net/connection_descriptor.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "win/smart_handle.h"
@@ -82,7 +83,7 @@ namespace net
 		//virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
 
 		// connection register to the online descriptor table by this number.
-		const unsigned descriptor_number;
+		AdminLevelDescriptor descriptor_number;
 
 	private:
 		ApplicationServer& app_server;
@@ -101,58 +102,5 @@ namespace net
 			std::size_t offline_tick = 0;
 			std::size_t last_interaction_tick = 0;
 		} connection_status;
-	};
-
-	class ConnectionDescriptorTable
-	{
-	public:
-		struct DescriptorData
-		{
-			ConnectionServer* connection;
-			win::Socket raw_socket;
-
-			io::IoSendEventSmallData* io_send_event_small_data;
-			io::IoSendEventData* io_send_event_data;
-			io::IoSendEvent* io_send_event;
-			io::IoRecvEvent* io_recv_event;
-
-			bool is_online = false;
-			bool is_send_event_running = false;
-			bool is_recv_event_running = false;
-		};
-
-		ConnectionDescriptorTable() = delete;
-
-		static void initialize(unsigned max_client_connections);
-
-		static void request_recv_client_message(unsigned);
-
-		static void request_send_server_message(unsigned);
-
-		static bool push_server_message(unsigned, std::byte*, std::size_t);
-
-		static bool push_short_server_message(unsigned, std::byte*, std::size_t);
-
-		static void flush_server_message();
-
-		static void flush_client_message();
-
-		static bool push_disconnect_message(unsigned, std::string_view);
-
-	private:
-		// only connection server can modify descriptor table.
-		friend ConnectionServer;
-
-		static unsigned issue_descriptor_number();
-
-		static void delete_descriptor(unsigned);
-
-		static void set_descriptor_data(unsigned, DescriptorData);
-
-		static void shrink_max_descriptor();
-
-		static unsigned max_client_connections;
-		static unsigned max_descriptor;
-		static std::unique_ptr<DescriptorData[]> descriptor_table;
 	};
 }

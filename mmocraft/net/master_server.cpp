@@ -22,7 +22,7 @@ namespace net
 			throw error::DATABASE_CONNECT;
 	}
 
-	bool MasterServer::handle_packet(unsigned conn_descriptor, Packet* packet)
+	bool MasterServer::handle_packet(ConnectionLevelDescriptor conn_descriptor, Packet* packet)
 	{
 		switch (packet->id) {
 		case PacketID::Handshake:
@@ -32,7 +32,7 @@ namespace net
 		}
 	}
 
-	bool MasterServer::handle_handshake_packet(unsigned conn_descriptor, PacketHandshake& packet)
+	bool MasterServer::handle_handshake_packet(ConnectionLevelDescriptor conn_descriptor, PacketHandshake& packet)
 	{
 		if (packet.protocol_version != 7) {
 			return false;

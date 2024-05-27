@@ -22,6 +22,7 @@
     <ClCompile Include="net\packet.cpp" />
     <ClCompile Include="database\database_core.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
+    <ClCompile Include="net\connection_descriptor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -51,6 +52,7 @@
     <ClInclude Include="net\application_server.h" />
     <ClInclude Include="database\database_core.h" />
     <ClInclude Include="database\sql_statement.h" />
+    <ClInclude Include="net\connection_descriptor.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />

@@ -2,6 +2,7 @@
 
 #include "database/database_core.h"
 
+#include "net/connection_descriptor.h"
 #include "net/server_core.h"
 #include "net/packet.h"
 
@@ -16,9 +17,9 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		bool handle_packet(unsigned, Packet*);
+		bool handle_packet(ConnectionLevelDescriptor, Packet*);
 
-		bool handle_handshake_packet(unsigned, PacketHandshake&);
+		bool handle_handshake_packet(ConnectionLevelDescriptor, PacketHandshake&);
 
 		void serve_forever();
 
