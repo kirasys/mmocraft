@@ -8,14 +8,14 @@
 
 namespace net
 {
-	unsigned ConnectionDescriptorTable::max_client_connections;
-	unsigned ConnectionDescriptorTable::max_descriptor;
+	unsigned ConnectionDescriptorTable::descriptor_table_capacity;
+	unsigned ConnectionDescriptorTable::descriptor_end;
 	std::unique_ptr<ConnectionDescriptorTable::DescriptorData[]> ConnectionDescriptorTable::descriptor_table;
 
 	void ConnectionDescriptorTable::initialize(unsigned a_max_client_connections)
 	{
-		max_client_connections = a_max_client_connections;
-		max_descriptor = 0;
+		descriptor_table_capacity = a_max_client_connections;
+		descriptor_end = 0;
 		descriptor_table.reset(new DescriptorData[a_max_client_connections + 1]());
 	}
 
@@ -23,13 +23,13 @@ namespace net
 	{
 		shrink_max_descriptor();
 
-		for (unsigned i = 0; i < max_descriptor; i++) // find free slot.
+		for (unsigned i = 0; i < descriptor_end; i++) // find free slot.
 			if (not descriptor_table[i].is_online) desc = AdminLevelDescriptor(i); return true;
 
-		if (max_descriptor >= max_client_connections)
+		if (descriptor_end >= descriptor_table_capacity)
 			return false;
 
-		desc = AdminLevelDescriptor(max_descriptor++);
+		desc = AdminLevelDescriptor(descriptor_end++);
 		return true;
 	}
 
@@ -40,11 +40,11 @@ namespace net
 
 	void ConnectionDescriptorTable::shrink_max_descriptor()
 	{
-		for (unsigned i = max_descriptor; i > 0; i--)
-			if (descriptor_table[i].is_online)
-				max_descriptor = i; return;
-		
-		max_descriptor = 0;
+		for (unsigned i = descriptor_end; i > 0; i--)
+			if (descriptor_table[i - 1].is_online)
+				descriptor_end = i; return;
+
+		descriptor_end = 0;
 	}
 
 	void ConnectionDescriptorTable::set_descriptor_data(AdminLevelDescriptor desc, DescriptorData data)
@@ -104,7 +104,7 @@ namespace net
 
 	void ConnectionDescriptorTable::flush_server_message()
 	{
-		for (unsigned desc = 0; desc < max_descriptor; ++desc) {
+		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
 
 			if (desc_entry.is_online && not desc_entry.is_send_event_running)
@@ -114,7 +114,7 @@ namespace net
 
 	void ConnectionDescriptorTable::flush_client_message()
 	{
-		for (unsigned desc = 0; desc < max_descriptor; ++desc) {
+		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
 
 			if (desc_entry.is_online && not desc_entry.is_recv_event_running) {

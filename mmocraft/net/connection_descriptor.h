@@ -67,8 +67,8 @@ namespace net
 
 		static void shrink_max_descriptor();
 
-		static unsigned max_client_connections;
-		static unsigned max_descriptor;
+		static unsigned descriptor_table_capacity;
+		static unsigned descriptor_end;
 		static std::unique_ptr<DescriptorData[]> descriptor_table;
 	};
 }
