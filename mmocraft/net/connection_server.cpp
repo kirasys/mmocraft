@@ -30,11 +30,11 @@ namespace net
 		io_service.register_event_source(_client_socket.get_handle(), this);
 
 		// register to the global descriptor table.
-		if (not ConnectionDescriptorTable::issue_descriptor_number(descriptor_number))
+		if (not ConnectionDescriptor::issue_descriptor_number(descriptor_number))
 			throw error::ErrorCode::CONNECTION_CREATE;
 
-		ConnectionDescriptorTable::set_descriptor_data(descriptor_number,
-			ConnectionDescriptorTable::DescriptorData{
+		ConnectionDescriptor::set_descriptor_data(descriptor_number,
+			ConnectionDescriptor::DescriptorData{
 				.connection = this,
 				.raw_socket = _client_socket.get_handle(),
 				.io_send_event_small_data = io_send_event_small_data.get(),
@@ -45,7 +45,7 @@ namespace net
 		);
 
 		// init first recv.
-		ConnectionDescriptorTable::activate_receive_cycle(descriptor_number);
+		ConnectionDescriptor::activate_receive_cycle(descriptor_number);
 	}
 
 	ConnectionServer::~ConnectionServer()
@@ -89,7 +89,7 @@ namespace net
 
 	void ConnectionServer::set_offline()
 	{
-		ConnectionDescriptorTable::delete_descriptor(descriptor_number);
+		ConnectionDescriptor::delete_descriptor(descriptor_number);
 
 		// this lead to close the io completion port.
 		_client_socket.close();
@@ -117,7 +117,7 @@ namespace net
 
 	void ConnectionServer::on_success(io::IoRecvEvent* event)
 	{
-		ConnectionDescriptorTable::activate_receive_cycle(descriptor_number);
+		ConnectionDescriptor::activate_receive_cycle(descriptor_number);
 	}
 
 	void ConnectionServer::on_error(io::IoRecvEvent* event)
@@ -138,7 +138,7 @@ namespace net
 
 	void ConnectionServer::on_success(io::IoSendEvent* event)
 	{
-		ConnectionDescriptorTable::activate_send_cycle(descriptor_number);
+		ConnectionDescriptor::activate_send_cycle(descriptor_number);
 	}
 
 	void ConnectionServer::on_error(io::IoSendEvent* event)

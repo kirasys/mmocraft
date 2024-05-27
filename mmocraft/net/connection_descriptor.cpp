@@ -8,18 +8,18 @@
 
 namespace net
 {
-	unsigned ConnectionDescriptorTable::descriptor_table_capacity;
-	unsigned ConnectionDescriptorTable::descriptor_end;
-	std::unique_ptr<ConnectionDescriptorTable::DescriptorData[]> ConnectionDescriptorTable::descriptor_table;
+	unsigned ConnectionDescriptor::descriptor_table_capacity;
+	unsigned ConnectionDescriptor::descriptor_end;
+	std::unique_ptr<ConnectionDescriptor::DescriptorData[]> ConnectionDescriptor::descriptor_table;
 
-	void ConnectionDescriptorTable::initialize(unsigned a_max_client_connections)
+	void ConnectionDescriptor::initialize(unsigned a_max_client_connections)
 	{
 		descriptor_table_capacity = a_max_client_connections;
 		descriptor_end = 0;
 		descriptor_table.reset(new DescriptorData[a_max_client_connections + 1]());
 	}
 
-	bool ConnectionDescriptorTable::issue_descriptor_number(AdminLevelDescriptor& desc)
+	bool ConnectionDescriptor::issue_descriptor_number(AdminLevelDescriptor& desc)
 	{
 		shrink_max_descriptor();
 
@@ -33,12 +33,12 @@ namespace net
 		return true;
 	}
 
-	void ConnectionDescriptorTable::delete_descriptor(AdminLevelDescriptor desc)
+	void ConnectionDescriptor::delete_descriptor(AdminLevelDescriptor desc)
 	{
 		descriptor_table[desc].is_online = false;
 	}
 
-	void ConnectionDescriptorTable::shrink_max_descriptor()
+	void ConnectionDescriptor::shrink_max_descriptor()
 	{
 		for (unsigned i = descriptor_end; i > 0; i--)
 			if (descriptor_table[i - 1].is_online)
@@ -47,14 +47,14 @@ namespace net
 		descriptor_end = 0;
 	}
 
-	void ConnectionDescriptorTable::set_descriptor_data(AdminLevelDescriptor desc, DescriptorData data)
+	void ConnectionDescriptor::set_descriptor_data(AdminLevelDescriptor desc, DescriptorData data)
 	{
 		descriptor_table[desc] = data;
 		std::atomic_thread_fence(std::memory_order_release);
 		descriptor_table[desc].is_online = true;
 	}
 
-	void ConnectionDescriptorTable::activate_receive_cycle(AdminLevelDescriptor desc)
+	void ConnectionDescriptor::activate_receive_cycle(AdminLevelDescriptor desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		if (not desc_entry.is_online)
@@ -70,7 +70,7 @@ namespace net
 		desc_entry.is_recv_event_running = Socket::recv(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 1);
 	}
 
-	void ConnectionDescriptorTable::activate_send_cycle(AdminLevelDescriptor desc)
+	void ConnectionDescriptor::activate_send_cycle(AdminLevelDescriptor desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		if (not desc_entry.is_online) return;
@@ -90,13 +90,13 @@ namespace net
 		desc_entry.is_send_event_running = Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
 	}
 
-	bool ConnectionDescriptorTable::push_server_message(WorkerLevelDescriptor desc, std::byte* message, std::size_t n)
+	bool ConnectionDescriptor::push_server_message(WorkerLevelDescriptor desc, std::byte* message, std::size_t n)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		return desc_entry.is_online ? desc_entry.io_send_event_data->push(message, n) : false;
 	}
 
-	void ConnectionDescriptorTable::flush_server_message(WorkerLevelDescriptor)
+	void ConnectionDescriptor::flush_server_message(WorkerLevelDescriptor)
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
@@ -106,7 +106,7 @@ namespace net
 		}
 	}
 
-	void ConnectionDescriptorTable::flush_client_message(WorkerLevelDescriptor)
+	void ConnectionDescriptor::flush_client_message(WorkerLevelDescriptor)
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
@@ -120,13 +120,13 @@ namespace net
 		}
 	}
 
-	bool ConnectionDescriptorTable::push_server_message(ConnectionLevelDescriptor desc, std::byte* message, std::size_t n)
+	bool ConnectionDescriptor::push_server_message(ConnectionLevelDescriptor desc, std::byte* message, std::size_t n)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		return desc_entry.is_online ? desc_entry.io_send_event_small_data->push(message, n) : false;
 	}
 
-	bool ConnectionDescriptorTable::push_disconnect_message(ConnectionLevelDescriptor desc, std::string_view reason)
+	bool ConnectionDescriptor::push_disconnect_message(ConnectionLevelDescriptor desc, std::string_view reason)
 	{
 		if (auto& desc_entry = descriptor_table[desc]; desc_entry.is_online) {
 			net::PacketDisconnectPlayer disconnect_packet{ reason };

@@ -14,7 +14,7 @@ namespace net
 
 	class ConnectionServer;
 
-	class ConnectionDescriptorTable
+	class ConnectionDescriptor
 	{
 	public:
 		struct DescriptorData
@@ -32,7 +32,7 @@ namespace net
 			bool is_recv_event_running = false;
 		};
 
-		ConnectionDescriptorTable() = delete;
+		ConnectionDescriptor() = delete;
 
 		static void initialize(unsigned max_client_connections);
 

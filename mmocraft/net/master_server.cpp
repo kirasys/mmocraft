@@ -48,8 +48,8 @@ namespace net
 		while (1) {
 			std::size_t start_tick = util::current_monotonic_tick();
 
-			ConnectionDescriptorTable::flush_server_message(worker_permission);
-			ConnectionDescriptorTable::flush_client_message(worker_permission);
+			ConnectionDescriptor::flush_server_message(worker_permission);
+			ConnectionDescriptor::flush_client_message(worker_permission);
 
 			std::size_t end_tick = util::current_monotonic_tick();
 
