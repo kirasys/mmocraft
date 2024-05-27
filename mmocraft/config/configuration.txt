@@ -5,3 +5,10 @@ memory_pool_size: 256
 [Logging]
 log_level: FATAL
 log_file_path: server_log.txt
+
+[Database]
+driver_name: ODBC Driver 17 for SQL Server
+server_address: DESKTOP-G3KIELI\MINESQLSERVER
+database: mmocraft
+userid: mmocraft_login
+password: 12341234

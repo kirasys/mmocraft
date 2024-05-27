@@ -103,7 +103,7 @@ namespace io
 		void pop(std::size_t n) override;
 
 	private:
-		std::byte _data[RECV_BUFFER_SIZE];
+		std::byte _data[RECV_BUFFER_SIZE] = {};
 		std::size_t _size = 0;
 	};
 
@@ -183,7 +183,7 @@ namespace io
 		}
 
 	private:
-		std::byte _data[N];
+		std::byte _data[N] = {};
 		int data_head = 0;
 		int data_tail = 0;
 	};
@@ -193,7 +193,7 @@ namespace io
 
 	struct IoEvent
 	{
-		WSAOVERLAPPED overlapped;
+		WSAOVERLAPPED overlapped = {};
 
 		// NOTE: separate buffer space for better locality.
 		//       the allocator(may be pool) responsible for release.

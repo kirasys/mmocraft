@@ -202,7 +202,7 @@ namespace net
 			return;
 		}
 
-		WSABUF wbuf[1];
+		WSABUF wbuf[1] = {};
 		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_recv_event->data.begin_unused());
 		wbuf[0].len = ULONG(desc_entry.io_recv_event->data.unused_size());
 
@@ -217,7 +217,7 @@ namespace net
 			return;
 		}
 
-		WSABUF wbuf[2];
+		WSABUF wbuf[2] = {};
 		// send first short send buffer.
 		desc_entry.io_send_event->transferred_small_data_bytes = desc_entry.io_send_event_small_data->size();
 		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_send_event_small_data->begin());

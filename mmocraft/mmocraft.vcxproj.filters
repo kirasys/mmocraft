@@ -14,13 +14,14 @@
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
     <ClCompile Include="io\io_event.cpp" />
-    <ClCompile Include="util\lock_free_stack.cpp" />
     <ClCompile Include="net\server_core.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
     <ClCompile Include="net\connection_server.cpp" />
     <ClCompile Include="net\master_server.cpp" />
     <ClCompile Include="net\packet.cpp" />
+    <ClCompile Include="database\database_core.cpp" />
+    <ClCompile Include="database\sql_statement.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -31,7 +32,6 @@
     <ClInclude Include="logging\error.h" />
     <ClInclude Include="io\io_event.h" />
     <ClInclude Include="win\object_pool.h" />
-    <ClInclude Include="util\lock_free_stack.h" />
     <ClInclude Include="win\win_base_object.h" />
     <ClInclude Include="win\win_type.h" />
     <ClInclude Include="net\server_core.h" />
@@ -49,6 +49,8 @@
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\player.h" />
     <ClInclude Include="net\application_server.h" />
+    <ClInclude Include="database\database_core.h" />
+    <ClInclude Include="database\sql_statement.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />

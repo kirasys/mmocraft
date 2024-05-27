@@ -1,8 +1,10 @@
 #include "pch.h"
+#include "master_server.h"
 
 #include <cstring>
 
-#include "master_server.h"
+#include "config/config.h"
+#include "logging/error.h"
 
 namespace net
 {
@@ -12,7 +14,13 @@ namespace net
 		unsigned num_of_event_threads,
 		int concurrency_hint)
 		: server_core{ *this, ip, port, max_client_connections, num_of_event_threads, concurrency_hint }
-	{ }
+		, database_core{ }
+	{ 
+		const auto& conf = config::get_config();
+
+		if (not database_core.connect_with_password(conf.db))
+			throw error::DATABASE_CONNECT;
+	}
 
 	bool MasterServer::handle_packet(unsigned conn_descriptor, Packet* packet)
 	{

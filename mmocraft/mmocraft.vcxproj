@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="config\config.cpp" />
+    <ClCompile Include="database\database_core.cpp" />
+    <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="io\io_event.cpp" />
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
@@ -36,11 +38,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="util\lock_free_stack.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
+    <ClInclude Include="database\database_core.h" />
+    <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\player.h" />
     <ClInclude Include="io\io_event.h" />
@@ -59,7 +62,6 @@
     <ClInclude Include="util\custom_unique_ptr.h" />
     <ClInclude Include="util\deferred_call.h" />
     <ClInclude Include="util\interval_task.h" />
-    <ClInclude Include="util\lock_free_stack.h" />
     <ClInclude Include="util\noncopyable.h" />
     <ClInclude Include="util\time_util.h" />
     <ClInclude Include="win\object_pool.h" />

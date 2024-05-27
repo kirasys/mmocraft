@@ -1,4 +1,7 @@
 #pragma once
+
+#include "database/database_core.h"
+
 #include "net/server_core.h"
 #include "net/packet.h"
 
@@ -20,6 +23,7 @@ namespace net
 		void serve_forever();
 
 	private:
-		ServerCore server_core;
+		net::ServerCore server_core;
+		database::DatabaseCore database_core;
 	};
 }

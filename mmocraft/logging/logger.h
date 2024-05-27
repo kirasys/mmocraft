@@ -5,6 +5,9 @@
 #include <fstream>
 #include <source_location>
 
+#include <sql.h>
+#include <sqlext.h>
+
 #include "util/common_util.h"
 
 namespace logging
@@ -47,4 +50,6 @@ namespace logging
 	// Console log functions
 	LogStream cerr(const std::source_location &location = std::source_location::current());
 	LogStream cfatal(const std::source_location &location = std::source_location::current());
+
+	void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code);
 }

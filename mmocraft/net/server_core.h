@@ -23,6 +23,7 @@ namespace net
 	public:
 		enum State
 		{
+			Uninitialized,
 			Initialized,
 			Running,
 			Stopped,
@@ -57,7 +58,7 @@ namespace net
 		virtual std::optional<std::size_t> handle_io_event(io::IoAcceptEvent*) override;
 		
 	private:
-		ServerCore::State _state;
+		ServerCore::State _state = Uninitialized;
 
 		ApplicationServer& app_server;
 

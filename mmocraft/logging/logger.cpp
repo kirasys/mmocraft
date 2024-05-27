@@ -64,4 +64,29 @@ namespace logging
 	LogStream cfatal(const std::source_location &location) {
 		return LogStream{ std::cerr, location, true };
 	}
+
+	void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code)
+	{
+		std::cout << "error_code: " << error_code << '\n';
+		if (error_code == SQL_SUCCESS_WITH_INFO || error_code == SQL_ERROR) {
+			SQLINTEGER native_error_code;
+			WCHAR error_message[1024];
+			WCHAR sql_state[SQL_SQLSTATE_SIZE + 1];
+
+			for (SQLSMALLINT i = 1;
+				::SQLGetDiagRec(handle_type,
+					handle,
+					i,
+					sql_state,
+					&native_error_code,
+					error_message,
+					(SQLSMALLINT)(sizeof(error_message) / sizeof(*error_message)),
+					(SQLSMALLINT*)NULL) == SQL_SUCCESS;
+				i++)
+			{
+				std::wcerr << error_message << L'\n';
+				//fwprintf(stderr, L"[%5.5s] %s (%d)\n", wszState, wszMessage, native_error);
+			}
+		}
+	}
 }

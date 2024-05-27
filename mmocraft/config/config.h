@@ -34,6 +34,15 @@ namespace config {
 
 		} login;
 
+		struct DatabaseConfig
+		{
+			std::string driver_name;
+			std::string server_address;
+			std::string database;
+			std::string userid;
+			std::string password;
+		} db;
+
 		Configuration() :loaded(false)
 		{
 

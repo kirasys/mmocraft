@@ -11,7 +11,7 @@
 #include "logging/error.h"
 
 namespace {
-	void trim(std::string_view line) noexcept {
+	void trim(std::string_view& line) noexcept {
 		line.remove_prefix(std::min(line.find_first_not_of(' '), line.size()));
 		if (line.back() == ' ')
 			line.remove_suffix(line.size() - line.find_last_not_of(' ') - 1);
@@ -77,7 +77,7 @@ namespace config {
 			conf.file_path = conf_map.at("log_file_path");
 	}
 
-	void load_system_config(Configuration::SystemConfig conf, ConfigMap conf_map)
+	void load_system_config(Configuration::SystemConfig& conf, ConfigMap conf_map)
 	{
 		auto end = conf_map.end();
 
@@ -94,6 +94,26 @@ namespace config {
 			conf.memory_pool_size = MegaBytes{ std::stoi(conf_map.at("memory_pool_size")) };
 	}
 
+	void load_database_config(Configuration::DatabaseConfig& conf, ConfigMap conf_map)
+	{
+		auto end = conf_map.end();
+
+		if (conf_map.find("driver_name") != end)
+			conf.driver_name = conf_map.at("driver_name");
+
+		if (conf_map.find("server_address") != end)
+			conf.server_address = conf_map.at("server_address");
+
+		if (conf_map.find("database") != end)
+			conf.database = conf_map.at("database");
+
+		if (conf_map.find("userid") != end)
+			conf.userid = conf_map.at("userid");
+
+		if (conf_map.find("password") != end)
+			conf.password = conf_map.at("password");
+	}
+
 	// public functions
 
 	bool load_config(Configuration& conf) {
@@ -103,6 +123,7 @@ namespace config {
 		try {
 			load_log_config(conf.log, conf_map);
 			load_system_config(conf.system, conf_map);
+			load_database_config(conf.db, conf_map);
 		}
 		catch (const std::exception& ex) {
 			logging::cerr() << "Fail to setting config: " << ex.what();
