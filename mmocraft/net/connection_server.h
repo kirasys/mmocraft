@@ -1,8 +1,9 @@
 #pragma once
 
 #include <atomic>
-#include <memory>
 #include <chrono>
+#include <memory>
+#include <string_view>
 #include <ctime>
 
 #include "net/socket.h"
@@ -107,7 +108,6 @@ namespace net
 	public:
 		struct DescriptorData
 		{
-			bool is_online = false;
 			ConnectionServer* connection;
 			win::Socket raw_socket;
 
@@ -116,6 +116,7 @@ namespace net
 			io::IoSendEvent* io_send_event;
 			io::IoRecvEvent* io_recv_event;
 
+			bool is_online = false;
 			bool is_send_event_running = false;
 			bool is_recv_event_running = false;
 		};
@@ -135,6 +136,8 @@ namespace net
 		static void flush_server_message();
 
 		static void flush_client_message();
+
+		static bool push_disconnect_message(unsigned, std::string_view);
 
 	private:
 		// only connection server can modify descriptor table.

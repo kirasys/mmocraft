@@ -84,21 +84,22 @@ namespace net
 		auto packet = static_cast<PacketHandshake*>(out_packet);
 		PARSE_SCALAR_FIELD(buf_start, buf_end, packet->protocol_version);
 		PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
-		PARSE_STRING_FIELD(buf_start, buf_end, packet->verification_key);
+		PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
 		PARSE_SCALAR_FIELD(buf_start, buf_end, packet->unused);
 		return buf_start;
 	}
 
-	bool PacketKick::serialize(io::IoEventRawData& out_stream) const
+	bool PacketDisconnectPlayer::serialize(io::IoEventRawData& event_data) const
 	{
-		if (size_of_serialized() > out_stream.unused_size())
+		if (size_of_serialized() > event_data.unused_size())
 			return false;
 
-		std::byte* out_data = out_stream.data();
-		PacketStructure::write_byte(out_data, id);
-		PacketStructure::write_string(out_data, reason);
+		std::byte* buf_start = event_data.data();
+		PacketStructure::write_byte(buf_start, id);
+		PacketStructure::write_string(buf_start, reason);
+		
+		event_data.commit(buf_start - event_data.data());
 
-		out_stream.commit(size_of_serialized());
 		return true;
 	}
 }

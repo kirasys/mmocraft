@@ -31,7 +31,7 @@ namespace net
 		PositionUpdate = 0xA,
 		OrientationUpdate = 0xB,
 		DespawnPlayer = 0xC,
-		Kick= 0xE,
+		DisconnectPlayer = 0xE,
 		UpdateUserType = 0xF,
 
 		// CPE
@@ -101,17 +101,17 @@ namespace net
 	{
 		PacketFieldType::Byte protocol_version;
 		PacketFieldType::String username;
-		PacketFieldType::String verification_key;
+		PacketFieldType::String password;
 		PacketFieldType::Byte unused;
 
 		static std::byte* parse(std::byte* buf_start, std::byte* buf_end, Packet*);
 	};
 
 	
-	struct PacketKick : Packet
+	struct PacketDisconnectPlayer : Packet
 	{
-		PacketKick(std::string_view a_reason)
-			: Packet{ PacketID::Kick }
+		PacketDisconnectPlayer(std::string_view a_reason)
+			: Packet{ PacketID::DisconnectPlayer }
 			, reason{ a_reason.data(), a_reason.size() }
 		{ }
 

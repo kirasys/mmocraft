@@ -2,6 +2,7 @@
 #include "connection_server.h"
 
 #include "logging/error.h"
+#include "net/packet.h"
 
 namespace net
 {
@@ -197,10 +198,11 @@ namespace net
 	void ConnectionDescriptorTable::request_recv_client_message(unsigned desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		if (desc_entry.io_recv_event->data.unused_size() < PacketStructure::size_of_max_packet_struct()) {
-			desc_entry.is_recv_event_running = false;
+		if (not desc_entry.is_online)
 			return;
-		}
+
+		if (desc_entry.io_recv_event->data.unused_size() < PacketStructure::size_of_max_packet_struct())
+			desc_entry.is_recv_event_running = false; return;
 
 		WSABUF wbuf[1] = {};
 		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_recv_event->data.begin_unused());
@@ -212,10 +214,10 @@ namespace net
 	void ConnectionDescriptorTable::request_send_server_message(unsigned desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		if (desc_entry.io_send_event_data->size() + desc_entry.io_send_event_small_data->size() == 0) {
-			desc_entry.is_send_event_running = false;
-			return;
-		}
+		if (not desc_entry.is_online) return;
+
+		if (desc_entry.io_send_event_data->size() + desc_entry.io_send_event_small_data->size() == 0)
+			desc_entry.is_send_event_running = false; return;
 
 		WSABUF wbuf[2] = {};
 		// send first short send buffer.
@@ -263,5 +265,14 @@ namespace net
 					desc_entry.io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
 			}
 		}
+	}
+
+	bool ConnectionDescriptorTable::push_disconnect_message(unsigned desc, std::string_view reason)
+	{
+		if (auto& desc_entry = descriptor_table[desc]; desc_entry.is_online) {
+			net::PacketDisconnectPlayer disconnect_packet{ reason };
+			return disconnect_packet.serialize(*desc_entry.io_send_event_small_data);
+		}
+		return false;
 	}
 }
