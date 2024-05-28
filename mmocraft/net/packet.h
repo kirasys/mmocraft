@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include "io/io_event.h"
+#include "logging/error.h"
 
 namespace net
 {
@@ -91,7 +92,6 @@ namespace net
 		};
 	};
 
-
 	struct Packet
 	{
 		PacketFieldType::Byte id;
@@ -132,7 +132,7 @@ namespace net
 			return sizeof(PacketHandshake);
 		}
 
-		static std::size_t parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*);
+		static auto parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*) -> std::pair<std::uint32_t, error::ErrorCode>;
 
 		static void write_byte(std::byte*&, PacketFieldType::Byte);
 

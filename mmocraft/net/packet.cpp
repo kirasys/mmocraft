@@ -40,7 +40,8 @@ namespace net
 {
 	/* Common Packet Static Methods */
 
-	std::size_t PacketStructure::parse_packet(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+	auto PacketStructure::parse_packet(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+		-> std::pair<std::uint32_t, error::ErrorCode>
 	{
 		assert(buf_start < buf_end);
 
@@ -50,13 +51,13 @@ namespace net
 
 		out_packet->id = packet_parser ? packet_id : PacketID::INVALID;
 		if (out_packet->id == PacketID::INVALID)
-			return 1; // stop parsing invalid packet.
+			return { 0, error::PACKET_INVALID_FORMAT }; // stop parsing invalid packet.
 
 		// parse concrete packet structure.
 		if (auto new_buf_start = (*packet_parser)(buf_start + 1, buf_end, out_packet))
-			return new_buf_start - buf_start;
+			return { new_buf_start - buf_start, error::SUCCESS };
 
-		return 0; // insufficient packet data.
+		return { 0, error::PACKET_INSUFFIENT_DATA }; // insufficient packet data.
 	}
 
 	void PacketStructure::write_byte(std::byte* &buf, PacketFieldType::Byte value)

@@ -64,9 +64,14 @@ namespace net
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
 		while (data_cur < data_end) {
-			const std::size_t parsed_bytes = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
-			if (parsed_bytes == 0) // Insuffcient packet data
+			auto [parsed_bytes, error_code] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
+			if (error_code == error::PACKET_INSUFFIENT_DATA)
 				break;
+
+			if (error_code != error::SUCCESS) {
+				// kick
+				return;
+			}
 
 			if (not app_server.handle_packet(ConnectionLevelDescriptor(descriptor_number), packet_ptr))
 				break; // Couldn't handle right now. try again later.
