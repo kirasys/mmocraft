@@ -26,12 +26,13 @@ namespace
 	struct PacketStaticData
 	{
 		std::byte* (*parse)(std::byte*, std::byte*, net::Packet*) = nullptr;
+		error::ErrorCode (*validate)(const net::Packet*) = nullptr;
 	};
 
 	constinit const std::array<PacketStaticData, 0x100> packet_metadata_db = [] {
 		using namespace net;
 		std::array<PacketStaticData, 0x100> arr{};
-		arr[PacketID::Handshake] = { &PacketHandshake::parse };
+		arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate };
 		return arr;
 	}();
 }
@@ -47,15 +48,18 @@ namespace net
 
 		// parse packet common header.
 		auto packet_id = decltype(Packet::id)(*buf_start);
-		auto packet_parser = *packet_metadata_db[packet_id].parse;
+		auto packet_parser = packet_metadata_db[packet_id].parse;
 
 		out_packet->id = packet_parser ? packet_id : PacketID::INVALID;
 		if (out_packet->id == PacketID::INVALID)
-			return { 0, error::PACKET_INVALID_FORMAT }; // stop parsing invalid packet.
+			return { 0, error::PACKET_INVALID_ID }; // stop parsing invalid packet.
 
-		// parse concrete packet structure.
-		if (auto new_buf_start = (*packet_parser)(buf_start + 1, buf_end, out_packet))
-			return { new_buf_start - buf_start, error::SUCCESS };
+		// parse and validate concrete packet structure.
+		if (auto new_buf_start = packet_parser(buf_start + 1, buf_end, out_packet)) {
+			auto packet_validater = packet_metadata_db[packet_id].validate;
+			auto error_code = packet_validater ? packet_validater(out_packet) : error::SUCCESS;
+			return { std::uint32_t(new_buf_start - buf_start), error_code };
+		}
 
 		return { 0, error::PACKET_INSUFFIENT_DATA }; // insufficient packet data.
 	}
@@ -88,6 +92,25 @@ namespace net
 		PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
 		PARSE_SCALAR_FIELD(buf_start, buf_end, packet->unused);
 		return buf_start;
+	}
+
+	error::ErrorCode PacketHandshake::validate(const net::Packet* a_packet)
+	{
+		auto &packet = *static_cast<const PacketHandshake*>(a_packet);
+
+		if (packet.protocol_version != 7)
+			return error::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION;
+
+		if (packet.username.size == 0 || packet.username.size > 16)
+			return error::PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH;
+
+		if (not util::is_alphanumeric(packet.username.data, packet.username.size))
+			return error::PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT;
+
+		if (packet.password.size == 0 || packet.password.size > 32)
+			return error::PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH;
+
+		return error::SUCCESS;
 	}
 
 	bool PacketDisconnectPlayer::serialize(io::IoEventRawData& event_data) const

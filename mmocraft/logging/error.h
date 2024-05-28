@@ -9,6 +9,8 @@ namespace error
 {
 	enum ErrorCode
 	{
+		SUCCESS,
+
 		// Socket
 		SOCKET_CREATE,
 		SOCKET_BIND,
@@ -30,6 +32,15 @@ namespace error
 		DATABASE_ALLOC_STATEMENT_HANDLE,
 		DATABASE_SET_ATTRIBUTE_VERSION,
 		DATABASE_CONNECT,
+
+		// Packet parsing
+		PACKET_INVALID_ID,
+		PACKET_INSUFFIENT_DATA,
+
+		PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION,
+		PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH,
+		PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT,
+		PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH,
 
 		// Indicate size of the enum class.
 		SIZE,
@@ -53,6 +64,8 @@ namespace error
 			: Exception{ code }
 		{ }
 	};
+
+	const char* get_error_message(error::ErrorCode);
 
 	std::ostream& operator<<(std::ostream& os, ErrorCode ex);
 }

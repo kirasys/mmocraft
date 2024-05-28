@@ -68,12 +68,7 @@ namespace net
 			if (error_code == error::PACKET_INSUFFIENT_DATA)
 				break;
 
-			if (error_code != error::SUCCESS) {
-				// kick
-				return;
-			}
-
-			if (not app_server.handle_packet(ConnectionLevelDescriptor(descriptor_number), packet_ptr))
+			if (not app_server.handle_packet(ConnectionLevelDescriptor(descriptor_number), packet_ptr, error_code))
 				break; // Couldn't handle right now. try again later.
 
 			data_cur += parsed_bytes;

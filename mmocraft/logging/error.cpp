@@ -31,12 +31,26 @@ namespace
 		arr[ErrorCode::DATABASE_SET_ATTRIBUTE_VERSION]	  = "DATABASE_SET_ATTRIBUTE_VERSION";
 		arr[ErrorCode::DATABASE_CONNECT] = "DATABASE_CONNECT";
 
+		// Packet
+		arr[ErrorCode::PACKET_INVALID_ID] = "Unsupported Packet ID";
+		arr[ErrorCode::PACKET_INSUFFIENT_DATA] = "PACKET_INSUFFIENT_DATA";
+
+		arr[ErrorCode::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION] = "Unsupported protocol version";
+		arr[ErrorCode::PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH] = "Username must be 1 to 16 characters";
+		arr[ErrorCode::PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT] = "Username must be alphanumeric characters";
+		arr[ErrorCode::PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH] = "Password must be 1 to 32 characters";
+
 		return arr;
 	}();
 }
 
 namespace error
 {
+	const char* get_error_message(error::ErrorCode code)
+	{
+		return error_messages[code];
+	}
+
 	std::ostream& operator<<(std::ostream& os, ErrorCode code)
 	{
 		if (auto msg = error_messages[code])

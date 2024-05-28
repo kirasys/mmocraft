@@ -104,7 +104,9 @@ namespace net
 		PacketFieldType::String password;
 		PacketFieldType::Byte unused;
 
-		static std::byte* parse(std::byte* buf_start, std::byte* buf_end, Packet*);
+		static std::byte* parse(std::byte* buf_start, std::byte* buf_end, net::Packet*);
+
+		static error::ErrorCode validate(const net::Packet*);
 	};
 
 	

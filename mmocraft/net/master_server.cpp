@@ -22,22 +22,24 @@ namespace net
 			throw error::DATABASE_CONNECT;
 	}
 
-	bool MasterServer::handle_packet(ConnectionLevelDescriptor conn_descriptor, Packet* packet)
+	bool MasterServer::handle_packet(ConnectionLevelDescriptor conn_descriptor, Packet* packet, error::ErrorCode error_code)
 	{
+		if (error_code != error::SUCCESS) {
+			ConnectionDescriptor::push_disconnect_message(conn_descriptor, error::get_error_message(error_code));
+			return false;
+		}
+
 		switch (packet->id) {
 		case PacketID::Handshake:
 			return handle_handshake_packet(conn_descriptor, *static_cast<PacketHandshake*>(packet));
 		default:
-			return false;
+			return true;
 		}
 	}
 
 	bool MasterServer::handle_handshake_packet(ConnectionLevelDescriptor conn_descriptor, PacketHandshake& packet)
 	{
-		if (packet.protocol_version != 7) {
-			return false;
-		}
-
+		
 		return true;
 	}
 

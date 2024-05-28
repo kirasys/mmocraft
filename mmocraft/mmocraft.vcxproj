@@ -65,6 +65,7 @@
     <ClInclude Include="util\deferred_call.h" />
     <ClInclude Include="util\interval_task.h" />
     <ClInclude Include="util\noncopyable.h" />
+    <ClInclude Include="util\string_util.h" />
     <ClInclude Include="util\time_util.h" />
     <ClInclude Include="win\object_pool.h" />
     <ClInclude Include="win\smart_handle.h" />

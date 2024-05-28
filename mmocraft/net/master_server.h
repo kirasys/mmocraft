@@ -17,7 +17,7 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		bool handle_packet(ConnectionLevelDescriptor, Packet*);
+		bool handle_packet(ConnectionLevelDescriptor, Packet*, error::ErrorCode);
 
 		bool handle_handshake_packet(ConnectionLevelDescriptor, PacketHandshake&);
 
