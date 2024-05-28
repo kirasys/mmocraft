@@ -90,12 +90,6 @@ namespace net
 		desc_entry.is_send_event_running = Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
 	}
 
-	bool ConnectionDescriptor::push_server_message(WorkerLevelDescriptor desc, std::byte* message, std::size_t n)
-	{
-		auto& desc_entry = descriptor_table[desc];
-		return desc_entry.is_online ? desc_entry.io_send_event_data->push(message, n) : false;
-	}
-
 	void ConnectionDescriptor::flush_server_message(WorkerLevelDescriptor)
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
@@ -120,6 +114,12 @@ namespace net
 		}
 	}
 
+	bool ConnectionDescriptor::push_server_message(WorkerLevelDescriptor desc, std::byte* message, std::size_t n)
+	{
+		auto& desc_entry = descriptor_table[desc];
+		return desc_entry.is_online ? desc_entry.io_send_event_data->push(message, n) : false;
+	}
+
 	bool ConnectionDescriptor::push_server_message(ConnectionLevelDescriptor desc, std::byte* message, std::size_t n)
 	{
 		auto& desc_entry = descriptor_table[desc];
@@ -129,6 +129,8 @@ namespace net
 	bool ConnectionDescriptor::push_disconnect_message(ConnectionLevelDescriptor desc, std::string_view reason)
 	{
 		if (auto& desc_entry = descriptor_table[desc]; desc_entry.is_online) {
+			desc_entry.connection->set_offline();
+
 			net::PacketDisconnectPlayer disconnect_packet{ reason };
 			return disconnect_packet.serialize(*desc_entry.io_send_event_small_data);
 		}
