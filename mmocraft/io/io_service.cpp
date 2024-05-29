@@ -2,6 +2,7 @@
 #include "io_service.h"
 
 #include "logging/error.h"
+#include "net/server_event.h"
 
 namespace io
 {
@@ -18,6 +19,14 @@ namespace io
 	void IoCompletionPort::register_event_source(win::Socket event_source, IoEventHandler* event_handler)
 	{
 		register_event_source(win::Handle(event_source), event_handler);
+	}
+
+	bool IoCompletionPort::push_event(DWORD num_of_transferred, void* event_handler, void* overlapped)
+	{
+		return ::PostQueuedCompletionStatus(_handle, 
+			num_of_transferred,
+			ULONG_PTR(event_handler),
+			LPOVERLAPPED(overlapped)) != 0;
 	}
 
 	void IoCompletionPort::close() noexcept
@@ -59,9 +68,20 @@ namespace io
 					io_event->invoke_handler(*event_handler, num_of_transferred_bytes);
 				}
 				catch (const error::Exception& ex) {
-					logging::cerr() << "Exception(" << ex.code <<") was caught, but suppressed...";
+					logging::cerr() << "Exception(" << ex.code << ") was caught, but suppressed...";
 				}
 			}
+			else if (completion_key) {
+				auto event_handler = reinterpret_cast<net::ServerEventHandler*>(completion_key);
+
+				try {
+					event_handler->handle_server_event(net::ServerEventType(num_of_transferred_bytes));
+				}
+				catch (const error::Exception& ex) {
+					logging::cerr() << "Exception(" << ex.code << ") was caught, but suppressed...";
+				}
+			}
+			else return;
 		}
 	}
 
