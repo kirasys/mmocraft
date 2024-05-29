@@ -54,6 +54,7 @@
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="net\connection_descriptor.h" />
     <ClInclude Include="util\string_util.h" />
+    <ClInclude Include="net\deferred_packet.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />
