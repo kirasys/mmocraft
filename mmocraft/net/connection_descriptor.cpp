@@ -136,4 +136,9 @@ namespace net
 		}
 		return false;
 	}
+
+	bool ConnectionDescriptor::push_disconnect_message(AdminLevelDescriptor desc, std::string_view reason)
+	{
+		return push_disconnect_message(ConnectionLevelDescriptor(desc), reason);
+	}
 }

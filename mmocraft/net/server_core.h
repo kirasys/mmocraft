@@ -51,11 +51,9 @@ namespace net
 		 *  Event handler interface 
 		 */
 
-		virtual void on_success(io::IoAcceptEvent*) override;
+		virtual void on_complete(io::IoAcceptEvent*) override;
 
-		virtual void on_error(io::IoAcceptEvent*) override;
-
-		virtual std::optional<std::size_t> handle_io_event(io::IoAcceptEvent*) override;
+		virtual std::size_t handle_io_event(io::IoAcceptEvent*) override;
 		
 	private:
 		ServerCore::State _state = Uninitialized;

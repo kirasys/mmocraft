@@ -63,6 +63,8 @@ namespace net
 
 		static void activate_send_cycle(AdminLevelDescriptor);
 
+		static bool push_disconnect_message(AdminLevelDescriptor, std::string_view);
+
 	private:
 
 		static void shrink_max_descriptor();

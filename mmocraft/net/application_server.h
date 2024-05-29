@@ -10,6 +10,6 @@ namespace net
 	class ApplicationServer
 	{
 	public:
-		virtual bool handle_packet(ConnectionLevelDescriptor, net::Packet*, error::ErrorCode) = 0;
+		virtual error::ErrorCode handle_packet(ConnectionLevelDescriptor, net::Packet*) = 0;
 	};
 }

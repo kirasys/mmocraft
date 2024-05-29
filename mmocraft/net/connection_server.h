@@ -42,7 +42,7 @@ namespace net
 		
 		void request_send();
 
-		std::optional<std::size_t> process_packets(std::byte*, std::byte*);
+		auto process_packets(std::byte*, std::byte*) -> std::pair<std::uint32_t, error::ErrorCode>;
 
 		/**
 		 *  Methods related to connection status
@@ -70,15 +70,11 @@ namespace net
 		 *  Event Handler Interface
 		 */
 
-		virtual void on_success(io::IoRecvEvent*) override;
+		virtual void on_complete(io::IoRecvEvent*) override;
 
-		virtual void on_error(io::IoRecvEvent*) override;
+		virtual std::size_t handle_io_event(io::IoRecvEvent*) override;
 
-		virtual std::optional<std::size_t> handle_io_event(io::IoRecvEvent*) override;
-
-		virtual void on_success(io::IoSendEvent*) override;
-
-		virtual void on_error(io::IoSendEvent*) override;
+		virtual void on_complete(io::IoSendEvent*) override;
 
 		//virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
 

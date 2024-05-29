@@ -8,6 +8,7 @@
 #include <optional>
 #include <limits>
 
+#define NOMINMAX
 #include <winsock2.h>
 #include <mswsock.h>
 
@@ -167,7 +168,6 @@ namespace io
 			assert(data_head <= sizeof(_data));
 		}
 
-
 		/**
 		 *  IoEventRawData interface. 
 		 */
@@ -198,6 +198,8 @@ namespace io
 		// NOTE: separate buffer space for better locality.
 		//       the allocator(may be pool) responsible for release.
 		IoEventData& data;
+
+		error::ErrorCode result = error::SUCCESS;
 
 		IoEvent(IoEventData* a_data)
 			: data{ *a_data }
@@ -239,22 +241,25 @@ namespace io
 	class IoEventHandler
 	{
 	public:
-		virtual void on_error(IoAcceptEvent*) { assert(false); };
+		virtual void on_complete(IoAcceptEvent*) { assert(false); }
 
-		virtual void on_error(IoRecvEvent*) { assert(false); };
+		virtual void on_complete(IoRecvEvent*) { assert(false); }
 
-		virtual void on_error(IoSendEvent*) { assert(false); };
+		virtual void on_complete(IoSendEvent*) { assert(false); }
 
-		virtual void on_success(IoAcceptEvent*) { assert(false); };
+		virtual std::size_t handle_io_event(IoAcceptEvent*)
+		{
+			assert(false); return 0;
+		}
 
-		virtual void on_success(IoRecvEvent*) { assert(false); };
+		virtual std::size_t handle_io_event(IoRecvEvent*)
+		{
+			assert(false); return 0;
+		}
 
-		virtual void on_success(IoSendEvent*) { assert(false); };
-
-		virtual std::optional<std::size_t> handle_io_event(IoAcceptEvent*) { assert(false); return std::nullopt;};
-
-		virtual std::optional<std::size_t> handle_io_event(IoRecvEvent*) { assert(false); return std::nullopt;};
-
-		virtual std::optional<std::size_t> handle_io_event(IoSendEvent*) { assert(false); return std::nullopt;};
+		virtual std::size_t handle_io_event(IoSendEvent*)
+		{
+			assert(false); return 0;
+		}
 	};
 }

@@ -85,10 +85,13 @@ namespace net
 	 *  Event handler interface
 	 */
 
-	void ServerCore::on_success(io::IoAcceptEvent* event)
+	void ServerCore::on_complete(io::IoAcceptEvent* event)
 	{
 		// check there are expired tasks before accepting next client.
 		interval_task_scheduler.process_tasks();
+
+		if (event->result != error::SUCCESS)
+			_state = ServerCore::State::Stopped; return;
 
 		try {
 			_listen_sock.accept(*event);
@@ -99,19 +102,15 @@ namespace net
 		}
 	}
 
-	void ServerCore::on_error(io::IoAcceptEvent* event)
-	{
-		_state = ServerCore::State::Stopped;
-	}
-
-	std::optional<std::size_t> ServerCore::handle_io_event(io::IoAcceptEvent* event)
+	std::size_t ServerCore::handle_io_event(io::IoAcceptEvent* event)
 	{
 		// creates unique accept socket first to avoid resource leak.
 		auto client_socket = win::UniqueSocket(event->accepted_socket);
 
 		if (connection_server_ptrs.size() > server_info.max_client_connections) {
 			logging::cerr() << "full connection reached. skip to accept new client";
-			return std::nullopt;
+			event->result = error::CLIENT_CONNECTION_FULL;
+			return 0;
 		}
 
 		// inherit the properties of the listen socket.
@@ -120,11 +119,13 @@ namespace net
 			SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 			reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
 			logging::cerr() << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
-			return std::nullopt;
+			event->result = error::SOCKET_SETOPT;
+			return 0;
 		}
 
 		// add a client to the server.
 		new_connection(std::move(client_socket));
+		event->result = error::SUCCESS;
 		return 0;
 	}
 }

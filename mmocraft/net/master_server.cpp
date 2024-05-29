@@ -22,25 +22,19 @@ namespace net
 			throw error::DATABASE_CONNECT;
 	}
 
-	bool MasterServer::handle_packet(ConnectionLevelDescriptor conn_descriptor, Packet* packet, error::ErrorCode error_code)
+	error::ErrorCode MasterServer::handle_packet(ConnectionLevelDescriptor conn_descriptor, Packet* packet)
 	{
-		if (error_code != error::SUCCESS) {
-			ConnectionDescriptor::push_disconnect_message(conn_descriptor, error::get_error_message(error_code));
-			return false;
-		}
-
 		switch (packet->id) {
 		case PacketID::Handshake:
 			return handle_handshake_packet(conn_descriptor, *static_cast<PacketHandshake*>(packet));
 		default:
-			return true;
+			return error::PACKET_UNIMPLEMENTED_ID;
 		}
 	}
 
-	bool MasterServer::handle_handshake_packet(ConnectionLevelDescriptor conn_descriptor, PacketHandshake& packet)
+	error::ErrorCode MasterServer::handle_handshake_packet(ConnectionLevelDescriptor conn_descriptor, PacketHandshake& packet)
 	{
-		
-		return true;
+		return error::SUCCESS;
 	}
 
 	void MasterServer::serve_forever()

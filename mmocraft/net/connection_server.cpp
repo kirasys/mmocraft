@@ -21,7 +21,7 @@ namespace net
 		, io_recv_event{ io_event_pool.new_recv_event(io_recv_event_data.get()) }
 	{
 		if (not is_valid())
-			throw error::ErrorCode::CONNECTION_CREATE;
+			throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
 
 		connection_status.online = true;
 		update_last_interaction_time();
@@ -31,7 +31,7 @@ namespace net
 
 		// register to the global descriptor table.
 		if (not ConnectionDescriptor::issue_descriptor_number(descriptor_number))
-			throw error::ErrorCode::CONNECTION_CREATE;
+			throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
 
 		ConnectionDescriptor::set_descriptor_data(descriptor_number,
 			ConnectionDescriptor::DescriptorData{
@@ -58,24 +58,27 @@ namespace net
 
 	}
 
-	std::optional<std::size_t> ConnectionServer::process_packets(std::byte* data_begin, std::byte* data_end)
+	auto ConnectionServer::process_packets(std::byte* data_begin, std::byte* data_end)
+		-> std::pair<std::uint32_t, error::ErrorCode>
 	{
+		error::ErrorCode result = error::SUCCESS;
+
 		auto data_cur = data_begin;
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
 		while (data_cur < data_end) {
-			auto [parsed_bytes, error_code] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
-			if (error_code == error::PACKET_INSUFFIENT_DATA)
-				break;
-
-			if (not app_server.handle_packet(ConnectionLevelDescriptor(descriptor_number), packet_ptr, error_code))
-				break; // Couldn't handle right now. try again later.
+			auto [parsed_bytes, parsing_error] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
+			if (parsing_error != error::SUCCESS)
+				result = parsing_error; break;
 
 			data_cur += parsed_bytes;
+
+			if (result = app_server.handle_packet(ConnectionLevelDescriptor(descriptor_number), packet_ptr))
+				break;
 		}
 
 		assert(data_cur <= data_end && "Parsing error");
-		return data_cur - data_begin; // num of total parsed bytes.
+		return { std::uint32_t(data_cur - data_begin), result }; // num of total parsed bytes.
 	}
 
 	bool ConnectionServer::try_interact_with_client()
@@ -115,35 +118,41 @@ namespace net
 	
 	/// recv event handler
 
-	void ConnectionServer::on_success(io::IoRecvEvent* event)
+	void ConnectionServer::on_complete(io::IoRecvEvent* event)
 	{
-		ConnectionDescriptor::activate_receive_cycle(descriptor_number);
+		switch (event->result) {
+		case error::SUCCESS:
+		case error::PACKET_INSUFFIENT_DATA:
+			ConnectionDescriptor::activate_receive_cycle(descriptor_number); return;
+		default:
+			if (not connection_status.online) {
+				ConnectionDescriptor::push_disconnect_message(descriptor_number, error::get_error_message(event->result));
+				set_offline();
+			}
+		}
 	}
 
-	void ConnectionServer::on_error(io::IoRecvEvent* event)
+	std::size_t ConnectionServer::handle_io_event(io::IoRecvEvent* event)
 	{
-		if (not connection_status.online)
-			set_offline();
-	}
+		if (not try_interact_with_client()) { // timeout case: connection will be deleted soon.
+			event->result = error::PACKET_HANDLE_ERROR;
+			return 0; 
+		}
 
-	std::optional<std::size_t> ConnectionServer::handle_io_event(io::IoRecvEvent* event)
-	{
-		if (not try_interact_with_client())
-			return std::nullopt; // timeout case: connection will be deleted soon.
-
-		return process_packets(event->data.begin(), event->data.end());
+		auto [processed_bytes, error_code] = process_packets(event->data.begin(), event->data.end());
+		event->result = error_code;
+		return processed_bytes;
 	}
 
 	/// send event handler
 
-	void ConnectionServer::on_success(io::IoSendEvent* event)
+	void ConnectionServer::on_complete(io::IoSendEvent* event)
 	{
-		ConnectionDescriptor::activate_send_cycle(descriptor_number);
-	}
+		if (event->result != error::SUCCESS) {
+			if (not connection_status.online) set_offline();
+			return;
+		}
 
-	void ConnectionServer::on_error(io::IoSendEvent* event)
-	{
-		if (not connection_status.online)
-			set_offline();
+		ConnectionDescriptor::activate_send_cycle(descriptor_number);
 	}
 }
