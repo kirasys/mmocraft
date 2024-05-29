@@ -4,6 +4,7 @@
 #include <sql.h>
 #include <sqlext.h>
 
+#include "net/packet.h"
 #include "util/common_util.h"
 #include "logging/logger.h"
 #include "win/win_type.h"
@@ -62,7 +63,8 @@ namespace database
 		SQLHSTMT statement_handle = SQL_NULL_HSTMT;
 	};
 
-	constexpr const char* sql_player_auth = "SELECT COUNT(*) FROM player WHERE username = ? AND password = dbo.GetPasswordHash(?)";
+	constexpr const char* sql_select_player_by_username_and_password = "SELECT COUNT(*) FROM player WHERE username = ? AND password = dbo.GetPasswordHash(?)";
+	constexpr const char* sql_select_player_by_username = "SELECT COUNT(*) FROM player WHERE username = ?";
 
 	class PlayerAuthSQL : public SQLStatement
 	{
@@ -73,9 +75,11 @@ namespace database
 
 		bool authenticate(const char* username, const char* password);
 
+		bool is_exist_username(const char* username);
+
 	private:
-		char _username[16 + 1];
-		char _password[32 + 1];
+		char _username[net::PacketFieldConstraint::max_username_length + 1];
+		char _password[net::PacketFieldConstraint::max_password_length + 1];
 
 		SQLUINTEGER selected_player_count = 0;
 	};
