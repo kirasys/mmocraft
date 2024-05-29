@@ -74,6 +74,9 @@ namespace net
 		ExtEntityTeleport = 0x36,
 
 		INVALID = 0xFF,
+		
+		// Indicate size of the enum class.
+		SIZE,
 	};
 
 	namespace PacketFieldType
@@ -91,6 +94,12 @@ namespace net
 			static constexpr unsigned size_with_padding = 64;
 		};
 	};
+
+	namespace PacketFieldConstraint
+	{
+		static constexpr unsigned max_username_length = 16;
+		static constexpr unsigned max_password_length = 32;
+	}
 
 	struct Packet
 	{

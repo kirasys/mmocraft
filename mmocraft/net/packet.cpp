@@ -15,11 +15,13 @@
 		OVERFLOW_CHECK(buf_start, buf_end, 64) \
 		{ \
 			std::uint16_t padding_size = 0; \
-			for (;padding_size < 64 && buf_start[63-padding_size] == std::byte(' '); padding_size++) { } \
+			for (;padding_size < 64 && buf_start[63-padding_size] == std::byte(' '); padding_size++) \
+				buf_start[63-padding_size] = std::byte(0); \
 			(out).size = 64 - padding_size; \
 		} \
 		(out).data = reinterpret_cast<const char*>(buf_start); \
-		buf_start += 64;
+		buf_start += 64; \
+		*(buf_start - 1) = std::byte(0); \
 
 namespace
 {
@@ -101,13 +103,13 @@ namespace net
 		if (packet.protocol_version != 7)
 			return error::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION;
 
-		if (packet.username.size == 0 || packet.username.size > 16)
+		if (packet.username.size == 0 || packet.username.size > PacketFieldConstraint::max_username_length)
 			return error::PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH;
 
 		if (not util::is_alphanumeric(packet.username.data, packet.username.size))
 			return error::PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT;
 
-		if (packet.password.size == 0 || packet.password.size > 32)
+		if (packet.password.size == 0 || packet.password.size > PacketFieldConstraint::max_password_length)
 			return error::PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH;
 
 		return error::SUCCESS;
