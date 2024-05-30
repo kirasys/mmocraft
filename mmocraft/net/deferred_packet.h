@@ -55,6 +55,12 @@ namespace net
             return get_head<PacketType>().exchange(nullptr);
         }
 
+        template <typename PacketType>
+        bool is_empty()
+        {
+            return get_head<PacketType>().load(std::memory_order_relaxed) == nullptr;
+        }
+
     private:
         template <typename PacketType>
         std::atomic<DeferredPacket<PacketType>*>& get_head()
@@ -86,13 +92,17 @@ namespace net
     {
         enum Status
         {
-            Initialized,
-            Processing,
+            Ready,
+            Used,
             Failed,
-            Done,
         };
 
-        Status _status = Initialized;
+        Status _status = Ready;
+
+        Status& status()
+        {
+            return _status;
+        }
 
         virtual void invoke_handler(DeferredPacketHandler&) = 0;
 
@@ -109,13 +119,15 @@ namespace net
     template <typename PacketType>
     struct DeferredPacketEvent : IDeferredPacketEvent
     {
-        DeferredPacket<PacketType>* head;
+        DeferredPacket<PacketType>* head = nullptr;
 
         void invoke_handler(DeferredPacketHandler& event_handler)
         {
+            auto old_head = head;       // Note: save head first to avoid memory ordering issues.
             event_handler.handle_deferred_packet(this);
-            _status = Status::Done;
-            delete_packets(head);
+
+            _status = Status::Ready;    // Note: must use old_head because after staus changes, head also can be overwrited. 
+            delete_packets(old_head);
         }
     };
 }

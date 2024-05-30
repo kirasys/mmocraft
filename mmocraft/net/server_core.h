@@ -44,7 +44,7 @@ namespace net
 
 		void start_network_io_service();
 
-		bool post_io_event(void* event, void* event_handler);
+		bool post_deferred_packet_event(IDeferredPacketEvent* event, DeferredPacketHandler* event_handler);
 
 		void new_connection(win::UniqueSocket &&client_sock);
 

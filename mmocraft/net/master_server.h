@@ -24,8 +24,6 @@ namespace net
 
 		void serve_forever();
 
-		bool post_deferrend_packet_event(IDeferredPacketEvent*);
-
 		/**
 		 *  Event handler interface
 		 */
@@ -33,9 +31,25 @@ namespace net
 		virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*) override;
 
 	private:
+		void post_deferrend_packet_event();
+
+		template <typename PacketType>
+		void post_deferrend_packet_event_internal(DeferredPacketEvent<PacketType>& event)
+		{
+			if (not deferred_packet_stack.is_empty<PacketType>()) {
+				if (auto& status = event.status(); status == IDeferredPacketEvent::Ready) {
+					status = IDeferredPacketEvent::Used;
+					event.head = deferred_packet_stack.pop<PacketType>();
+					server_core.post_deferred_packet_event(&event, this);
+				}
+			}
+		}
+
 		net::ServerCore server_core;
 		database::DatabaseCore database_core;
+
 		net::DeferredPacketStack deferred_packet_stack;
+		DeferredPacketEvent<PacketHandshake> deferred_handshake_packet_event;
 
 		WorkerLevelDescriptor worker_permission = WorkerLevelDescriptor(0);
 	};
