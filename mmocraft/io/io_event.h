@@ -19,8 +19,9 @@
 
 namespace io
 {
-	constexpr DWORD EOF_SIGNAL = 0;
-	constexpr DWORD RETRY_SIGNAL = std::numeric_limits<DWORD>::max();
+	constexpr DWORD EOF_SIGNAL			= 0;
+	constexpr DWORD RETRY_SIGNAL		= std::numeric_limits<DWORD>::max();
+	constexpr DWORD CUSTOM_EVENT_SIGNAL = RETRY_SIGNAL - 1;
 
 	constexpr int RECV_BUFFER_SIZE = 4096;
 	constexpr int SEND_BUFFER_SIZE = 4096;

@@ -12,8 +12,6 @@
 
 namespace io
 {
-	constexpr unsigned CUSTOM_EVENT_TYPE = 0xFFFFFFFF;
-
 	const int DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS = 0;
 	// 0 means the number of threads concurrently running threads as many processors.
 	

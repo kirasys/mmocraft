@@ -24,7 +24,7 @@ namespace io
 	bool IoCompletionPort::push_event(void* event_handler, void* overlapped)
 	{
 		return ::PostQueuedCompletionStatus(_handle, 
-			DWORD(io::CUSTOM_EVENT_TYPE),
+			DWORD(io::CUSTOM_EVENT_SIGNAL),
 			ULONG_PTR(event_handler),
 			LPOVERLAPPED(overlapped)) != 0;
 	}
@@ -37,13 +37,13 @@ namespace io
 	void IoCompletionPort::run_event_loop_forever(DWORD get_event_timeout_ms)
 	{
 		while (true) {
-			DWORD transferred_bytes = 0;
+			DWORD transferred_bytes_or_signal = 0;
 			ULONG_PTR completion_key = 0;
 			LPOVERLAPPED overlapped = nullptr;
 
 			BOOL ok = ::GetQueuedCompletionStatus(
 				_handle,
-				&transferred_bytes,
+				&transferred_bytes_or_signal,
 				&completion_key,
 				&overlapped,
 				get_event_timeout_ms);
@@ -61,7 +61,7 @@ namespace io
 			}
 
 			try {
-				if (transferred_bytes == CUSTOM_EVENT_TYPE) {
+				if (transferred_bytes_or_signal == CUSTOM_EVENT_SIGNAL) {
 					auto packet_event = reinterpret_cast<net::IDeferredPacketEvent*>(overlapped);
 					auto packet_handler = reinterpret_cast<net::DeferredPacketHandler*>(completion_key);
 
@@ -71,7 +71,7 @@ namespace io
 					auto io_event = CONTAINING_RECORD(overlapped, io::IoEvent, overlapped);
 					auto event_handler = reinterpret_cast<IoEventHandler*>(completion_key);
 
-					io_event->invoke_handler(*event_handler, transferred_bytes);
+					io_event->invoke_handler(*event_handler, transferred_bytes_or_signal);
 				}	
 			}
 			catch (const error::Exception& ex) {
