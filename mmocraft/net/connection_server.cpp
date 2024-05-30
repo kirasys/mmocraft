@@ -126,6 +126,7 @@ namespace net
 		switch (event->result) {
 		case error::SUCCESS:
 		case error::PACKET_INSUFFIENT_DATA:
+		case error::PACKET_HANDLE_DEFERRED:
 			ConnectionDescriptor::activate_receive_cycle(descriptor_number); return;
 		default:
 			if (not connection_status.online) {
