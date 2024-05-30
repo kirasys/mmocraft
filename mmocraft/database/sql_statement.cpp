@@ -52,6 +52,8 @@ namespace database
     bool SQLStatement::fetch()
     {
         auto ret = ::SQLFetch(statement_handle);
+        if (ret == SQL_NO_DATA) return false;
+
         CHECK_DB_SUCCESS(ret);
         return true;
     }
