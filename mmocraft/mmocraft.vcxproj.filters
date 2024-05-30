@@ -59,4 +59,13 @@
   <ItemGroup>
     <Text Include="config\configuration.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="database\sql\clean.sql" />
+    <None Include="database\sql\variables.sql" />
+    <None Include="database\sql\configure.sql" />
+    <None Include="database\sql\routines\create_database.sql" />
+    <None Include="database\sql\routines\create_login_and_user.sql" />
+    <None Include="database\sql\routines\create_functions.sql" />
+    <None Include="database\sql\routines\create_tables.sql" />
+  </ItemGroup>
 </Project>
