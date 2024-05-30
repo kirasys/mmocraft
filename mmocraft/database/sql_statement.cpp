@@ -138,9 +138,6 @@ namespace database
         // bind input parameters.
         this->inbound_null_terminated_string_parameter(1, _username, sizeof(_username));
         this->inbound_null_terminated_string_parameter(2, _password, sizeof(_password));
-
-        // bind output parameters.
-        this->outbound_unsigned_integer_column(1, selected_player_count);
     }
 
     bool PlayerLoginSQL::authenticate(const char* a_username, const char* a_password)
@@ -150,7 +147,7 @@ namespace database
 
         if (this->execute()) {
             util::defer clear_cursor = [this] { this->close_cursor(); };
-            return this->fetch() && selected_player_count == 1;
+            return this->fetch();
         }
 
         return false;

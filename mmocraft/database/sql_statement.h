@@ -76,8 +76,6 @@ namespace database
 	private:
 		char _username[net::PacketFieldConstraint::max_username_length + 1];
 		char _password[net::PacketFieldConstraint::max_password_length + 1];
-
-		SQLUINTEGER selected_player_count = 0;
 	};
 
 	class PlayerSearchSQL : public SQLStatement
