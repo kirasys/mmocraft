@@ -24,7 +24,9 @@ namespace net
 		shrink_max_descriptor();
 
 		for (unsigned i = 0; i < descriptor_end; i++) // find free slot.
-			if (not descriptor_table[i].is_online) desc = AdminLevelDescriptor(i); return true;
+			if (not descriptor_table[i].is_online) {
+				desc = AdminLevelDescriptor(i); return true;
+			}
 
 		if (descriptor_end >= descriptor_table_capacity)
 			return false;
@@ -41,8 +43,9 @@ namespace net
 	void ConnectionDescriptor::shrink_max_descriptor()
 	{
 		for (unsigned i = descriptor_end; i > 0; i--)
-			if (descriptor_table[i - 1].is_online)
+			if (descriptor_table[i - 1].is_online) {
 				descriptor_end = i; return;
+			}
 
 		descriptor_end = 0;
 	}
@@ -60,8 +63,9 @@ namespace net
 		if (not desc_entry.is_online)
 			return;
 
-		if (desc_entry.io_recv_event->data.unused_size() < PacketStructure::size_of_max_packet_struct())
+		if (desc_entry.io_recv_event->data.unused_size() < PacketStructure::size_of_max_packet_struct()) {
 			desc_entry.is_recv_event_running = false; return;
+		}
 
 		WSABUF wbuf[1] = {};
 		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_recv_event->data.begin_unused());
@@ -75,8 +79,9 @@ namespace net
 		auto& desc_entry = descriptor_table[desc];
 		if (not desc_entry.is_online) return;
 
-		if (desc_entry.io_send_event_data->size() + desc_entry.io_send_event_small_data->size() == 0)
+		if (desc_entry.io_send_event_data->size() + desc_entry.io_send_event_small_data->size() == 0) {
 			desc_entry.is_send_event_running = false; return;
+		}
 
 		WSABUF wbuf[2] = {};
 		// send first short send buffer.
