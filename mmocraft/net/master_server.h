@@ -3,12 +3,13 @@
 #include "database/database_core.h"
 
 #include "net/connection_descriptor.h"
+#include "net/deferred_packet.h"
 #include "net/server_core.h"
 #include "net/packet.h"
 
 namespace net
 {
-	class MasterServer : public ApplicationServer
+	class MasterServer : public ApplicationServer, public net::DeferredPacketHandler
 	{
 	public:
 		MasterServer(std::string_view ip,
@@ -23,9 +24,18 @@ namespace net
 
 		void serve_forever();
 
+		bool post_deferrend_packet_event(IDeferredPacketEvent*);
+
+		/**
+		 *  Event handler interface
+		 */
+
+		virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*) override;
+
 	private:
 		net::ServerCore server_core;
 		database::DatabaseCore database_core;
+		net::DeferredPacketStack deferred_packet_stack;
 
 		WorkerLevelDescriptor worker_permission = WorkerLevelDescriptor(0);
 	};

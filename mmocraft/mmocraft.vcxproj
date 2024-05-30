@@ -58,7 +58,6 @@
     <ClInclude Include="net\packet.h" />
     <ClInclude Include="net\connection_server.h" />
     <ClInclude Include="net\master_server.h" />
-    <ClInclude Include="net\server_event.h" />
     <ClInclude Include="net\socket.h" />
     <ClInclude Include="net\server_core.h" />
     <ClInclude Include="pch.h" />

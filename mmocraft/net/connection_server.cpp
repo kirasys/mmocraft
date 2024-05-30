@@ -67,14 +67,15 @@ namespace net
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
 
 		while (data_cur < data_end) {
-			auto [parsed_bytes, parsing_error] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
-			if (parsing_error != error::SUCCESS)
-				result = parsing_error; break;
+			auto [parsed_bytes, error_code] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
+			if (error_code != error::SUCCESS)
+				result = error_code; break;
+
+			error_code = app_server.handle_packet(ConnectionLevelDescriptor(descriptor_number), packet_ptr);
+			if (error_code != error::SUCCESS && error_code != error::PACKET_HANDLE_DEFERRED)
+				result = error_code; break;
 
 			data_cur += parsed_bytes;
-
-			if (result = app_server.handle_packet(ConnectionLevelDescriptor(descriptor_number), packet_ptr))
-				break;
 		}
 
 		assert(data_cur <= data_end && "Parsing error");

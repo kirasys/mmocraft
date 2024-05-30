@@ -34,7 +34,8 @@ namespace net
 
 	error::ErrorCode MasterServer::handle_handshake_packet(ConnectionLevelDescriptor conn_descriptor, PacketHandshake& packet)
 	{
-		return error::SUCCESS;
+		deferred_packet_stack.push<net::PacketHandshake>(conn_descriptor, packet);
+		return error::PACKET_HANDLE_DEFERRED;
 	}
 
 	void MasterServer::serve_forever()
@@ -51,6 +52,23 @@ namespace net
 
 			if (auto diff = end_tick - start_tick; diff < 1000)
 				util::sleep_ms(std::max(1000 - diff, std::size_t(100)));
+		}
+	}
+
+	bool MasterServer::post_deferrend_packet_event(IDeferredPacketEvent* event)
+	{
+		return server_core.post_io_event(event, this);
+	}
+
+	/**
+	 *  Event handler interface
+	 */
+
+	void MasterServer::handle_deferred_packet(DeferredPacketEvent<PacketHandshake>* event)
+	{
+		for (auto defer_packet = event->head; defer_packet; defer_packet = defer_packet->next) {
+			std::cout << defer_packet->connection_descriptor << ' '
+				<< defer_packet->_username << '\n';
 		}
 	}
 }

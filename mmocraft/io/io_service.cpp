@@ -2,7 +2,7 @@
 #include "io_service.h"
 
 #include "logging/error.h"
-#include "net/server_event.h"
+#include "net/deferred_packet.h"
 
 namespace io
 {
@@ -21,10 +21,10 @@ namespace io
 		register_event_source(win::Handle(event_source), event_handler);
 	}
 
-	bool IoCompletionPort::push_event(DWORD num_of_transferred, void* event_handler, void* overlapped)
+	bool IoCompletionPort::push_event(void* event_handler, void* overlapped)
 	{
 		return ::PostQueuedCompletionStatus(_handle, 
-			num_of_transferred,
+			DWORD(io::CUSTOM_EVENT_TYPE),
 			ULONG_PTR(event_handler),
 			LPOVERLAPPED(overlapped)) != 0;
 	}
@@ -37,13 +37,13 @@ namespace io
 	void IoCompletionPort::run_event_loop_forever(DWORD get_event_timeout_ms)
 	{
 		while (true) {
-			DWORD num_of_transferred_bytes = 0;
+			DWORD transferred_bytes = 0;
 			ULONG_PTR completion_key = 0;
 			LPOVERLAPPED overlapped = nullptr;
 
 			BOOL ok = ::GetQueuedCompletionStatus(
 				_handle,
-				&num_of_transferred_bytes,
+				&transferred_bytes,
 				&completion_key,
 				&overlapped,
 				get_event_timeout_ms);
@@ -55,33 +55,28 @@ namespace io
 			if (error_code == ERROR_ABANDONED_WAIT_0)
 				return;
 
-			if (error_code != ERROR_SUCCESS) {
+			if (error_code != ERROR_SUCCESS || overlapped == nullptr) {
 				logging::cerr() << "GetQueuedCompletionStatus() failed with " << error_code;
 				continue;
 			}
 
-			if (overlapped) {
-				auto io_event = CONTAINING_RECORD(overlapped, io::IoEvent, overlapped);
+			try {
+				if (transferred_bytes == CUSTOM_EVENT_TYPE) {
+					auto packet_event = reinterpret_cast<net::IDeferredPacketEvent*>(overlapped);
+					auto packet_handler = reinterpret_cast<net::DeferredPacketHandler*>(completion_key);
 
-				try {
+					packet_event->invoke_handler(*packet_handler);
+				}
+				else {
+					auto io_event = CONTAINING_RECORD(overlapped, io::IoEvent, overlapped);
 					auto event_handler = reinterpret_cast<IoEventHandler*>(completion_key);
-					io_event->invoke_handler(*event_handler, num_of_transferred_bytes);
-				}
-				catch (const error::Exception& ex) {
-					logging::cerr() << "Exception(" << ex.code << ") was caught, but suppressed...";
-				}
-			}
-			else if (completion_key) {
-				auto event_handler = reinterpret_cast<net::ServerEventHandler*>(completion_key);
 
-				try {
-					event_handler->handle_server_event(net::ServerEventType(num_of_transferred_bytes));
-				}
-				catch (const error::Exception& ex) {
-					logging::cerr() << "Exception(" << ex.code << ") was caught, but suppressed...";
-				}
+					io_event->invoke_handler(*event_handler, transferred_bytes);
+				}	
 			}
-			else return;
+			catch (const error::Exception& ex) {
+				logging::cerr() << "Exception(" << ex.code << ") was caught, but suppressed...";
+			}
 		}
 	}
 

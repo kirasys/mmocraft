@@ -9,7 +9,7 @@
 #include "net/packet.h"
 #include "net/connection_server.h"
 #include "net/application_server.h"
-#include "net/server_event.h"
+#include "net/deferred_packet.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
@@ -44,7 +44,7 @@ namespace net
 
 		void start_network_io_service();
 
-		bool post_server_event(ServerEventType, ServerEventHandler*);
+		bool post_io_event(void* event, void* event_handler);
 
 		void new_connection(win::UniqueSocket &&client_sock);
 

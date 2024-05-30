@@ -81,9 +81,9 @@ namespace net
 		_state = ServerCore::State::Running;
 	}
 
-	bool ServerCore::post_server_event(ServerEventType type, ServerEventHandler* event_handler)
+	bool ServerCore::post_io_event(void* event, void* event_handler)
 	{
-		return io_service.push_event(type, event_handler, nullptr);
+		return io_service.push_event(event, event_handler);
 	}
 
 	/** 

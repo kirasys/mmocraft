@@ -12,6 +12,8 @@
 
 namespace io
 {
+	constexpr unsigned CUSTOM_EVENT_TYPE = 0xFFFFFFFF;
+
 	const int DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS = 0;
 	// 0 means the number of threads concurrently running threads as many processors.
 	
@@ -50,7 +52,7 @@ namespace io
 
 		void register_event_source(win::Socket event_source, IoEventHandler* event_handler);
 
-		bool push_event(DWORD num_of_transferred, void* event_handler, void* overlapped);
+		bool push_event(void* event_handler, void* overlapped);
 
 		void run_event_loop_forever(DWORD get_event_timeout_ms = INFINITE);
 

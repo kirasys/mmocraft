@@ -71,4 +71,51 @@ namespace net
 
         std::atomic<DeferredPacket<PacketHandshake>*> head_packet_handshake{ nullptr };
     };
+
+    // forward declaration.
+    template<typename PacketType = PacketHandshake>
+    struct DeferredPacketEvent;
+
+    class DeferredPacketHandler
+    {
+    public:
+        virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*) = 0;
+    };
+
+    struct IDeferredPacketEvent
+    {
+        enum Status
+        {
+            Initialized,
+            Processing,
+            Failed,
+            Done,
+        };
+
+        Status _status = Initialized;
+
+        virtual void invoke_handler(DeferredPacketHandler&) = 0;
+
+        template <typename PacketType>
+        void delete_packets(DeferredPacket<PacketType>* head)
+        {
+            for (auto packet = head, next_packet = head; packet; packet = next_packet) {
+                next_packet = packet->next;
+                delete packet;
+            }
+        }
+    };
+
+    template <typename PacketType>
+    struct DeferredPacketEvent : IDeferredPacketEvent
+    {
+        DeferredPacket<PacketType>* head;
+
+        void invoke_handler(DeferredPacketHandler& event_handler)
+        {
+            event_handler.handle_deferred_packet(this);
+            _status = Status::Done;
+            delete_packets(head);
+        }
+    };
 }

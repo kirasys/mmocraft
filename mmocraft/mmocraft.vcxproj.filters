@@ -55,7 +55,6 @@
     <ClInclude Include="net\connection_descriptor.h" />
     <ClInclude Include="util\string_util.h" />
     <ClInclude Include="net\deferred_packet.h" />
-    <ClInclude Include="net\server_event.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />
