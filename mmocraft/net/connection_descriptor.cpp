@@ -23,7 +23,7 @@ namespace net
 
 	bool ConnectionDescriptor::issue_descriptor_number(AdminLevelDescriptor& desc)
 	{
-		shrink_max_descriptor();
+		shrink_descriptor_end();
 
 		for (unsigned i = 0; i < descriptor_end; i++) // find free slot.
 			if (not descriptor_table[i].is_online) {
@@ -42,7 +42,7 @@ namespace net
 		descriptor_table[desc].is_online = false;
 	}
 
-	void ConnectionDescriptor::shrink_max_descriptor()
+	void ConnectionDescriptor::shrink_descriptor_end()
 	{
 		for (unsigned i = descriptor_end; i > 0; i--)
 			if (descriptor_table[i - 1].is_online) {

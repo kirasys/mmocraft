@@ -72,7 +72,7 @@ namespace net
 
 	private:
 
-		static void shrink_max_descriptor();
+		static void shrink_descriptor_end();
 
 		static unsigned descriptor_table_capacity;
 		static unsigned descriptor_end;
