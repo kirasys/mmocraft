@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "config/config.h"
+#include "database/sql_statement.h"
 #include "logging/error.h"
 
 namespace net
@@ -68,9 +69,13 @@ namespace net
 
 	void MasterServer::handle_deferred_packet(DeferredPacketEvent<PacketHandshake>* event)
 	{
+		database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
+		database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
+
 		for (auto defer_packet = event->head; defer_packet; defer_packet = defer_packet->next) {
+			player_search.search(defer_packet->username);
 			std::cout << defer_packet->connection_descriptor << ' '
-				<< defer_packet->_username << '\n';
+				<< defer_packet->username << '\n';
 		}
 	}
 }

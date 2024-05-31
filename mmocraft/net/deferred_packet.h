@@ -92,12 +92,12 @@ namespace net
     {
         enum Status
         {
-            Ready,
-            Used,
+            Unused,
+            Processing,
             Failed,
         };
 
-        Status _status = Ready;
+        Status _status = Unused;
 
         Status& status()
         {
@@ -126,7 +126,7 @@ namespace net
             auto old_head = head;       // Note: save head first to avoid memory ordering issues.
             event_handler.handle_deferred_packet(this);
 
-            _status = Status::Ready;    // Note: must use old_head because after staus changes, head also can be overwrited. 
+            _status = Status::Unused;    // Note: must use old_head because after staus changes, head also can be overwrited. 
             delete_packets(old_head);
         }
     };

@@ -37,8 +37,8 @@ namespace net
 		void post_deferrend_packet_event_internal(DeferredPacketEvent<PacketType>& event)
 		{
 			if (not deferred_packet_stack.is_empty<PacketType>()) {
-				if (auto& status = event.status(); status == IDeferredPacketEvent::Ready) {
-					status = IDeferredPacketEvent::Used;
+				if (auto& status = event.status(); status == IDeferredPacketEvent::Unused) {
+					status = IDeferredPacketEvent::Processing;
 					event.head = deferred_packet_stack.pop<PacketType>();
 					server_core.post_deferred_packet_event(&event, this);
 				}
