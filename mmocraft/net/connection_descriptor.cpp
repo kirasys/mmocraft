@@ -26,10 +26,11 @@ namespace net
 	{
 		shrink_descriptor_end();
 
-		for (unsigned i = 0; i < descriptor_end; i++) // find free slot.
+		for (unsigned i = 0; i < descriptor_end; i++) { // find free slot.
 			if (not descriptor_table[i].is_online) {
 				desc = AdminLevelDescriptor(i); return true;
 			}
+		}
 
 		if (descriptor_end >= descriptor_table_capacity)
 			return false;
@@ -45,10 +46,11 @@ namespace net
 
 	void ConnectionDescriptor::shrink_descriptor_end()
 	{
-		for (unsigned i = descriptor_end; i > 0; i--)
+		for (unsigned i = descriptor_end; i > 0; i--) {
 			if (descriptor_table[i - 1].is_online) {
 				descriptor_end = i; return;
 			}
+		}
 
 		descriptor_end = 0;
 	}
@@ -142,6 +144,7 @@ namespace net
 			net::PacketDisconnectPlayer disconnect_packet{ reason };
 			return disconnect_packet.serialize(*desc_entry.io_send_event_small_data);
 		}
+
 		return false;
 	}
 
