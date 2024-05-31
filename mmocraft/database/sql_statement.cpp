@@ -142,8 +142,8 @@ namespace database
 
     bool PlayerLoginSQL::authenticate(const char* a_username, const char* a_password)
     {
-        ::strcpy_s(_username, sizeof(_username), a_username);
-        ::strcpy_s(_password, sizeof(_password), a_password);
+        ::strcpy_s(_username, a_username);
+        ::strcpy_s(_password, a_password);
 
         if (this->execute()) {
             util::defer clear_cursor = [this] { this->close_cursor(); };
