@@ -16,7 +16,7 @@ namespace net
 	{
 		descriptor_end = 0;
 		descriptor_table_capacity = a_max_client_connections;
-		descriptor_table.reset(new DescriptorData[a_max_client_connections + 1]());
+		descriptor_table.reset(new DescriptorData[a_max_client_connections]());
 
 		player_lookup_table.reserve(a_max_client_connections);
 	}
