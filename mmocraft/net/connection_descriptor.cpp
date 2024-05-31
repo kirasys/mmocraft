@@ -41,7 +41,11 @@ namespace net
 
 	void ConnectionDescriptor::delete_descriptor(AdminLevelDescriptor desc)
 	{
-		descriptor_table[desc].is_online = false;
+		auto& desc_entry = descriptor_table[desc];
+		desc_entry.is_online = false;
+
+		// clean player lookup table.
+		player_lookup_table.erase(desc_entry.player->get_identity_number());
 	}
 
 	void ConnectionDescriptor::shrink_descriptor_end()

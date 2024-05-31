@@ -29,11 +29,16 @@ namespace game
 	class Player : util::NonCopyable
 	{
 	public:
-		Player(PlayerID player_id, PlayerType player_type, const char* username, const char* password);
+		Player(PlayerID, PlayerType, const char* username, const char* password);
+
+		PlayerID get_identity_number() const
+		{
+			return identity_number;
+		}
 
 	private:
-		PlayerID _id;
-		PlayerType _type;
+		PlayerID identity_number;
+		PlayerType player_type;
 		char _username[net::PacketFieldConstraint::max_username_length + 1];
 		char _password[net::PacketFieldConstraint::max_password_length + 1];
 	};
