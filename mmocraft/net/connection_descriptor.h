@@ -29,7 +29,7 @@ namespace net
 			io::IoSendEvent* io_send_event;
 			io::IoRecvEvent* io_recv_event;
 
-			game::Player* player;
+			game::Player* player = nullptr;
 
 			bool is_online = false;
 			bool is_send_event_running = false;
@@ -46,7 +46,7 @@ namespace net
 
 		static bool push_disconnect_message(ConnectionLevelDescriptor, std::string_view);
 
-		static void on_login_complete(ConnectionLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
+		static bool try_complete_login(ConnectionLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
 
 		// Worker level apis.
 

@@ -152,11 +152,15 @@ namespace net
 		return false;
 	}
 
-	void ConnectionDescriptor::on_login_complete
+	bool ConnectionDescriptor::try_complete_login
 		(ConnectionLevelDescriptor desc, game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		if (not desc_entry.is_online) return;
+		if (not desc_entry.is_online) 
+			return false;
+
+		if (player_lookup_table.find(player_id) != player_lookup_table.end())
+			return false;
 
 		auto player_ptr = std::make_unique<game::Player>(
 			player_id,
