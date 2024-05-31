@@ -167,7 +167,7 @@ namespace database
 
     bool PlayerSearchSQL::search(const char* a_username)
     {
-        ::strcpy_s(_username, sizeof(_username), a_username);
+        ::strcpy_s(_username, a_username);
 
         if (this->execute()) {
             util::defer clear_cursor = [this] { this->close_cursor(); };

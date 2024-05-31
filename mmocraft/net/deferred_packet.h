@@ -23,8 +23,8 @@ namespace net
         DeferredPacket<PacketHandshake>(ConnectionLevelDescriptor desc, const PacketHandshake& src_packet)
             : connection_descriptor{ desc }
         {
-            ::strcpy_s(username, sizeof(username), src_packet.username.data);
-            ::strcpy_s(password, sizeof(password), src_packet.password.data);
+            ::strcpy_s(username, src_packet.username.data);
+            ::strcpy_s(password, src_packet.password.data);
         }
 
         DeferredPacket<PacketHandshake>* next = nullptr;
