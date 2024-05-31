@@ -22,14 +22,14 @@ namespace net
         DeferredPacket<PacketHandshake>(ConnectionLevelDescriptor desc, const PacketHandshake& src_packet)
             : connection_descriptor{ desc }
         {
-            ::strcpy_s(_username, sizeof(_username), src_packet.username.data);
-            ::strcpy_s(_password, sizeof(_password), src_packet.password.data);
+            ::strcpy_s(username, sizeof(username), src_packet.username.data);
+            ::strcpy_s(password, sizeof(password), src_packet.password.data);
         }
 
         DeferredPacket<PacketHandshake>* next = nullptr;
         ConnectionLevelDescriptor connection_descriptor;
-        char _username[net::PacketFieldConstraint::max_username_length + 1];
-        char _password[net::PacketFieldConstraint::max_password_length + 1];
+        char username[net::PacketFieldConstraint::max_username_length + 1];
+        char password[net::PacketFieldConstraint::max_password_length + 1];
     };
 
     class DeferredPacketStack : util::NonCopyable, util::NonMovable
