@@ -46,7 +46,7 @@ namespace net
 		while (1) {
 			std::size_t start_tick = util::current_monotonic_tick();
 
-			post_deferrend_packet_event();
+			post_deferred_packet_event();
 
 			ConnectionDescriptor::flush_server_message(worker_permission);
 			ConnectionDescriptor::flush_client_message(worker_permission);
@@ -58,9 +58,9 @@ namespace net
 		}
 	}
 
-	void MasterServer::post_deferrend_packet_event()
+	void MasterServer::post_deferred_packet_event()
 	{
-		post_deferrend_packet_event_internal(deferred_handshake_packet_event);
+		post_deferred_packet_event_internal(deferred_handshake_packet_event);
 	}
 
 	/**

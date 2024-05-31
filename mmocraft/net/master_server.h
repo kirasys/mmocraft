@@ -31,10 +31,10 @@ namespace net
 		virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*) override;
 
 	private:
-		void post_deferrend_packet_event();
+		void post_deferred_packet_event();
 
 		template <typename PacketType>
-		void post_deferrend_packet_event_internal(DeferredPacketEvent<PacketType>& event)
+		void post_deferred_packet_event_internal(DeferredPacketEvent<PacketType>& event)
 		{
 			if (not deferred_packet_stack.is_empty<PacketType>()) {
 				if (auto& status = event.status(); status == IDeferredPacketEvent::Unused) {
