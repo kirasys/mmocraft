@@ -72,10 +72,29 @@ namespace net
 		database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
 		database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
 
-		for (auto defer_packet = event->head; defer_packet; defer_packet = defer_packet->next) {
-			player_search.search(defer_packet->username);
-			std::cout << defer_packet->connection_descriptor << ' '
-				<< defer_packet->username << '\n';
+		for (const auto* packet = event->head; packet; packet = packet->next) {
+			auto player_type = game::PlayerType::INVALID;
+
+			if (not player_search.search(packet->username)) {
+				player_type = std::strlen(packet->password) ? game::PlayerType::NEW_USER : game::PlayerType::GUEST;
+			}
+			else if (player_login.authenticate(packet->username, packet->password)) {
+				player_type = std::strcmp(packet->username, "admin")
+					? game::PlayerType::AUTHENTICATED_USER : game::PlayerType::ADMIN;
+			}
+
+			error::ErrorCode result = error::PACKET_RESULT_FAIL_LOGIN;
+
+			if (player_type != game::PlayerType::INVALID) {
+				result = ConnectionDescriptor::associate_game_player(
+					packet->connection_descriptor,
+					player_search.get_player_identity_number(),
+					player_type,
+					packet->username,
+					packet->password) ? error::PACKET_RESULT_SUCCESS_LOGIN : error::PACKET_RESULT_ALREADY_LOGIN;
+			}
+
+			event->result.push(packet->connection_descriptor, result);
 		}
 	}
 }

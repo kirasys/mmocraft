@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 
+#include "logging/error.h"
 #include "net/packet.h"
 #include "net/connection_descriptor.h"
 #include "util/common_util.h"
@@ -116,10 +117,32 @@ namespace net
         }
     };
 
+    struct DeferredPacketResult
+    {
+        ConnectionLevelDescriptor connection_descriptor;
+        error::ErrorCode result;
+        DeferredPacketResult* next;
+    };
+
+    class DeferredPacketResultStack
+    {
+    public:
+        void push(ConnectionLevelDescriptor desc, error::ErrorCode result);
+
+        inline DeferredPacketResult* pop()
+        {
+            return head.exchange(nullptr);
+        }
+
+    private:
+        std::atomic<DeferredPacketResult*> head{ nullptr };
+    };
+
     template <typename PacketType>
     struct DeferredPacketEvent : IDeferredPacketEvent
     {
         DeferredPacket<PacketType>* head = nullptr;
+        DeferredPacketResultStack result;
 
         void invoke_handler(DeferredPacketHandler& event_handler)
         {

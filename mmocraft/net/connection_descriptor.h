@@ -46,7 +46,7 @@ namespace net
 
 		static bool push_disconnect_message(ConnectionLevelDescriptor, std::string_view);
 
-		static bool try_complete_login(ConnectionLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
+		static bool associate_game_player(ConnectionLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
 
 		// Worker level apis.
 
@@ -68,8 +68,6 @@ namespace net
 		static void activate_receive_cycle(AdminLevelDescriptor);
 
 		static void activate_send_cycle(AdminLevelDescriptor);
-
-		static bool push_disconnect_message(AdminLevelDescriptor, std::string_view);
 
 	private:
 

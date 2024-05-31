@@ -24,6 +24,7 @@
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="net\connection_descriptor.cpp" />
     <ClCompile Include="game\player.cpp" />
+    <ClCompile Include="net\deferred_packet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />

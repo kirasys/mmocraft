@@ -49,6 +49,11 @@ namespace
 		arr[ErrorCode::PACKET_HANDLE_SUCCESS]  = "PACKET_HANDLE_SUCCESS";
 		arr[ErrorCode::PACKET_HANDLE_DEFERRED] = "PACKET_HANDLE_DEFERRED";
 
+		// Packet result
+		arr[ErrorCode::PACKET_RESULT_SUCCESS_LOGIN] = "PACKET_RESULT_SUCCESS_LOGIN";
+		arr[ErrorCode::PACKET_RESULT_FAIL_LOGIN] = "Incorrect username or password";
+		arr[ErrorCode::PACKET_RESULT_ALREADY_LOGIN] = "Already logged in";
+
 		return arr;
 	}();
 }

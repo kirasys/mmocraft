@@ -29,6 +29,7 @@
     <ClCompile Include="logging\logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="net\connection_descriptor.cpp" />
+    <ClCompile Include="net\deferred_packet.cpp" />
     <ClCompile Include="net\packet.cpp" />
     <ClCompile Include="net\connection_server.cpp" />
     <ClCompile Include="net\master_server.cpp" />

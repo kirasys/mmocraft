@@ -51,6 +51,11 @@ namespace error
 		PACKET_HANDLE_SUCCESS,
 		PACKET_HANDLE_DEFERRED,
 
+		// Deferred packet result
+		PACKET_RESULT_SUCCESS_LOGIN,
+		PACKET_RESULT_FAIL_LOGIN,
+		PACKET_RESULT_ALREADY_LOGIN,
+
 		// Indicate size of the enum class.
 		SIZE,
 	};

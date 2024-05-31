@@ -152,15 +152,15 @@ namespace net
 		return false;
 	}
 
-	bool ConnectionDescriptor::try_complete_login
+	bool ConnectionDescriptor::associate_game_player
 		(ConnectionLevelDescriptor desc, game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
 	{
 		auto& desc_entry = descriptor_table[desc];
-		if (not desc_entry.is_online) 
+		if (not desc_entry.is_online)
 			return false;
 
 		if (player_lookup_table.find(player_id) != player_lookup_table.end())
-			return false;
+			return false; // already associated.
 
 		auto player_ptr = std::make_unique<game::Player>(
 			player_id,
@@ -171,12 +171,8 @@ namespace net
 
 		desc_entry.player = player_ptr.get();
 		desc_entry.connection->set_player(std::move(player_ptr)); // transfer ownership to tje connection server.
-		
-		player_lookup_table[player_id] = desc_entry.player;
-	}
 
-	bool ConnectionDescriptor::push_disconnect_message(AdminLevelDescriptor desc, std::string_view reason)
-	{
-		return push_disconnect_message(ConnectionLevelDescriptor(desc), reason);
+		player_lookup_table[player_id] = desc_entry.player;
+		return true;
 	}
 }

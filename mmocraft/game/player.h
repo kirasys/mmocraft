@@ -11,6 +11,8 @@ namespace game
 
 	enum PlayerType
 	{
+		INVALID,
+
 		// Users logged in without password.
 		// destory all information after disconnecting.
 		GUEST,
