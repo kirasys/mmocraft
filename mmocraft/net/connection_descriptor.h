@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "io/io_event.h"
+#include "game/player.h"
 
 namespace net
 {
@@ -45,7 +46,7 @@ namespace net
 
 		static bool push_disconnect_message(ConnectionLevelDescriptor, std::string_view);
 
-		static bool on_login_complete(ConnectionLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
+		static void on_login_complete(ConnectionLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
 
 		// Worker level apis.
 

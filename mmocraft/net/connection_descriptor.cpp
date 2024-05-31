@@ -11,6 +11,7 @@ namespace net
 	unsigned ConnectionDescriptor::descriptor_table_capacity;
 	unsigned ConnectionDescriptor::descriptor_end;
 	std::unique_ptr<ConnectionDescriptor::DescriptorData[]> ConnectionDescriptor::descriptor_table;
+	std::unordered_map<game::PlayerID, game::Player*> ConnectionDescriptor::player_lookup_table;
 
 	void ConnectionDescriptor::initialize(unsigned a_max_client_connections)
 	{
@@ -144,7 +145,7 @@ namespace net
 		return false;
 	}
 
-	bool ConnectionDescriptor::on_login_complete
+	void ConnectionDescriptor::on_login_complete
 		(ConnectionLevelDescriptor desc, game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
 	{
 		auto& desc_entry = descriptor_table[desc];
@@ -160,7 +161,7 @@ namespace net
 		desc_entry.player = player_ptr.get();
 		desc_entry.connection->set_player(std::move(player_ptr)); // transfer ownership to tje connection server.
 		
-		player_lookup_table.insert({ player_id, desc_entry.player });
+		player_lookup_table[player_id] = desc_entry.player;
 	}
 
 	bool ConnectionDescriptor::push_disconnect_message(AdminLevelDescriptor desc, std::string_view reason)
