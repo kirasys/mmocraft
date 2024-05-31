@@ -85,7 +85,7 @@ namespace database
 
 		bool search(const char* username);
 
-		inline SQLUINTEGER get_id() const
+		inline SQLUINTEGER get_player_identity_number() const
 		{
 			return player_id;
 		}
