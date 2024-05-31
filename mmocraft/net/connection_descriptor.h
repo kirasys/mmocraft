@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include "io/io_event.h"
 
@@ -27,6 +28,8 @@ namespace net
 			io::IoSendEvent* io_send_event;
 			io::IoRecvEvent* io_recv_event;
 
+			game::Player* player;
+
 			bool is_online = false;
 			bool is_send_event_running = false;
 			bool is_recv_event_running = false;
@@ -41,6 +44,8 @@ namespace net
 		static bool push_server_message(ConnectionLevelDescriptor, std::byte*, std::size_t);
 
 		static bool push_disconnect_message(ConnectionLevelDescriptor, std::string_view);
+
+		static bool on_login_complete(ConnectionLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
 
 		// Worker level apis.
 
@@ -72,5 +77,7 @@ namespace net
 		static unsigned descriptor_table_capacity;
 		static unsigned descriptor_end;
 		static std::unique_ptr<DescriptorData[]> descriptor_table;
+
+		static std::unordered_map<game::PlayerID, game::Player*> player_lookup_table;
 	};
 }

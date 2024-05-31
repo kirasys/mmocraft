@@ -84,6 +84,11 @@ namespace net
 		return { std::uint32_t(data_cur - data_begin), result }; // num of total parsed bytes.
 	}
 
+	void ConnectionServer::set_player(std::unique_ptr<game::Player>&& a_player)
+	{
+		_player = std::move(a_player);
+	}
+
 	bool ConnectionServer::try_interact_with_client()
 	{
 		if (is_online()) {

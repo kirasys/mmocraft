@@ -22,6 +22,7 @@
     <ClCompile Include="config\config.cpp" />
     <ClCompile Include="database\database_core.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
+    <ClCompile Include="game\player.cpp" />
     <ClCompile Include="io\io_event.cpp" />
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />

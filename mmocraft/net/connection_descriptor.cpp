@@ -14,9 +14,11 @@ namespace net
 
 	void ConnectionDescriptor::initialize(unsigned a_max_client_connections)
 	{
-		descriptor_table_capacity = a_max_client_connections;
 		descriptor_end = 0;
+		descriptor_table_capacity = a_max_client_connections;
 		descriptor_table.reset(new DescriptorData[a_max_client_connections + 1]());
+
+		player_lookup_table.reserve(a_max_client_connections);
 	}
 
 	bool ConnectionDescriptor::issue_descriptor_number(AdminLevelDescriptor& desc)
@@ -140,6 +142,25 @@ namespace net
 			return disconnect_packet.serialize(*desc_entry.io_send_event_small_data);
 		}
 		return false;
+	}
+
+	bool ConnectionDescriptor::on_login_complete
+		(ConnectionLevelDescriptor desc, game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
+	{
+		auto& desc_entry = descriptor_table[desc];
+		if (not desc_entry.is_online) return;
+
+		auto player_ptr = std::make_unique<game::Player>(
+			player_id,
+			player_type,
+			username,
+			password
+		);
+
+		desc_entry.player = player_ptr.get();
+		desc_entry.connection->set_player(std::move(player_ptr)); // transfer ownership to tje connection server.
+		
+		player_lookup_table.insert({ player_id, desc_entry.player });
 	}
 
 	bool ConnectionDescriptor::push_disconnect_message(AdminLevelDescriptor desc, std::string_view reason)

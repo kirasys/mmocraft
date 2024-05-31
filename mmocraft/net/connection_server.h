@@ -6,13 +6,13 @@
 #include <string_view>
 #include <ctime>
 
+#include "game/player.h"
+#include "io/io_event_pool.h"
+#include "io/io_service.h"
 #include "net/socket.h"
 #include "net/application_server.h"
 #include "net/connection_descriptor.h"
-#include "io/io_event_pool.h"
-#include "io/io_service.h"
 #include "win/smart_handle.h"
-#include "game/player.h"
 #include "util/common_util.h"
 
 namespace net
@@ -43,6 +43,8 @@ namespace net
 		void request_send();
 
 		auto process_packets(std::byte*, std::byte*) -> std::pair<std::uint32_t, error::ErrorCode>;
+
+		void set_player(std::unique_ptr<game::Player>&&);
 
 		/**
 		 *  Methods related to connection status
@@ -98,5 +100,7 @@ namespace net
 			std::size_t offline_tick = 0;
 			std::size_t last_interaction_tick = 0;
 		} connection_status;
+
+		std::unique_ptr<game::Player> _player;
 	};
 }
