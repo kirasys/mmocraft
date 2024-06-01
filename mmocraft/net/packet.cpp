@@ -88,7 +88,7 @@ namespace net
 
 	std::byte* PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
 	{
-		auto packet = static_cast<PacketHandshake*>(out_packet);
+		auto packet = to_derived(out_packet);
 		PARSE_SCALAR_FIELD(buf_start, buf_end, packet->protocol_version);
 		PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
 		PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
@@ -98,7 +98,7 @@ namespace net
 
 	error::ErrorCode PacketHandshake::validate(const net::Packet* a_packet)
 	{
-		auto &packet = *static_cast<const PacketHandshake*>(a_packet);
+		auto &packet = *to_derived(a_packet);
 
 		if (packet.protocol_version != 7)
 			return error::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION;

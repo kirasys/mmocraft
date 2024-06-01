@@ -9,6 +9,20 @@
 #include "io/io_event.h"
 #include "logging/error.h"
 
+#define DECLARE_PACKET_READ_METHOD(packet_type) \
+	static std::byte* parse(std::byte* buf_start, std::byte* buf_end, net::Packet*); \
+															 \
+	static error::ErrorCode validate(const net::Packet*);	 \
+															 \
+	static inline auto to_derived(net::Packet* packet)		 \
+	{														 \
+		return static_cast<packet_type*>(packet);			 \
+	}														 \
+	static inline auto to_derived(const net::Packet* packet) \
+	{														 \
+		return static_cast<const packet_type*>(packet);		 \
+	}
+
 namespace net
 {
 	enum PacketID
@@ -113,9 +127,7 @@ namespace net
 		PacketFieldType::String password;
 		PacketFieldType::Byte unused;
 
-		static std::byte* parse(std::byte* buf_start, std::byte* buf_end, net::Packet*);
-
-		static error::ErrorCode validate(const net::Packet*);
+		DECLARE_PACKET_READ_METHOD(PacketHandshake);
 	};
 
 	
