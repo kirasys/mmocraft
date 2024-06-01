@@ -49,8 +49,8 @@ namespace net
 
 			flush_deferred_packet();
 
-			ConnectionDescriptor::flush_server_message();
-			ConnectionDescriptor::flush_client_message();
+			ConnectionDescriptor::flush_server_message(DescriptorType::tick_descriptor);
+			ConnectionDescriptor::flush_client_message(DescriptorType::tick_descriptor);
 
 			std::size_t end_tick = util::current_monotonic_tick();
 

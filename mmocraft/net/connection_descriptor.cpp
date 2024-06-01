@@ -104,7 +104,7 @@ namespace net
 		desc_entry.is_send_event_running = Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
 	}
 
-	void ConnectionDescriptor::flush_server_message()
+	void ConnectionDescriptor::flush_server_message(DescriptorType::Tick)
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
@@ -114,7 +114,7 @@ namespace net
 		}
 	}
 
-	void ConnectionDescriptor::flush_client_message()
+	void ConnectionDescriptor::flush_client_message(DescriptorType::Tick)
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];

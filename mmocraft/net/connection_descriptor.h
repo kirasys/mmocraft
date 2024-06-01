@@ -23,7 +23,11 @@ namespace net
 		using Send = Connection;
 
 		enum DeferredPacket { };
+
+		enum Tick { };
+		constexpr Tick tick_descriptor = Tick(0);
 	}
+
 
 	class ConnectionServer;
 
@@ -73,9 +77,9 @@ namespace net
 
 		// Tick thread level apis.
 
-		static void flush_server_message();
+		static void flush_server_message(DescriptorType::Tick);
 
-		static void flush_client_message();
+		static void flush_client_message(DescriptorType::Tick);
 
 		// Deferred packet level apis.
 
