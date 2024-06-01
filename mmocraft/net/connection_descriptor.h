@@ -43,7 +43,7 @@ namespace net
 		static void initialize(unsigned max_client_connections);
 
 		template <typename DescriptorType>
-		static bool push_disconnect_message(DescriptorType desc, std::string_view reason)
+		static bool disconnect(DescriptorType desc, std::string_view reason)
 		{
 			auto& desc_entry = descriptor_table[desc];
 			if (not desc_entry.is_online)
