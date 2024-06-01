@@ -151,10 +151,4 @@ namespace net
 		player_lookup_table[player_id] = desc_entry.player;
 		return true;
 	}
-
-	bool ConnectionDescriptor::push_server_message(ConnectionLevelDescriptor desc, std::byte* message, std::size_t n)
-	{
-		auto& desc_entry = descriptor_table[desc];
-		return desc_entry.is_online ? desc_entry.io_send_event_small_data->push(message, n) : false;
-	}
 }

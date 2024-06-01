@@ -63,11 +63,7 @@ namespace net
 
 		// Connection level apis.
 
-		static bool push_server_message(ConnectionLevelDescriptor, std::byte*, std::size_t);
-
 		// Worker level apis.
-
-		static bool push_server_message(WorkerLevelDescriptor, std::byte*, std::size_t);
 
 		static void flush_server_message(WorkerLevelDescriptor);
 
