@@ -31,6 +31,10 @@ namespace net
 		virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*) override;
 
 	private:
+		void process_deferred_packet_result();
+
+		void process_deferred_packet_result_internal(const DeferredPacketResult*);
+
 		void flush_deferred_packet();
 
 		template <typename PacketType>

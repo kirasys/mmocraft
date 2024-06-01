@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "master_server.h"
 
+#include <array>
 #include <cstring>
 
 #include "config/config.h"
@@ -55,6 +56,37 @@ namespace net
 
 			if (auto diff = end_tick - start_tick; diff < 1000)
 				util::sleep_ms(std::max(1000 - diff, std::size_t(100)));
+		}
+	}
+
+	void MasterServer::process_deferred_packet_result()
+	{
+		DeferredPacketResult* results[] = {
+			deferred_handshake_packet_event.result.pop(),
+		};
+
+		for (const auto* result : results) {
+			while (result) {
+				process_deferred_packet_result_internal(result);
+				result = result->next;
+			}
+		}
+
+		for (auto result : results)
+			while (result) delete result;
+	}
+
+	void MasterServer::process_deferred_packet_result_internal(const DeferredPacketResult* result)
+	{
+		switch (result->result) {
+		case error::PACKET_RESULT_SUCCESS_LOGIN:
+
+		case error::PACKET_RESULT_FAIL_LOGIN:
+
+		case error::PACKET_RESULT_ALREADY_LOGIN:
+			
+		default:
+			logging::cerr() << "Unexpected packet result: " << result->result;
 		}
 	}
 
