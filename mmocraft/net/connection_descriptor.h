@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 
 #include "io/io_event.h"
@@ -40,11 +42,28 @@ namespace net
 
 		static void initialize(unsigned max_client_connections);
 
+		template <typename DescriptorType>
+		static bool push_disconnect_message(DescriptorType desc, std::string_view reason)
+		{
+			auto& desc_entry = descriptor_table[desc];
+			if (not desc_entry.is_online)
+				return false;
+
+			desc_entry.connection->set_offline();
+
+			net::PacketDisconnectPlayer disconnect_packet{ reason };
+
+			if constexpr (std::is_same_v<DescriptorType, ConnectionLevelDescriptor>)
+				return disconnect_packet.serialize(*desc_entry.io_send_event_small_data);
+			else if constexpr (std::is_same_v<DescriptorType, WorkerLevelDescriptor>)
+				return disconnect_packet.serialize(*desc_entry.io_send_event_data);
+			else
+				assert(false);
+		}
+
 		// Connection level apis.
 
 		static bool push_server_message(ConnectionLevelDescriptor, std::byte*, std::size_t);
-
-		static bool push_disconnect_message(ConnectionLevelDescriptor, std::string_view);
 
 		// Worker level apis.
 

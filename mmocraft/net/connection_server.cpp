@@ -134,14 +134,11 @@ namespace net
 		case error::PACKET_HANDLE_DEFERRED:
 			ConnectionDescriptor::activate_receive_cycle(descriptor_number); return;
 		default:
-			if (not connection_status.online) {
-				ConnectionDescriptor::push_disconnect_message(
-					// Note: it is safe to use connection level descriptor until activating receive cycle.
-					ConnectionLevelDescriptor(descriptor_number),
-					error::get_error_message(event->result)
-				);
-				set_offline();
-			}
+			ConnectionDescriptor::push_disconnect_message(
+				// Note: it is safe to use connection level descriptor until activating receive cycle.
+				ConnectionLevelDescriptor(descriptor_number),
+				error::get_error_message(event->result)
+			);
 		}
 	}
 
