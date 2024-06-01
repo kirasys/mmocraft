@@ -20,15 +20,15 @@ namespace net
     template <>
     struct DeferredPacket<PacketHandshake>
     {
-        DeferredPacket<PacketHandshake>(ConnectionLevelDescriptor desc, const PacketHandshake& src_packet)
-            : connection_descriptor{ WorkerLevelDescriptor(desc) }
+        DeferredPacket<PacketHandshake>(DescriptorType::Connection desc, const PacketHandshake& src_packet)
+            : connection_descriptor{ DescriptorType::DeferredPacket(desc) }
         {
             ::strcpy_s(username, src_packet.username.data);
             ::strcpy_s(password, src_packet.password.data);
         }
 
         DeferredPacket<PacketHandshake>* next = nullptr;
-        WorkerLevelDescriptor connection_descriptor;
+        DescriptorType::DeferredPacket connection_descriptor;
         char username[net::PacketFieldConstraint::max_username_length + 1];
         char password[net::PacketFieldConstraint::max_password_length + 1];
     };
@@ -39,7 +39,7 @@ namespace net
         DeferredPacketStack() = default;
 
         template <typename PacketType>
-        void push(ConnectionLevelDescriptor desc, const PacketType& src_packet)
+        void push(DescriptorType::Connection desc, const PacketType& src_packet)
         {
             auto& head = get_head<PacketType>();
             auto new_packet = new DeferredPacket<PacketType>(desc, src_packet);
@@ -119,7 +119,7 @@ namespace net
 
     struct DeferredPacketResult
     {
-        WorkerLevelDescriptor connection_descriptor;
+        DescriptorType::DeferredPacket connection_descriptor;
         error::ErrorCode error_code;
         DeferredPacketResult* next;
     };
@@ -127,7 +127,7 @@ namespace net
     class DeferredPacketResultStack
     {
     public:
-        void push(WorkerLevelDescriptor desc, error::ErrorCode result);
+        void push(DescriptorType::DeferredPacket desc, error::ErrorCode result);
 
         inline DeferredPacketResult* pop()
         {

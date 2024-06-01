@@ -22,24 +22,31 @@ namespace net
 		player_lookup_table.reserve(a_max_client_connections);
 	}
 
-	bool ConnectionDescriptor::issue_descriptor_number(AdminLevelDescriptor& desc)
+	bool ConnectionDescriptor::issue_descriptor_number(DescriptorType::Connection& desc)
 	{
 		shrink_descriptor_end();
 
 		for (unsigned i = 0; i < descriptor_end; i++) { // find free slot.
 			if (not descriptor_table[i].is_online) {
-				desc = AdminLevelDescriptor(i); return true;
+				desc = DescriptorType::Connection(i); return true;
 			}
 		}
 
 		if (descriptor_end >= descriptor_table_capacity)
 			return false;
 
-		desc = AdminLevelDescriptor(descriptor_end++);
+		desc = DescriptorType::Connection(descriptor_end++);
 		return true;
 	}
 
-	void ConnectionDescriptor::delete_descriptor(AdminLevelDescriptor desc)
+	void ConnectionDescriptor::set_descriptor_data(DescriptorType::Connection desc, DescriptorData data)
+	{
+		descriptor_table[desc] = data;
+		std::atomic_thread_fence(std::memory_order_release);
+		descriptor_table[desc].is_online = true;
+	}
+
+	void ConnectionDescriptor::delete_descriptor(DescriptorType::Connection desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		desc_entry.is_online = false;
@@ -59,14 +66,7 @@ namespace net
 		descriptor_end = 0;
 	}
 
-	void ConnectionDescriptor::set_descriptor_data(AdminLevelDescriptor desc, DescriptorData data)
-	{
-		descriptor_table[desc] = data;
-		std::atomic_thread_fence(std::memory_order_release);
-		descriptor_table[desc].is_online = true;
-	}
-
-	void ConnectionDescriptor::activate_receive_cycle(AdminLevelDescriptor desc)
+	void ConnectionDescriptor::activate_receive_cycle(DescriptorType::Connection desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		if (not desc_entry.is_online)
@@ -83,7 +83,7 @@ namespace net
 		desc_entry.is_recv_event_running = Socket::recv(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 1);
 	}
 
-	void ConnectionDescriptor::activate_send_cycle(AdminLevelDescriptor desc)
+	void ConnectionDescriptor::activate_send_cycle(DescriptorType::Connection desc)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		if (not desc_entry.is_online) return;
@@ -104,17 +104,17 @@ namespace net
 		desc_entry.is_send_event_running = Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
 	}
 
-	void ConnectionDescriptor::flush_server_message(WorkerLevelDescriptor)
+	void ConnectionDescriptor::flush_server_message()
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
 
 			if (desc_entry.is_online && not desc_entry.is_send_event_running)
-				activate_send_cycle(AdminLevelDescriptor(desc));
+				activate_send_cycle(DescriptorType::Connection(desc));
 		}
 	}
 
-	void ConnectionDescriptor::flush_client_message(WorkerLevelDescriptor)
+	void ConnectionDescriptor::flush_client_message()
 	{
 		for (unsigned desc = 0; desc < descriptor_end; ++desc) {
 			auto& desc_entry = descriptor_table[desc];
@@ -129,7 +129,7 @@ namespace net
 	}
 
 	bool ConnectionDescriptor::associate_game_player
-		(WorkerLevelDescriptor desc, game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
+		(DescriptorType::DeferredPacket desc, game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
 	{
 		auto& desc_entry = descriptor_table[desc];
 		if (not desc_entry.is_online)

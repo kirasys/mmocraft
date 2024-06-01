@@ -72,7 +72,7 @@ namespace net
 				result = error_code; break;
 			}
 
-			error_code = app_server.handle_packet(ConnectionLevelDescriptor(descriptor_number), packet_ptr);
+			error_code = app_server.handle_packet(descriptor_number, packet_ptr);
 			if (error_code != error::SUCCESS && error_code != error::PACKET_HANDLE_DEFERRED) {
 				result = error_code; break;
 			}
@@ -135,8 +135,7 @@ namespace net
 			ConnectionDescriptor::activate_receive_cycle(descriptor_number); return;
 		default:
 			ConnectionDescriptor::disconnect(
-				// Note: must use connection level descriptor.
-				ConnectionLevelDescriptor(descriptor_number),
+				descriptor_number,
 				error::get_error_message(event->result)
 			);
 		}

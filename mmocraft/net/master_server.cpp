@@ -24,7 +24,7 @@ namespace net
 			throw error::DATABASE_CONNECT;
 	}
 
-	error::ErrorCode MasterServer::handle_packet(ConnectionLevelDescriptor conn_descriptor, Packet* packet)
+	error::ErrorCode MasterServer::handle_packet(DescriptorType::Connection conn_descriptor, Packet* packet)
 	{
 		switch (packet->id) {
 		case PacketID::Handshake:
@@ -34,7 +34,7 @@ namespace net
 		}
 	}
 
-	error::ErrorCode MasterServer::handle_handshake_packet(ConnectionLevelDescriptor conn_descriptor, PacketHandshake& packet)
+	error::ErrorCode MasterServer::handle_handshake_packet(DescriptorType::Connection conn_descriptor, PacketHandshake& packet)
 	{
 		deferred_packet_stack.push<net::PacketHandshake>(conn_descriptor, packet);
 		return error::PACKET_HANDLE_DEFERRED;
@@ -49,8 +49,8 @@ namespace net
 
 			flush_deferred_packet();
 
-			ConnectionDescriptor::flush_server_message(worker_permission);
-			ConnectionDescriptor::flush_client_message(worker_permission);
+			ConnectionDescriptor::flush_server_message();
+			ConnectionDescriptor::flush_client_message();
 
 			std::size_t end_tick = util::current_monotonic_tick();
 
@@ -83,11 +83,14 @@ namespace net
 	{
 		switch (result->error_code) {
 		case error::PACKET_RESULT_SUCCESS_LOGIN:
-
+			break;
 		case error::PACKET_RESULT_FAIL_LOGIN:
-
 		case error::PACKET_RESULT_ALREADY_LOGIN:
-			
+			ConnectionDescriptor::disconnect(
+				result->connection_descriptor,
+				error::get_error_message(result->error_code)
+			);
+			break;
 		default:
 			logging::cerr() << "Unexpected packet result: " << result->error_code;
 		}

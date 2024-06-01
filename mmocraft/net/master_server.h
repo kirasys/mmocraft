@@ -18,9 +18,9 @@ namespace net
 			unsigned num_of_event_threads,
 			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
-		error::ErrorCode handle_packet(ConnectionLevelDescriptor, Packet*) override;
+		error::ErrorCode handle_packet(DescriptorType::Connection, Packet*) override;
 
-		error::ErrorCode handle_handshake_packet(ConnectionLevelDescriptor, PacketHandshake&);
+		error::ErrorCode handle_handshake_packet(DescriptorType::Connection, PacketHandshake&);
 
 		void serve_forever();
 
@@ -54,7 +54,5 @@ namespace net
 
 		net::DeferredPacketStack deferred_packet_stack;
 		DeferredPacketEvent<PacketHandshake> deferred_handshake_packet_event;
-
-		WorkerLevelDescriptor worker_permission = WorkerLevelDescriptor(0);
 	};
 }

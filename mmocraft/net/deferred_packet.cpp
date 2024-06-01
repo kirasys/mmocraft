@@ -3,7 +3,7 @@
 
 namespace net
 {
-    void DeferredPacketResultStack::push(WorkerLevelDescriptor desc, error::ErrorCode error_code)
+    void DeferredPacketResultStack::push(DescriptorType::DeferredPacket desc, error::ErrorCode error_code)
     {
         auto new_packet = new DeferredPacketResult{
             .connection_descriptor = desc,

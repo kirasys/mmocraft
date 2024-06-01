@@ -81,7 +81,7 @@ namespace net
 		//virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
 
 		// connection register to the online descriptor table by this number.
-		AdminLevelDescriptor descriptor_number;
+		DescriptorType::Connection descriptor_number;
 
 	private:
 		ApplicationServer& app_server;
