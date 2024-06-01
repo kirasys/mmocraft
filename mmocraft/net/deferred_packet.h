@@ -21,14 +21,14 @@ namespace net
     struct DeferredPacket<PacketHandshake>
     {
         DeferredPacket<PacketHandshake>(ConnectionLevelDescriptor desc, const PacketHandshake& src_packet)
-            : connection_descriptor{ desc }
+            : connection_descriptor{ WorkerLevelDescriptor(desc) }
         {
             ::strcpy_s(username, src_packet.username.data);
             ::strcpy_s(password, src_packet.password.data);
         }
 
         DeferredPacket<PacketHandshake>* next = nullptr;
-        ConnectionLevelDescriptor connection_descriptor;
+        WorkerLevelDescriptor connection_descriptor;
         char username[net::PacketFieldConstraint::max_username_length + 1];
         char password[net::PacketFieldConstraint::max_password_length + 1];
     };
@@ -119,15 +119,15 @@ namespace net
 
     struct DeferredPacketResult
     {
-        ConnectionLevelDescriptor connection_descriptor;
-        error::ErrorCode result;
+        WorkerLevelDescriptor connection_descriptor;
+        error::ErrorCode error_code;
         DeferredPacketResult* next;
     };
 
     class DeferredPacketResultStack
     {
     public:
-        void push(ConnectionLevelDescriptor desc, error::ErrorCode result);
+        void push(WorkerLevelDescriptor desc, error::ErrorCode result);
 
         inline DeferredPacketResult* pop()
         {

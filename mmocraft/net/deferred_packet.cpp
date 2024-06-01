@@ -3,11 +3,11 @@
 
 namespace net
 {
-    void DeferredPacketResultStack::push(ConnectionLevelDescriptor desc, error::ErrorCode result)
+    void DeferredPacketResultStack::push(WorkerLevelDescriptor desc, error::ErrorCode error_code)
     {
         auto new_packet = new DeferredPacketResult{
             .connection_descriptor = desc,
-            .result = result,
+            .error_code = error_code,
             .next = head.load(std::memory_order_relaxed)
         };
 

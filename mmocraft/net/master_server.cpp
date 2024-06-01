@@ -72,13 +72,16 @@ namespace net
 			}
 		}
 
-		for (auto result : results)
-			while (result) delete result;
+		for (auto result : results) {
+			while (result) {
+				delete result;
+			}
+		}
 	}
 
 	void MasterServer::process_deferred_packet_result_internal(const DeferredPacketResult* result)
 	{
-		switch (result->result) {
+		switch (result->error_code) {
 		case error::PACKET_RESULT_SUCCESS_LOGIN:
 
 		case error::PACKET_RESULT_FAIL_LOGIN:
@@ -86,7 +89,7 @@ namespace net
 		case error::PACKET_RESULT_ALREADY_LOGIN:
 			
 		default:
-			logging::cerr() << "Unexpected packet result: " << result->result;
+			logging::cerr() << "Unexpected packet result: " << result->error_code;
 		}
 	}
 

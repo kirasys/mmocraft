@@ -46,8 +46,6 @@ namespace net
 
 		static bool push_disconnect_message(ConnectionLevelDescriptor, std::string_view);
 
-		static bool associate_game_player(ConnectionLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
-
 		// Worker level apis.
 
 		static bool push_server_message(WorkerLevelDescriptor, std::byte*, std::size_t);
@@ -55,6 +53,8 @@ namespace net
 		static void flush_server_message(WorkerLevelDescriptor);
 
 		static void flush_client_message(WorkerLevelDescriptor);
+
+		static bool associate_game_player(WorkerLevelDescriptor, game::PlayerID, game::PlayerType, const char*, const char*);
 
 
 		/// Admin level apis.

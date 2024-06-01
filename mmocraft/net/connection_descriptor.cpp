@@ -128,6 +128,30 @@ namespace net
 		}
 	}
 
+	bool ConnectionDescriptor::associate_game_player
+		(WorkerLevelDescriptor desc, game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
+	{
+		auto& desc_entry = descriptor_table[desc];
+		if (not desc_entry.is_online)
+			return false;
+
+		if (player_lookup_table.find(player_id) != player_lookup_table.end())
+			return false; // already associated.
+
+		auto player_ptr = std::make_unique<game::Player>(
+			player_id,
+			player_type,
+			username,
+			password
+		);
+
+		desc_entry.player = player_ptr.get();
+		desc_entry.connection->set_player(std::move(player_ptr)); // transfer ownership to tje connection server.
+
+		player_lookup_table[player_id] = desc_entry.player;
+		return true;
+	}
+
 	bool ConnectionDescriptor::push_server_message(WorkerLevelDescriptor desc, std::byte* message, std::size_t n)
 	{
 		auto& desc_entry = descriptor_table[desc];
@@ -150,29 +174,5 @@ namespace net
 		}
 
 		return false;
-	}
-
-	bool ConnectionDescriptor::associate_game_player
-		(ConnectionLevelDescriptor desc, game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
-	{
-		auto& desc_entry = descriptor_table[desc];
-		if (not desc_entry.is_online)
-			return false;
-
-		if (player_lookup_table.find(player_id) != player_lookup_table.end())
-			return false; // already associated.
-
-		auto player_ptr = std::make_unique<game::Player>(
-			player_id,
-			player_type,
-			username,
-			password
-		);
-
-		desc_entry.player = player_ptr.get();
-		desc_entry.connection->set_player(std::move(player_ptr)); // transfer ownership to tje connection server.
-
-		player_lookup_table[player_id] = desc_entry.player;
-		return true;
 	}
 }
