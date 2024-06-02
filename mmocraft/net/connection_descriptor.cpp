@@ -72,7 +72,7 @@ namespace net
 		if (not desc_entry.is_online)
 			return;
 
-		if (desc_entry.io_recv_event->data.unused_size() < PacketStructure::size_of_max_packet_struct()) {
+		if (desc_entry.io_recv_event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
 			desc_entry.is_recv_event_running = false; return;
 		}
 

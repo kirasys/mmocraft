@@ -64,7 +64,7 @@ namespace net
 		error::ErrorCode result = error::SUCCESS;
 
 		auto data_cur = data_begin;
-		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::size_of_max_packet_struct()));
+		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::max_size_of_packet_struct()));
 
 		while (data_cur < data_end) {
 			auto [parsed_bytes, error_code] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);

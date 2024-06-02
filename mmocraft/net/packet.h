@@ -150,7 +150,7 @@ namespace net
 
 	struct PacketStructure
 	{
-		consteval static std::size_t size_of_max_packet_struct()
+		consteval static std::size_t max_size_of_packet_struct()
 		{
 			return sizeof(PacketHandshake);
 		}
