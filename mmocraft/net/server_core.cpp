@@ -81,7 +81,7 @@ namespace net
 		_state = ServerCore::State::Running;
 	}
 
-	bool ServerCore::post_event(IDeferredPacketEvent* event, DeferredPacketHandler* event_handler)
+	bool ServerCore::post_event(PacketEvent* event, DeferredPacketHandler* event_handler)
 	{
 		return io_service.push_event(event, event_handler);
 	}

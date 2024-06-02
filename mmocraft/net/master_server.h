@@ -25,10 +25,10 @@ namespace net
 		void serve_forever();
 
 		/**
-		 *  Event handler interface
+		 *  Deferred packet handler methods.
 		 */
 
-		virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*) override;
+		virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*, const DeferredPacket<PacketHandshake>*) override;
 
 	private:
 		void process_deferred_packet_result();
@@ -37,22 +37,13 @@ namespace net
 
 		void flush_deferred_packet();
 
-		template <typename PacketType>
-		void flush_deferred_packet_internal(DeferredPacketEvent<PacketType>& event)
-		{
-			if (not deferred_packet_stack.is_empty<PacketType>()) {
-				if (auto& status = event.status(); status == IDeferredPacketEvent::Unused) {
-					status = IDeferredPacketEvent::Processing;
-					event.head = deferred_packet_stack.pop<PacketType>();
-					server_core.post_event(&event, this);
-				}
-			}
-		}
-
 		net::ServerCore server_core;
+
 		database::DatabaseCore database_core;
 
-		net::DeferredPacketStack deferred_packet_stack;
 		DeferredPacketEvent<PacketHandshake> deferred_handshake_packet_event;
+		PacketEvent* deferred_packet_events[1] = {
+			&deferred_handshake_packet_event
+		};
 	};
 }

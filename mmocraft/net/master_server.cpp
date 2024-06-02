@@ -36,7 +36,7 @@ namespace net
 
 	error::ErrorCode MasterServer::handle_handshake_packet(DescriptorType::Connection conn_descriptor, PacketHandshake& packet)
 	{
-		deferred_packet_stack.push(conn_descriptor, packet);
+		deferred_handshake_packet_event.push_packet(conn_descriptor, packet);
 		return error::PACKET_HANDLE_DEFERRED;
 	}
 
@@ -48,6 +48,7 @@ namespace net
 			std::size_t start_tick = util::current_monotonic_tick();
 
 			flush_deferred_packet();
+			process_deferred_packet_result();
 
 			ConnectionDescriptor::flush_server_message(DescriptorType::tick_descriptor);
 			ConnectionDescriptor::flush_client_message(DescriptorType::tick_descriptor);
@@ -61,56 +62,52 @@ namespace net
 
 	void MasterServer::process_deferred_packet_result()
 	{
-		DeferredPacketResult* results[] = {
-			deferred_handshake_packet_event.result.pop(),
-		};
-
-		for (const auto* result : results) {
-			while (result) {
-				process_deferred_packet_result_internal(result);
-				result = result->next;
-			}
-		}
-
-		for (auto result : results) {
-			while (result) {
-				delete result;
-			}
-		}
-	}
-
-	void MasterServer::process_deferred_packet_result_internal(const DeferredPacketResult* result)
-	{
-		switch (result->error_code) {
-		case error::PACKET_RESULT_SUCCESS_LOGIN:
-			break;
-		case error::PACKET_RESULT_FAIL_LOGIN:
-		case error::PACKET_RESULT_ALREADY_LOGIN:
-			ConnectionDescriptor::disconnect(
-				result->connection_descriptor,
-				error::get_error_message(result->error_code)
-			);
-			break;
-		default:
-			logging::cerr() << "Unexpected packet result: " << result->error_code;
+		for (auto event : deferred_packet_events) {
+			auto result_ptr = event->pop_pending_result();
+			process_deferred_packet_result_internal(result_ptr.get());
 		}
 	}
 
 	void MasterServer::flush_deferred_packet()
 	{
-		flush_deferred_packet_internal(deferred_handshake_packet_event);
+		for (auto event : deferred_packet_events) {
+			if (event->is_exist_pending_packet()
+				&& event->transit_state(PacketEvent::Unused, PacketEvent::Processing)) {
+				server_core.post_event(event, this);
+			}
+		}
 	}
 
 	/**
-	 *  Event handler interface
+	 *  Deferred packet handler methods.
 	 */
 
-	void MasterServer::handle_deferred_packet(DeferredPacketEvent<PacketHandshake>* event)
+	void MasterServer::process_deferred_packet_result_internal(const DeferredPacketResult* results)
+	{
+		for (auto result = results; result; result = result->next) {
+			switch (result->error_code) {
+			case error::PACKET_RESULT_SUCCESS_LOGIN:
+				// TODO
+				break;
+			case error::PACKET_RESULT_FAIL_LOGIN:
+			case error::PACKET_RESULT_ALREADY_LOGIN:
+				ConnectionDescriptor::disconnect(
+					result->connection_descriptor,
+					error::get_error_message(result->error_code)
+				);
+				break;
+			default:
+				logging::cerr() << "Unexpected packet result: " << result->error_code;
+			}
+		}
+	}
+
+	void MasterServer::handle_deferred_packet(DeferredPacketEvent<PacketHandshake>* event, const DeferredPacket<PacketHandshake>* packet_head)
 	{
 		database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
 		database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
 
-		for (const auto* packet = event->head; packet; packet = packet->next) {
+		for (auto packet = packet_head; packet; packet = packet->next) {
 			auto player_type = game::PlayerType::INVALID;
 
 			if (not player_search.search(packet->username)) {
@@ -132,7 +129,7 @@ namespace net
 					packet->password) ? error::PACKET_RESULT_SUCCESS_LOGIN : error::PACKET_RESULT_ALREADY_LOGIN;
 			}
 
-			event->result.push(packet->connection_descriptor, result);
+			event->push_result(packet->connection_descriptor, result);
 		}
 	}
 }

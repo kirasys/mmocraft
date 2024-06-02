@@ -62,7 +62,7 @@ namespace io
 
 			try {
 				if (transferred_bytes_or_signal == CUSTOM_EVENT_SIGNAL) {
-					auto packet_event = reinterpret_cast<net::IDeferredPacketEvent*>(overlapped);
+					auto packet_event = reinterpret_cast<net::PacketEvent*>(overlapped);
 					auto packet_handler = reinterpret_cast<net::DeferredPacketHandler*>(completion_key);
 
 					packet_event->invoke_handler(*packet_handler);

@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
+#include <memory>
 
 #include "logging/error.h"
 #include "net/packet.h"
@@ -33,89 +34,9 @@ namespace net
         char password[net::PacketFieldConstraint::max_password_length + 1];
     };
 
-    class DeferredPacketStack : util::NonCopyable, util::NonMovable
-    {
-    public:
-        DeferredPacketStack() = default;
-
-        template <typename PacketType>
-        void push(DescriptorType::Connection desc, const PacketType& src_packet)
-        {
-            auto& head = get_head<PacketType>();
-            auto new_packet = new DeferredPacket<PacketType>(desc, src_packet);
-
-            new_packet->next = head.load(std::memory_order_relaxed);
-
-            while (!head.compare_exchange_weak(new_packet->next, new_packet,
-                std::memory_order_release, std::memory_order_relaxed));
-        }
-
-        template <typename PacketType>
-        DeferredPacket<PacketType>* pop()
-        {
-            return get_head<PacketType>().exchange(nullptr);
-        }
-
-        template <typename PacketType>
-        bool is_empty()
-        {
-            return get_head<PacketType>().load(std::memory_order_relaxed) == nullptr;
-        }
-
-    private:
-        template <typename PacketType>
-        std::atomic<DeferredPacket<PacketType>*>& get_head()
-        {
-            assert(false);
-            return nullptr;
-        }
-
-        template <>
-        std::atomic<DeferredPacket<PacketHandshake>*>& get_head<PacketHandshake>()
-        {
-            return head_packet_handshake;
-        }
-
-        std::atomic<DeferredPacket<PacketHandshake>*> head_packet_handshake{ nullptr };
-    };
-
     // forward declaration.
     template<typename PacketType = PacketHandshake>
-    struct DeferredPacketEvent;
-
-    class DeferredPacketHandler
-    {
-    public:
-        virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*) = 0;
-    };
-
-    struct IDeferredPacketEvent
-    {
-        enum Status
-        {
-            Unused,
-            Processing,
-            Failed,
-        };
-
-        Status _status = Unused;
-
-        Status& status()
-        {
-            return _status;
-        }
-
-        virtual void invoke_handler(DeferredPacketHandler&) = 0;
-
-        template <typename PacketType>
-        void delete_packets(DeferredPacket<PacketType>* head)
-        {
-            for (auto packet = head, next_packet = head; packet; packet = next_packet) {
-                next_packet = packet->next;
-                delete packet;
-            }
-        }
-    };
+    class DeferredPacketEvent;
 
     struct DeferredPacketResult
     {
@@ -124,33 +45,116 @@ namespace net
         DeferredPacketResult* next;
     };
 
-    class DeferredPacketResultStack
+    class DeferredPacketHandler
     {
     public:
-        void push(DescriptorType::DeferredPacket desc, error::ErrorCode result);
+        virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*, const DeferredPacket<PacketHandshake>*) = 0;
+    };
 
-        inline DeferredPacketResult* pop()
+    class PacketEvent
+    {
+    public:
+        enum State
         {
-            return head.exchange(nullptr);
+            Unused,
+            Processing,
+            Failed,
+        };
+
+        State _state = Unused;
+
+        bool transit_state(State old_state, State new_state)
+        {
+            if (_state == old_state) {
+                _state = new_state;
+                return true;
+            }
+            return false;
+        }
+
+        virtual void invoke_handler(DeferredPacketHandler&) = 0;
+
+        virtual bool is_exist_pending_packet() const = 0;
+
+        virtual auto pop_pending_result() -> std::unique_ptr<DeferredPacketResult, void(*)(DeferredPacketResult*)> = 0;
+    };
+
+
+    template <typename PacketType>
+    class DeferredPacketEvent: public PacketEvent
+    {
+    public:
+        virtual void invoke_handler(DeferredPacketHandler& event_handler) override
+        {
+            auto head_ptr = pop_pending_packet();
+            event_handler.handle_deferred_packet(this, head_ptr.get());
+
+            transit_state(State::Processing, State::Unused);
+        }
+
+        virtual bool is_exist_pending_packet() const override
+        {
+            return pending_packet_head.load(std::memory_order_relaxed) != nullptr;
+        }
+
+        void push_packet(DescriptorType::Connection desc, const PacketType& src_packet)
+        {
+            auto new_packet = new DeferredPacket<PacketType>(desc, src_packet);
+
+            new_packet->next = pending_packet_head.load(std::memory_order_relaxed);
+
+            while (!pending_packet_head.compare_exchange_weak(new_packet->next, new_packet,
+                std::memory_order_release, std::memory_order_relaxed));
+        }
+
+        static void delete_packets(DeferredPacket<PacketType>* head)
+        {
+            for (auto packet = head, next_packet = head; packet; packet = next_packet) {
+                next_packet = packet->next;
+                delete packet;
+            }
+        }
+
+        auto pop_pending_packet()
+        {
+            return std::unique_ptr<DeferredPacket<PacketType>, decltype(delete_packets)*>(
+                pending_packet_head.exchange(nullptr, std::memory_order_relaxed),
+                delete_packets
+            );
+        }
+
+        void push_result(DescriptorType::DeferredPacket desc, error::ErrorCode error_code)
+        {
+            auto new_packet = new DeferredPacketResult{
+                .connection_descriptor = desc,
+                .error_code = error_code,
+                .next = pending_result_head.load(std::memory_order_relaxed)
+            };
+
+            while (!pending_result_head.compare_exchange_weak(new_packet->next, new_packet,
+                std::memory_order_release, std::memory_order_relaxed));
+        }
+
+        static void delete_results(DeferredPacketResult* head)
+        {
+            for (auto result = head, next_result = head; result; result = next_result) {
+                next_result = result->next;
+                delete result;
+            }
+        }
+
+        using result_ptr_type = std::unique_ptr<DeferredPacketResult, decltype(delete_results)*>;
+
+        auto pop_pending_result() -> result_ptr_type override
+        {
+            return result_ptr_type(
+                pending_result_head.exchange(nullptr, std::memory_order_relaxed),
+                delete_results
+            );
         }
 
     private:
-        std::atomic<DeferredPacketResult*> head{ nullptr };
-    };
-
-    template <typename PacketType>
-    struct DeferredPacketEvent : IDeferredPacketEvent
-    {
-        DeferredPacket<PacketType>* head = nullptr;
-        DeferredPacketResultStack result;
-
-        void invoke_handler(DeferredPacketHandler& event_handler)
-        {
-            auto old_head = head;       // Note: save head first to avoid memory ordering issues.
-            event_handler.handle_deferred_packet(this);
-
-            _status = Status::Unused;    // Note: must use old_head because after staus changes, head also can be overwrited. 
-            delete_packets(old_head);
-        }
+        std::atomic<DeferredPacket<PacketType>*> pending_packet_head{ nullptr };
+        std::atomic<DeferredPacketResult*> pending_result_head{ nullptr };
     };
 }
