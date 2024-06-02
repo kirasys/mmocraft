@@ -36,7 +36,7 @@ namespace net
 
 	error::ErrorCode MasterServer::handle_handshake_packet(DescriptorType::Connection conn_descriptor, PacketHandshake& packet)
 	{
-		deferred_packet_stack.push<net::PacketHandshake>(conn_descriptor, packet);
+		deferred_packet_stack.push(conn_descriptor, packet);
 		return error::PACKET_HANDLE_DEFERRED;
 	}
 
