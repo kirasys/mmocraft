@@ -9,8 +9,6 @@
 #include "io/io_service.h"
 #include "system_initializer.h"
 
-using namespace error;
-
 namespace
 {
 	bool is_socket_system_initialized = false;
@@ -24,7 +22,7 @@ net::Socket::Socket(SocketType type)
 	: _handle{ create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
 {
 	if (not is_valid())
-		throw NetworkException(ErrorCode::SOCKET_CREATE);
+		throw error::SOCKET_CREATE;
 }
 
 net::Socket::Socket(win::Socket sock)
@@ -57,19 +55,19 @@ bool net::Socket::bind(std::string_view ip, int port){
 	::inet_pton(get_address_family(), ip.data(), &sock_addr.sin_addr);
 
 	if (::bind(_handle, reinterpret_cast<SOCKADDR*>(&sock_addr), sizeof(sock_addr)) == SOCKET_ERROR)
-		throw NetworkException(ErrorCode::SOCKET_BIND);
+		throw error::SOCKET_BIND;
 
 	return true;
 }
 
 bool net::Socket::listen(int backlog) {
 	if (::listen(_handle, backlog) == SOCKET_ERROR)
-		throw NetworkException(ErrorCode::SOCKET_LISTEN);
+		throw error::SOCKET_LISTEN;
 
 	return true;
 }
 
-bool net::Socket::accept(io::IoAcceptEvent& event)
+error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event)
 {
 	if (event.fnAcceptEx == nullptr) {
 		GUID acceptex_guid = WSAID_ACCEPTEX;
@@ -84,13 +82,13 @@ bool net::Socket::accept(io::IoAcceptEvent& event)
 			sizeof(event.fnAcceptEx),
 			&bytes, NULL, NULL) == SOCKET_ERROR)
 		{
-			throw NetworkException(ErrorCode::SOCKET_ACCEPTEX_LOAD);
+			return error::SOCKET_ACCEPTEX_LOAD;
 		}
 	}
 
 	event.accepted_socket = create_windows_socket(SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
 	if (event.accepted_socket == INVALID_SOCKET)
-		throw NetworkException(ErrorCode::SOCKET_CREATE);
+		return error::SOCKET_CREATE;
 
 	DWORD bytes_received;
 	BOOL success = event.fnAcceptEx(
@@ -102,10 +100,8 @@ bool net::Socket::accept(io::IoAcceptEvent& event)
 		&event.overlapped
 	);
 
-	if (not success && (ERROR_IO_PENDING != ::WSAGetLastError()))
-		throw NetworkException(ErrorCode::SOCKET_ACCEPTEX);
-	
-	return true;
+	return not success && (ERROR_IO_PENDING != ::WSAGetLastError()) ?
+		error::SOCKET_ACCEPTEX : error::SUCCESS;
 }
 
 bool net::Socket::send(win::Socket sock, WSAOVERLAPPED* overlapped, WSABUF* wsa_buf, DWORD buffer_count)

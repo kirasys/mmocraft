@@ -20,13 +20,13 @@ namespace database
     DatabaseCore::DatabaseCore()
     {
         if (::SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &environment_handle) == SQL_ERROR)
-            throw error::ErrorCode::DATABASE_ALLOC_ENVIRONMENT_HANDLE;
+            throw error::DATABASE_ALLOC_ENVIRONMENT_HANDLE;
 
         if (::SQLSetEnvAttr(environment_handle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0) == SQL_ERROR)
-            throw error::ErrorCode::DATABASE_SET_ATTRIBUTE_VERSION;
+            throw error::DATABASE_SET_ATTRIBUTE_VERSION;
 
         if (::SQLAllocHandle(SQL_HANDLE_DBC, environment_handle, &connection_handle) == SQL_ERROR)
-            throw error::ErrorCode::DATABASE_ALLOC_CONNECTION_HANDLE;
+            throw error::DATABASE_ALLOC_CONNECTION_HANDLE;
 
         _state = State::Initialized;
     }

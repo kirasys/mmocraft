@@ -51,7 +51,7 @@ namespace net
 
 		bool listen(int backlog = SOMAXCONN);
 
-		bool accept(io::IoAcceptEvent&);
+		error::ErrorCode accept(io::IoAcceptEvent&);
 
 		static bool send(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 

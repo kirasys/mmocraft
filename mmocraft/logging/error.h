@@ -60,25 +60,6 @@ namespace error
 		SIZE,
 	};
 
-	struct Exception
-	{
-		const ErrorCode code;
-	};
-
-	struct NetworkException : Exception
-	{
-		NetworkException(ErrorCode code) noexcept
-			: Exception{ code }
-		{ }
-	};
-
-	struct IoException : Exception
-	{
-		IoException(ErrorCode code) noexcept
-			: Exception{ code }
-		{ }
-	};
-
 	const char* get_error_message(error::ErrorCode);
 
 	std::ostream& operator<<(std::ostream& os, ErrorCode ex);

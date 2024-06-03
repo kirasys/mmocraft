@@ -96,11 +96,8 @@ namespace net
 		if (event->result != error::SUCCESS)
 			_state = ServerCore::State::Stopped; return;
 
-		try {
-			_listen_sock.accept(*event);
-		}
-		catch (...) {
-			LOG(error) << "fail to request accept";
+		if (auto error_code = _listen_sock.accept(*event)) {
+			LOG(error) << "fail to request accept with " << error_code;
 			_state = ServerCore::State::Stopped;
 		}
 	}

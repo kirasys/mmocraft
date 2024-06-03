@@ -14,7 +14,7 @@ namespace io
 	void IoCompletionPort::register_event_source(win::Handle event_source, IoEventHandler* event_handler)
 	{
 		if (::CreateIoCompletionPort(event_source, _handle, ULONG_PTR(event_handler), DWORD(0)) == NULL)
-			throw error::IoException(error::ErrorCode::IO_SERVICE_CREATE_COMPLETION_PORT);
+			throw error::IO_SERVICE_CREATE_COMPLETION_PORT;
 	}
 
 	void IoCompletionPort::register_event_source(win::Socket event_source, IoEventHandler* event_handler)
@@ -75,8 +75,11 @@ namespace io
 					io_event->invoke_handler(*event_handler, transferred_bytes_or_signal);
 				}	
 			}
-			catch (const error::Exception& ex) {
-				LOG(error) << "Exception(" << ex.code << ") was caught, but suppressed...";
+			catch (error::ErrorCode error_code) {
+				LOG(error) << "Exception was caught with " << error_code << ", buf supressed..";
+			}
+			catch (...) {
+				LOG(error) << "Unexcepted exception was caught, but suppressed...";
 			}
 		}
 	}
