@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include "logging/error.h"
+#include "logging/logger.h"
 #include "io/io_service.h"
 
 using namespace error;

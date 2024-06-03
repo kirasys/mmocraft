@@ -2,6 +2,7 @@
 #include "io_service.h"
 
 #include "logging/error.h"
+#include "logging/logger.h"
 #include "net/deferred_packet.h"
 
 namespace io
