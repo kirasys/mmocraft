@@ -7,6 +7,7 @@
 #include "logging/error.h"
 #include "logging/logger.h"
 #include "io/io_service.h"
+#include "system_initializer.h"
 
 using namespace error;
 
@@ -40,6 +41,11 @@ void net::Socket::initialize_system()
 		WSADATA wsaData;
 		if (int result = ::WSAStartup(MAKEWORD(2, 2), &wsaData); result != 0)
 			logging::cfatal() << "WSAStartup() failed: " << result;
+
+		setup::add_termination_handler([]() {
+			::WSACleanup();
+		});
+
 		is_socket_system_initialized = true;
 	}
 }

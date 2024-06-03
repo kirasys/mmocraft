@@ -23,6 +23,7 @@
     <ClCompile Include="database\database_core.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
+    <ClCompile Include="system_initializer.cpp" />
     <ClCompile Include="io\io_event.cpp" />
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
@@ -49,6 +50,7 @@
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\player.h" />
+    <ClInclude Include="system_initializer.h" />
     <ClInclude Include="io\io_event.h" />
     <ClInclude Include="io\io_event_pool.h" />
     <ClInclude Include="io\io_service.h" />
