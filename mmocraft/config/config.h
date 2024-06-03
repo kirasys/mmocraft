@@ -2,8 +2,6 @@
 #include <string>
 #include <tuple>
 
-#include "logging/logger.h"
-
 namespace config {
 	struct MegaBytes
 	{
@@ -23,9 +21,14 @@ namespace config {
 			MegaBytes memory_pool_size { 128 };
 		} system;
 
+		struct ServerConfig
+		{
+			int max_player = 100;
+		} server;
+
 		struct LogConfig
 		{
-			logging::LogLevel level = logging::LogLevel::Info;
+			std::string level = "ERROR";
 			std::string file_path = "server_log.txt";
 		} log;
 

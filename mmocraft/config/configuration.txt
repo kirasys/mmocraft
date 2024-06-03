@@ -2,6 +2,9 @@
 # Memory pool size (MB)
 memory_pool_size: 256
 
+[Server]
+max_player: 1000
+
 [Logging]
 log_level: FATAL
 log_file_path: server_log.txt

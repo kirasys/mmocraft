@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "logging/error.h"
+#include "logging/logger.h"
 
 namespace {
 	void trim(std::string_view& line) noexcept {
@@ -71,7 +72,7 @@ namespace config {
 
 		// Log configuration
 		if (conf_map.find("log_level") != end)
-			conf.level = logging::to_log_level(conf_map.at("log_level"));
+			conf.level = conf_map.at("log_level");
 
 		if (conf_map.find("log_file_path") != end)
 			conf.file_path = conf_map.at("log_file_path");
@@ -92,6 +93,14 @@ namespace config {
 
 		if (conf_map.find("memory_pool_size") != end)
 			conf.memory_pool_size = MegaBytes{ std::stoi(conf_map.at("memory_pool_size")) };
+	}
+
+	void load_server_config(Configuration::ServerConfig& conf, ConfigMap conf_map)
+	{
+		auto end = conf_map.end();
+
+		if (conf_map.find("max_player") != end)
+			conf.max_player = std::stoi(conf_map.at("max_player"));
 	}
 
 	void load_database_config(Configuration::DatabaseConfig& conf, ConfigMap conf_map)
@@ -123,6 +132,7 @@ namespace config {
 		try {
 			load_log_config(conf.log, conf_map);
 			load_system_config(conf.system, conf_map);
+			load_server_config(conf.server, conf_map);
 			load_database_config(conf.db, conf_map);
 		}
 		catch (const std::exception& ex) {
