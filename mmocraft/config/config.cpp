@@ -101,6 +101,12 @@ namespace config {
 	{
 		auto end = conf_map.end();
 
+		if (conf_map.find("ip") != end)
+			conf.ip = conf_map.at("ip");
+
+		if (conf_map.find("port") != end)
+			conf.port = std::stoi(conf_map.at("port"));
+
 		if (conf_map.find("max_player") != end)
 			conf.max_player = std::stoi(conf_map.at("max_player"));
 	}

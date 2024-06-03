@@ -15,15 +15,17 @@ namespace config {
 
 		struct SystemConfig
 		{
-			int page_size = 0;
-			int alllocation_granularity = 0;
-			int num_of_processors = 0;
+			unsigned page_size = 0;
+			unsigned alllocation_granularity = 0;
+			unsigned num_of_processors = 0;
 			MegaBytes memory_pool_size { 128 };
 		} system;
 
 		struct ServerConfig
 		{
-			int max_player = 100;
+			std::string ip = "127.0.0.1";
+			int port = 12345;
+			unsigned max_player = 100;
 		} server;
 
 		struct LogConfig

@@ -7,21 +7,18 @@
 
 namespace net
 {
-	ServerCore::ServerCore(ApplicationServer& a_app_server, std::string_view ip, int port,
-							unsigned max_client_connections,
-							unsigned num_of_event_threads,
-							int concurrency_hint)
+	ServerCore::ServerCore(ApplicationServer& a_app_server, const config::Configuration& conf)
 		: app_server{ a_app_server }
-		, server_info{ .ip = ip,
-						 .port = port, 
-						 .max_client_connections = max_client_connections,
-						 .num_of_event_threads = num_of_event_threads}
+		, server_info{ .ip = conf.server.ip,
+						 .port = conf.server.port, 
+						 .max_client_connections = conf.server.max_player,
+						 .num_of_event_threads = conf.system.num_of_processors * 2}
 		, _listen_sock{ net::SocketType::TCPv4 }
-		, io_service{ concurrency_hint }
-		, io_event_pool{ max_client_connections }
+		, io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
+		, io_event_pool{ conf.server.max_player }
 		, io_accept_event_data { io_event_pool.new_accept_event_data() }
 		, io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
-		, connection_server_pool{ max_client_connections }
+		, connection_server_pool{ conf.server.max_player }
 		, interval_task_scheduler{ this }
 	{	
 		io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);

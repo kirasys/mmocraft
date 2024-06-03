@@ -30,12 +30,7 @@ namespace net
 			Stopped,
 		};
 
-		ServerCore(ApplicationServer&,
-			std::string_view ip,
-			int port,
-			unsigned max_client_connections,
-			unsigned num_of_event_threads,
-			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
+		ServerCore(ApplicationServer&, const config::Configuration&);
 
 		ServerCore::State status() const
 		{

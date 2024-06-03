@@ -10,12 +10,8 @@
 
 namespace net
 {
-	MasterServer::MasterServer(std::string_view ip,
-		int port,
-		unsigned max_client_connections,
-		unsigned num_of_event_threads,
-		int concurrency_hint)
-		: server_core{ *this, ip, port, max_client_connections, num_of_event_threads, concurrency_hint }
+	MasterServer::MasterServer()
+		: server_core{ *this, config::get_config()}
 		, database_core{ }
 	{ 
 		const auto& conf = config::get_config();

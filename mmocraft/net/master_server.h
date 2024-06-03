@@ -12,11 +12,7 @@ namespace net
 	class MasterServer : public ApplicationServer, public net::DeferredPacketHandler
 	{
 	public:
-		MasterServer(std::string_view ip,
-			int port,
-			unsigned max_client_connections,
-			unsigned num_of_event_threads,
-			int concurrency_hint = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
+		MasterServer();
 
 		error::ErrorCode handle_packet(DescriptorType::Connection, Packet*) override;
 
