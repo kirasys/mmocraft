@@ -3,8 +3,16 @@
 
 #include <map>
 #include <filesystem>
+#include <string_view>
 
 #include "error.h"
+
+namespace
+{
+	logging::LogLevel system_log_level = logging::LogLevel::Info;
+	std::ofstream system_log_file_stream;
+	std::mutex system_log_mutex;
+}
 
 namespace logging
 {
@@ -24,16 +32,13 @@ namespace logging
 		return log_level_map.at(log_level);
 	}
 
-	struct Logger {
-		LogLevel level = LogLevel::Debug;
-		std::ofstream os;
-	} g_logger;
-
-	void init_logger(const char* out_file_path, LogLevel level)
+	void initialize_logging_system(std::string_view out_file_path, LogLevel level)
 	{
-		g_logger.level = level;
-		g_logger.os.open(out_file_path, std::ofstream::out);
-		if (not g_logger.os.is_open())
+		setlocale(LC_ALL, ""); // user-default ANSI code page obtained from the operating system
+
+		system_log_level = level;
+		system_log_file_stream.open(out_file_path, std::ofstream::out);
+		if (not system_log_file_stream.is_open())
 			logging::cfatal() << "Fail to open file: " << out_file_path;
 	}
 

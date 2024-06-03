@@ -43,6 +43,8 @@ namespace net
 			return _handle.get();
 		}
 
+		static void initialize_socket_system();
+
 		void close() noexcept;
 
 		bool bind(std::string_view, int);

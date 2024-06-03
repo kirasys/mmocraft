@@ -9,6 +9,11 @@
 
 using namespace error;
 
+namespace
+{
+	bool is_socket_system_initialized = false;
+}
+
 net::Socket::Socket() noexcept
 	: _handle{ }
 { }
@@ -27,6 +32,16 @@ net::Socket::Socket(win::Socket sock)
 net::Socket::Socket(win::UniqueSocket&& sock)
 	: _handle{ std::move(sock) }
 { }
+
+void net::Socket::initialize_socket_system()
+{
+	if (not is_socket_system_initialized) {
+		WSADATA wsaData;
+		if (int result = ::WSAStartup(MAKEWORD(2, 2), &wsaData); result != 0)
+			logging::cfatal() << "WSAStartup() failed: " << result;
+		is_socket_system_initialized = true;
+	}
+}
 
 bool net::Socket::bind(std::string_view ip, int port){
 	sockaddr_in sock_addr;
