@@ -10,9 +10,15 @@
 
 #include "util/common_util.h"
 
+#define LOG(level) logging::##level()
+#define CONSOLE_LOG(level) logging::console_##level()
+
+#define LOG_IF(level, cond) if ((cond)) logging::##level()
+#define CONSOLE_LOG_IF(level, cond) if ((cond)) logging::console_##level()
+
 namespace logging
 {
-	enum class LogLevel
+	enum LogLevel
 	{
 		Debug,
 		Info,
@@ -67,46 +73,16 @@ namespace logging
 		Logger logger;
 	};
 
-	class ConditionalLogStream
-	{
-	public:
-		ConditionalLogStream(bool condition, bool is_fatal, std::ostream&, const std::source_location&);
-
-		~ConditionalLogStream();
-
-		// template member function should be in the header.
-		template <typename T>
-		ConditionalLogStream& operator<<(T&& value)
-		{
-			if (_condition) 
-				logger.append(std::forward<T>(value));
-			return *this;
-		}
-
-	private:
-		bool _condition;
-		Logger logger;
-	};
-
-
 	// Console log functions
-	LogStream cerr(const std::source_location &location = std::source_location::current());
+	LogStream console_error(const std::source_location &location = std::source_location::current());
 	
-	LogStream cfatal(const std::source_location &location = std::source_location::current());
-
-	ConditionalLogStream cerr(bool condition, const std::source_location& location = std::source_location::current());
-
-	ConditionalLogStream cfatal_if(bool condition, const std::source_location& location = std::source_location::current());
+	LogStream console_fatal(const std::source_location &location = std::source_location::current());
 
 
 	// File log functions
-	LogStream err(const std::source_location& location = std::source_location::current());
+	LogStream error(const std::source_location& location = std::source_location::current());
 	
-	ConditionalLogStream err_if(bool condition, const std::source_location& location = std::source_location::current());
-
 	LogStream fatal(const std::source_location& location = std::source_location::current());
-
-	ConditionalLogStream fatal_if(bool condition, const std::source_location& location = std::source_location::current());
 
 	void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code);
 }

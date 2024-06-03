@@ -44,7 +44,7 @@ namespace logging
 		system_log_level = to_log_level(conf.log.level);
 		system_log_file_stream.open(conf.log.file_path, std::ofstream::out);
 		if (not system_log_file_stream.is_open())
-			logging::cfatal() << "Fail to open file: " << conf.log.file_path;
+			LOG(fatal) << "Fail to open file: " << conf.log.file_path;
 
 		setup::add_termination_handler([]() {
 			system_log_file_stream.close();
@@ -97,54 +97,20 @@ namespace logging
 		logger.flush();
 	}
 
-	ConditionalLogStream::ConditionalLogStream
-		(bool condition, bool is_fatal, std::ostream& os, const std::source_location& location)
-		: _condition{ condition }
-		, logger{ condition && is_fatal, os, location }
-	{
-
-	}
-
-	ConditionalLogStream::~ConditionalLogStream()
-	{
-		if (_condition)
-			logger.flush();
-	}
-
-	LogStream cerr(const std::source_location &location) {
+	LogStream console_error(const std::source_location &location) {
 		return { false, std::cerr, location };
 	}
 
-	LogStream cfatal(const std::source_location& location) {
+	LogStream console_fatal(const std::source_location& location) {
 		return { true, std::cerr, location };
 	}
 
-	ConditionalLogStream cerr_if(bool condition, const std::source_location& location)
-	{
-		return { condition, false, std::cerr, location };
-	}
-
-	ConditionalLogStream cfatal_if(bool condition, const std::source_location& location)
-	{
-		return { condition, true, std::cerr, location };
-	}
-
-	LogStream err(const std::source_location& location) {
+	LogStream error(const std::source_location& location) {
 		return { false, system_log_file_stream, location };
 	}
 
 	LogStream fatal(const std::source_location& location) {
 		return { true, system_log_file_stream, location };
-	}
-
-	ConditionalLogStream err_if(bool condition, const std::source_location& location)
-	{
-		return { condition, false, system_log_file_stream, location };
-	}
-
-	ConditionalLogStream fatal_if(bool condition, const std::source_location& location)
-	{
-		return { condition, true, system_log_file_stream, location };
 	}
 
 	void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code)
