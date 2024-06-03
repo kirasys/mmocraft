@@ -6,7 +6,8 @@
 #include <filesystem>
 #include <string_view>
 
-#include "error.h"
+#include "config/config.h"
+#include "logging/error.h"
 
 namespace
 {
@@ -33,14 +34,16 @@ namespace logging
 		return log_level_map.at(log_level);
 	}
 
-	void initialize_system(std::string_view out_file_path, LogLevel level)
+	void initialize_system()
 	{
+		const auto& conf = config::get_config();
+
 		setlocale(LC_ALL, ""); // user-default ANSI code page obtained from the operating system
 
-		system_log_level = level;
-		system_log_file_stream.open(out_file_path, std::ofstream::out);
+		system_log_level = to_log_level(conf.log.level);
+		system_log_file_stream.open(conf.log.file_path, std::ofstream::out);
 		if (not system_log_file_stream.is_open())
-			logging::cfatal() << "Fail to open file: " << out_file_path;
+			logging::cfatal() << "Fail to open file: " << conf.log.file_path;
 	}
 
 	/*  LogStream Class */
