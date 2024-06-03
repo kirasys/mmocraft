@@ -83,7 +83,7 @@ namespace net
 		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_recv_event->data.begin_unused());
 		wbuf[0].len = ULONG(desc_entry.io_recv_event->data.unused_size());
 
-		desc_entry.is_recv_event_running = Socket::recv(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 1);
+		desc_entry.is_recv_event_running = Socket::recv(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, std::size(wbuf));
 	}
 
 	void ConnectionDescriptor::activate_send_cycle(DescriptorType::Connection desc)
@@ -104,7 +104,7 @@ namespace net
 		wbuf[1].buf = reinterpret_cast<char*>(desc_entry.io_send_event_data->begin());
 		wbuf[1].len = ULONG(desc_entry.io_send_event_data->size());
 
-		desc_entry.is_send_event_running = Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, 2);
+		desc_entry.is_send_event_running = Socket::send(desc_entry.raw_socket, &desc_entry.io_recv_event->overlapped, wbuf, std::size(wbuf));
 	}
 
 	void ConnectionDescriptor::flush_server_message(DescriptorType::Tick)
