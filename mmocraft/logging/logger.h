@@ -41,6 +41,8 @@ namespace logging
 		}
 
 	private:
+		void set_line_prefix(const std::source_location&);
+
 		std::ostream& _os;
 
 		bool _fatal_flag;
@@ -49,7 +51,13 @@ namespace logging
 
 	// Console log functions
 	LogStream cerr(const std::source_location &location = std::source_location::current());
+	
 	LogStream cfatal(const std::source_location &location = std::source_location::current());
+
+	// File log functions
+	LogStream err(const std::source_location& location = std::source_location::current());
+	
+	LogStream fatal(const std::source_location& location = std::source_location::current());
 
 	void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code);
 }

@@ -2,6 +2,7 @@
 #include "logger.h"
 
 #include <map>
+#include <mutex>
 #include <filesystem>
 #include <string_view>
 
@@ -47,19 +48,26 @@ namespace logging
 	LogStream::LogStream(std::ostream &os, const std::source_location &location, bool fatal_flag)
 		: _os(os), _fatal_flag{ fatal_flag }
 	{
-		_buf << std::filesystem::path(location.file_name()).filename() << '('
-			<< location.line() << ':'
-			<< location.column() << ") `"
-			<< location.function_name() << "`: ";
+		set_line_prefix(location);
 	}
 
 	LogStream::~LogStream()
 	{
-		// TODO: make it more thread-safe
-		_os << _buf.view() << std::endl;
+		{
+			const std::lock_guard<std::mutex> lock(system_log_mutex);
+			_os << _buf.view() << '\n';
+		}
 
 		if (_fatal_flag)
 			std::exit(0);
+	}
+
+	void LogStream::set_line_prefix(const std::source_location& location)
+	{
+		_buf << std::filesystem::path(location.file_name()).filename() << '('
+			<< location.line() << ':'
+			<< location.column() << ") `"
+			<< location.function_name() << "`: ";
 	}
 
 	LogStream cerr(const std::source_location &location) {
@@ -68,6 +76,14 @@ namespace logging
 
 	LogStream cfatal(const std::source_location &location) {
 		return LogStream{ std::cerr, location, true };
+	}
+
+	LogStream err(const std::source_location& location) {
+		return LogStream{ system_log_file_stream, location, false };
+	}
+
+	LogStream fatal(const std::source_location& location) {
+		return LogStream{ system_log_file_stream, location, true };
 	}
 
 	void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code)
