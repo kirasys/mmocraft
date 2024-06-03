@@ -53,45 +53,98 @@ namespace logging
 
 	/*  LogStream Class */
 
-	LogStream::LogStream(std::ostream &os, const std::source_location &location, bool fatal_flag)
-		: _os(os), _fatal_flag{ fatal_flag }
+	Logger::Logger
+		(bool is_fatal, std::ostream& os, const std::source_location &location)
+		: _is_fatal{ is_fatal }
+		, _output_stream{ os }
 	{
 		set_line_prefix(location);
 	}
 
-	LogStream::~LogStream()
+	Logger::~Logger()
 	{
-		{
-			const std::lock_guard<std::mutex> lock(system_log_mutex);
-			_os << _buf.view() << std::endl;
-		}
-
-		if (_fatal_flag)
+		if (_is_fatal)
 			std::exit(0);
 	}
 
-	void LogStream::set_line_prefix(const std::source_location& location)
+	void Logger::flush()
 	{
-		_buf << std::filesystem::path(location.file_name()).filename() << '('
+		{
+			const std::lock_guard<std::mutex> lock(system_log_mutex);
+			_output_stream << _buffer.view() << std::endl;
+		}
+
+		_buffer.str(std::string());
+		_buffer.clear();
+	}
+
+	void Logger::set_line_prefix(const std::source_location& location)
+	{
+		_buffer << std::filesystem::path(location.file_name()).filename() << '('
 			<< location.line() << ':'
-			<< location.column() << ") `"
-			<< location.function_name() << "`: ";
+			<< location.column() << ") : ";
+	}
+
+	LogStream::LogStream
+		(bool is_fatal, std::ostream& os, const std::source_location& location)
+		: logger{ is_fatal, os, location }
+	{
+		
+	}
+
+	LogStream::~LogStream()
+	{
+		logger.flush();
+	}
+
+	ConditionalLogStream::ConditionalLogStream
+		(bool condition, bool is_fatal, std::ostream& os, const std::source_location& location)
+		: _condition{ condition }
+		, logger{ condition && is_fatal, os, location }
+	{
+
+	}
+
+	ConditionalLogStream::~ConditionalLogStream()
+	{
+		if (_condition)
+			logger.flush();
 	}
 
 	LogStream cerr(const std::source_location &location) {
-		return LogStream{ std::cerr, location, false };
+		return { false, std::cerr, location };
 	}
 
-	LogStream cfatal(const std::source_location &location) {
-		return LogStream{ std::cerr, location, true };
+	LogStream cfatal(const std::source_location& location) {
+		return { true, std::cerr, location };
+	}
+
+	ConditionalLogStream cerr_if(bool condition, const std::source_location& location)
+	{
+		return { condition, false, std::cerr, location };
+	}
+
+	ConditionalLogStream cfatal_if(bool condition, const std::source_location& location)
+	{
+		return { condition, true, std::cerr, location };
 	}
 
 	LogStream err(const std::source_location& location) {
-		return LogStream{ system_log_file_stream, location, false };
+		return { false, system_log_file_stream, location };
 	}
 
 	LogStream fatal(const std::source_location& location) {
-		return LogStream{ system_log_file_stream, location, true };
+		return { true, system_log_file_stream, location };
+	}
+
+	ConditionalLogStream err_if(bool condition, const std::source_location& location)
+	{
+		return { condition, false, system_log_file_stream, location };
+	}
+
+	ConditionalLogStream fatal_if(bool condition, const std::source_location& location)
+	{
+		return { condition, true, system_log_file_stream, location };
 	}
 
 	void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code)
