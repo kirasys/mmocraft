@@ -26,6 +26,8 @@ namespace config {
 
 	const char* config_file_path = "config/configuration.txt";
 
+	Configuration configuration;
+	
 	// private functions
 
 	ConfigMap parse_config(std::stringstream& config_ss) {
@@ -144,13 +146,13 @@ namespace config {
 	}
 
 	const Configuration& get_config() {
-		static Configuration configuration;
-
-		if (!configuration.loaded) {
-			if (configuration.loaded = !load_config(configuration))
-				logging::cfatal() << "Fail to load configuration file at \"" << config_file_path << "\"";
-		}
-
 		return configuration;
+	}
+
+	void initialize_system()
+	{
+		configuration.loaded = load_config(configuration);
+		if (not configuration.loaded)
+			logging::cfatal() << "Fail to load configuration file at \"" << config_file_path << "\"";
 	}
 }

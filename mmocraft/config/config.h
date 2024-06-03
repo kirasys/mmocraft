@@ -61,4 +61,6 @@ namespace config {
 	bool load_config(Configuration&);
 
 	const Configuration& get_config();
+
+	void initialize_system();
 }

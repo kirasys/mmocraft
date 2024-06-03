@@ -38,6 +38,9 @@ namespace setup
 		std::signal(SIGINT, termination_routine_for_signal);
 		std::signal(SIGABRT, termination_routine_for_signal);
 
+		// config system
+		config::initialize_system();
+
 		// log system
 		logging::initialize_system();
 
