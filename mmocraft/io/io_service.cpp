@@ -57,7 +57,7 @@ namespace io
 				return;
 
 			if (error_code != ERROR_SUCCESS || overlapped == nullptr) {
-				logging::cerr() << "GetQueuedCompletionStatus() failed with " << error_code;
+				LOG(error) << "GetQueuedCompletionStatus() failed with " << error_code;
 				continue;
 			}
 
@@ -76,7 +76,7 @@ namespace io
 				}	
 			}
 			catch (const error::Exception& ex) {
-				logging::cerr() << "Exception(" << ex.code << ") was caught, but suppressed...";
+				LOG(error) << "Exception(" << ex.code << ") was caught, but suppressed...";
 			}
 		}
 	}

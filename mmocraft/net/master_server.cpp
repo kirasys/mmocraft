@@ -97,7 +97,7 @@ namespace net
 				);
 				break;
 			default:
-				logging::cerr() << "Unexpected packet result: " << result->error_code;
+				LOG(error) << "Unexpected packet result: " << result->error_code;
 			}
 		}
 	}

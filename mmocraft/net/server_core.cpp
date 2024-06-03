@@ -100,7 +100,7 @@ namespace net
 			_listen_sock.accept(*event);
 		}
 		catch (...) {
-			logging::cerr() << "fail to request accept";
+			LOG(error) << "fail to request accept";
 			_state = ServerCore::State::Stopped;
 		}
 	}
@@ -111,7 +111,7 @@ namespace net
 		auto client_socket = win::UniqueSocket(event->accepted_socket);
 
 		if (connection_server_ptrs.size() > server_info.max_client_connections) {
-			logging::cerr() << "full connection reached. skip to accept new client";
+			LOG(error) << "full connection reached. skip to accept new client";
 			event->result = error::CLIENT_CONNECTION_FULL;
 			return 0;
 		}
@@ -121,7 +121,7 @@ namespace net
 		if (SOCKET_ERROR == ::setsockopt(client_socket,
 			SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 			reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
-			logging::cerr() << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
+			LOG(error) << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
 			event->result = error::SOCKET_SETOPT;
 			return 0;
 		}

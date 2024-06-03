@@ -138,7 +138,7 @@ namespace config {
 			load_database_config(conf.db, conf_map);
 		}
 		catch (const std::exception& ex) {
-			logging::cerr() << "Fail to setting config: " << ex.what();
+			CONSOLE_LOG(error) << "Fail to setting config: " << ex.what();
 			return false;
 		}
 
@@ -152,7 +152,7 @@ namespace config {
 	void initialize_system()
 	{
 		configuration.loaded = load_config(configuration);
-		if (not configuration.loaded)
-			logging::cfatal() << "Fail to load configuration file at \"" << config_file_path << "\"";
+		CONSOLE_LOG_IF(fatal, not configuration.loaded) 
+			<< "Fail to load configuration file at \"" << config_file_path << "\"";
 	}
 }

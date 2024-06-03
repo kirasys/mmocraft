@@ -183,7 +183,7 @@ namespace win
 
 			if (_storage != nullptr) {
 				if (not ::VirtualFree(_storage, 0, MEM_RELEASE))
-					logging::cerr() << "VirtualFree() failed with " << ::GetLastError();
+					LOG(error) << "VirtualFree() failed with " << ::GetLastError();
 			}
 		}
 

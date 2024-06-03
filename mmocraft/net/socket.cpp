@@ -39,8 +39,8 @@ void net::Socket::initialize_system()
 {
 	if (not is_socket_system_initialized) {
 		WSADATA wsaData;
-		if (int result = ::WSAStartup(MAKEWORD(2, 2), &wsaData); result != 0)
-			logging::cfatal() << "WSAStartup() failed: " << result;
+		int result = ::WSAStartup(MAKEWORD(2, 2), &wsaData);
+		CONSOLE_LOG_IF(fatal, result != 0) << "WSAStartup() failed: " << result;
 
 		setup::add_termination_handler([]() {
 			::WSACleanup();

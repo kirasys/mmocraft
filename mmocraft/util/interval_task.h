@@ -73,7 +73,7 @@ namespace util
 					task.expired_at = util::current_monotonic_tick() + task.period;
 				}
 				catch (...) {
-					logging::cerr() << "Exception occured at " << task.tag << " (Task deferred)";
+					LOG(error) << "Exception occured at " << task.tag << " (Task deferred)";
 					task.expired_at = util::current_monotonic_tick() + (task.period << 2);
 				}
 			}
