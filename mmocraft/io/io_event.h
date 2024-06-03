@@ -200,8 +200,6 @@ namespace io
 		//       the allocator(may be pool) responsible for release.
 		IoEventData& data;
 
-		error::ErrorCode result = error::SUCCESS;
-
 		IoEvent(IoEventData* a_data)
 			: data{ *a_data }
 		{ }

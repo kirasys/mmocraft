@@ -90,8 +90,11 @@ namespace net
 		// check there are expired tasks before accepting next client.
 		interval_task_scheduler.process_tasks();
 
-		if (event->result != error::SUCCESS)
-			_state = ServerCore::State::Stopped; return;
+		if (not last_error_code.is_strong_success()) {
+			LOG(error) << last_error_code;
+			_state = ServerCore::State::Stopped;
+			return;
+		}
 
 		if (auto error_code = _listen_sock.accept(*event)) {
 			LOG(error) << "fail to request accept with " << error_code;
@@ -105,8 +108,7 @@ namespace net
 		auto client_socket = win::UniqueSocket(event->accepted_socket);
 
 		if (connection_server_ptrs.size() > server_info.max_client_connections) {
-			LOG(error) << "full connection reached. skip to accept new client";
-			event->result = error::CLIENT_CONNECTION_FULL;
+			last_error_code = error::CLIENT_CONNECTION_FULL;
 			return 0;
 		}
 
@@ -115,14 +117,13 @@ namespace net
 		if (SOCKET_ERROR == ::setsockopt(client_socket,
 			SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 			reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
-			LOG(error) << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed";
-			event->result = error::SOCKET_SETOPT;
+			last_error_code = error::SOCKET_SETOPT;
 			return 0;
 		}
 
 		// add a client to the server.
 		new_connection(std::move(client_socket));
-		event->result = error::SUCCESS;
+		last_error_code = error::SUCCESS;
 		return 0;
 	}
 }

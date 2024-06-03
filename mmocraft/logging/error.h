@@ -62,5 +62,40 @@ namespace error
 
 	const char* get_error_message(error::ErrorCode);
 
-	std::ostream& operator<<(std::ostream& os, ErrorCode ex);
+	class ResultCode
+	{
+	public:
+		inline ResultCode(error::ErrorCode code = error::SUCCESS)
+			: error_code{ code }
+		{ }
+
+		inline bool is_success() const
+		{
+			return error_code == error::SUCCESS
+				|| error_code == error::PACKET_INSUFFIENT_DATA
+				|| error_code == error::PACKET_HANDLE_DEFERRED;
+		}
+
+		inline bool is_strong_success() const
+		{
+			return error_code == error::SUCCESS;
+		}
+
+		inline const char* to_string() const
+		{
+			return get_error_message(error_code);
+		}
+
+		inline const ErrorCode to_error_code() const
+		{
+			return error_code;
+		}
+
+	private:
+		error::ErrorCode error_code;
+	};
+
+	std::ostream& operator<<(std::ostream&, ErrorCode);
+
+	std::ostream& operator<<(std::ostream&, ResultCode);
 }

@@ -42,7 +42,7 @@ namespace net
 		
 		void request_send();
 
-		auto process_packets(std::byte*, std::byte*) -> std::pair<std::uint32_t, error::ErrorCode>;
+		std::size_t process_packets(std::byte*, std::byte*);
 
 		void set_player(std::unique_ptr<game::Player>&&);
 
@@ -85,6 +85,8 @@ namespace net
 
 	private:
 		ApplicationServer& app_server;
+
+		error::ResultCode last_error_code;
 
 		net::Socket _client_socket;
 

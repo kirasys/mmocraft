@@ -44,7 +44,7 @@ namespace net
 	/* Common Packet Static Methods */
 
 	auto PacketStructure::parse_packet(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
-		-> std::pair<std::uint32_t, error::ErrorCode>
+		-> std::pair<std::uint32_t, error::ResultCode>
 	{
 		assert(buf_start < buf_end);
 

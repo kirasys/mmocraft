@@ -55,6 +55,7 @@ namespace net
 		
 	private:
 		ServerCore::State _state = Uninitialized;
+		error::ResultCode last_error_code;
 
 		ApplicationServer& app_server;
 

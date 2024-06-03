@@ -14,9 +14,9 @@ namespace net
 	public:
 		MasterServer();
 
-		error::ErrorCode handle_packet(DescriptorType::Connection, Packet*) override;
+		error::ResultCode handle_packet(DescriptorType::Connection, Packet*) override;
 
-		error::ErrorCode handle_handshake_packet(DescriptorType::Connection, PacketHandshake&);
+		error::ResultCode handle_handshake_packet(DescriptorType::Connection, PacketHandshake&);
 
 		void serve_forever();
 

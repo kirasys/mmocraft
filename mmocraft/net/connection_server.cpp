@@ -58,30 +58,29 @@ namespace net
 
 	}
 
-	auto ConnectionServer::process_packets(std::byte* data_begin, std::byte* data_end)
-		-> std::pair<std::uint32_t, error::ErrorCode>
+	std::size_t ConnectionServer::process_packets(std::byte* data_begin, std::byte* data_end)
 	{
-		error::ErrorCode result = error::SUCCESS;
-
 		auto data_cur = data_begin;
 		auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::max_size_of_packet_struct()));
 
 		while (data_cur < data_end) {
-			auto [parsed_bytes, error_code] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
-			if (error_code != error::SUCCESS) {
-				result = error_code; break;
+			auto [parsed_bytes, parsing_result] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
+			if (not parsing_result.is_success()) {
+				last_error_code = parsing_result;
+				break;
 			}
 
-			error_code = app_server.handle_packet(descriptor_number, packet_ptr);
-			if (error_code != error::SUCCESS && error_code != error::PACKET_HANDLE_DEFERRED) {
-				result = error_code; break;
+			auto handle_result = app_server.handle_packet(descriptor_number, packet_ptr);
+			if (not handle_result.is_success()) {
+				last_error_code = handle_result;
+				break;
 			}
 
 			data_cur += parsed_bytes;
 		}
 
 		assert(data_cur <= data_end && "Parsing error");
-		return { std::uint32_t(data_cur - data_begin), result }; // num of total parsed bytes.
+		return data_cur - data_begin; // num of total parsed bytes.
 	}
 
 	void ConnectionServer::set_player(std::unique_ptr<game::Player>&& a_player)
@@ -128,40 +127,29 @@ namespace net
 
 	void ConnectionServer::on_complete(io::IoRecvEvent* event)
 	{
-		switch (event->result) {
-		case error::SUCCESS:
-		case error::PACKET_INSUFFIENT_DATA:
-		case error::PACKET_HANDLE_DEFERRED:
-			ConnectionDescriptor::activate_receive_cycle(descriptor_number); return;
-		default:
-			ConnectionDescriptor::disconnect(
-				descriptor_number,
-				error::get_error_message(event->result)
-			);
+		if (last_error_code.is_strong_success()) {
+			ConnectionDescriptor::activate_receive_cycle(descriptor_number);
+			return;
 		}
+
+		ConnectionDescriptor::disconnect(
+			descriptor_number,
+			last_error_code.to_string()
+		);
 	}
 
 	std::size_t ConnectionServer::handle_io_event(io::IoRecvEvent* event)
 	{
-		if (not try_interact_with_client()) { // timeout case: connection will be deleted soon.
-			event->result = error::PACKET_HANDLE_ERROR;
+		if (not try_interact_with_client()) // timeout case: connection will be deleted soon.
 			return 0; 
-		}
 
-		auto [processed_bytes, error_code] = process_packets(event->data.begin(), event->data.end());
-		event->result = error_code;
-		return processed_bytes;
+		return process_packets(event->data.begin(), event->data.end());
 	}
 
 	/// send event handler
 
 	void ConnectionServer::on_complete(io::IoSendEvent* event)
 	{
-		if (event->result != error::SUCCESS) {
-			if (not connection_status.online) set_offline();
-			return;
-		}
-
 		ConnectionDescriptor::activate_send_cycle(descriptor_number);
 	}
 }

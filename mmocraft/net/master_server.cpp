@@ -20,7 +20,7 @@ namespace net
 			throw error::DATABASE_CONNECT;
 	}
 
-	error::ErrorCode MasterServer::handle_packet(DescriptorType::Connection conn_descriptor, Packet* packet)
+	error::ResultCode MasterServer::handle_packet(DescriptorType::Connection conn_descriptor, Packet* packet)
 	{
 		switch (packet->id) {
 		case PacketID::Handshake:
@@ -30,7 +30,7 @@ namespace net
 		}
 	}
 
-	error::ErrorCode MasterServer::handle_handshake_packet(DescriptorType::Connection conn_descriptor, PacketHandshake& packet)
+	error::ResultCode MasterServer::handle_handshake_packet(DescriptorType::Connection conn_descriptor, PacketHandshake& packet)
 	{
 		deferred_handshake_packet_event.push_packet(conn_descriptor, packet);
 		return error::PACKET_HANDLE_DEFERRED;

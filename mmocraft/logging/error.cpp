@@ -71,4 +71,11 @@ namespace error
 			return os << msg;
 		return os << int(code);
 	}
+
+	std::ostream& operator<<(std::ostream& os, ResultCode code)
+	{
+		if (auto msg = code.to_string())
+			return os << msg;
+		return os << int(code.to_error_code());
+	}
 }

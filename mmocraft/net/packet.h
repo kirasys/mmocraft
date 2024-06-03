@@ -155,7 +155,7 @@ namespace net
 			return sizeof(PacketHandshake);
 		}
 
-		static auto parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*) -> std::pair<std::uint32_t, error::ErrorCode>;
+		static auto parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*) -> std::pair<std::uint32_t, error::ResultCode>;
 
 		static void write_byte(std::byte*&, PacketFieldType::Byte);
 
