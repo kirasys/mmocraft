@@ -7,7 +7,7 @@ max_player: 1000
 
 [Logging]
 log_level: FATAL
-log_file_path: server_log.txt
+log_file_path: server.log
 
 [Database]
 driver_name: ODBC Driver 17 for SQL Server
