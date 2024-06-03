@@ -51,10 +51,10 @@ namespace io
 		if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
 			return;
 
-		auto processed_small_data_bytes = std::min(size_t(transferred_bytes_or_signal), transferred_small_data_bytes);
+		auto processed_small_data_bytes = std::min(size_t(transferred_bytes_or_signal), small_data.size());
 		small_data.pop(processed_small_data_bytes);
 
-		if (auto process_data_bytes = transferred_bytes_or_signal - processed_small_data_bytes)
-			data.pop(process_data_bytes);
+		auto process_data_bytes = transferred_bytes_or_signal - processed_small_data_bytes;
+		data.pop(process_data_bytes);
 	}
 }

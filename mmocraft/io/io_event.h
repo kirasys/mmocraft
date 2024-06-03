@@ -226,7 +226,6 @@ namespace io
 
 	struct IoSendEvent : IoEvent
 	{
-		std::size_t transferred_small_data_bytes = 0;
 		IoSendEventSmallData& small_data;
 
 		IoSendEvent(IoSendEventData* a_data, IoSendEventSmallData* a_small_data)

@@ -75,7 +75,8 @@ namespace net
 			return;
 
 		if (desc_entry.io_recv_event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
-			desc_entry.is_recv_event_running = false; return;
+			desc_entry.is_recv_event_running = false;
+			return;
 		}
 
 		WSABUF wbuf[1] = {};
@@ -91,14 +92,14 @@ namespace net
 		if (not desc_entry.is_online) return;
 
 		if (desc_entry.io_send_event_data->size() + desc_entry.io_send_event_small_data->size() == 0) {
-			desc_entry.is_send_event_running = false; return;
+			desc_entry.is_send_event_running = false;
+			return;
 		}
 
 		WSABUF wbuf[2] = {};
 		// send first short send buffer.
-		desc_entry.io_send_event->transferred_small_data_bytes = desc_entry.io_send_event_small_data->size();
 		wbuf[0].buf = reinterpret_cast<char*>(desc_entry.io_send_event_small_data->begin());
-		wbuf[0].len = ULONG(desc_entry.io_send_event->transferred_small_data_bytes);
+		wbuf[0].len = ULONG(desc_entry.io_send_event_small_data->size());
 
 		wbuf[1].buf = reinterpret_cast<char*>(desc_entry.io_send_event_data->begin());
 		wbuf[1].len = ULONG(desc_entry.io_send_event_data->size());
