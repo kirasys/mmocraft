@@ -33,7 +33,7 @@ net::Socket::Socket(win::UniqueSocket&& sock)
 	: _handle{ std::move(sock) }
 { }
 
-void net::Socket::initialize_socket_system()
+void net::Socket::initialize_system()
 {
 	if (not is_socket_system_initialized) {
 		WSADATA wsaData;

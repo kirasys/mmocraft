@@ -13,7 +13,7 @@ namespace net
 	std::unique_ptr<ConnectionDescriptor::DescriptorData[]> ConnectionDescriptor::descriptor_table;
 	std::unordered_map<game::PlayerID, game::Player*> ConnectionDescriptor::player_lookup_table;
 
-	void ConnectionDescriptor::initialize(unsigned a_max_client_connections)
+	void ConnectionDescriptor::initialize_system(unsigned a_max_client_connections)
 	{
 		descriptor_end = 0;
 		descriptor_table_capacity = a_max_client_connections;

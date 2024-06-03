@@ -53,7 +53,7 @@ namespace net
 
 		ConnectionDescriptor() = delete;
 
-		static void initialize(unsigned max_client_connections);
+		static void initialize_system(unsigned max_client_connections);
 
 		template <typename DescType>
 		static bool disconnect(DescType desc, std::string_view reason)

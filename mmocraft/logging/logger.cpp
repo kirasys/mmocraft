@@ -33,7 +33,7 @@ namespace logging
 		return log_level_map.at(log_level);
 	}
 
-	void initialize_logging_system(std::string_view out_file_path, LogLevel level)
+	void initialize_system(std::string_view out_file_path, LogLevel level)
 	{
 		setlocale(LC_ALL, ""); // user-default ANSI code page obtained from the operating system
 

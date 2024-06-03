@@ -23,7 +23,7 @@ namespace logging
 
 	LogLevel to_log_level(std::string log_level);
 
-	void initialize_logging_system(std::string_view out_file_path, LogLevel level);
+	void initialize_system(std::string_view out_file_path, LogLevel level);
 
 	class LogStream : util::NonCopyable, util::NonMovable
 	{
