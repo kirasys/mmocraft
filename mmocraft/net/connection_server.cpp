@@ -139,7 +139,7 @@ namespace net
 				connection = connection->next) {
 			auto connection_descriptor = connection->value;
 			online_connection_table[connection_descriptor] = true;
-			connection_descriptor->activate_receive_cycle();
+			connection_descriptor->activate_receive_cycle(connection_descriptor->io_recv_event);
 		}
 	}
 
@@ -174,7 +174,9 @@ namespace net
 	void ConnectionServer::flush_client_message()
 	{
 		for (const auto& [desc, online] : online_connection_table) {
-			if (online && not desc->is_recv_event_running) {
+			if (online && not desc->io_recv_event->is_processing) {
+				desc->io_recv_event->is_processing = true;
+
 				// if there are no unprocessed packets, connection will be close.
 				// (because it is unusual situation)
 				desc->io_recv_event->invoke_handler(*desc->connection,
@@ -192,11 +194,12 @@ namespace net
 	void ConnectionServer::on_complete(io::IoRecvEvent* event)
 	{
 		if (last_error_code.is_strong_success()) {
-			connection_descriptor.activate_receive_cycle();
+			connection_descriptor.activate_receive_cycle(event);
 			return;
 		}
 
 		connection_descriptor.disconnect_immediate(last_error_code.to_string());
+		event->is_processing = false;
 	}
 
 	std::size_t ConnectionServer::handle_io_event(io::IoRecvEvent* event)
@@ -256,10 +259,10 @@ namespace net
 		return false;
 	}
 
-	void ConnectionServer::Descriptor::activate_receive_cycle()
+	void ConnectionServer::Descriptor::activate_receive_cycle(io::IoRecvEvent* event)
 	{
 		if (not is_online || io_recv_event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
-			is_recv_event_running = false;
+			event->is_processing = false;
 			return;
 		}
 
@@ -267,7 +270,10 @@ namespace net
 		wbuf[0].buf = reinterpret_cast<char*>(io_recv_event->data.begin_unused());
 		wbuf[0].len = ULONG(io_recv_event->data.unused_size());
 
-		is_recv_event_running = Socket::recv(raw_socket, &io_recv_event->overlapped, wbuf, 1);
+		// should assign flag first to avoid data race.
+		event->is_processing = true;
+		if (not Socket::recv(raw_socket, &io_recv_event->overlapped, wbuf, 1))
+			event->is_processing = false;
 	}
 
 	void ConnectionServer::Descriptor::activate_send_cycle(io::IoSendEvent* event)

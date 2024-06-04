@@ -203,6 +203,8 @@ namespace io
 	{
 		WSAOVERLAPPED overlapped = {};
 
+		bool is_processing = false;
+
 		// NOTE: separate buffer space for better locality.
 		//       the allocator(may be pool) responsible for release.
 		IoEventData& data;
@@ -233,8 +235,6 @@ namespace io
 
 	struct IoSendEvent : IoEvent
 	{
-		bool is_processing = false;
-
 		using IoEvent::IoEvent;
 
 		void invoke_handler(IoEventHandler&, DWORD) override;

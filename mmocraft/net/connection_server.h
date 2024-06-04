@@ -58,7 +58,7 @@ namespace net
 				last_interaction_tick = current_tick;
 			}
 
-			void activate_receive_cycle();
+			void activate_receive_cycle(io::IoRecvEvent*);
 
 			void activate_send_cycle(io::IoSendEvent*);
 
