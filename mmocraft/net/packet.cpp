@@ -115,7 +115,7 @@ namespace net
 		return error::SUCCESS;
 	}
 
-	bool PacketDisconnectPlayer::serialize(io::IoEventRawData& event_data) const
+	bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const
 	{
 		if (size_of_serialized() > event_data.unused_size())
 			return false;

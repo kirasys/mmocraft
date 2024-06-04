@@ -7,7 +7,7 @@
 
 #include "logging/error.h"
 #include "net/packet.h"
-#include "net/connection_descriptor.h"
+#include "net/connection_server.h"
 #include "util/common_util.h"
 
 namespace net
@@ -21,15 +21,15 @@ namespace net
     template <>
     struct DeferredPacket<PacketHandshake>
     {
-        DeferredPacket<PacketHandshake>(DescriptorType::Connection desc, const PacketHandshake& src_packet)
-            : connection_descriptor{ DescriptorType::DeferredPacket(desc) }
+        DeferredPacket<PacketHandshake>(ConnectionServer::Descriptor* desc, const PacketHandshake& src_packet)
+            : connection_descriptor{ desc }
         {
             ::strcpy_s(username, src_packet.username.data);
             ::strcpy_s(password, src_packet.password.data);
         }
 
         DeferredPacket<PacketHandshake>* next = nullptr;
-        DescriptorType::DeferredPacket connection_descriptor;
+        ConnectionServer::Descriptor* connection_descriptor;
         char username[net::PacketFieldConstraint::max_username_length + 1];
         char password[net::PacketFieldConstraint::max_password_length + 1];
     };
@@ -40,7 +40,7 @@ namespace net
 
     struct DeferredPacketResult
     {
-        DescriptorType::DeferredPacket connection_descriptor;
+        ConnectionServer::Descriptor* connection_descriptor;
         error::ErrorCode error_code;
         DeferredPacketResult* next;
     };
@@ -97,7 +97,7 @@ namespace net
             return pending_packet_head.load(std::memory_order_relaxed) != nullptr;
         }
 
-        void push_packet(DescriptorType::Connection desc, const PacketType& src_packet)
+        void push_packet(ConnectionServer::Descriptor* desc, const PacketType& src_packet)
         {
             auto new_packet = new DeferredPacket<PacketType>(desc, src_packet);
 
@@ -123,7 +123,7 @@ namespace net
             );
         }
 
-        void push_result(DescriptorType::DeferredPacket desc, error::ErrorCode error_code)
+        void push_result(ConnectionServer::Descriptor* desc, error::ErrorCode error_code)
         {
             auto new_packet = new DeferredPacketResult{
                 .connection_descriptor = desc,

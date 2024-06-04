@@ -143,7 +143,7 @@ namespace net
 			return sizeof(Packet::id) + reason.size_with_padding;
 		}
 
-		bool serialize(io::IoEventRawData&) const;
+		bool serialize(io::IoEventData&) const;
 
 		PacketFieldType::String reason;
 	};

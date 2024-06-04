@@ -19,7 +19,8 @@ namespace io
 			: accept_event_pool{ 1 }
 			, recv_event_pool{ max_capacity }
 			, recv_event_data_pool{ max_capacity + 1}
-			, send_event_pool{ max_capacity }
+
+			, send_event_pool{ 2 * max_capacity }
 			, send_event_data_pool{ max_capacity }
 			, send_event_small_data_pool{ max_capacity }
 		{ }
@@ -54,9 +55,9 @@ namespace io
 			return send_event_small_data_pool.new_object();
 		}
 
-		auto new_send_event(IoSendEventData* io_data, IoSendEventSmallData* io_small_data)
+		auto new_send_event(IoEventData* io_data)
 		{
-			return send_event_pool.new_object(io_data, io_small_data);
+			return send_event_pool.new_object(io_data);
 		}
 
 	private:
@@ -65,7 +66,6 @@ namespace io
 		win::ObjectPool<IoRecvEvent> recv_event_pool;
 		win::ObjectPool<IoRecvEventData> recv_event_data_pool;
 
-		
 		win::ObjectPool<IoSendEvent> send_event_pool;
 		win::ObjectPool<IoSendEventData> send_event_data_pool;
 		win::ObjectPool<IoSendEventSmallData> send_event_small_data_pool;

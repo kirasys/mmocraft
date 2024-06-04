@@ -2,21 +2,22 @@
 
 #include "database/database_core.h"
 
-#include "net/connection_descriptor.h"
+#include "net/connection_server.h"
 #include "net/deferred_packet.h"
 #include "net/server_core.h"
 #include "net/packet.h"
+#include "util/interval_task.h"
 
 namespace net
 {
-	class MasterServer : public ApplicationServer, public net::DeferredPacketHandler
+	class MasterServer : public net::PacketHandleServer, public net::DeferredPacketHandler
 	{
 	public:
 		MasterServer();
 
-		error::ResultCode handle_packet(DescriptorType::Connection, Packet*) override;
+		error::ResultCode handle_packet(net::ConnectionServer::Descriptor&, Packet*) override;
 
-		error::ResultCode handle_handshake_packet(DescriptorType::Connection, PacketHandshake&);
+		error::ResultCode handle_handshake_packet(net::ConnectionServer::Descriptor&, PacketHandshake&);
 
 		void serve_forever();
 
@@ -27,11 +28,14 @@ namespace net
 		virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*, const DeferredPacket<PacketHandshake>*) override;
 
 	private:
+
 		void process_deferred_packet_result();
 
 		void process_deferred_packet_result_internal(const DeferredPacketResult*);
 
 		void flush_deferred_packet();
+
+		util::IntervalTaskScheduler<void> interval_task_scheduler;
 
 		net::ServerCore server_core;
 

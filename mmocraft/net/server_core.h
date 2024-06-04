@@ -8,18 +8,16 @@
 #include "net/socket.h"
 #include "net/packet.h"
 #include "net/connection_server.h"
-#include "net/application_server.h"
 #include "net/deferred_packet.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
 #include "util/common_util.h"
-#include "util/interval_task.h"
 #include "config/config.h"
 
 namespace net
 {
-	class ServerCore final : io::IoEventHandler
+	class ServerCore final : public io::IoEventHandler
 	{
 	public:
 		enum State
@@ -30,7 +28,7 @@ namespace net
 			Stopped,
 		};
 
-		ServerCore(ApplicationServer&, const config::Configuration&);
+		ServerCore(PacketHandleServer&, const config::Configuration& conf = config::get_config());
 
 		ServerCore::State status() const
 		{
@@ -43,7 +41,7 @@ namespace net
 
 		void new_connection(win::UniqueSocket &&client_sock);
 
-		void check_connection_expiration();
+		static void cleanup_expired_connection();
 
 		/**
 		 *  Event handler interface 
@@ -57,7 +55,7 @@ namespace net
 		ServerCore::State _state = Uninitialized;
 		error::ResultCode last_error_code;
 
-		ApplicationServer& app_server;
+		PacketHandleServer& packet_handle_server;
 
 		const struct ServerInfo
 		{
@@ -76,8 +74,6 @@ namespace net
 		win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
 
 		win::ObjectPool<net::ConnectionServer> connection_server_pool;
-		std::list<win::ObjectPool<net::ConnectionServer>::Pointer> connection_server_ptrs;
-
-		util::IntervalTaskScheduler<ServerCore> interval_task_scheduler;
+		static std::list<win::ObjectPool<net::ConnectionServer>::Pointer> connection_server_ptrs;
 	};
 }

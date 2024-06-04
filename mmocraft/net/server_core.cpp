@@ -7,8 +7,10 @@
 
 namespace net
 {
-	ServerCore::ServerCore(ApplicationServer& a_app_server, const config::Configuration& conf)
-		: app_server{ a_app_server }
+	std::list<win::ObjectPool<net::ConnectionServer>::Pointer> ServerCore::connection_server_ptrs;
+
+	ServerCore::ServerCore(PacketHandleServer& a_packet_handle_server, const config::Configuration& conf)
+		: packet_handle_server{ a_packet_handle_server }
 		, server_info{ .ip = conf.server.ip,
 						 .port = conf.server.port, 
 						 .max_client_connections = conf.server.max_player,
@@ -19,14 +21,8 @@ namespace net
 		, io_accept_event_data { io_event_pool.new_accept_event_data() }
 		, io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
 		, connection_server_pool{ conf.server.max_player }
-		, interval_task_scheduler{ this }
 	{	
 		io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
-
-		//
-		// Schedule interval tasks.
-		// 
-		interval_task_scheduler.schedule("keep-alive", &ServerCore::check_connection_expiration, util::MilliSecond(10000));
 
 		_state = ServerCore::State::Initialized;
 	}
@@ -35,32 +31,13 @@ namespace net
 	{
 		// create a server for single client.
 		auto connection_server_ptr = connection_server_pool.new_object(
-			app_server,
+			packet_handle_server,
 			std::move(client_sock),
 			io_service,
 			io_event_pool
 		);
 
 		connection_server_ptrs.emplace_back(std::move(connection_server_ptr));
-	}
-
-	void ServerCore::check_connection_expiration()
-	{
-		auto current_tick = util::current_monotonic_tick();
-
-		for (auto it = connection_server_ptrs.begin(); it != connection_server_ptrs.end();) {
-			auto &connection_server = *(*it).get();
-
-			if (connection_server.is_safe_delete(current_tick)) {
-				it = connection_server_ptrs.erase(it);
-				continue;
-			}
-
-			if (connection_server.is_expired(current_tick))
-				connection_server.set_offline();
-
-			++it;
-		}
 	}
 
 	void ServerCore::start_network_io_service()
@@ -81,15 +58,29 @@ namespace net
 		return io_service.push_event(event, event_handler);
 	}
 
+	void ServerCore::cleanup_expired_connection()
+	{
+		for (auto it = connection_server_ptrs.begin(); it != connection_server_ptrs.end();) {
+			auto& connection_server = *(*it).get();
+
+			if (connection_server.is_safe_delete()) {
+				it = connection_server_ptrs.erase(it);
+				continue;
+			}
+
+			if (connection_server.is_expired())
+				connection_server.set_offline();
+
+			++it;
+		}
+	}
+
 	/** 
 	 *  Event handler interface
 	 */
 
 	void ServerCore::on_complete(io::IoAcceptEvent* event)
 	{
-		// check there are expired tasks before accepting next client.
-		interval_task_scheduler.process_tasks();
-
 		if (not last_error_code.is_strong_success()) {
 			LOG(error) << last_error_code;
 			_state = ServerCore::State::Stopped;

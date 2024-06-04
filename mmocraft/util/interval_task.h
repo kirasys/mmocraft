@@ -12,10 +12,20 @@
 
 namespace util
 {
+	enum TaskTag
+	{
+		INVALID,
+		CLEAN_CONNECTION,
+		CLEAN_PLAYER,
+
+		// Size of enum.
+		SIZE
+	};
+
 	template <typename T>
 	struct IntervalTask
 	{
-		std::string tag;
+		TaskTag tag;
 		std::size_t period;
 		std::size_t expired_at;
 
@@ -26,7 +36,7 @@ namespace util
 	template <>
 	struct IntervalTask<void>
 	{
-		std::string tag;
+		TaskTag tag;
 		std::size_t period;
 		std::size_t expired_at;
 
@@ -43,9 +53,11 @@ namespace util
 		{ 
 			if constexpr (std::is_class_v<T>)
 				assert(("class type scheduler must have instance.", instance != nullptr));
+			else
+				assert(("static scheduler must not have instance.", instance == nullptr));
 		}
 
-		void schedule(std::string_view tag, IntervalTask<T>::func_type func, MilliSecond period)
+		void schedule(TaskTag tag, IntervalTask<T>::func_type func, MilliSecond period)
 		{
 			interval_tasks.push_back({
 				.tag {tag},
@@ -57,29 +69,46 @@ namespace util
 
 		void process_tasks()
 		{
-			auto current_tick = util::current_monotonic_tick();
-
 			for (IntervalTask<T>& task : interval_tasks)
 			{
-				if (current_tick < task.expired_at)
+				invoke_task(task);
+			}
+		}
+
+		void process_task(TaskTag tag)
+		{
+			for (IntervalTask<T>& task : interval_tasks)
+			{
+				if (task.tag != tag)
 					continue;
 
-				try {
-					if constexpr (std::is_class_v<T>)
-						std::invoke(task.func, *_instance);
-					else
-						std::invoke(task.func);
-
-					task.expired_at = util::current_monotonic_tick() + task.period;
-				}
-				catch (...) {
-					LOG(error) << "Exception occured at " << task.tag << " (Task deferred)";
-					task.expired_at = util::current_monotonic_tick() + (task.period << 2);
-				}
+				invoke_task(task);
 			}
 		}
 
 	private:
+
+		void invoke_task(IntervalTask<T>& task)
+		{
+			auto current_tick = util::current_monotonic_tick();
+
+			if (current_tick < task.expired_at)
+				return;
+
+			try {
+				if constexpr (std::is_class_v<T>)
+					std::invoke(task.func, *_instance);
+				else
+					std::invoke(task.func);
+
+				task.expired_at = util::current_monotonic_tick() + task.period;
+			}
+			catch (...) {
+				LOG(error) << "Exception occured at " << int(task.tag) << " (Task deferred)";
+				task.expired_at = util::current_monotonic_tick() + (task.period << 2);
+			}
+		}
+
 		T* _instance;
 		std::vector<IntervalTask<T>> interval_tasks;
 	};

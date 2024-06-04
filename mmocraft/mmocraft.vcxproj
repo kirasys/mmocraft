@@ -29,7 +29,6 @@
     <ClCompile Include="logging\error.cpp" />
     <ClCompile Include="logging\logger.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="net\connection_descriptor.cpp" />
     <ClCompile Include="net\deferred_packet.cpp" />
     <ClCompile Include="net\packet.cpp" />
     <ClCompile Include="net\connection_server.cpp" />
@@ -56,8 +55,6 @@
     <ClInclude Include="io\io_service.h" />
     <ClInclude Include="logging\error.h" />
     <ClInclude Include="logging\logger.h" />
-    <ClInclude Include="net\application_server.h" />
-    <ClInclude Include="net\connection_descriptor.h" />
     <ClInclude Include="net\deferred_packet.h" />
     <ClInclude Include="net\packet.h" />
     <ClInclude Include="net\connection_server.h" />
@@ -69,6 +66,7 @@
     <ClInclude Include="util\custom_unique_ptr.h" />
     <ClInclude Include="util\deferred_call.h" />
     <ClInclude Include="util\interval_task.h" />
+    <ClInclude Include="util\lockfree_stack.h" />
     <ClInclude Include="util\noncopyable.h" />
     <ClInclude Include="util\string_util.h" />
     <ClInclude Include="util\time_util.h" />

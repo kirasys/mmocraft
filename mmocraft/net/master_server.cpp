@@ -11,16 +11,18 @@
 namespace net
 {
 	MasterServer::MasterServer()
-		: server_core{ *this, config::get_config()}
+		: interval_task_scheduler{ }
+		, server_core{ *this }
 		, database_core{ }
 	{ 
 		const auto& conf = config::get_config();
 
 		if (not database_core.connect_with_password(conf.db))
 			throw error::DATABASE_CONNECT;
+
 	}
 
-	error::ResultCode MasterServer::handle_packet(DescriptorType::Connection conn_descriptor, Packet* packet)
+	error::ResultCode MasterServer::handle_packet(net::ConnectionServer::Descriptor& conn_descriptor, Packet* packet)
 	{
 		switch (packet->id) {
 		case PacketID::Handshake:
@@ -30,9 +32,9 @@ namespace net
 		}
 	}
 
-	error::ResultCode MasterServer::handle_handshake_packet(DescriptorType::Connection conn_descriptor, PacketHandshake& packet)
+	error::ResultCode MasterServer::handle_handshake_packet(net::ConnectionServer::Descriptor& conn_descriptor, PacketHandshake& packet)
 	{
-		deferred_handshake_packet_event.push_packet(conn_descriptor, packet);
+		deferred_handshake_packet_event.push_packet(&conn_descriptor, packet);
 		return error::PACKET_HANDLE_DEFERRED;
 	}
 
@@ -43,11 +45,10 @@ namespace net
 		while (1) {
 			std::size_t start_tick = util::current_monotonic_tick();
 
+			ConnectionServer::tick();
+
 			flush_deferred_packet();
 			process_deferred_packet_result();
-
-			ConnectionDescriptor::flush_server_message(DescriptorType::tick_descriptor);
-			ConnectionDescriptor::flush_client_message(DescriptorType::tick_descriptor);
 
 			std::size_t end_tick = util::current_monotonic_tick();
 
@@ -87,8 +88,7 @@ namespace net
 				break;
 			case error::PACKET_RESULT_FAIL_LOGIN:
 			case error::PACKET_RESULT_ALREADY_LOGIN:
-				ConnectionDescriptor::disconnect(
-					result->connection_descriptor,
+				result->connection_descriptor->disconnect_deferred(
 					error::get_error_message(result->error_code)
 				);
 				break;
@@ -117,8 +117,7 @@ namespace net
 			error::ErrorCode result = error::PACKET_RESULT_FAIL_LOGIN;
 
 			if (player_type != game::PlayerType::INVALID) {
-				result = ConnectionDescriptor::associate_game_player(
-					packet->connection_descriptor,
+				result = packet->connection_descriptor->associate_game_player(
 					player_search.get_player_identity_number(),
 					player_type,
 					packet->username,

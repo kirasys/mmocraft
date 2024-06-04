@@ -53,11 +53,9 @@ namespace io
 		virtual bool push(std::byte* data, std::size_t n) = 0;
 
 		virtual void pop(std::size_t n) = 0;
-	};
 
-	class IoEventRawData : public IoEventData
-	{
-	public:
+		// raw buffer manipulation
+
 		virtual std::byte* data() = 0;
 
 		virtual void commit(std::size_t n) = 0;
@@ -104,6 +102,16 @@ namespace io
 
 		void pop(std::size_t n) override;
 
+		std::byte* data()
+		{
+			return _data;
+		}
+
+		void commit(std::size_t n)
+		{
+			_size -= n;
+		}
+
 	private:
 		std::byte _data[RECV_BUFFER_SIZE] = {};
 		std::size_t _size = 0;
@@ -112,7 +120,7 @@ namespace io
 	using IoAcceptEventData = IoRecvEventData;
 
 	template <std::size_t N>
-	class IoSendEventVariableData : public IoEventRawData
+	class IoSendEventVariableData : public IoEventData
 	{
 	public:
 		// data points to used space.
@@ -169,10 +177,6 @@ namespace io
 			assert(data_head <= sizeof(_data));
 		}
 
-		/**
-		 *  IoEventRawData interface. 
-		 */
-
 		std::byte* data() override
 		{
 			return _data;
@@ -180,6 +184,9 @@ namespace io
 
 		void commit(std::size_t n) override
 		{
+			if (data_head == data_tail)
+				data_head = data_tail = 0;
+
 			data_tail += int(n);
 		}
 
@@ -204,7 +211,7 @@ namespace io
 			: data{ *a_data }
 		{ }
 
-		virtual void invoke_handler(IoEventHandler&, DWORD) = 0;
+		virtual void invoke_handler(IoEventHandler&, DWORD transferred_bytes) = 0;
 	};
 
 	struct IoAcceptEvent : IoEvent
@@ -214,24 +221,21 @@ namespace io
 
 		using IoEvent::IoEvent;
 
-		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
+		void invoke_handler(IoEventHandler&, DWORD) override;
 	};
 
 	struct IoRecvEvent : IoEvent
 	{
 		using IoEvent::IoEvent;
 
-		void invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes) override;
+		void invoke_handler(IoEventHandler&, DWORD) override;
 	};
 
 	struct IoSendEvent : IoEvent
 	{
-		IoSendEventSmallData& small_data;
+		bool is_processing = false;
 
-		IoSendEvent(IoSendEventData* a_data, IoSendEventSmallData* a_small_data)
-			: IoEvent{ a_data }
-			, small_data{ *a_small_data }
-		{ }
+		using IoEvent::IoEvent;
 
 		void invoke_handler(IoEventHandler&, DWORD) override;
 	};

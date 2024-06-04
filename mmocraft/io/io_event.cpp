@@ -13,8 +13,6 @@ namespace io
 
 	void IoRecvEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal)
 	{
-		util::defer on_complete = [&]() { event_handler.on_complete(this); };
-
 		// pre-processing
 		if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
 			return;
@@ -28,6 +26,8 @@ namespace io
 		// post-processing
 		if (processed_bytes)
 			data.pop(processed_bytes);
+
+		event_handler.on_complete(this);
 	}
 
 	bool IoRecvEventData::push(std::byte*, std::size_t n)
@@ -45,16 +45,12 @@ namespace io
 
 	void IoSendEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal)
 	{
-		util::defer on_complete = [&]() { event_handler.on_complete(this); };
-
 		// pre-processing
 		if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
 			return;
 
-		auto processed_small_data_bytes = std::min(size_t(transferred_bytes_or_signal), small_data.size());
-		small_data.pop(processed_small_data_bytes);
+		data.pop(transferred_bytes_or_signal);
 
-		auto process_data_bytes = transferred_bytes_or_signal - processed_small_data_bytes;
-		data.pop(process_data_bytes);
+		event_handler.on_complete(this);
 	}
 }
