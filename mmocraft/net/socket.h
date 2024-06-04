@@ -12,62 +12,62 @@
 
 namespace net
 {
-	enum SocketType
-	{
-		None,
-		TCPv4,
-		UDPv4,
-	};
+    enum SocketType
+    {
+        None,
+        TCPv4,
+        UDPv4,
+    };
 
-	class Socket : public win::WinBaseObject<win::Socket>, util::NonCopyable
-	{
-	public:
-		// constructor
-		Socket() noexcept;
-		Socket(SocketType);
-		Socket(win::Socket);
-		Socket(win::UniqueSocket&&);
+    class Socket : public win::WinBaseObject<win::Socket>, util::NonCopyable
+    {
+    public:
+        // constructor
+        Socket() noexcept;
+        Socket(SocketType);
+        Socket(win::Socket);
+        Socket(win::UniqueSocket&&);
 
-		// destructor
-		~Socket() = default;
+        // destructor
+        ~Socket() = default;
 
-		// move controllers
-		Socket(Socket&& sock) = default;
-		Socket& operator=(Socket&&) = default;
+        // move controllers
+        Socket(Socket&& sock) = default;
+        Socket& operator=(Socket&&) = default;
 
-		win::Socket get_handle() const {
-			return _handle.get();
-		}
+        win::Socket get_handle() const {
+            return _handle.get();
+        }
 
-		bool is_valid() const {
-			return _handle.get();
-		}
+        bool is_valid() const {
+            return _handle.get();
+        }
 
-		static void initialize_system();
+        static void initialize_system();
 
-		void close() noexcept;
+        void close() noexcept;
 
-		bool bind(std::string_view, int);
+        bool bind(std::string_view, int);
 
-		bool listen(int backlog = SOMAXCONN);
+        bool listen(int backlog = SOMAXCONN);
 
-		error::ErrorCode accept(io::IoAcceptEvent&);
+        error::ErrorCode accept(io::IoAcceptEvent&);
 
-		static bool send(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
+        static bool send(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 
-		bool send(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
+        bool send(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 
-		static bool recv(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
+        static bool recv(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 
-		bool recv(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
+        bool recv(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 
-		int get_address_family() {
-			return AF_INET; // TODO: IPv6
-		}
+        int get_address_family() {
+            return AF_INET; // TODO: IPv6
+        }
 
-	private:
-		win::UniqueSocket _handle;
-	};
+    private:
+        win::UniqueSocket _handle;
+    };
 
-	win::Socket create_windows_socket(SocketType, DWORD flags);
+    win::Socket create_windows_socket(SocketType, DWORD flags);
 }

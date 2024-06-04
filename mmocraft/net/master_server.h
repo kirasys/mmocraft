@@ -10,40 +10,40 @@
 
 namespace net
 {
-	class MasterServer : public net::PacketHandleServer, public net::DeferredPacketHandler
-	{
-	public:
-		MasterServer();
+    class MasterServer : public net::PacketHandleServer, public net::DeferredPacketHandler
+    {
+    public:
+        MasterServer();
 
-		error::ResultCode handle_packet(net::ConnectionServer::Descriptor&, Packet*) override;
+        error::ResultCode handle_packet(net::ConnectionServer::Descriptor&, Packet*) override;
 
-		error::ResultCode handle_handshake_packet(net::ConnectionServer::Descriptor&, PacketHandshake&);
+        error::ResultCode handle_handshake_packet(net::ConnectionServer::Descriptor&, PacketHandshake&);
 
-		void serve_forever();
+        void serve_forever();
 
-		/**
-		 *  Deferred packet handler methods.
-		 */
+        /**
+         *  Deferred packet handler methods.
+         */
 
-		virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*, const DeferredPacket<PacketHandshake>*) override;
+        virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*, const DeferredPacket<PacketHandshake>*) override;
 
-	private:
+    private:
 
-		void process_deferred_packet_result();
+        void process_deferred_packet_result();
 
-		void process_deferred_packet_result_internal(const DeferredPacketResult*);
+        void process_deferred_packet_result_internal(const DeferredPacketResult*);
 
-		void flush_deferred_packet();
+        void flush_deferred_packet();
 
-		util::IntervalTaskScheduler<void> interval_task_scheduler;
+        util::IntervalTaskScheduler<void> interval_task_scheduler;
 
-		net::ServerCore server_core;
+        net::ServerCore server_core;
 
-		database::DatabaseCore database_core;
+        database::DatabaseCore database_core;
 
-		DeferredPacketEvent<PacketHandshake> deferred_handshake_packet_event;
-		PacketEvent* deferred_packet_events[1] = {
-			&deferred_handshake_packet_event
-		};
-	};
+        DeferredPacketEvent<PacketHandshake> deferred_handshake_packet_event;
+        PacketEvent* deferred_packet_events[1] = {
+            &deferred_handshake_packet_event
+        };
+    };
 }

@@ -17,63 +17,63 @@
 
 namespace net
 {
-	class ServerCore final : public io::IoEventHandler
-	{
-	public:
-		enum State
-		{
-			Uninitialized,
-			Initialized,
-			Running,
-			Stopped,
-		};
+    class ServerCore final : public io::IoEventHandler
+    {
+    public:
+        enum State
+        {
+            Uninitialized,
+            Initialized,
+            Running,
+            Stopped,
+        };
 
-		ServerCore(PacketHandleServer&, const config::Configuration& conf = config::get_config());
+        ServerCore(PacketHandleServer&, const config::Configuration& conf = config::get_config());
 
-		ServerCore::State status() const
-		{
-			return _state;
-		}
+        ServerCore::State status() const
+        {
+            return _state;
+        }
 
-		void start_network_io_service();
+        void start_network_io_service();
 
-		bool post_event(PacketEvent* event, DeferredPacketHandler* event_handler);
+        bool post_event(PacketEvent* event, DeferredPacketHandler* event_handler);
 
-		void new_connection(win::UniqueSocket &&client_sock);
+        void new_connection(win::UniqueSocket &&client_sock);
 
-		static void cleanup_expired_connection();
+        static void cleanup_expired_connection();
 
-		/**
-		 *  Event handler interface 
-		 */
+        /**
+         *  Event handler interface 
+         */
 
-		virtual void on_complete(io::IoAcceptEvent*) override;
+        virtual void on_complete(io::IoAcceptEvent*) override;
 
-		virtual std::size_t handle_io_event(io::IoAcceptEvent*) override;
-		
-	private:
-		ServerCore::State _state = Uninitialized;
-		error::ResultCode last_error_code;
+        virtual std::size_t handle_io_event(io::IoAcceptEvent*) override;
+        
+    private:
+        ServerCore::State _state = Uninitialized;
+        error::ResultCode last_error_code;
 
-		PacketHandleServer& packet_handle_server;
+        PacketHandleServer& packet_handle_server;
 
-		const struct ServerInfo
-		{
-			std::string_view ip;
-			int port;
-			unsigned max_client_connections;
-			unsigned num_of_event_threads;
-		} server_info;
+        const struct ServerInfo
+        {
+            std::string_view ip;
+            int port;
+            unsigned max_client_connections;
+            unsigned num_of_event_threads;
+        } server_info;
 
-		net::Socket _listen_sock;
+        net::Socket _listen_sock;
 
-		io::IoCompletionPort io_service;
+        io::IoCompletionPort io_service;
 
-		io::IoEventPool io_event_pool;
-		win::ObjectPool<io::IoAcceptEventData>::Pointer io_accept_event_data;
-		win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
+        io::IoEventPool io_event_pool;
+        win::ObjectPool<io::IoAcceptEventData>::Pointer io_accept_event_data;
+        win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
 
-		win::ObjectPool<net::ConnectionServer> connection_server_pool;
-		static std::list<win::ObjectPool<net::ConnectionServer>::Pointer> connection_server_ptrs;
-	};
+        win::ObjectPool<net::ConnectionServer> connection_server_pool;
+        static std::list<win::ObjectPool<net::ConnectionServer>::Pointer> connection_server_ptrs;
+    };
 }

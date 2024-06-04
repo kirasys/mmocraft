@@ -11,46 +11,46 @@
 
 namespace
 {
-	std::vector<std::terminate_handler> system_terminatio_handlers;
+    std::vector<std::terminate_handler> system_terminatio_handlers;
 
-	void termination_routine()
-	{
-		for (auto handler : system_terminatio_handlers)
-			handler();
+    void termination_routine()
+    {
+        for (auto handler : system_terminatio_handlers)
+            handler();
 
-		std::exit(0);
-	}
+        std::exit(0);
+    }
 
-	void termination_routine_for_signal(int signal)
-	{
-		return;
-	}
+    void termination_routine_for_signal(int signal)
+    {
+        return;
+    }
 }
 
 namespace setup
 {
-	void initialize_system()
-	{
-		std::set_terminate(termination_routine);
+    void initialize_system()
+    {
+        std::set_terminate(termination_routine);
 
-		std::signal(SIGTERM, termination_routine_for_signal);
-		std::signal(SIGSEGV, termination_routine_for_signal);
-		std::signal(SIGINT, termination_routine_for_signal);
-		std::signal(SIGABRT, termination_routine_for_signal);
+        std::signal(SIGTERM, termination_routine_for_signal);
+        std::signal(SIGSEGV, termination_routine_for_signal);
+        std::signal(SIGINT, termination_routine_for_signal);
+        std::signal(SIGABRT, termination_routine_for_signal);
 
-		// config system
-		config::initialize_system();
+        // config system
+        config::initialize_system();
 
-		// log system
-		logging::initialize_system();
+        // log system
+        logging::initialize_system();
 
-		// network system
-		net::Socket::initialize_system();
-		net::ConnectionServer::initialize_system();
-	}
+        // network system
+        net::Socket::initialize_system();
+        net::ConnectionServer::initialize_system();
+    }
 
-	void add_termination_handler(std::terminate_handler handler)
-	{
-		system_terminatio_handlers.push_back(handler);
-	}
+    void add_termination_handler(std::terminate_handler handler)
+    {
+        system_terminatio_handlers.push_back(handler);
+    }
 }
