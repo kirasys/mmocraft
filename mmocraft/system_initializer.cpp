@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "logging/logger.h"
-#include "net/connection_descriptor.h"
 #include "net/socket.h"
+#include "net/connection_server.h"
 
 namespace
 {
@@ -46,7 +46,7 @@ namespace setup
 
 		// network system
 		net::Socket::initialize_system();
-		net::ConnectionDescriptor::initialize_system();
+		net::ConnectionServer::initialize_system();
 	}
 
 	void add_termination_handler(std::terminate_handler handler)
