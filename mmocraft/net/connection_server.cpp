@@ -161,9 +161,6 @@ namespace net
     void ConnectionServer::flush_server_message()
     {
         for (const auto& [desc, online] : online_connection_table) {
-            if (not online)
-                continue;
-
             for (auto event : desc->io_send_events) {
                 if (not event->is_processing)
                     desc->activate_send_cycle(event);
@@ -278,7 +275,7 @@ namespace net
 
     void ConnectionServer::Descriptor::activate_send_cycle(io::IoSendEvent* event)
     {
-        if (not is_online || event->data.size() == 0)
+        if (event->data.size() == 0)
             return;
 
         WSABUF wbuf[1] = {};
@@ -296,10 +293,11 @@ namespace net
         if (not is_online)
             return false;
 
-        set_offline();
-
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        return disconnect_packet.serialize(io_send_events[SendType::IMMEDIATE]->data);
+        disconnect_packet.serialize(io_send_events[SendType::IMMEDIATE]->data);
+
+        set_offline();
+        return true; // Todo: error recover
     }
 
     bool ConnectionServer::Descriptor::disconnect_deferred(std::string_view reason)
@@ -307,10 +305,11 @@ namespace net
         if (not is_online)
             return false;
 
-        set_offline();
-
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        return disconnect_packet.serialize(io_send_events[SendType::DEFERRED]->data);
+        disconnect_packet.serialize(io_send_events[SendType::DEFERRED]->data);
+    
+        set_offline();
+        return true; // Todo: error recover
     }
 
     
