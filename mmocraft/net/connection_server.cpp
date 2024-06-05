@@ -294,10 +294,10 @@ namespace net
             return false;
 
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        disconnect_packet.serialize(io_send_events[SendType::IMMEDIATE]->data);
+        auto result = disconnect_packet.serialize(io_send_events[SendType::IMMEDIATE]->data);
 
         set_offline();
-        return true; // Todo: error recover
+        return result;
     }
 
     bool ConnectionServer::Descriptor::disconnect_deferred(std::string_view reason)
@@ -306,10 +306,10 @@ namespace net
             return false;
 
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        disconnect_packet.serialize(io_send_events[SendType::DEFERRED]->data);
+        auto result = disconnect_packet.serialize(io_send_events[SendType::DEFERRED]->data);
     
         set_offline();
-        return true; // Todo: error recover
+        return result;
     }
 
     bool ConnectionServer::Descriptor::finalize_handshake() const
