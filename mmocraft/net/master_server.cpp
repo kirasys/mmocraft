@@ -14,6 +14,8 @@ namespace net
         : interval_task_scheduler{ }
         , server_core{ *this }
         , database_core{ }
+        
+        , deferred_handshake_packet_event{ &MasterServer::handle_deferred_handshake_packet }
     { 
         const auto& conf = config::get_config();
 
@@ -57,20 +59,12 @@ namespace net
         }
     }
 
-    void MasterServer::process_deferred_packet_result()
-    {
-        for (auto event : deferred_packet_events) {
-            auto result_ptr = event->pop_pending_result();
-            process_deferred_packet_result_internal(result_ptr.get());
-        }
-    }
-
     void MasterServer::flush_deferred_packet()
     {
         for (auto event : deferred_packet_events) {
             if (event->is_exist_pending_packet()
                 && event->transit_state(PacketEvent::Unused, PacketEvent::Processing)) {
-                server_core.post_event(event, this);
+                server_core.post_event(event, ULONG_PTR(this));
             }
         }
     }
@@ -79,26 +73,31 @@ namespace net
      *  Deferred packet handler methods.
      */
 
-    void MasterServer::process_deferred_packet_result_internal(const DeferredPacketResult* results)
+    void MasterServer::process_deferred_packet_result()
     {
-        for (auto result = results; result; result = result->next) {
-            switch (result->error_code) {
-            case error::PACKET_RESULT_SUCCESS_LOGIN:
-                // TODO
-                break;
-            case error::PACKET_RESULT_FAIL_LOGIN:
-            case error::PACKET_RESULT_ALREADY_LOGIN:
-                result->connection_descriptor->disconnect_deferred(
-                    error::get_error_message(result->error_code)
-                );
-                break;
-            default:
-                LOG(error) << "Unexpected packet result: " << result->error_code;
-            }
+        for (auto event : deferred_packet_events) {
+            auto result_ptr = event->pop_pending_result();
+            process_deferred_packet_result_internal(result_ptr.get());
         }
     }
 
-    void MasterServer::handle_deferred_packet(DeferredPacketEvent<PacketHandshake>* event, const DeferredPacket<PacketHandshake>* packet_head)
+    void MasterServer::process_deferred_packet_result_internal(const DeferredPacketResult* results)
+    {
+        for (auto result = results; result; result = result->next) {
+            auto result_code = result->result_code;
+
+            if (result_code.is_login_success()) {
+                // TODO
+                return;
+            }
+
+            result->connection_descriptor->disconnect_deferred(
+                result_code.to_string()
+            );
+        }
+    }
+
+    void MasterServer::handle_deferred_handshake_packet(net::PacketEvent* event, const DeferredPacket<PacketHandshake>* packet_head)
     {
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };

@@ -10,7 +10,7 @@
 
 namespace net
 {
-    class MasterServer : public net::PacketHandleServer, public net::DeferredPacketHandler
+    class MasterServer : public net::PacketHandleServer
     {
     public:
         MasterServer();
@@ -25,7 +25,7 @@ namespace net
          *  Deferred packet handler methods.
          */
 
-        virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*, const DeferredPacket<PacketHandshake>*) override;
+        virtual void handle_deferred_handshake_packet(net::PacketEvent*, const DeferredPacket<PacketHandshake>*);
 
     private:
 
@@ -41,7 +41,7 @@ namespace net
 
         database::DatabaseCore database_core;
 
-        DeferredPacketEvent<PacketHandshake> deferred_handshake_packet_event;
+        DeferredPacketEvent<PacketHandshake, MasterServer> deferred_handshake_packet_event;
         PacketEvent* deferred_packet_events[1] = {
             &deferred_handshake_packet_event
         };

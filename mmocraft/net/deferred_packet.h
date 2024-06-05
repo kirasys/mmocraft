@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <memory>
 
 #include "logging/error.h"
@@ -34,21 +35,11 @@ namespace net
         char password[net::PacketFieldConstraint::max_password_length + 1];
     };
 
-    // forward declaration.
-    template<typename PacketType = PacketHandshake>
-    class DeferredPacketEvent;
-
     struct DeferredPacketResult
     {
         ConnectionServer::Descriptor* connection_descriptor;
-        error::ErrorCode error_code;
+        error::ResultCode result_code;
         DeferredPacketResult* next;
-    };
-
-    class DeferredPacketHandler
-    {
-    public:
-        virtual void handle_deferred_packet(DeferredPacketEvent<PacketHandshake>*, const DeferredPacket<PacketHandshake>*) = 0;
     };
 
     class PacketEvent
@@ -72,22 +63,35 @@ namespace net
             return false;
         }
 
-        virtual void invoke_handler(DeferredPacketHandler&) = 0;
+        virtual void invoke_handler(ULONG_PTR event_handler_inst) = 0;
 
         virtual bool is_exist_pending_packet() const = 0;
+
+        virtual void push_result(ConnectionServer::Descriptor*, error::ErrorCode) = 0;
 
         virtual auto pop_pending_result() -> std::unique_ptr<DeferredPacketResult, void(*)(DeferredPacketResult*)> = 0;
     };
 
 
-    template <typename PacketType>
+    template <typename PacketType, typename HandlerClass>
     class DeferredPacketEvent: public PacketEvent
     {
     public:
-        virtual void invoke_handler(DeferredPacketHandler& event_handler) override
+        using handler_type = void (HandlerClass::*const)(PacketEvent*, const DeferredPacket<PacketType>*);
+
+        DeferredPacketEvent(handler_type a_handler)
+            : _handler{ a_handler }
+        { }
+
+        virtual void invoke_handler(ULONG_PTR event_handler_inst) override
         {
             auto head_ptr = pop_pending_packet();
-            event_handler.handle_deferred_packet(this, head_ptr.get());
+
+            std::invoke(_handler,
+                *reinterpret_cast<HandlerClass*>(event_handler_inst),
+                this,
+                head_ptr.get()
+            );
 
             transit_state(State::Processing, State::Unused);
         }
@@ -123,11 +127,11 @@ namespace net
             );
         }
 
-        void push_result(ConnectionServer::Descriptor* desc, error::ErrorCode error_code)
+        void push_result(ConnectionServer::Descriptor* desc, error::ErrorCode error_code) override
         {
             auto new_packet = new DeferredPacketResult{
                 .connection_descriptor = desc,
-                .error_code = error_code,
+                .result_code = error_code,
                 .next = pending_result_head.load(std::memory_order_relaxed)
             };
 
@@ -154,6 +158,8 @@ namespace net
         }
 
     private:
+        handler_type _handler;
+
         std::atomic<DeferredPacket<PacketType>*> pending_packet_head{ nullptr };
         std::atomic<DeferredPacketResult*> pending_result_head{ nullptr };
     };

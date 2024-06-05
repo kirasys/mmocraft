@@ -22,12 +22,12 @@ namespace io
         register_event_source(win::Handle(event_source), event_handler);
     }
 
-    bool IoCompletionPort::push_event(void* event_handler, void* overlapped)
+    bool IoCompletionPort::push_event(void* event, ULONG_PTR event_handler_inst)
     {
         return ::PostQueuedCompletionStatus(_handle, 
             DWORD(io::CUSTOM_EVENT_SIGNAL),
-            ULONG_PTR(event_handler),
-            LPOVERLAPPED(overlapped)) != 0;
+            event_handler_inst,
+            LPOVERLAPPED(event)) != 0;
     }
 
     void IoCompletionPort::close() noexcept
@@ -64,9 +64,8 @@ namespace io
             try {
                 if (transferred_bytes_or_signal == CUSTOM_EVENT_SIGNAL) {
                     auto packet_event = reinterpret_cast<net::PacketEvent*>(overlapped);
-                    auto packet_handler = reinterpret_cast<net::DeferredPacketHandler*>(completion_key);
 
-                    packet_event->invoke_handler(*packet_handler);
+                    packet_event->invoke_handler(completion_key);
                 }
                 else {
                     auto io_event = CONTAINING_RECORD(overlapped, io::IoEvent, overlapped);
