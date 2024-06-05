@@ -55,11 +55,19 @@ namespace config {
 
         }
 
-        // only one global configuration variable exists.
-        Configuration(Configuration&) = delete;
-        Configuration(Configuration&&) = delete;
+        Configuration clone() const
+        {
+            return *this;
+        }
+
+
         Configuration& operator=(Configuration&) = delete;
         Configuration& operator=(Configuration&&) = delete;
+
+    private:
+        // disallow implicit copy constructing.
+        Configuration(const Configuration&) = default;
+        Configuration(Configuration&&) = default;
     };
 
     bool load_config(Configuration&);
