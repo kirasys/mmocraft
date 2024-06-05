@@ -26,6 +26,8 @@ namespace config {
             std::string ip = "127.0.0.1";
             int port = 12345;
             unsigned max_player = 100;
+            std::string server_name = "Minecraft Server";
+            std::string motd = "welcome";
         } server;
 
         struct LogConfig

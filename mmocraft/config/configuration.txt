@@ -6,6 +6,8 @@ memory_pool_size: 256
 ip: 127.0.0.1
 port: 12345
 max_player: 1000
+server_name: Massive Minecraft Classic Server
+motd: welcome to mmocraft server.
 
 [Logging]
 log_level: FATAL

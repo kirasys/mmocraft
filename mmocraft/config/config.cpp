@@ -109,6 +109,12 @@ namespace config {
 
         if (conf_map.find("max_player") != end)
             conf.max_player = std::stoi(conf_map.at("max_player"));
+
+        if (conf_map.find("server_name") != end)
+            conf.server_name = conf_map.at("server_name");
+
+        if (conf_map.find("motd") != end)
+            conf.motd = conf_map.at("motd");
     }
 
     void load_database_config(Configuration::DatabaseConfig& conf, ConfigMap conf_map)
