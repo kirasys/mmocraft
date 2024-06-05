@@ -66,6 +66,8 @@ namespace net
 
             bool disconnect_deferred(std::string_view);
 
+            bool finalize_handshake() const;
+
             bool associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
         };
 

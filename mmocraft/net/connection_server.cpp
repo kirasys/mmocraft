@@ -312,5 +312,18 @@ namespace net
         return true; // Todo: error recover
     }
 
-    
+    bool ConnectionServer::Descriptor::finalize_handshake() const
+    {
+        if (not is_online)
+            return false;
+
+        const auto& conf = config::get_config();
+
+        PacketHandshake handshake_packet{
+            conf.server.server_name, conf.server.motd, 
+            self_player->get_player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
+        };
+
+        return handshake_packet.serialize(io_send_events[SendType::DEFERRED]->data);
+    }
 }

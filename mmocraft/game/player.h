@@ -38,6 +38,11 @@ namespace game
             return identity_number;
         }
 
+        PlayerType get_player_type() const
+        {
+            return player_type;
+        }
+
     private:
         PlayerID identity_number;
         PlayerType player_type;

@@ -87,7 +87,7 @@ namespace net
             auto result_code = result->result_code;
 
             if (result_code.is_login_success()) {
-                // TODO
+                result->connection_descriptor->finalize_handshake();
                 return;
             }
 
