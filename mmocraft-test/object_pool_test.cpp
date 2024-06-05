@@ -1,7 +1,7 @@
 #include "pch.h"
 #include <vector>
 
-#include "win/object_pool.cpp"
+#include "win/object_pool.h"
 
 struct Foo {
 	int a = 0;
@@ -47,9 +47,9 @@ TEST(ObjectPoolTest, New_Object_Correctly) {
 	auto obj1_id = object_pool.new_object(1, 'a');
 	auto obj2_id = object_pool.new_object(2, 'b');
 	auto obj3_id = object_pool.new_object(3, 'c');
-	auto obj1 = win::ObjectPool<Foo>::find_object(obj1_id);
-	auto obj2 = win::ObjectPool<Foo>::find_object(obj2_id);
-	auto obj3 = win::ObjectPool<Foo>::find_object(obj3_id);
+	auto obj1 = obj1_id.get();
+	auto obj2 = obj2_id.get();
+	auto obj3 = obj3_id.get();
 
 	ASSERT_TRUE(obj1 != nullptr);
 	ASSERT_TRUE(obj2 != nullptr);
@@ -69,12 +69,12 @@ TEST(ObjectPoolTest, New_Object_To_Max) {
 	const int max_capacity = 10;
 	win::ObjectPool<Foo> object_pool(max_capacity);
 	
-	std::vector<win::ObjectPool<Foo>::ScopedID> object_ids;
+	std::vector<win::ObjectPool<Foo>::Pointer> object_ptrs;
 	for (int i = 0; i < max_capacity; i++)
-		object_ids.emplace_back(object_pool.new_object(i, 'a'));
+		object_ptrs.emplace_back(object_pool.new_object(i, 'a'));
 
 	for (int i = 0; i < max_capacity; i++) {
-		EXPECT_NE(win::ObjectPool<Foo>::find_object(object_ids[i]), nullptr);
+		EXPECT_NE(object_ptrs[i].get(), nullptr);
 	}
 }
 
@@ -82,14 +82,14 @@ TEST(ObjectPoolTest, New_Object_Exceed) {
 	const int max_capacity = 10;
 	win::ObjectPool<Foo> object_pool(max_capacity);
 
-	std::vector<win::ObjectPool<Foo>::ScopedID> object_ids;
+	std::vector<win::ObjectPool<Foo>::Pointer> object_ptrs;
 	for (int i = 0; i < max_capacity + 1; i++)
-		object_ids.emplace_back(object_pool.new_object(i, 'a'));
+		object_ptrs.emplace_back(object_pool.new_object(i, 'a'));
 
 	for (int i = 0; i < max_capacity; i++)
-		EXPECT_NE(win::ObjectPool<Foo>::find_object(object_ids[i]), nullptr);
+		EXPECT_NE(object_ptrs[i].get(), nullptr);
 	
-	EXPECT_EQ(win::ObjectPool<Foo>::find_object(object_ids.back()), nullptr);
+	EXPECT_EQ(object_ptrs.back().get(), nullptr);
 }
 
 TEST(ObjectPoolTest, New_Object_Unsafe_Delete_Correctly) {
