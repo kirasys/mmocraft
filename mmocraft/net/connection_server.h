@@ -144,4 +144,12 @@ namespace net
     public:
         virtual error::ResultCode handle_packet(net::ConnectionServer::Descriptor&, net::Packet*) = 0;
     };
+
+    class PacketHandleServerStub : public PacketHandleServer
+    {
+        error::ResultCode handle_packet(net::ConnectionServer::Descriptor&, net::Packet*) override
+        {
+            return error::SUCCESS;
+        }
+    };
 }
