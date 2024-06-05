@@ -15,7 +15,9 @@ namespace net
         , server_core{ *this }
         , database_core{ }
         
-        , deferred_handshake_packet_event{ &MasterServer::handle_deferred_handshake_packet }
+        , deferred_handshake_packet_event{ 
+            &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_packet_result
+        }
     { 
         const auto& conf = config::get_config();
 
@@ -50,7 +52,7 @@ namespace net
             ConnectionServer::tick();
 
             flush_deferred_packet();
-            process_deferred_packet_result();
+            handle_deferred_packet_result();
 
             std::size_t end_tick = util::current_monotonic_tick();
 
@@ -73,15 +75,13 @@ namespace net
      *  Deferred packet handler methods.
      */
 
-    void MasterServer::process_deferred_packet_result()
+    void MasterServer::handle_deferred_packet_result()
     {
-        for (auto event : deferred_packet_events) {
-            auto result_ptr = event->pop_pending_result();
-            process_deferred_packet_result_internal(result_ptr.get());
-        }
+        for (auto event : deferred_packet_events)
+            event->invoke_result_handler(/*handler_instance=*/ this);
     }
 
-    void MasterServer::process_deferred_packet_result_internal(const DeferredPacketResult* results)
+    void MasterServer::handle_deferred_handshake_packet_result(const DeferredPacketResult* results)
     {
         for (auto result = results; result; result = result->next) {
             auto result_code = result->result_code;

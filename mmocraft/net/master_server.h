@@ -25,13 +25,13 @@ namespace net
          *  Deferred packet handler methods.
          */
 
-        virtual void handle_deferred_handshake_packet(net::PacketEvent*, const DeferredPacket<PacketHandshake>*);
+        void handle_deferred_handshake_packet_result(const DeferredPacketResult*);
+
+        void handle_deferred_handshake_packet(net::PacketEvent*, const DeferredPacket<PacketHandshake>*);
 
     private:
 
-        void process_deferred_packet_result();
-
-        void process_deferred_packet_result_internal(const DeferredPacketResult*);
+        void handle_deferred_packet_result();
 
         void flush_deferred_packet();
 

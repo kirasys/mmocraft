@@ -81,6 +81,11 @@ namespace error
             return error_code == error::SUCCESS;
         }
 
+        inline bool is_login_success() const
+        {
+            return error_code == error::PACKET_RESULT_SUCCESS_LOGIN;
+        }
+
         inline const char* to_string() const
         {
             return get_error_message(error_code);

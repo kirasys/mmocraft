@@ -65,11 +65,13 @@ namespace net
 
         virtual void invoke_handler(ULONG_PTR event_handler_inst) = 0;
 
+        virtual void invoke_result_handler(void* result_handler_inst) = 0;
+
         virtual bool is_exist_pending_packet() const = 0;
 
-        virtual void push_result(ConnectionServer::Descriptor*, error::ErrorCode) = 0;
+        virtual bool is_exist_pending_result() const = 0;
 
-        virtual auto pop_pending_result() -> std::unique_ptr<DeferredPacketResult, void(*)(DeferredPacketResult*)> = 0;
+        virtual void push_result(ConnectionServer::Descriptor*, error::ErrorCode) = 0;
     };
 
 
@@ -78,9 +80,11 @@ namespace net
     {
     public:
         using handler_type = void (HandlerClass::*const)(PacketEvent*, const DeferredPacket<PacketType>*);
+        using result_handler_type = void (HandlerClass::* const)(const DeferredPacketResult*);
 
-        DeferredPacketEvent(handler_type a_handler)
+        DeferredPacketEvent(handler_type a_handler, result_handler_type a_result_handler)
             : _handler{ a_handler }
+            , _result_handler{ a_result_handler }
         { }
 
         virtual void invoke_handler(ULONG_PTR event_handler_inst) override
@@ -96,9 +100,24 @@ namespace net
             transit_state(State::Processing, State::Unused);
         }
 
+        virtual void invoke_result_handler(void* result_handler_inst) override
+        {
+            auto result_ptr = pop_pending_result();
+
+            std::invoke(_result_handler,
+                *reinterpret_cast<HandlerClass*>(result_handler_inst),
+                result_ptr.get()
+            );
+        }
+
         virtual bool is_exist_pending_packet() const override
         {
             return pending_packet_head.load(std::memory_order_relaxed) != nullptr;
+        }
+
+        virtual bool is_exist_pending_result() const override
+        {
+            return pending_result_head.load(std::memory_order_relaxed) != nullptr;
         }
 
         void push_packet(ConnectionServer::Descriptor* desc, const PacketType& src_packet)
@@ -149,7 +168,7 @@ namespace net
 
         using result_ptr_type = std::unique_ptr<DeferredPacketResult, decltype(delete_results)*>;
 
-        auto pop_pending_result() -> result_ptr_type override
+        auto pop_pending_result() -> result_ptr_type
         {
             return result_ptr_type(
                 pending_result_head.exchange(nullptr, std::memory_order_relaxed),
@@ -159,6 +178,7 @@ namespace net
 
     private:
         handler_type _handler;
+        result_handler_type _result_handler;
 
         std::atomic<DeferredPacket<PacketType>*> pending_packet_head{ nullptr };
         std::atomic<DeferredPacketResult*> pending_result_head{ nullptr };
