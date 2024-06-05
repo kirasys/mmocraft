@@ -93,6 +93,12 @@ namespace net
         SIZE,
     };
 
+    enum UserType
+    {
+        NORMAL = 0,
+        OP = 64,
+    };
+
     namespace PacketFieldType
     {
         using Byte = std::uint8_t;
@@ -123,29 +129,57 @@ namespace net
     struct PacketHandshake : Packet
     {
         PacketFieldType::Byte protocol_version;
-        PacketFieldType::String username;
-        PacketFieldType::String password;
-        PacketFieldType::Byte unused;
+        union {
+            PacketFieldType::String username;
+            PacketFieldType::String server_name;
+        };
+        union {
+            PacketFieldType::String password;
+            PacketFieldType::String motd;
+        };
+        union {
+            PacketFieldType::Byte unused;
+            PacketFieldType::Byte user_type;
+        };
 
         DECLARE_PACKET_READ_METHOD(PacketHandshake);
+
+        PacketHandshake(std::string_view a_server_name, std::string_view a_motd, UserType a_user_type)
+            : Packet{ PacketID::Handshake }
+            , server_name{ a_server_name.data(), a_server_name.size() }
+            , motd{ a_motd.data(), a_motd.size() }
+            , protocol_version{ 7 }
+            , user_type{ PacketFieldType::Byte(a_user_type) }
+        { }
+
+        inline std::size_t size_of_serialized() const
+        {
+            return sizeof(Packet::id) 
+                + sizeof(protocol_version)
+                + server_name.size_with_padding
+                + motd.size_with_padding
+                + sizeof(user_type);
+        }
+
+        bool serialize(io::IoEventData&) const;
     };
 
     
     struct PacketDisconnectPlayer : Packet
     {
+        PacketFieldType::String reason;
+
         PacketDisconnectPlayer(std::string_view a_reason)
             : Packet{ PacketID::DisconnectPlayer }
             , reason{ a_reason.data(), a_reason.size() }
         { }
 
-        std::size_t size_of_serialized() const
+        inline std::size_t size_of_serialized() const
         {
             return sizeof(Packet::id) + reason.size_with_padding;
         }
 
         bool serialize(io::IoEventData&) const;
-
-        PacketFieldType::String reason;
     };
 
     struct PacketStructure

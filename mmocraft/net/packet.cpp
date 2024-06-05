@@ -115,6 +115,23 @@ namespace net
         return error::SUCCESS;
     }
 
+    bool PacketHandshake::serialize(io::IoEventData& event_data) const
+    {
+        if (size_of_serialized() > event_data.unused_size())
+            return false;
+
+        std::byte* buf_start = event_data.data();
+        PacketStructure::write_byte(buf_start, id);
+        PacketStructure::write_byte(buf_start, protocol_version);
+        PacketStructure::write_string(buf_start, server_name);
+        PacketStructure::write_string(buf_start, motd);
+        PacketStructure::write_byte(buf_start, user_type);
+
+        event_data.commit(buf_start - event_data.data());
+
+        return true;
+    }
+
     bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const
     {
         if (size_of_serialized() > event_data.unused_size())
