@@ -89,6 +89,7 @@ namespace net
 
         if (auto error_code = _listen_sock.accept(*event)) {
             LOG(error) << "fail to request accept with " << error_code;
+            last_error_code = error::SOCKET_ACCEPTEX;
             _state = ServerCore::State::Stopped;
         }
     }
@@ -108,8 +109,7 @@ namespace net
         if (SOCKET_ERROR == ::setsockopt(client_socket,
             SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
             reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
-            last_error_code = error::SOCKET_SETOPT;
-            return 0;
+            LOG(error) << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed but suppressed.";
         }
 
         // add a client to the server.
