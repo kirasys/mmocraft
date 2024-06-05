@@ -10,11 +10,19 @@
 
 #include "util/common_util.h"
 
+#ifdef ENABLE_LOGGING
 #define LOG(level) logging::##level()
 #define CONSOLE_LOG(level) logging::console_##level()
 
 #define LOG_IF(level, cond) if ((cond)) logging::##level()
 #define CONSOLE_LOG_IF(level, cond) if ((cond)) logging::console_##level()
+#else
+#define LOG(level) if (false) logging::##level()
+#define CONSOLE_LOG(level) if (false) logging::console_##level()
+
+#define LOG_IF(level, cond) if (false) logging::##level()
+#define CONSOLE_LOG_IF(level, cond) if (false) logging::console_##level()
+#endif
 
 namespace logging
 {
