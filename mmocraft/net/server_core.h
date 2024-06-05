@@ -35,6 +35,17 @@ namespace net
             return _state;
         }
 
+        error::ResultCode get_last_error() const
+        {
+            return last_error_code;
+        }
+
+        static auto get_connection_list()
+            -> std::list<win::ObjectPool<net::ConnectionServer>::Pointer>&
+        {
+            return connection_server_ptrs;
+        }
+
         void start_network_io_service();
 
         bool post_event(PacketEvent* event, ULONG_PTR event_handler_class);
