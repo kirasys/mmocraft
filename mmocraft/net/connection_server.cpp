@@ -42,24 +42,24 @@ namespace net
 
     void ConnectionServer::register_descriptor()
     {
-        connection_descriptor.connection = this;
-        connection_descriptor.raw_socket = _client_socket.get_handle();
-        connection_descriptor.io_recv_event = io_recv_event.get();
-        connection_descriptor.io_send_events[SendType::IMMEDIATE] = io_immedidate_send_event.get();
-        connection_descriptor.io_send_events[SendType::DEFERRED] = io_send_event.get();
+        descriptor.connection = this;
+        descriptor.raw_socket = _client_socket.get_handle();
+        descriptor.io_recv_event = io_recv_event.get();
+        descriptor.io_send_events[SendType::IMMEDIATE] = io_immedidate_send_event.get();
+        descriptor.io_send_events[SendType::DEFERRED] = io_send_event.get();
 
-        connection_descriptor.is_online = true;
-        connection_descriptor.update_last_interaction_time();
+        descriptor.online = true;
+        descriptor.update_last_interaction_time();
 
-        accepted_connections.push(&this->connection_descriptor);
+        accepted_connections.push(&this->descriptor);
     }
 
     ConnectionServer::~ConnectionServer()
     {
-        online_connection_table.erase(&connection_descriptor);
+        online_connection_table.erase(&descriptor);
         
-        if (connection_descriptor.self_player) {
-            if (auto player_id = connection_descriptor.self_player->get_identity_number();
+        if (descriptor.self_player) {
+            if (auto player_id = descriptor.self_player->get_identity_number();
                 player_lookup_table.find(player_id) != player_lookup_table.end()) {
                 // For thread-safety, erase the entry at the tick routine.
                 player_lookup_table[player_id] = nullptr; 
@@ -80,22 +80,6 @@ namespace net
             util::MilliSecond(10000));
     }
 
-    bool ConnectionServer::is_expired(std::size_t current_tick) const
-    {
-        return current_tick >= connection_descriptor.last_interaction_tick + REQUIRED_MILLISECONDS_FOR_EXPIRE;
-    }
-
-    bool ConnectionServer::is_safe_delete(std::size_t current_tick) const
-    {
-        return not connection_descriptor.is_online
-            && current_tick >= connection_descriptor.last_offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
-    }
-
-    void ConnectionServer::set_offline()
-    {
-        connection_descriptor.set_offline();
-    }
-
     std::size_t ConnectionServer::process_packets(std::byte* data_begin, std::byte* data_end)
     {
         auto data_cur = data_begin;
@@ -108,7 +92,7 @@ namespace net
                 break;
             }
 
-            auto handle_result = packet_handle_server.handle_packet(connection_descriptor, packet_ptr);
+            auto handle_result = packet_handle_server.handle_packet(descriptor, packet_ptr);
             if (not handle_result.is_success()) {
                 last_error_code = handle_result;
                 break;
@@ -188,17 +172,17 @@ namespace net
     void ConnectionServer::on_complete(io::IoRecvEvent* event)
     {
         if (last_error_code.is_strong_success()) {
-            connection_descriptor.activate_receive_cycle(event);
+            descriptor.activate_receive_cycle(event);
             return;
         }
 
-        connection_descriptor.disconnect_immediate(last_error_code.to_string());
+        descriptor.disconnect_immediate(last_error_code.to_string());
         event->is_processing = false;
     }
 
     std::size_t ConnectionServer::handle_io_event(io::IoRecvEvent* event)
     {
-        if (not connection_descriptor.try_interact_with_client()) // timeout case: connection will be deleted soon.
+        if (not descriptor.try_interact_with_client()) // timeout case: connection will be deleted soon.
             return 0; 
 
         return process_packets(event->data.begin(), event->data.end());
@@ -216,37 +200,27 @@ namespace net
      *  Connection descriptor interface
      */
 
-    bool ConnectionServer::Descriptor::associate_game_player
-        (game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
+    bool ConnectionServer::Descriptor::is_expired(std::size_t current_tick) const
     {
-        // clean up deleted players.
-        connection_interval_tasks.process_task(util::TaskTag::CLEAN_PLAYER);
-
-        if (not is_online || player_lookup_table.find(player_id) != player_lookup_table.end())
-            return false; // already associated.
-
-        auto player_ptr = std::make_unique<game::Player>(
-            player_id,
-            player_type,
-            username,
-            password
-        );
-
-        player_lookup_table[player_id] = player_ptr.get();
-        self_player = std::move(player_ptr);
-
-        return true;
+        return current_tick >= last_interaction_tick + REQUIRED_MILLISECONDS_FOR_EXPIRE;
     }
 
-    void ConnectionServer::Descriptor::set_offline()
+    bool ConnectionServer::Descriptor::is_safe_delete(std::size_t current_tick) const
     {
+        return not online
+            && current_tick >= last_offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
+    }
+
+    void ConnectionServer::Descriptor::set_offline(std::size_t current_tick)
+    {
+        online = false;
+        last_offline_tick = current_tick;
         online_connection_table[this] = false;
-        last_offline_tick = util::current_monotonic_tick();
     }
 
     bool ConnectionServer::Descriptor::try_interact_with_client()
     {
-        if (is_online) {
+        if (online) {
             update_last_interaction_time();
             return true;
         }
@@ -255,7 +229,7 @@ namespace net
 
     void ConnectionServer::Descriptor::activate_receive_cycle(io::IoRecvEvent* event)
     {
-        if (not is_online || io_recv_event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
+        if (not online || io_recv_event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
             event->is_processing = false;
             return;
         }
@@ -287,7 +261,7 @@ namespace net
 
     bool ConnectionServer::Descriptor::disconnect_immediate(std::string_view reason)
     {
-        if (not is_online)
+        if (not online)
             return false;
 
         net::PacketDisconnectPlayer disconnect_packet{ reason };
@@ -299,7 +273,7 @@ namespace net
 
     bool ConnectionServer::Descriptor::disconnect_deferred(std::string_view reason)
     {
-        if (not is_online)
+        if (not online)
             return false;
 
         net::PacketDisconnectPlayer disconnect_packet{ reason };
@@ -311,7 +285,7 @@ namespace net
 
     bool ConnectionServer::Descriptor::finalize_handshake() const
     {
-        if (not is_online)
+        if (not online)
             return false;
 
         const auto& conf = config::get_config();
@@ -322,5 +296,27 @@ namespace net
         };
 
         return handshake_packet.serialize(io_send_events[SendType::DEFERRED]->data);
+    }
+
+    bool ConnectionServer::Descriptor::associate_game_player
+        (game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
+    {
+        // clean up deleted players.
+        connection_interval_tasks.process_task(util::TaskTag::CLEAN_PLAYER);
+
+        if (not online || player_lookup_table.find(player_id) != player_lookup_table.end())
+            return false; // already associated.
+
+        auto player_ptr = std::make_unique<game::Player>(
+            player_id,
+            player_type,
+            username,
+            password
+        );
+
+        player_lookup_table[player_id] = player_ptr.get();
+        self_player = std::move(player_ptr);
+
+        return true;
     }
 }

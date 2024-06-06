@@ -59,15 +59,15 @@ namespace net
     void ServerCore::cleanup_expired_connection()
     {
         for (auto it = connection_server_ptrs.begin(); it != connection_server_ptrs.end();) {
-            auto& connection_server = *(*it).get();
+            auto& connection = *(*it).get();
 
-            if (connection_server.is_safe_delete()) {
+            if (connection.descriptor.is_safe_delete()) {
                 it = connection_server_ptrs.erase(it);
                 continue;
             }
 
-            if (connection_server.is_expired())
-                connection_server.set_offline();
+            if (connection.descriptor.is_expired())
+                connection.descriptor.set_offline();
 
             ++it;
         }

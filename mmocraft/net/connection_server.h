@@ -36,20 +36,18 @@ namespace net
 
         struct Descriptor : util::NonCopyable, util::NonMovable
         {
-            net::ConnectionServer* connection;
-            win::Socket raw_socket;
+            friend ConnectionServer;
 
-            io::IoRecvEvent* io_recv_event;
-            io::IoSendEvent* io_send_events[2];
+            void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
-            std::unique_ptr<game::Player> self_player;
+            inline bool is_online() const
+            {
+                return online;
+            }
 
-            bool is_online = false;
-            bool is_recv_event_running = false;
-            std::size_t last_offline_tick = 0;
-            std::size_t last_interaction_tick = 0;
+            bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;
 
-            void set_offline();
+            bool is_safe_delete(std::size_t current_tick = util::current_monotonic_tick()) const;
 
             bool try_interact_with_client();
 
@@ -69,6 +67,19 @@ namespace net
             bool finalize_handshake() const;
 
             bool associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
+
+        private:
+            net::ConnectionServer* connection;
+            win::Socket raw_socket;
+
+            io::IoRecvEvent* io_recv_event;
+            io::IoSendEvent* io_send_events[2];
+
+            std::unique_ptr<game::Player> self_player;
+
+            bool online = false;
+            std::size_t last_offline_tick = 0;
+            std::size_t last_interaction_tick = 0;
         };
 
         ConnectionServer(PacketHandleServer&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
@@ -81,12 +92,6 @@ namespace net
         {
             return io_send_event && io_recv_event;
         }
-
-        bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;
-
-        bool is_safe_delete(std::size_t current_tick = util::current_monotonic_tick()) const;
-
-        void set_offline();
 
         std::size_t process_packets(std::byte*, std::byte*);
 
@@ -114,6 +119,8 @@ namespace net
 
         //virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
 
+        Descriptor descriptor;
+
     private:
         static util::IntervalTaskScheduler<void> connection_interval_tasks;
         static util::LockfreeStack<ConnectionServer::Descriptor*> accepted_connections;
@@ -134,8 +141,6 @@ namespace net
 
         win::ObjectPool<io::IoRecvEventData>::Pointer io_recv_event_data;
         win::ObjectPool<io::IoRecvEvent>::Pointer io_recv_event;
-
-        Descriptor connection_descriptor;
     };
 
 
