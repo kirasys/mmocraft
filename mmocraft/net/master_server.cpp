@@ -11,7 +11,7 @@
 namespace net
 {
     MasterServer::MasterServer()
-        : interval_task_scheduler{ }
+        : server_core_task{ &server_core }
         , server_core{ *this }
         , database_core{ }
         
@@ -24,6 +24,12 @@ namespace net
         if (not database_core.connect_with_password(conf.db))
             throw error::DATABASE_CONNECT;
 
+        /// Schedule interval tasks.
+
+        server_core_task.schedule(
+            util::TaskTag::CLEAN_CONNECTION,
+            &ServerCore::cleanup_expired_connection,
+            util::MilliSecond(10000));
     }
 
     error::ResultCode MasterServer::handle_packet(net::ConnectionServer::Descriptor& conn_descriptor, Packet* packet)
@@ -49,6 +55,7 @@ namespace net
         while (1) {
             std::size_t start_tick = util::current_monotonic_tick();
 
+            server_core_task.process_task(util::TaskTag::CLEAN_CONNECTION);
             ConnectionServer::tick();
 
             flush_deferred_packet();

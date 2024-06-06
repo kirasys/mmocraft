@@ -35,7 +35,7 @@ namespace net
 
         void flush_deferred_packet();
 
-        util::IntervalTaskScheduler<void> interval_task_scheduler;
+        util::IntervalTaskScheduler<ServerCore> server_core_task;
 
         net::ServerCore server_core;
 

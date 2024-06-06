@@ -9,7 +9,7 @@
 
 namespace net
 {
-    util::IntervalTaskScheduler<void> ConnectionServer::interval_task_scheduler;
+    util::IntervalTaskScheduler<void> ConnectionServer::connection_interval_tasks;
     util::LockfreeStack<ConnectionServer::Descriptor*> ConnectionServer::accepted_connections;
     std::unordered_map<ConnectionServer::Descriptor*, bool> ConnectionServer::online_connection_table;
     std::unordered_map<game::PlayerID, game::Player*> ConnectionServer::player_lookup_table;
@@ -57,8 +57,14 @@ namespace net
     ConnectionServer::~ConnectionServer()
     {
         online_connection_table.erase(&connection_descriptor);
-        // For thread-safety, erase the entry at the tick routine.
-        player_lookup_table[connection_descriptor.self_player->get_identity_number()] = nullptr;
+        
+        if (connection_descriptor.self_player) {
+            if (auto player_id = connection_descriptor.self_player->get_identity_number();
+                player_lookup_table.find(player_id) != player_lookup_table.end()) {
+                // For thread-safety, erase the entry at the tick routine.
+                player_lookup_table[player_id] = nullptr; 
+            }
+        }
     }
 
     void ConnectionServer::initialize_system()
@@ -68,14 +74,7 @@ namespace net
         online_connection_table.reserve(conf.server.max_player);
         player_lookup_table.reserve(conf.server.max_player);
 
-        /// Schedule interval tasks.
-
-        interval_task_scheduler.schedule(
-            util::TaskTag::CLEAN_CONNECTION,
-            &ServerCore::cleanup_expired_connection,
-            util::MilliSecond(10000));
-
-        interval_task_scheduler.schedule(
+        connection_interval_tasks.schedule(
             util::TaskTag::CLEAN_PLAYER,
             &ConnectionServer::cleanup_deleted_player,
             util::MilliSecond(10000));
@@ -124,8 +123,6 @@ namespace net
 
     void ConnectionServer::tick()
     {
-        // clean-up expired connections.
-        interval_task_scheduler.process_task(util::TaskTag::CLEAN_CONNECTION);
         activate_pending_connections();
 
         flush_server_message();
@@ -223,7 +220,7 @@ namespace net
         (game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
     {
         // clean up deleted players.
-        interval_task_scheduler.process_task(util::TaskTag::CLEAN_PLAYER);
+        connection_interval_tasks.process_task(util::TaskTag::CLEAN_PLAYER);
 
         if (not is_online || player_lookup_table.find(player_id) != player_lookup_table.end())
             return false; // already associated.

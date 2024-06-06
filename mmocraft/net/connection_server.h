@@ -115,7 +115,7 @@ namespace net
         //virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
 
     private:
-        static util::IntervalTaskScheduler<void> interval_task_scheduler;
+        static util::IntervalTaskScheduler<void> connection_interval_tasks;
         static util::LockfreeStack<ConnectionServer::Descriptor*> accepted_connections;
         static std::unordered_map<Descriptor*, bool> online_connection_table;
         static std::unordered_map<game::PlayerID, game::Player*> player_lookup_table;

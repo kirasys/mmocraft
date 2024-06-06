@@ -7,8 +7,6 @@
 
 namespace net
 {
-    std::list<win::ObjectPool<net::ConnectionServer>::Pointer> ServerCore::connection_server_ptrs;
-
     ServerCore::ServerCore(PacketHandleServer& a_packet_handle_server, const config::Configuration& conf)
         : packet_handle_server{ a_packet_handle_server }
         , server_info{ .ip = conf.server.ip,
@@ -99,7 +97,7 @@ namespace net
         // creates unique accept socket first to avoid resource leak.
         auto client_socket = win::UniqueSocket(event->accepted_socket);
 
-        if (connection_server_ptrs.size() > server_info.max_client_connections) {
+        if (connection_server_ptrs.size() >= server_info.max_client_connections) {
             last_error_code = error::CLIENT_CONNECTION_FULL;
             return 0;
         }

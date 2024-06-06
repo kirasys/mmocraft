@@ -40,7 +40,7 @@ namespace net
             return last_error_code;
         }
 
-        static auto get_connection_list()
+        auto get_connection_list()
             -> std::list<win::ObjectPool<net::ConnectionServer>::Pointer>&
         {
             return connection_server_ptrs;
@@ -52,7 +52,7 @@ namespace net
 
         void new_connection(win::UniqueSocket &&client_sock);
 
-        static void cleanup_expired_connection();
+        void cleanup_expired_connection();
 
         /**
          *  Event handler interface 
@@ -85,6 +85,6 @@ namespace net
         win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
 
         win::ObjectPool<net::ConnectionServer> connection_server_pool;
-        static std::list<win::ObjectPool<net::ConnectionServer>::Pointer> connection_server_ptrs;
+        std::list<win::ObjectPool<net::ConnectionServer>::Pointer> connection_server_ptrs;
     };
 }
