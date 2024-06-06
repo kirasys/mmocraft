@@ -229,18 +229,18 @@ namespace net
 
     void ConnectionServer::Descriptor::activate_receive_cycle(io::IoRecvEvent* event)
     {
-        if (not online || io_recv_event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
+        if (not online || event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
             event->is_processing = false;
             return;
         }
 
         WSABUF wbuf[1] = {};
-        wbuf[0].buf = reinterpret_cast<char*>(io_recv_event->data.begin_unused());
-        wbuf[0].len = ULONG(io_recv_event->data.unused_size());
+        wbuf[0].buf = reinterpret_cast<char*>(event->data.begin_unused());
+        wbuf[0].len = ULONG(event->data.unused_size());
 
         // should assign flag first to avoid data race.
         event->is_processing = true;
-        if (not Socket::recv(raw_socket, &io_recv_event->overlapped, wbuf, 1))
+        if (not Socket::recv(raw_socket, &event->overlapped, wbuf, 1))
             event->is_processing = false;
     }
 
