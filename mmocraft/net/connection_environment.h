@@ -18,13 +18,17 @@ namespace net
             return connection_ptrs;
         }
         
-        void append_connection(win::ObjectPool<net::Connection>::Pointer&&);
-
         std::size_t size_of_connections() const
         {
             return connection_ptrs.size();
         }
 
+        // Append new allocated conneciton resource to manage life-cycle.
+        // * this method invoked at the accept I/O thread.
+        void append_connection(win::ObjectPool<net::Connection>::Pointer&&);
+
+        // Check unresponsiveness connections (timeout) and delete these connection.
+        // * this method invoked at the accept I/O thread.
         void cleanup_expired_connection();
 
         void activate_pending_connections();

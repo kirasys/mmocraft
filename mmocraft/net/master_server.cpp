@@ -11,8 +11,7 @@
 namespace net
 {
     MasterServer::MasterServer()
-        : connection_env_task{ &connection_env }
-        , server_core{ *this, connection_env }
+        : server_core{ *this, connection_env }
         , database_core{ }
         
         , deferred_handshake_packet_event{ 
@@ -23,13 +22,6 @@ namespace net
 
         if (not database_core.connect_with_password(conf.db))
             throw error::DATABASE_CONNECT;
-
-        /// Schedule interval tasks.
-
-        connection_env_task.schedule(
-            util::TaskTag::CLEAN_CONNECTION,
-            &ConnectionEnvironment::cleanup_expired_connection,
-            util::MilliSecond(10000));
     }
 
     error::ResultCode MasterServer::handle_packet(net::Connection::Descriptor& conn_descriptor, Packet* packet)
@@ -55,7 +47,6 @@ namespace net
         while (1) {
             std::size_t start_tick = util::current_monotonic_tick();
 
-            connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
             connection_env.activate_pending_connections();
             connection_env.flush_server_message();
             connection_env.flush_client_message();

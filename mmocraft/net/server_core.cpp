@@ -12,6 +12,7 @@ namespace net
         (PacketHandleServer& a_packet_handle_server, ConnectionEnvironment& a_connection_env, const config::Configuration& conf)
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
+        , connection_env_task{ &connection_env }
         , server_info{ .ip = conf.server.ip,
                          .port = conf.server.port, 
                          .max_client_connections = conf.server.max_player,
@@ -26,6 +27,13 @@ namespace net
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
 
         _state = ServerCore::State::Initialized;
+
+        /// Schedule interval tasks.
+
+        connection_env_task.schedule(
+            util::TaskTag::CLEAN_CONNECTION,
+            &ConnectionEnvironment::cleanup_expired_connection,
+            util::MilliSecond(10000));
     }
 
     void ServerCore::new_connection(win::UniqueSocket &&client_sock)
@@ -83,6 +91,8 @@ namespace net
     {
         // creates unique accept socket first to avoid resource leak.
         auto client_socket = win::UniqueSocket(event->accepted_socket);
+
+        connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
 
         if (connection_env.size_of_connections() >= server_info.max_client_connections) {
             last_error_code = error::CLIENT_CONNECTION_FULL;

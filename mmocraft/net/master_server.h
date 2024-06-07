@@ -38,8 +38,6 @@ namespace net
 
         net::ConnectionEnvironment connection_env;
 
-        util::IntervalTaskScheduler<ConnectionEnvironment> connection_env_task;
-
         net::ServerCore server_core;
 
         database::DatabaseCore database_core;
