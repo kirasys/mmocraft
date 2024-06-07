@@ -15,7 +15,7 @@ namespace net
             auto& connection = *(*it).get();
 
             if (connection.descriptor.is_safe_delete()) {
-                online_connection_table.erase(&connection.descriptor);
+                connection_table.erase(&connection.descriptor);
                 it = connection_ptrs.erase(it);
                 continue;
             }
@@ -33,14 +33,15 @@ namespace net
             connection;
             connection = connection->next) {
             auto connection_descriptor = connection->value;
-            online_connection_table.insert(connection_descriptor);
+            connection_table.insert(connection_descriptor);
+
             connection_descriptor->activate_receive_cycle(connection_descriptor->io_recv_event);
         }
     }
 
     void ConnectionEnvironment::flush_server_message()
     {
-        for (const auto& desc : online_connection_table) {
+        for (const auto& desc : connection_table) {
             for (auto event : desc->io_send_events) {
                 if (not event->is_processing)
                     desc->activate_send_cycle(event);
@@ -50,7 +51,7 @@ namespace net
 
     void ConnectionEnvironment::flush_client_message()
     {
-        for (const auto& desc : online_connection_table) {
+        for (const auto& desc : connection_table) {
             if (desc->is_online() && not desc->io_recv_event->is_processing) {
                 desc->io_recv_event->is_processing = true;
 

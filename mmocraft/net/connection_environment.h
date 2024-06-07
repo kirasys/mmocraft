@@ -40,8 +40,8 @@ namespace net
     private:
         std::list<win::ObjectPool<net::Connection>::Pointer> connection_ptrs;
 
-        util::LockfreeStack<Connection::Descriptor*> pending_connection;
+        std::unordered_set<Connection::Descriptor*> connection_table;
 
-        std::unordered_set<Connection::Descriptor*> online_connection_table;
+        util::LockfreeStack<Connection::Descriptor*> pending_connection;
     };
 }
