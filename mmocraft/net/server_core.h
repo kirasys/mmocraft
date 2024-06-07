@@ -63,7 +63,6 @@ namespace net
         PacketHandleServer& packet_handle_server;
 
         ConnectionEnvironment& connection_env;
-        util::IntervalTaskScheduler<ConnectionEnvironment> connection_env_task;
 
         const struct ServerInfo
         {
