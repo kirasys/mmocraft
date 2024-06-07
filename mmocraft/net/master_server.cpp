@@ -56,7 +56,9 @@ namespace net
             std::size_t start_tick = util::current_monotonic_tick();
 
             connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
-            Connection::tick();
+            connection_env.activate_pending_connections();
+            connection_env.flush_server_message();
+            connection_env.flush_client_message();
 
             flush_deferred_packet();
             handle_deferred_packet_result();

@@ -10,15 +10,15 @@
 namespace net
 {
     util::IntervalTaskScheduler<void> Connection::connection_interval_tasks;
-    util::LockfreeStack<Connection::Descriptor*> Connection::accepted_connections;
-    std::unordered_map<Connection::Descriptor*, bool> Connection::online_connection_table;
     std::unordered_map<game::PlayerID, game::Player*> Connection::player_lookup_table;
 
     Connection::Connection(net::PacketHandleServer& a_packet_handle_server,
+                                net::ConnectionEnvironment& a_connection_env,
                                 win::UniqueSocket&& sock,
                                 io::IoCompletionPort& io_service,
                                 io::IoEventPool &io_event_pool)
         : packet_handle_server{ a_packet_handle_server }
+        , connection_env{ a_connection_env }
         , _client_socket{ std::move(sock) }
 
         , io_send_event_data{ io_event_pool.new_send_event_data() }
@@ -50,14 +50,10 @@ namespace net
 
         descriptor.online = true;
         descriptor.update_last_interaction_time();
-
-        accepted_connections.push(&this->descriptor);
     }
 
     Connection::~Connection()
     {
-        online_connection_table.erase(&descriptor);
-        
         if (descriptor.self_player) {
             if (auto player_id = descriptor.self_player->get_identity_number();
                 player_lookup_table.find(player_id) != player_lookup_table.end()) {
@@ -71,7 +67,7 @@ namespace net
     {
         const auto& conf = config::get_config();
 
-        online_connection_table.reserve(conf.server.max_player);
+        //online_connection_table.reserve(conf.server.max_player);
         player_lookup_table.reserve(conf.server.max_player);
 
         connection_interval_tasks.schedule(
@@ -105,25 +101,6 @@ namespace net
         return data_cur - data_begin; // num of total parsed bytes.
     }
 
-    void Connection::tick()
-    {
-        activate_pending_connections();
-
-        flush_server_message();
-        flush_client_message();
-    }
-
-    void Connection::activate_pending_connections()
-    {
-        for (auto connection = accepted_connections.pop();
-                connection;
-                connection = connection->next) {
-            auto connection_descriptor = connection->value;
-            online_connection_table[connection_descriptor] = true;
-            connection_descriptor->activate_receive_cycle(connection_descriptor->io_recv_event);
-        }
-    }
-
     void Connection::cleanup_deleted_player()
     {
         std::vector<game::PlayerID> deleted_player;
@@ -136,30 +113,6 @@ namespace net
 
         for (auto player_id : deleted_player) {
             player_lookup_table.erase(player_id);
-        }
-    }
-
-    void Connection::flush_server_message()
-    {
-        for (const auto& [desc, online] : online_connection_table) {
-            for (auto event : desc->io_send_events) {
-                if (not event->is_processing)
-                    desc->activate_send_cycle(event);
-            }
-        }
-    }
-
-    void Connection::flush_client_message()
-    {
-        for (const auto& [desc, online] : online_connection_table) {
-            if (online && not desc->io_recv_event->is_processing) {
-                desc->io_recv_event->is_processing = true;
-
-                // if there are no unprocessed packets, connection will be close.
-                // (because it is unusual situation)
-                desc->io_recv_event->invoke_handler(*desc->connection,
-                    desc->io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
-            }
         }
     }
 
@@ -215,7 +168,6 @@ namespace net
     {
         online = false;
         last_offline_tick = current_tick;
-        online_connection_table[this] = false;
     }
 
     bool Connection::Descriptor::try_interact_with_client()

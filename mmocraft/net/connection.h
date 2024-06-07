@@ -19,6 +19,7 @@
 namespace net
 {
     class PacketHandleServer;
+    class ConnectionEnvironment;
 
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
     {
@@ -37,6 +38,7 @@ namespace net
         struct Descriptor : util::NonCopyable, util::NonMovable
         {
             friend Connection;
+            friend ConnectionEnvironment;
 
             void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
@@ -82,7 +84,7 @@ namespace net
             std::size_t last_interaction_tick = 0;
         };
 
-        Connection(PacketHandleServer&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
+        Connection(PacketHandleServer&, ConnectionEnvironment&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
 
         ~Connection();
 
@@ -97,15 +99,7 @@ namespace net
 
         void register_descriptor();
 
-        static void tick();
-
-        static void activate_pending_connections();
-
         static void cleanup_deleted_player();
-
-        static void flush_server_message();
-
-        static void flush_client_message();
 
         /**
          *  Event Handler Interface
@@ -123,11 +117,11 @@ namespace net
 
     private:
         static util::IntervalTaskScheduler<void> connection_interval_tasks;
-        static util::LockfreeStack<Connection::Descriptor*> accepted_connections;
-        static std::unordered_map<Descriptor*, bool> online_connection_table;
         static std::unordered_map<game::PlayerID, game::Player*> player_lookup_table;
 
         net::PacketHandleServer& packet_handle_server;
+        
+        net::ConnectionEnvironment& connection_env;
 
         error::ResultCode last_error_code;
 

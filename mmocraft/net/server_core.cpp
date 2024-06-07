@@ -33,6 +33,7 @@ namespace net
         // create a server for single client.
         auto connection_ptr = connection_pool.new_object(
             packet_handle_server,
+            connection_env,
             std::move(client_sock),
             io_service,
             io_event_pool
