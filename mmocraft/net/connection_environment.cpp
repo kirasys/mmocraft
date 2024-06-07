@@ -5,19 +5,25 @@ namespace net
 {
     void ConnectionEnvironment::append_connection(win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
     {
-        ++connection_counter;
+        connection_counter.fetch_add(1);
         pending_connections.push(std::move(a_connection_ptr));
+    }
+
+    void ConnectionEnvironment::on_connection_delete(Connection* deleted_connection)
+    {
+        connection_table.erase(&deleted_connection->descriptor);
     }
 
     void ConnectionEnvironment::cleanup_expired_connection()
     {
+        int deleted_connection_count = 0;
+
         for (auto it = connection_ptrs.begin(); it != connection_ptrs.end();) {
             auto& connection = *(*it).get();
 
             if (connection.descriptor.is_safe_delete()) {
-                connection_table.erase(&connection.descriptor);
-                it = connection_ptrs.erase(it);
-                --connection_counter;
+                it = connection_ptrs.erase(it); // will invoke on_connecyion_delete()
+                ++deleted_connection_count;
                 continue;
             }
 
@@ -26,6 +32,8 @@ namespace net
 
             ++it;
         }
+
+        connection_counter.fetch_sub(deleted_connection_count);
     }
 
     void ConnectionEnvironment::register_pending_connections()

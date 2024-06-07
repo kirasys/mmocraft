@@ -28,6 +28,8 @@ namespace net
         // because this method invoked at the accept I/O thread, append to the lock-free stack(pending_connections) first.
         void append_connection(win::ObjectPool<net::Connection>::Pointer&&);
 
+        void on_connection_delete(Connection*);
+
         // Check unresponsiveness connections (timeout) and delete these connection.
         void cleanup_expired_connection();
 

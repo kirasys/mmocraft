@@ -6,6 +6,7 @@
 #include "logging/error.h"
 #include "net/packet.h"
 #include "net/server_core.h"
+#include "net/connection_environment.h"
 
 namespace net
 {
@@ -54,6 +55,8 @@ namespace net
 
     Connection::~Connection()
     {
+        connection_env.on_connection_delete(this);
+
         if (descriptor.self_player) {
             if (auto player_id = descriptor.self_player->get_identity_number();
                 player_lookup_table.find(player_id) != player_lookup_table.end()) {
