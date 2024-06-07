@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "net/connection_environment.h"
 #include "net/server_core.h"
 
 class ServerCoreTest : public testing::Test
@@ -18,7 +19,8 @@ protected:
     io::IoAcceptEvent io_accept_event{ &io_accept_data };
 };
 TEST_F(ServerCoreTest, Connection_Creation_Success) { 
-    net::ServerCore server_core{ handle_server_stub, conf };
+    net::ConnectionEnvironment connection_env;
+    net::ServerCore server_core{ handle_server_stub, connection_env, conf };
 
     // server core will create new connection.
     for (unsigned i = 0; i < conf.server.max_player; i++) {
@@ -29,11 +31,12 @@ TEST_F(ServerCoreTest, Connection_Creation_Success) {
     EXPECT_TRUE(server_core.get_last_error().is_strong_success()) 
         << "Unexpected last error: " << server_core.get_last_error().to_string();
 
-    EXPECT_EQ(server_core.get_connection_list().size(), 10);
+    EXPECT_EQ(connection_env.size_of_connections(), 10);
 }
 
 TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
-    net::ServerCore server_core{ handle_server_stub, conf };
+    net::ConnectionEnvironment connection_env;
+    net::ServerCore server_core{ handle_server_stub, connection_env, conf };
 
     // server core will create new connection.
     for (unsigned i = 0; i < conf.server.max_player + 1; i++) {
@@ -45,11 +48,12 @@ TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
         << "Unexpected last error: " << server_core.get_last_error().to_string();
 
     // lconnection list never be exceed max player count.
-    EXPECT_EQ(server_core.get_connection_list().size(), conf.server.max_player);
+    EXPECT_EQ(connection_env.size_of_connections(), conf.server.max_player);
 }
 
 TEST_F(ServerCoreTest, Check_Connection_Timeout) {
-    net::ServerCore server_core{ handle_server_stub, conf };
+    net::ConnectionEnvironment connection_env;
+    net::ServerCore server_core{ handle_server_stub, connection_env, conf };
 
     // server core will create new connection.
     for (unsigned i = 0; i < conf.server.max_player; i++) {
@@ -57,19 +61,19 @@ TEST_F(ServerCoreTest, Check_Connection_Timeout) {
         server_core.handle_io_event(&io_accept_event);
     }
 
-    auto expired_connection = server_core.get_connection_list().front().get();
+    auto expired_connection = connection_env.get_connection_pointers().front().get();
 
     // trigger connection timeout.
     expired_connection->descriptor.update_last_interaction_time(1);
     auto before_cleanup_online_status = expired_connection->descriptor.is_online();
-    server_core.cleanup_expired_connection();
+    connection_env.cleanup_expired_connection();
     auto after_cleanup_online_status = expired_connection->descriptor.is_online();
 
     // trigger connection deletion.
     expired_connection->descriptor.set_offline(1);
-    server_core.cleanup_expired_connection();       // coonection will be deleted
+    connection_env.cleanup_expired_connection();       // coonection will be deleted
     
     EXPECT_TRUE(before_cleanup_online_status);
     EXPECT_FALSE(after_cleanup_online_status);
-    EXPECT_EQ(server_core.get_connection_list().size(), conf.server.max_player - 1);
+    EXPECT_EQ(connection_env.size_of_connections(), conf.server.max_player - 1);
 }
