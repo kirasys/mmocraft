@@ -19,7 +19,7 @@ namespace net
             return connection_ptrs;
         }
         
-        int size_of_connections() const
+        unsigned size_of_connections() const
         {
             return connection_counter.load();
         }
@@ -40,7 +40,7 @@ namespace net
         void flush_client_message();
 
     private:
-        std::atomic<int> connection_counter{ 0 };
+        std::atomic<unsigned> connection_counter{ 0 };
 
         util::LockfreeStack<win::ObjectPool<net::Connection>::Pointer> pending_connections;
         
