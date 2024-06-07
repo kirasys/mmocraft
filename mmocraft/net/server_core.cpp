@@ -18,7 +18,7 @@ namespace net
         , io_event_pool{ conf.server.max_player }
         , io_accept_event_data { io_event_pool.new_accept_event_data() }
         , io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
-        , connection_server_pool{ conf.server.max_player }
+        , connection_pool{ conf.server.max_player }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
 
@@ -28,14 +28,14 @@ namespace net
     void ServerCore::new_connection(win::UniqueSocket &&client_sock)
     {
         // create a server for single client.
-        auto connection_server_ptr = connection_server_pool.new_object(
+        auto connection_ptr = connection_pool.new_object(
             packet_handle_server,
             std::move(client_sock),
             io_service,
             io_event_pool
         );
 
-        connection_server_ptrs.emplace_back(std::move(connection_server_ptr));
+        connection_ptrs.emplace_back(std::move(connection_ptr));
     }
 
     void ServerCore::start_network_io_service()
@@ -58,11 +58,11 @@ namespace net
 
     void ServerCore::cleanup_expired_connection()
     {
-        for (auto it = connection_server_ptrs.begin(); it != connection_server_ptrs.end();) {
+        for (auto it = connection_ptrs.begin(); it != connection_ptrs.end();) {
             auto& connection = *(*it).get();
 
             if (connection.descriptor.is_safe_delete()) {
-                it = connection_server_ptrs.erase(it);
+                it = connection_ptrs.erase(it);
                 continue;
             }
 
@@ -97,7 +97,7 @@ namespace net
         // creates unique accept socket first to avoid resource leak.
         auto client_socket = win::UniqueSocket(event->accepted_socket);
 
-        if (connection_server_ptrs.size() >= server_info.max_client_connections) {
+        if (connection_ptrs.size() >= server_info.max_client_connections) {
             last_error_code = error::CLIENT_CONNECTION_FULL;
             return 0;
         }

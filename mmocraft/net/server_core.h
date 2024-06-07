@@ -43,7 +43,7 @@ namespace net
         auto get_connection_list()
             -> std::list<win::ObjectPool<net::Connection>::Pointer>&
         {
-            return connection_server_ptrs;
+            return connection_ptrs;
         }
 
         void start_network_io_service();
@@ -84,7 +84,7 @@ namespace net
         win::ObjectPool<io::IoAcceptEventData>::Pointer io_accept_event_data;
         win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
 
-        win::ObjectPool<net::Connection> connection_server_pool;
-        std::list<win::ObjectPool<net::Connection>::Pointer> connection_server_ptrs;
+        win::ObjectPool<net::Connection> connection_pool;
+        std::list<win::ObjectPool<net::Connection>::Pointer> connection_ptrs;
     };
 }
