@@ -32,7 +32,7 @@ namespace net
             util::MilliSecond(10000));
     }
 
-    error::ResultCode MasterServer::handle_packet(net::ConnectionServer::Descriptor& conn_descriptor, Packet* packet)
+    error::ResultCode MasterServer::handle_packet(net::Connection::Descriptor& conn_descriptor, Packet* packet)
     {
         switch (packet->id) {
         case PacketID::Handshake:
@@ -42,7 +42,7 @@ namespace net
         }
     }
 
-    error::ResultCode MasterServer::handle_handshake_packet(net::ConnectionServer::Descriptor& conn_descriptor, PacketHandshake& packet)
+    error::ResultCode MasterServer::handle_handshake_packet(net::Connection::Descriptor& conn_descriptor, PacketHandshake& packet)
     {
         deferred_handshake_packet_event.push_packet(&conn_descriptor, packet);
         return error::PACKET_HANDLE_DEFERRED;
@@ -56,7 +56,7 @@ namespace net
             std::size_t start_tick = util::current_monotonic_tick();
 
             server_core_task.process_task(util::TaskTag::CLEAN_CONNECTION);
-            ConnectionServer::tick();
+            Connection::tick();
 
             flush_deferred_packet();
             handle_deferred_packet_result();

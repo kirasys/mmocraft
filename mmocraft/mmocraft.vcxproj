@@ -31,7 +31,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="net\deferred_packet.cpp" />
     <ClCompile Include="net\packet.cpp" />
-    <ClCompile Include="net\connection_server.cpp" />
+    <ClCompile Include="net\connection.cpp" />
     <ClCompile Include="net\master_server.cpp" />
     <ClCompile Include="net\server_core.cpp" />
     <ClCompile Include="net\socket.cpp" />
@@ -57,7 +57,7 @@
     <ClInclude Include="logging\logger.h" />
     <ClInclude Include="net\deferred_packet.h" />
     <ClInclude Include="net\packet.h" />
-    <ClInclude Include="net\connection_server.h" />
+    <ClInclude Include="net\connection.h" />
     <ClInclude Include="net\master_server.h" />
     <ClInclude Include="net\socket.h" />
     <ClInclude Include="net\server_core.h" />

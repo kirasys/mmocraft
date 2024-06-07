@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "connection_server.h"
+#include "connection.h"
 
 #include <vector>
 
@@ -9,12 +9,12 @@
 
 namespace net
 {
-    util::IntervalTaskScheduler<void> ConnectionServer::connection_interval_tasks;
-    util::LockfreeStack<ConnectionServer::Descriptor*> ConnectionServer::accepted_connections;
-    std::unordered_map<ConnectionServer::Descriptor*, bool> ConnectionServer::online_connection_table;
-    std::unordered_map<game::PlayerID, game::Player*> ConnectionServer::player_lookup_table;
+    util::IntervalTaskScheduler<void> Connection::connection_interval_tasks;
+    util::LockfreeStack<Connection::Descriptor*> Connection::accepted_connections;
+    std::unordered_map<Connection::Descriptor*, bool> Connection::online_connection_table;
+    std::unordered_map<game::PlayerID, game::Player*> Connection::player_lookup_table;
 
-    ConnectionServer::ConnectionServer(net::PacketHandleServer& a_packet_handle_server,
+    Connection::Connection(net::PacketHandleServer& a_packet_handle_server,
                                 win::UniqueSocket&& sock,
                                 io::IoCompletionPort& io_service,
                                 io::IoEventPool &io_event_pool)
@@ -40,7 +40,7 @@ namespace net
         register_descriptor();
     }
 
-    void ConnectionServer::register_descriptor()
+    void Connection::register_descriptor()
     {
         descriptor.connection = this;
         descriptor.raw_socket = _client_socket.get_handle();
@@ -54,7 +54,7 @@ namespace net
         accepted_connections.push(&this->descriptor);
     }
 
-    ConnectionServer::~ConnectionServer()
+    Connection::~Connection()
     {
         online_connection_table.erase(&descriptor);
         
@@ -67,7 +67,7 @@ namespace net
         }
     }
 
-    void ConnectionServer::initialize_system()
+    void Connection::initialize_system()
     {
         const auto& conf = config::get_config();
 
@@ -76,11 +76,11 @@ namespace net
 
         connection_interval_tasks.schedule(
             util::TaskTag::CLEAN_PLAYER,
-            &ConnectionServer::cleanup_deleted_player,
+            &Connection::cleanup_deleted_player,
             util::MilliSecond(10000));
     }
 
-    std::size_t ConnectionServer::process_packets(std::byte* data_begin, std::byte* data_end)
+    std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
     {
         auto data_cur = data_begin;
         auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::max_size_of_packet_struct()));
@@ -105,7 +105,7 @@ namespace net
         return data_cur - data_begin; // num of total parsed bytes.
     }
 
-    void ConnectionServer::tick()
+    void Connection::tick()
     {
         activate_pending_connections();
 
@@ -113,7 +113,7 @@ namespace net
         flush_client_message();
     }
 
-    void ConnectionServer::activate_pending_connections()
+    void Connection::activate_pending_connections()
     {
         for (auto connection = accepted_connections.pop();
                 connection;
@@ -124,7 +124,7 @@ namespace net
         }
     }
 
-    void ConnectionServer::cleanup_deleted_player()
+    void Connection::cleanup_deleted_player()
     {
         std::vector<game::PlayerID> deleted_player;
 
@@ -139,7 +139,7 @@ namespace net
         }
     }
 
-    void ConnectionServer::flush_server_message()
+    void Connection::flush_server_message()
     {
         for (const auto& [desc, online] : online_connection_table) {
             for (auto event : desc->io_send_events) {
@@ -149,7 +149,7 @@ namespace net
         }
     }
 
-    void ConnectionServer::flush_client_message()
+    void Connection::flush_client_message()
     {
         for (const auto& [desc, online] : online_connection_table) {
             if (online && not desc->io_recv_event->is_processing) {
@@ -169,7 +169,7 @@ namespace net
     
     /// recv event handler
 
-    void ConnectionServer::on_complete(io::IoRecvEvent* event)
+    void Connection::on_complete(io::IoRecvEvent* event)
     {
         if (last_error_code.is_strong_success()) {
             descriptor.activate_receive_cycle(event);
@@ -180,7 +180,7 @@ namespace net
         event->is_processing = false;
     }
 
-    std::size_t ConnectionServer::handle_io_event(io::IoRecvEvent* event)
+    std::size_t Connection::handle_io_event(io::IoRecvEvent* event)
     {
         if (not descriptor.try_interact_with_client()) // timeout case: connection will be deleted soon.
             return 0; 
@@ -190,7 +190,7 @@ namespace net
 
     /// send event handler
 
-    void ConnectionServer::on_complete(io::IoSendEvent* event)
+    void Connection::on_complete(io::IoSendEvent* event)
     {
         // Note: Can't start I/O event again due to the interleaving problem.
         event->is_processing = false;
@@ -200,25 +200,25 @@ namespace net
      *  Connection descriptor interface
      */
 
-    bool ConnectionServer::Descriptor::is_expired(std::size_t current_tick) const
+    bool Connection::Descriptor::is_expired(std::size_t current_tick) const
     {
         return current_tick >= last_interaction_tick + REQUIRED_MILLISECONDS_FOR_EXPIRE;
     }
 
-    bool ConnectionServer::Descriptor::is_safe_delete(std::size_t current_tick) const
+    bool Connection::Descriptor::is_safe_delete(std::size_t current_tick) const
     {
         return not online
             && current_tick >= last_offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
     }
 
-    void ConnectionServer::Descriptor::set_offline(std::size_t current_tick)
+    void Connection::Descriptor::set_offline(std::size_t current_tick)
     {
         online = false;
         last_offline_tick = current_tick;
         online_connection_table[this] = false;
     }
 
-    bool ConnectionServer::Descriptor::try_interact_with_client()
+    bool Connection::Descriptor::try_interact_with_client()
     {
         if (online) {
             update_last_interaction_time();
@@ -227,7 +227,7 @@ namespace net
         return false;
     }
 
-    void ConnectionServer::Descriptor::activate_receive_cycle(io::IoRecvEvent* event)
+    void Connection::Descriptor::activate_receive_cycle(io::IoRecvEvent* event)
     {
         if (not online || event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
             event->is_processing = false;
@@ -244,7 +244,7 @@ namespace net
             event->is_processing = false;
     }
 
-    void ConnectionServer::Descriptor::activate_send_cycle(io::IoSendEvent* event)
+    void Connection::Descriptor::activate_send_cycle(io::IoSendEvent* event)
     {
         if (event->data.size() == 0)
             return;
@@ -259,7 +259,7 @@ namespace net
             event->is_processing = false;
     }
 
-    bool ConnectionServer::Descriptor::disconnect_immediate(std::string_view reason)
+    bool Connection::Descriptor::disconnect_immediate(std::string_view reason)
     {
         if (not online)
             return false;
@@ -271,7 +271,7 @@ namespace net
         return result;
     }
 
-    bool ConnectionServer::Descriptor::disconnect_deferred(std::string_view reason)
+    bool Connection::Descriptor::disconnect_deferred(std::string_view reason)
     {
         if (not online)
             return false;
@@ -283,7 +283,7 @@ namespace net
         return result;
     }
 
-    bool ConnectionServer::Descriptor::finalize_handshake() const
+    bool Connection::Descriptor::finalize_handshake() const
     {
         if (not online)
             return false;
@@ -298,7 +298,7 @@ namespace net
         return handshake_packet.serialize(io_send_events[SendType::DEFERRED]->data);
     }
 
-    bool ConnectionServer::Descriptor::associate_game_player
+    bool Connection::Descriptor::associate_game_player
         (game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
     {
         // clean up deleted players.

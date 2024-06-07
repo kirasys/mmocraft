@@ -20,7 +20,7 @@ namespace net
 {
     class PacketHandleServer;
 
-    class ConnectionServer : public io::IoEventHandler, util::NonCopyable, util::NonMovable
+    class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
     {
         // The minecrft beta server will disconnect a client,
         // if it doesn't receive at least one packet before 1200 in-game ticks (1200 tick = 60s)
@@ -36,7 +36,7 @@ namespace net
 
         struct Descriptor : util::NonCopyable, util::NonMovable
         {
-            friend ConnectionServer;
+            friend Connection;
 
             void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
@@ -69,7 +69,7 @@ namespace net
             bool associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
 
         private:
-            net::ConnectionServer* connection;
+            net::Connection* connection;
             win::Socket raw_socket;
 
             io::IoRecvEvent* io_recv_event;
@@ -82,9 +82,9 @@ namespace net
             std::size_t last_interaction_tick = 0;
         };
 
-        ConnectionServer(PacketHandleServer&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
+        Connection(PacketHandleServer&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
 
-        ~ConnectionServer();
+        ~Connection();
 
         static void initialize_system();
 
@@ -123,7 +123,7 @@ namespace net
 
     private:
         static util::IntervalTaskScheduler<void> connection_interval_tasks;
-        static util::LockfreeStack<ConnectionServer::Descriptor*> accepted_connections;
+        static util::LockfreeStack<Connection::Descriptor*> accepted_connections;
         static std::unordered_map<Descriptor*, bool> online_connection_table;
         static std::unordered_map<game::PlayerID, game::Player*> player_lookup_table;
 
@@ -147,12 +147,12 @@ namespace net
     class PacketHandleServer
     {
     public:
-        virtual error::ResultCode handle_packet(net::ConnectionServer::Descriptor&, net::Packet*) = 0;
+        virtual error::ResultCode handle_packet(net::Connection::Descriptor&, net::Packet*) = 0;
     };
 
     class PacketHandleServerStub : public PacketHandleServer
     {
-        error::ResultCode handle_packet(net::ConnectionServer::Descriptor&, net::Packet*) override
+        error::ResultCode handle_packet(net::Connection::Descriptor&, net::Packet*) override
         {
             return error::SUCCESS;
         }

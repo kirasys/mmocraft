@@ -7,7 +7,7 @@
 
 #include "net/socket.h"
 #include "net/packet.h"
-#include "net/connection_server.h"
+#include "net/connection.h"
 #include "net/deferred_packet.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
@@ -41,7 +41,7 @@ namespace net
         }
 
         auto get_connection_list()
-            -> std::list<win::ObjectPool<net::ConnectionServer>::Pointer>&
+            -> std::list<win::ObjectPool<net::Connection>::Pointer>&
         {
             return connection_server_ptrs;
         }
@@ -84,7 +84,7 @@ namespace net
         win::ObjectPool<io::IoAcceptEventData>::Pointer io_accept_event_data;
         win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
 
-        win::ObjectPool<net::ConnectionServer> connection_server_pool;
-        std::list<win::ObjectPool<net::ConnectionServer>::Pointer> connection_server_ptrs;
+        win::ObjectPool<net::Connection> connection_server_pool;
+        std::list<win::ObjectPool<net::Connection>::Pointer> connection_server_ptrs;
     };
 }
