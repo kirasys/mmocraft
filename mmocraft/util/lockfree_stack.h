@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <utility>
 
 namespace util
 {
@@ -14,10 +15,10 @@ namespace util
             Node* next;
         };
 
-        void push(T value)
+        void push(T&& value)
         {
             auto new_node = new Node{
-                .value = value,
+                .value = std::forward<T>(value),
                 .next = _head.load(std::memory_order_relaxed)
             };
 
