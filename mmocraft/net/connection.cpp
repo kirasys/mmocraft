@@ -55,14 +55,6 @@ namespace net
         connection_env.on_connection_delete(this);
     }
 
-    void Connection::initialize_system()
-    {
-        const auto& conf = config::get_config();
-
-        //online_connection_table.reserve(conf.server.max_player);
-        //player_lookup_table.reserve(conf.server.max_player);
-    }
-
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
     {
         auto data_cur = data_begin;

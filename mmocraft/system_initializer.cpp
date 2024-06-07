@@ -46,7 +46,6 @@ namespace setup
 
         // network system
         net::Socket::initialize_system();
-        net::Connection::initialize_system();
     }
 
     void add_termination_handler(std::terminate_handler handler)

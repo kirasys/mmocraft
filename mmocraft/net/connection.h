@@ -87,8 +87,6 @@ namespace net
 
         ~Connection();
 
-        static void initialize_system();
-
         bool is_valid() const
         {
             return io_send_event && io_recv_event;

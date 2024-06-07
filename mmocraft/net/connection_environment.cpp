@@ -3,6 +3,14 @@
 
 namespace net
 {
+    ConnectionEnvironment::ConnectionEnvironment()
+    {
+        const auto& conf = config::get_config();
+
+        connection_table.reserve(conf.server.max_player);
+        player_lookup_table.reserve(conf.server.max_player);
+    }
+
     void ConnectionEnvironment::append_connection(win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
     {
         connection_counter.fetch_add(1);

@@ -10,9 +10,11 @@
 
 namespace net
 {
-    class ConnectionEnvironment
+    class ConnectionEnvironment : util::NonCopyable
     {
     public:
+        ConnectionEnvironment();
+
         // used for testing purpose only.
         auto get_connection_pointers()
             -> std::list<win::ObjectPool<net::Connection>::Pointer>&
