@@ -16,7 +16,7 @@ namespace database
     public:
         SQLStatement(SQLHDBC);
 
-        ~SQLStatement();
+        virtual ~SQLStatement();
 
         SQLStatement(SQLStatement&& other) noexcept
             : statement_handle{ other.statement_handle }

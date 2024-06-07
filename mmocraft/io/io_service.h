@@ -18,6 +18,8 @@ namespace io
     class IoService
     {
     public:
+        virtual ~IoService() = default;
+
         virtual void register_event_source(win::Handle event_source, IoEventHandler* event_handler) = 0;
 
         virtual void register_event_source(win::Socket event_source, IoEventHandler* event_handler) = 0;

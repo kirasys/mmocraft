@@ -123,6 +123,9 @@ namespace net
 
     struct Packet
     {
+        Packet(PacketID a_id) : id{ PacketFieldType::Byte(a_id) } { }
+        virtual ~Packet() = default;
+
         PacketFieldType::Byte id;
     };
 

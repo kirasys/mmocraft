@@ -52,6 +52,8 @@ namespace net
             Failed,
         };
 
+        virtual ~PacketEvent() = default;
+
         State _state = Unused;
 
         bool transit_state(State old_state, State new_state)

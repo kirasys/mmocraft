@@ -213,6 +213,8 @@ namespace io
             : data{ *a_data }
         { }
 
+        virtual ~IoEvent() = default;
+
         virtual void invoke_handler(IoEventHandler&, DWORD transferred_bytes) = 0;
     };
 
