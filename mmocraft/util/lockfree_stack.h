@@ -15,7 +15,8 @@ namespace util
             Node* next;
         };
 
-        void push(T&& value)
+        template <typename U>
+        void push(U&& value)
         {
             auto new_node = new Node{
                 .value = std::forward<T>(value),
