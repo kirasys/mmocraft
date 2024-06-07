@@ -14,7 +14,6 @@
 #include "win/smart_handle.h"
 #include "util/common_util.h"
 #include "util/interval_task.h"
-#include "util/lockfree_stack.h"
 
 namespace net
 {

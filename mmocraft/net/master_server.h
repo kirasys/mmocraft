@@ -7,7 +7,6 @@
 #include "net/deferred_packet.h"
 #include "net/server_core.h"
 #include "net/packet.h"
-#include "util/interval_task.h"
 
 namespace net
 {
