@@ -25,6 +25,7 @@
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="net\deferred_packet.cpp" />
     <ClCompile Include="system_initializer.cpp" />
+    <ClCompile Include="net\connection_environment.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -57,6 +58,7 @@
     <ClInclude Include="net\deferred_packet.h" />
     <ClInclude Include="system_initializer.h" />
     <ClInclude Include="util\lockfree_stack.h" />
+    <ClInclude Include="net\connection_environment.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />

@@ -11,8 +11,8 @@
 namespace net
 {
     MasterServer::MasterServer()
-        : server_core_task{ &server_core }
-        , server_core{ *this }
+        : connection_env_task{ &connection_env }
+        , server_core{ *this, connection_env }
         , database_core{ }
         
         , deferred_handshake_packet_event{ 
@@ -26,9 +26,9 @@ namespace net
 
         /// Schedule interval tasks.
 
-        server_core_task.schedule(
+        connection_env_task.schedule(
             util::TaskTag::CLEAN_CONNECTION,
-            &ServerCore::cleanup_expired_connection,
+            &ConnectionEnvironment::cleanup_expired_connection,
             util::MilliSecond(10000));
     }
 
@@ -55,7 +55,7 @@ namespace net
         while (1) {
             std::size_t start_tick = util::current_monotonic_tick();
 
-            server_core_task.process_task(util::TaskTag::CLEAN_CONNECTION);
+            connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
             Connection::tick();
 
             flush_deferred_packet();

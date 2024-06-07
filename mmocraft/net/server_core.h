@@ -17,6 +17,8 @@
 
 namespace net
 {
+    class ConnectionEnvironment;
+
     class ServerCore final : public io::IoEventHandler
     {
     public:
@@ -28,7 +30,7 @@ namespace net
             Stopped,
         };
 
-        ServerCore(PacketHandleServer&, const config::Configuration& conf = config::get_config());
+        ServerCore(PacketHandleServer&, ConnectionEnvironment&, const config::Configuration& conf = config::get_config());
 
         ServerCore::State status() const
         {
@@ -40,19 +42,11 @@ namespace net
             return last_error_code;
         }
 
-        auto get_connection_list()
-            -> std::list<win::ObjectPool<net::Connection>::Pointer>&
-        {
-            return connection_ptrs;
-        }
-
         void start_network_io_service();
 
         bool post_event(PacketEvent* event, ULONG_PTR event_handler_class);
 
         void new_connection(win::UniqueSocket &&client_sock);
-
-        void cleanup_expired_connection();
 
         /**
          *  Event handler interface 
@@ -67,6 +61,8 @@ namespace net
         error::ResultCode last_error_code;
 
         PacketHandleServer& packet_handle_server;
+
+        ConnectionEnvironment& connection_env;
 
         const struct ServerInfo
         {
@@ -85,6 +81,5 @@ namespace net
         win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
 
         win::ObjectPool<net::Connection> connection_pool;
-        std::list<win::ObjectPool<net::Connection>::Pointer> connection_ptrs;
     };
 }

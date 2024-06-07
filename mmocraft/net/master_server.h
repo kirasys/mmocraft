@@ -3,6 +3,7 @@
 #include "database/database_core.h"
 
 #include "net/connection.h"
+#include "net/connection_environment.h"
 #include "net/deferred_packet.h"
 #include "net/server_core.h"
 #include "net/packet.h"
@@ -35,7 +36,9 @@ namespace net
 
         void flush_deferred_packet();
 
-        util::IntervalTaskScheduler<ServerCore> server_core_task;
+        net::ConnectionEnvironment connection_env;
+
+        util::IntervalTaskScheduler<ConnectionEnvironment> connection_env_task;
 
         net::ServerCore server_core;
 
@@ -45,5 +48,6 @@ namespace net
         PacketEvent* deferred_packet_events[1] = {
             &deferred_handshake_packet_event
         };
+
     };
 }

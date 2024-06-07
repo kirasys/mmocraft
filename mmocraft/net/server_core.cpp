@@ -4,11 +4,14 @@
 #include <cassert>
 
 #include "logging/error.h"
+#include "net/connection_environment.h"
 
 namespace net
 {
-    ServerCore::ServerCore(PacketHandleServer& a_packet_handle_server, const config::Configuration& conf)
+    ServerCore::ServerCore
+        (PacketHandleServer& a_packet_handle_server, ConnectionEnvironment& a_connection_env, const config::Configuration& conf)
         : packet_handle_server{ a_packet_handle_server }
+        , connection_env{ a_connection_env }
         , server_info{ .ip = conf.server.ip,
                          .port = conf.server.port, 
                          .max_client_connections = conf.server.max_player,
@@ -35,7 +38,7 @@ namespace net
             io_event_pool
         );
 
-        connection_ptrs.emplace_back(std::move(connection_ptr));
+        connection_env.append_connection(std::move(connection_ptr));
     }
 
     void ServerCore::start_network_io_service()
@@ -54,23 +57,6 @@ namespace net
     bool ServerCore::post_event(PacketEvent* event, ULONG_PTR event_handler_class)
     {
         return io_service.push_event(event, event_handler_class);
-    }
-
-    void ServerCore::cleanup_expired_connection()
-    {
-        for (auto it = connection_ptrs.begin(); it != connection_ptrs.end();) {
-            auto& connection = *(*it).get();
-
-            if (connection.descriptor.is_safe_delete()) {
-                it = connection_ptrs.erase(it);
-                continue;
-            }
-
-            if (connection.descriptor.is_expired())
-                connection.descriptor.set_offline();
-
-            ++it;
-        }
     }
 
     /** 
@@ -97,7 +83,7 @@ namespace net
         // creates unique accept socket first to avoid resource leak.
         auto client_socket = win::UniqueSocket(event->accepted_socket);
 
-        if (connection_ptrs.size() >= server_info.max_client_connections) {
+        if (connection_env.size_of_connections() >= server_info.max_client_connections) {
             last_error_code = error::CLIENT_CONNECTION_FULL;
             return 0;
         }
