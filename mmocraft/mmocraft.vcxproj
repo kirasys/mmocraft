@@ -156,9 +156,12 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj</Command>
+      <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -181,9 +184,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj</Command>
+      <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -204,9 +210,12 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj</Command>
+      <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -230,9 +239,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj</Command>
+      <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

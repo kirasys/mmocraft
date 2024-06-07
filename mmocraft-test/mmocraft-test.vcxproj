@@ -120,6 +120,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="server_core_test.cpp" />
+    <ClCompile Include="socket_stub.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\mmocraft\mmocraft.vcxproj">
