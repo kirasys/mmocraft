@@ -67,7 +67,7 @@ namespace net
 
             bool finalize_handshake() const;
 
-            bool associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
+            void associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
 
         private:
             net::Connection* connection;
@@ -98,8 +98,6 @@ namespace net
 
         void register_descriptor();
 
-        static void cleanup_deleted_player();
-
         /**
          *  Event Handler Interface
          */
@@ -115,9 +113,6 @@ namespace net
         Descriptor descriptor;
 
     private:
-        static util::IntervalTaskScheduler<void> connection_interval_tasks;
-        static std::unordered_map<game::PlayerID, game::Player*> player_lookup_table;
-
         net::PacketHandleServer& packet_handle_server;
         
         net::ConnectionEnvironment& connection_env;

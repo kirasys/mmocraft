@@ -11,7 +11,13 @@ namespace net
 
     void ConnectionEnvironment::on_connection_delete(Connection* deleted_connection)
     {
-        connection_table.erase(&deleted_connection->descriptor);
+        auto& connection_descriptor = deleted_connection->descriptor;
+        connection_table.erase(&connection_descriptor);
+
+        // for the thread-safety, append to the lock-free stack first.
+        if (connection_descriptor.self_player) {
+            delete_pending_players.push(connection_descriptor.self_player->get_identity_number());
+        }
     }
 
     void ConnectionEnvironment::cleanup_expired_connection()
@@ -72,6 +78,25 @@ namespace net
                 desc->io_recv_event->invoke_handler(*desc->connection,
                     desc->io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
             }
+        }
+    }
+
+    bool ConnectionEnvironment::register_player(game::PlayerID a_player_id)
+    {
+        if (player_lookup_table.find(a_player_id) != player_lookup_table.end())
+            return false; // already associated.
+
+        player_lookup_table.insert(a_player_id);
+        return true;
+    }
+
+    void ConnectionEnvironment::cleanup_deleted_player()
+    {
+        for (auto deleted_player_node = delete_pending_players.pop();
+                deleted_player_node;
+                deleted_player_node = deleted_player_node->next) {
+            auto player_id = deleted_player_node->value;
+            player_lookup_table.erase(player_id);
         }
     }
 }

@@ -111,6 +111,8 @@ namespace net
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
 
+        connection_env.cleanup_deleted_player();
+
         for (auto packet = packet_head; packet; packet = packet->next) {
             auto player_type = game::PlayerType::INVALID;
 
@@ -121,18 +123,26 @@ namespace net
                 player_type = std::strcmp(packet->username, "admin")
                     ? game::PlayerType::AUTHENTICATED_USER : game::PlayerType::ADMIN;
             }
-
-            error::ErrorCode result = error::PACKET_RESULT_FAIL_LOGIN;
-
-            if (player_type != game::PlayerType::INVALID) {
-                result = packet->connection_descriptor->associate_game_player(
-                    player_search.get_player_identity_number(),
-                    player_type,
-                    packet->username,
-                    packet->password) ? error::PACKET_RESULT_SUCCESS_LOGIN : error::PACKET_RESULT_ALREADY_LOGIN;
+            
+            if (player_type == game::PlayerType::INVALID) {
+                event->push_result(packet->connection_descriptor, error::PACKET_RESULT_FAIL_LOGIN);
+                return;
             }
 
-            event->push_result(packet->connection_descriptor, result);
+            game::PlayerID player_id = player_search.get_player_identity_number();
+
+            if (not connection_env.register_player(player_id)) {
+                event->push_result(packet->connection_descriptor, error::PACKET_RESULT_ALREADY_LOGIN);
+                return;
+            }
+
+            packet->connection_descriptor->associate_game_player(
+                player_id,
+                player_type,
+                packet->username,
+                packet->password);
+
+            event->push_result(packet->connection_descriptor, error::PACKET_RESULT_SUCCESS_LOGIN);
         }
     }
 }

@@ -10,9 +10,6 @@
 
 namespace net
 {
-    util::IntervalTaskScheduler<void> Connection::connection_interval_tasks;
-    std::unordered_map<game::PlayerID, game::Player*> Connection::player_lookup_table;
-
     Connection::Connection(net::PacketHandleServer& a_packet_handle_server,
                                 net::ConnectionEnvironment& a_connection_env,
                                 win::UniqueSocket&& sock,
@@ -56,14 +53,6 @@ namespace net
     Connection::~Connection()
     {
         connection_env.on_connection_delete(this);
-
-        if (descriptor.self_player) {
-            if (auto player_id = descriptor.self_player->get_identity_number();
-                player_lookup_table.find(player_id) != player_lookup_table.end()) {
-                // For thread-safety, erase the entry at the tick routine.
-                player_lookup_table[player_id] = nullptr; 
-            }
-        }
     }
 
     void Connection::initialize_system()
@@ -71,12 +60,7 @@ namespace net
         const auto& conf = config::get_config();
 
         //online_connection_table.reserve(conf.server.max_player);
-        player_lookup_table.reserve(conf.server.max_player);
-
-        connection_interval_tasks.schedule(
-            util::TaskTag::CLEAN_PLAYER,
-            &Connection::cleanup_deleted_player,
-            util::MilliSecond(10000));
+        //player_lookup_table.reserve(conf.server.max_player);
     }
 
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
@@ -102,21 +86,6 @@ namespace net
 
         assert(data_cur <= data_end && "Parsing error");
         return data_cur - data_begin; // num of total parsed bytes.
-    }
-
-    void Connection::cleanup_deleted_player()
-    {
-        std::vector<game::PlayerID> deleted_player;
-
-        for (const auto& [player_id, player] : player_lookup_table)
-        {
-            if (player == nullptr)
-                deleted_player.push_back(player_id);
-        }
-
-        for (auto player_id : deleted_player) {
-            player_lookup_table.erase(player_id);
-        }
     }
 
     /**
@@ -253,25 +222,14 @@ namespace net
         return handshake_packet.serialize(io_send_events[SendType::DEFERRED]->data);
     }
 
-    bool Connection::Descriptor::associate_game_player
+    void Connection::Descriptor::associate_game_player
         (game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
     {
-        // clean up deleted players.
-        connection_interval_tasks.process_task(util::TaskTag::CLEAN_PLAYER);
-
-        if (not online || player_lookup_table.find(player_id) != player_lookup_table.end())
-            return false; // already associated.
-
-        auto player_ptr = std::make_unique<game::Player>(
+        self_player = std::make_unique<game::Player>(
             player_id,
             player_type,
             username,
             password
         );
-
-        player_lookup_table[player_id] = player_ptr.get();
-        self_player = std::move(player_ptr);
-
-        return true;
     }
 }

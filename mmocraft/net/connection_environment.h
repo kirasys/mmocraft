@@ -13,6 +13,7 @@ namespace net
     class ConnectionEnvironment
     {
     public:
+        // used for testing purpose only.
         auto get_connection_pointers()
             -> std::list<win::ObjectPool<net::Connection>::Pointer>&
         {
@@ -25,7 +26,7 @@ namespace net
         }
 
         // Append new allocated conneciton resource to manage life-cycle.
-        // because this method invoked at the accept I/O thread, append to the lock-free stack(pending_connections) first.
+        // * the accept I/O thread invokes this method, so append to the lock-free stack(pending_connections) first.
         void append_connection(win::ObjectPool<net::Connection>::Pointer&&);
 
         void on_connection_delete(Connection*);
@@ -39,13 +40,22 @@ namespace net
 
         void flush_client_message();
 
+        // Register player id to the lookup table.
+        // * deferred packet thread invokes this method.
+        bool register_player(game::PlayerID);
+
+        // Fetch pending players and apply to the player lookup table.
+        // * deferred packet thread invokes this method.
+        void cleanup_deleted_player();
+
     private:
         std::atomic<unsigned> connection_counter{ 0 };
 
         util::LockfreeStack<win::ObjectPool<net::Connection>::Pointer> pending_connections;
-        
         std::list<win::ObjectPool<net::Connection>::Pointer> connection_ptrs;
-
         std::unordered_set<Connection::Descriptor*> connection_table;
+        
+        util::LockfreeStack<game::PlayerID> delete_pending_players;
+        std::unordered_set<game::PlayerID> player_lookup_table;
     };
 }
