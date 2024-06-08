@@ -10,17 +10,18 @@ protected:
        : conf{config::get_config().clone()}
     {
        net::Socket::initialize_system();
-       conf.server.max_player = 10;
+       conf.server.max_player = 5;
     }
 
     config::Configuration conf;
     net::PacketHandleServerStub handle_server_stub;
     io::IoAcceptEventData io_accept_data;
     io::IoAcceptEvent io_accept_event{ &io_accept_data };
+
+    net::ConnectionEnvironment connection_env;
 };
 
 TEST_F(ServerCoreTest, Connection_Creation_Success) { 
-    net::ConnectionEnvironment connection_env;
     net::ServerCore server_core{ handle_server_stub, connection_env, conf };
     bool is_success_create_max_player = true;
 
@@ -31,12 +32,12 @@ TEST_F(ServerCoreTest, Connection_Creation_Success) {
         is_success_create_max_player &= server_core.get_last_error().is_strong_success();
     }
     connection_env.register_pending_connections();
+
     EXPECT_TRUE(is_success_create_max_player);
-    EXPECT_EQ(connection_env.size_of_connections(), 10);
+    EXPECT_EQ(connection_env.size_of_connections(), conf.server.max_player);
 }
 
 TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
-    net::ConnectionEnvironment connection_env;
     net::ServerCore server_core{ handle_server_stub, connection_env, conf };
 
     // try to create more than maximum.
@@ -45,14 +46,14 @@ TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
         server_core.handle_io_event(&io_accept_event);
     }
     connection_env.register_pending_connections();
+
     EXPECT_EQ(server_core.get_last_error().to_error_code(), error::CLIENT_CONNECTION_FULL)
         << "Unexpected last error: " << server_core.get_last_error().to_string();
     // lconnection list never be exceed max player count.
     EXPECT_EQ(connection_env.size_of_connections(), conf.server.max_player);
 }
 
-TEST_F(ServerCoreTest, Check_Connection_Timeout) {
-    net::ConnectionEnvironment connection_env;
+TEST_F(ServerCoreTest, Check_Connection_Timeout) {;
     net::ServerCore server_core{ handle_server_stub, connection_env, conf };
 
     // server core will create new connection.
