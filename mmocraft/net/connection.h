@@ -97,6 +97,11 @@ namespace net
             return io_send_event && io_recv_event;
         }
 
+        error::ResultCode get_last_error() const
+        {
+            return last_error_code;
+        }
+
         std::size_t process_packets(std::byte*, std::byte*);
 
         void register_descriptor();
