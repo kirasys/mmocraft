@@ -14,10 +14,11 @@ protected:
     }
 
     config::Configuration conf;
-    net::PacketHandleServerStub handle_server_stub;
+    net::PacketHandleServerStub<net::Socket> handle_server_stub;
     io::IoAcceptEventData io_accept_data;
     io::IoAcceptEvent io_accept_event{ &io_accept_data };
 };
+
 TEST_F(ServerCoreTest, Connection_Creation_Success) { 
     net::ConnectionEnvironment connection_env;
     net::ServerCore server_core{ handle_server_stub, connection_env, conf };
@@ -25,7 +26,7 @@ TEST_F(ServerCoreTest, Connection_Creation_Success) {
 
     // server core will create new connection.
     for (unsigned i = 0; i < conf.server.max_player; i++) {
-        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
+        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
         server_core.handle_io_event(&io_accept_event);
         is_success_create_max_player &= server_core.get_last_error().is_strong_success();
     }
@@ -40,7 +41,7 @@ TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
 
     // try to create more than maximum.
     for (unsigned i = 0; i < conf.server.max_player + 1; i++) {
-        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
+        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
         server_core.handle_io_event(&io_accept_event);
     }
     connection_env.register_pending_connections();
@@ -56,7 +57,7 @@ TEST_F(ServerCoreTest, Check_Connection_Timeout) {
 
     // server core will create new connection.
     for (unsigned i = 0; i < conf.server.max_player; i++) {
-        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
+        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
         server_core.handle_io_event(&io_accept_event);
     }
     connection_env.register_pending_connections();
