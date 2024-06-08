@@ -53,11 +53,7 @@ namespace net
 
         error::ErrorCode accept(io::IoAcceptEvent&);
 
-        static bool send(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
-
         bool send(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
-
-        static bool recv(win::Socket, WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 
         bool recv(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
 

@@ -16,9 +16,9 @@ namespace net
                                 win::UniqueSocket&& sock,
                                 io::IoCompletionPort& io_service,
                                 io::IoEventPool &io_event_pool)
-        : packet_handle_server{ a_packet_handle_server }
+        : descriptor{ std::move(sock) }
         , connection_env{ a_connection_env }
-        , _client_socket{ std::move(sock) }
+        , packet_handle_server{ a_packet_handle_server }
 
         , io_send_event_data{ io_event_pool.new_send_event_data() }
         , io_send_event{ io_event_pool.new_send_event(io_send_event_data.get()) }
@@ -33,7 +33,7 @@ namespace net
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
 
         // allow to service client socket events.
-        io_service.register_event_source(_client_socket.get_handle(), this);
+        io_service.register_event_source(descriptor.client_socket.get_handle(), this);
 
         // register the descriptor.
         register_descriptor();
@@ -43,7 +43,6 @@ namespace net
     void TConnection<T>::register_descriptor()
     {
         descriptor.connection = this;
-        descriptor.raw_socket = _client_socket.get_handle();
         descriptor.io_recv_event = io_recv_event.get();
         descriptor.io_send_events[SendType::IMMEDIATE] = io_immedidate_send_event.get();
         descriptor.io_send_events[SendType::DEFERRED] = io_send_event.get();
@@ -168,7 +167,7 @@ namespace net
 
         // should assign flag first to avoid data race.
         event->is_processing = true;
-        if (not Socket::recv(raw_socket, &event->overlapped, wbuf, 1))
+        if (not client_socket.recv(&event->overlapped, wbuf, 1))
             event->is_processing = false;
     }
 
@@ -184,7 +183,7 @@ namespace net
 
         // should assign flag first to avoid data race.
         event->is_processing = true; 
-        if (not Socket::send(raw_socket, &event->overlapped, wbuf, 1))
+        if (not client_socket.send(&event->overlapped, wbuf, 1))
             event->is_processing = false;
     }
 

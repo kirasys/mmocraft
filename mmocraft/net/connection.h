@@ -42,6 +42,10 @@ namespace net
             friend TConnection;
             friend ConnectionEnvironment;
 
+            Descriptor(win::UniqueSocket&& accepted_socket)
+                : client_socket{ std::move(accepted_socket) }
+            { }
+
             void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
             inline bool is_online() const
@@ -73,11 +77,11 @@ namespace net
             void associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
 
         private:
-            net::TConnection<SocketType>* connection;
-            win::Socket raw_socket;
+            net::TConnection<SocketType>* connection = nullptr;
+            SocketType client_socket;
 
-            io::IoRecvEvent* io_recv_event;
-            io::IoSendEvent* io_send_events[2];
+            io::IoRecvEvent* io_recv_event = {};
+            io::IoSendEvent* io_send_events[2] = {};
 
             std::unique_ptr<game::Player> self_player;
 
@@ -114,13 +118,10 @@ namespace net
         Descriptor descriptor;
 
     private:
-        net::TPacketHandleServer<SocketType>& packet_handle_server;
-        
-        net::ConnectionEnvironment& connection_env;
-
         error::ResultCode last_error_code;
 
-        SocketType _client_socket;
+        net::ConnectionEnvironment& connection_env;
+        net::TPacketHandleServer<SocketType>& packet_handle_server;
 
         win::ObjectPool<io::IoSendEventData>::Pointer io_send_event_data;
         win::ObjectPool<io::IoSendEvent>::Pointer io_send_event;
