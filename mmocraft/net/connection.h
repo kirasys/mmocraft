@@ -17,13 +17,11 @@
 
 namespace net
 {
-    template <typename T>
-    class TPacketHandleServer;
+    class PacketHandleServer;
 
     class ConnectionEnvironment;
 
-    template <typename SocketType>
-    class TConnection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
+    class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
     {
         // The minecrft beta server will disconnect a client,
         // if it doesn't receive at least one packet before 1200 in-game ticks (1200 tick = 60s)
@@ -39,7 +37,7 @@ namespace net
 
         struct Descriptor : util::NonCopyable, util::NonMovable
         {
-            friend TConnection;
+            friend Connection;
             friend ConnectionEnvironment;
 
             Descriptor(win::UniqueSocket&& accepted_socket)
@@ -77,8 +75,8 @@ namespace net
             void associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
 
         private:
-            net::TConnection<SocketType>* connection = nullptr;
-            SocketType client_socket;
+            net::Connection* connection = nullptr;
+            net::Socket client_socket;
 
             io::IoRecvEvent* io_recv_event = {};
             io::IoSendEvent* io_send_events[2] = {};
@@ -90,9 +88,9 @@ namespace net
             std::size_t last_interaction_tick = 0;
         };
 
-        TConnection(TPacketHandleServer<SocketType>&, ConnectionEnvironment&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
+        Connection(PacketHandleServer&, ConnectionEnvironment&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
 
-        ~TConnection();
+        ~Connection();
 
         bool is_valid() const
         {
@@ -121,7 +119,7 @@ namespace net
         error::ResultCode last_error_code;
 
         net::ConnectionEnvironment& connection_env;
-        net::TPacketHandleServer<SocketType>& packet_handle_server;
+        net::PacketHandleServer& packet_handle_server;
 
         win::ObjectPool<io::IoSendEventData>::Pointer io_send_event_data;
         win::ObjectPool<io::IoSendEvent>::Pointer io_send_event;
@@ -133,20 +131,15 @@ namespace net
         win::ObjectPool<io::IoRecvEvent>::Pointer io_recv_event;
     };
 
-    template <typename T>
-    class TPacketHandleServer
+    class PacketHandleServer
     {
     public:
-        virtual error::ResultCode handle_packet(TConnection<T>::Descriptor&, net::Packet*) = 0;
+        virtual error::ResultCode handle_packet(Connection::Descriptor&, net::Packet*) = 0;
     };
 
-    using Connection = TConnection<net::Socket>;
-    using PacketHandleServer = TPacketHandleServer<net::Socket>;
-
-    template <typename T>
-    class PacketHandleServerStub : public TPacketHandleServer<T>
+    class PacketHandleServerStub : public PacketHandleServer
     {
-        error::ResultCode handle_packet(TConnection<T>::Descriptor&, net::Packet*) override
+        error::ResultCode handle_packet(Connection::Descriptor&, net::Packet*) override
         {
             return error::SUCCESS;
         }

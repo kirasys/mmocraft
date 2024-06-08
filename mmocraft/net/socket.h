@@ -53,9 +53,9 @@ namespace net
 
         error::ErrorCode accept(io::IoAcceptEvent&);
 
-        bool send(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
+        bool send(WSAOVERLAPPED*, WSABUF*);
 
-        bool recv(WSAOVERLAPPED*, WSABUF*, DWORD buffer_count);
+        bool recv(WSAOVERLAPPED*, WSABUF*);
 
         int get_address_family() {
             return AF_INET; // TODO: IPv6

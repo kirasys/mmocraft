@@ -161,7 +161,7 @@
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)connection.obj"</Command>
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -189,7 +189,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)connection.obj"</
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)connection.obj"</Command>
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -215,7 +215,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)connection.obj"</
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)connection.obj"</Command>
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -244,7 +244,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)connection.obj"</
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)connection.obj"</Command>
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

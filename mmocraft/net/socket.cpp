@@ -104,13 +104,13 @@ error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event)
         error::SOCKET_ACCEPTEX : error::SUCCESS;
 }
 
-bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf, DWORD buffer_count)
+bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
 {
     DWORD flags = 0;
 
     int ret = ::WSASend(
         _handle,
-        wsa_buf, buffer_count,
+        wsa_buf, 1,
         NULL,
         flags,
         overlapped,
@@ -123,13 +123,13 @@ bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf, DWORD buffer_
     return true;
 }
 
-bool net::Socket::recv(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf, DWORD buffer_count)
+bool net::Socket::recv(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
 {
     DWORD flags = 0;
 
     int ret = ::WSARecv(
         _handle,
-        wsa_buf, buffer_count,
+        wsa_buf, 1,
         NULL,
         &flags,
         overlapped,

@@ -14,7 +14,7 @@ protected:
     }
 
     config::Configuration conf;
-    net::PacketHandleServerStub<net::Socket> handle_server_stub;
+    net::PacketHandleServerStub handle_server_stub;
     io::IoAcceptEventData io_accept_data;
     io::IoAcceptEvent io_accept_event{ &io_accept_data };
 };
