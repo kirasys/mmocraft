@@ -52,4 +52,9 @@ namespace setup
     {
         system_terminatio_handlers.push_back(handler);
     }
+
+    NetworkSystemInitialzer::NetworkSystemInitialzer()
+    {
+        net::Socket::initialize_system();
+    }
 }
