@@ -15,6 +15,14 @@ namespace util
             Node* next;
         };
 
+        static void delete_nodes(Node* head)
+        {
+            for (auto node = head, next_node = head; node; node = next_node) {
+                next_node = node->next;
+                delete node;
+            }
+        }
+
         template <typename U>
         void push(U&& value)
         {
@@ -27,9 +35,12 @@ namespace util
                 std::memory_order_release, std::memory_order_relaxed));
         }
 
-        Node* pop()
+        auto pop()
         {
-            return _head.exchange(nullptr, std::memory_order_relaxed);
+            return std::unique_ptr<Node, decltype(delete_nodes)*>(
+                _head.exchange(nullptr, std::memory_order_relaxed),
+                delete_nodes
+            );
         }
 
         bool is_empty() const

@@ -53,10 +53,10 @@ namespace net
 
     void ConnectionEnvironment::register_pending_connections()
     {
-        for (auto peding_connection_node = pending_connections.pop();
-                peding_connection_node;
-                peding_connection_node = peding_connection_node->next) {
-            auto& connection_ptr = peding_connection_node->value;
+        auto pending_connection_head = pending_connections.pop();
+
+        for (auto connection_node = pending_connection_head.get(); connection_node; connection_node = connection_node->next) {
+            auto& connection_ptr = connection_node->value;
             auto& connection_descriptor = connection_ptr.get()->descriptor;
 
             connection_table.insert(&connection_descriptor);
@@ -101,11 +101,9 @@ namespace net
 
     void ConnectionEnvironment::cleanup_deleted_player()
     {
-        for (auto deleted_player_node = delete_pending_players.pop();
-                deleted_player_node;
-                deleted_player_node = deleted_player_node->next) {
-            auto player_id = deleted_player_node->value;
-            player_lookup_table.erase(player_id);
-        }
+        auto deleted_player_head = delete_pending_players.pop();
+
+        for (auto player_node = deleted_player_head.get(); player_node; player_node = player_node->next)
+            player_lookup_table.erase(player_node->value);
     }
 }
