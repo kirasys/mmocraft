@@ -198,7 +198,7 @@ namespace net
         return result;
     }
 
-    bool Connection::Descriptor::finalize_handshake() const
+    bool Connection::Descriptor::finalize_handshake(SendType send_type) const
     {
         if (not online)
             return false;
@@ -210,7 +210,7 @@ namespace net
             self_player->get_player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
         };
 
-        return handshake_packet.serialize(io_send_events[SendType::DEFERRED]->data);
+        return handshake_packet.serialize(io_send_events[send_type]->data);
     }
 
     void Connection::Descriptor::associate_game_player

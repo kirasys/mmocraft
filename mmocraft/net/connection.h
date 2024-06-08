@@ -70,7 +70,7 @@ namespace net
 
             bool disconnect_deferred(std::string_view);
 
-            bool finalize_handshake() const;
+            bool finalize_handshake(SendType send_type = SendType::DEFERRED) const;
 
             void associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
 
