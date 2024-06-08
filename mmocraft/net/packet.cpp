@@ -35,6 +35,7 @@ namespace
         using namespace net;
         std::array<PacketStaticData, 0x100> arr{};
         arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate };
+        arr[PacketID::SetBlockClient] = { PacketSetBlock::parse, PacketSetBlock::validate };
         return arr;
     }();
 }
@@ -147,7 +148,7 @@ namespace net
     {
         auto& packet = *to_derived(a_packet);
 
-        if (packet.mode != 0 && packet.mode == 1)
+        if (packet.mode != 0 && packet.mode != 1)
             return error::PACKET_INVALID_DATA;
 
         return error::SUCCESS;
