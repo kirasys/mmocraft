@@ -18,8 +18,8 @@ net::Socket::Socket() noexcept
     : _handle{ }
 { }
 
-net::Socket::Socket(SocketType type)
-    : _handle{ create_windows_socket(type, WSA_FLAG_OVERLAPPED) }
+net::Socket::Socket(SocketProtocol protocol)
+    : _handle{ create_windows_socket(protocol, WSA_FLAG_OVERLAPPED) }
 {
     if (not is_valid())
         throw error::SOCKET_CREATE;
@@ -86,7 +86,7 @@ error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event)
         }
     }
 
-    event.accepted_socket = create_windows_socket(SocketType::TCPv4, WSA_FLAG_OVERLAPPED);
+    event.accepted_socket = create_windows_socket(SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
     if (event.accepted_socket == INVALID_SOCKET)
         return error::SOCKET_CREATE;
 
@@ -157,13 +157,13 @@ void net::Socket::close() noexcept {
     _handle.reset();
 }
 
-win::Socket net::create_windows_socket(SocketType type, DWORD flags)
+win::Socket net::create_windows_socket(SocketProtocol protocol, DWORD flags)
 {
-    switch (type) {
-    case SocketType::TCPv4:
+    switch (protocol) {
+    case SocketProtocol::TCPv4:
         return WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, flags);
         break;
-    case SocketType::UDPv4:
+    case SocketProtocol::UDPv4:
         return ::WSASocketW(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, flags);
         break;
     default:

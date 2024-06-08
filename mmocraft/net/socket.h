@@ -12,7 +12,7 @@
 
 namespace net
 {
-    enum SocketType
+    enum SocketProtocol
     {
         None,
         TCPv4,
@@ -24,7 +24,7 @@ namespace net
     public:
         // constructor
         Socket() noexcept;
-        Socket(SocketType);
+        Socket(SocketProtocol);
         Socket(win::Socket);
         Socket(win::UniqueSocket&&);
 
@@ -69,5 +69,5 @@ namespace net
         win::UniqueSocket _handle;
     };
 
-    win::Socket create_windows_socket(SocketType, DWORD flags);
+    win::Socket create_windows_socket(SocketProtocol, DWORD flags);
 }
