@@ -9,6 +9,8 @@ namespace test
     public:
         MockSocket();
 
+        ~MockSocket();
+
         void send(char* buf, unsigned n)
         {
             send_buffer = buf;

@@ -18,6 +18,11 @@ test::MockSocket::MockSocket()
     mock = this;
 }
 
+test::MockSocket::~MockSocket()
+{
+    mock = nullptr;
+}
+
 net::Socket::Socket() noexcept
     : _handle{ }
 { }
@@ -65,12 +70,12 @@ error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event) {
 }
 
 bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf) {
-    mock->send(wsa_buf[0].buf, wsa_buf[0].len);
+    if (mock) mock->send(wsa_buf[0].buf, wsa_buf[0].len);
     return true;
 }
 
 bool net::Socket::recv(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf) {
-    mock->recv(wsa_buf[0].buf, wsa_buf[0].len);
+    if (mock) mock->recv(wsa_buf[0].buf, wsa_buf[0].len);
     return true;
 }
 
