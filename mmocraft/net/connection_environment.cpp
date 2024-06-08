@@ -17,9 +17,9 @@ namespace net
         pending_connections.push(std::move(a_connection_ptr));
     }
 
-    void ConnectionEnvironment::on_connection_delete(Connection* deleted_connection)
+    void ConnectionEnvironment::on_connection_delete(Connection& deleted_connection)
     {
-        auto& connection_descriptor = deleted_connection->descriptor;
+        auto& connection_descriptor = deleted_connection.descriptor;
         connection_table.erase(&connection_descriptor);
 
         // for the thread-safety, append to the lock-free stack first.
@@ -36,7 +36,8 @@ namespace net
             auto& connection = *(*it).get();
 
             if (connection.descriptor.is_safe_delete()) {
-                it = connection_ptrs.erase(it); // will invoke on_connecyion_delete()
+                on_connection_delete(connection);
+                it = connection_ptrs.erase(it);
                 ++deleted_connection_count;
                 continue;
             }

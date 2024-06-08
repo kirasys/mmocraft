@@ -55,7 +55,7 @@ namespace net
     template <class T>
     TConnection<T>::~TConnection()
     {
-        //connection_env.on_connection_delete(this);
+        
     }
 
     template <class T>
