@@ -39,6 +39,7 @@ namespace
         arr[ErrorCode::PACKET_INSUFFIENT_DATA]  = "PACKET_INSUFFIENT_DATA";
 
         // Packet validation
+        arr[ErrorCode::PACKET_INVALID_DATA]                      = "Invalid packet data received";
         arr[ErrorCode::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION] = "Unsupported protocol version";
         arr[ErrorCode::PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH] = "Username must be 1 to 16 characters";
         arr[ErrorCode::PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT] = "Username must be alphanumeric characters";

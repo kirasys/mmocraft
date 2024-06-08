@@ -167,6 +167,17 @@ namespace net
         bool serialize(io::IoEventData&) const;
     };
 
+    struct PacketSetBlock : Packet
+    {
+        PacketFieldType::Short x;
+        PacketFieldType::Short y;
+        PacketFieldType::Short z;
+        PacketFieldType::Byte mode;
+        PacketFieldType::Byte block_type;
+
+        DECLARE_PACKET_READ_METHOD(PacketSetBlock);
+    };
+
     
     struct PacketDisconnectPlayer : Packet
     {

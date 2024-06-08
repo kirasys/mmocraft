@@ -132,6 +132,27 @@ namespace net
         return true;
     }
 
+    std::byte* PacketSetBlock::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    {
+        auto packet = to_derived(out_packet);
+        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->x);
+        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->y);
+        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->z);
+        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->mode);
+        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->block_type);
+        return buf_start;
+    }
+
+    error::ErrorCode PacketSetBlock::validate(const net::Packet* a_packet)
+    {
+        auto& packet = *to_derived(a_packet);
+
+        if (packet.mode != 0 && packet.mode == 1)
+            return error::PACKET_INVALID_DATA;
+
+        return error::SUCCESS;
+    }
+
     bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const
     {
         if (size_of_serialized() > event_data.unused_size())
