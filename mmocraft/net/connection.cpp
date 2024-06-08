@@ -10,7 +10,8 @@
 
 namespace net
 {
-    Connection::Connection(net::PacketHandleServer& a_packet_handle_server,
+    template <class T>
+    TConnection<T>::TConnection(net::TPacketHandleServer<T>& a_packet_handle_server,
                                 net::ConnectionEnvironment& a_connection_env,
                                 win::UniqueSocket&& sock,
                                 io::IoCompletionPort& io_service,
@@ -38,7 +39,8 @@ namespace net
         register_descriptor();
     }
 
-    void Connection::register_descriptor()
+    template <class T>
+    void TConnection<T>::register_descriptor()
     {
         descriptor.connection = this;
         descriptor.raw_socket = _client_socket.get_handle();
@@ -50,12 +52,14 @@ namespace net
         descriptor.update_last_interaction_time();
     }
 
-    Connection::~Connection()
+    template <class T>
+    TConnection<T>::~TConnection()
     {
-        connection_env.on_connection_delete(this);
+        //connection_env.on_connection_delete(this);
     }
 
-    std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
+    template <class T>
+    std::size_t TConnection<T>::process_packets(std::byte* data_begin, std::byte* data_end)
     {
         auto data_cur = data_begin;
         auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::max_size_of_packet_struct()));
@@ -86,7 +90,8 @@ namespace net
     
     /// recv event handler
 
-    void Connection::on_complete(io::IoRecvEvent* event)
+    template <class T>
+    void TConnection<T>::on_complete(io::IoRecvEvent* event)
     {
         if (last_error_code.is_strong_success()) {
             descriptor.activate_receive_cycle(event);
@@ -97,7 +102,8 @@ namespace net
         event->is_processing = false;
     }
 
-    std::size_t Connection::handle_io_event(io::IoRecvEvent* event)
+    template <class T>
+    std::size_t TConnection<T>::handle_io_event(io::IoRecvEvent* event)
     {
         if (not descriptor.try_interact_with_client()) // timeout case: connection will be deleted soon.
             return 0; 
@@ -107,7 +113,8 @@ namespace net
 
     /// send event handler
 
-    void Connection::on_complete(io::IoSendEvent* event)
+    template <class T>
+    void TConnection<T>::on_complete(io::IoSendEvent* event)
     {
         // Note: Can't start I/O event again due to the interleaving problem.
         event->is_processing = false;
@@ -117,24 +124,28 @@ namespace net
      *  Connection descriptor interface
      */
 
-    bool Connection::Descriptor::is_expired(std::size_t current_tick) const
+    template <class T>
+    bool TConnection<T>::Descriptor::is_expired(std::size_t current_tick) const
     {
         return current_tick >= last_interaction_tick + REQUIRED_MILLISECONDS_FOR_EXPIRE;
     }
 
-    bool Connection::Descriptor::is_safe_delete(std::size_t current_tick) const
+    template <class T>
+    bool TConnection<T>::Descriptor::is_safe_delete(std::size_t current_tick) const
     {
         return not online
             && current_tick >= last_offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
     }
 
-    void Connection::Descriptor::set_offline(std::size_t current_tick)
+    template <class T>
+    void TConnection<T>::Descriptor::set_offline(std::size_t current_tick)
     {
         online = false;
         last_offline_tick = current_tick;
     }
 
-    bool Connection::Descriptor::try_interact_with_client()
+    template <class T>
+    bool TConnection<T>::Descriptor::try_interact_with_client()
     {
         if (online) {
             update_last_interaction_time();
@@ -143,7 +154,8 @@ namespace net
         return false;
     }
 
-    void Connection::Descriptor::activate_receive_cycle(io::IoRecvEvent* event)
+    template <class T>
+    void TConnection<T>::Descriptor::activate_receive_cycle(io::IoRecvEvent* event)
     {
         if (not online || event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
             event->is_processing = false;
@@ -160,7 +172,8 @@ namespace net
             event->is_processing = false;
     }
 
-    void Connection::Descriptor::activate_send_cycle(io::IoSendEvent* event)
+    template <class T>
+    void TConnection<T>::Descriptor::activate_send_cycle(io::IoSendEvent* event)
     {
         if (event->data.size() == 0)
             return;
@@ -175,7 +188,8 @@ namespace net
             event->is_processing = false;
     }
 
-    bool Connection::Descriptor::disconnect_immediate(std::string_view reason)
+    template <class T>
+    bool TConnection<T>::Descriptor::disconnect_immediate(std::string_view reason)
     {
         if (not online)
             return false;
@@ -187,7 +201,8 @@ namespace net
         return result;
     }
 
-    bool Connection::Descriptor::disconnect_deferred(std::string_view reason)
+    template <class T>
+    bool TConnection<T>::Descriptor::disconnect_deferred(std::string_view reason)
     {
         if (not online)
             return false;
@@ -199,7 +214,8 @@ namespace net
         return result;
     }
 
-    bool Connection::Descriptor::finalize_handshake() const
+    template <class T>
+    bool TConnection<T>::Descriptor::finalize_handshake() const
     {
         if (not online)
             return false;
@@ -214,7 +230,8 @@ namespace net
         return handshake_packet.serialize(io_send_events[SendType::DEFERRED]->data);
     }
 
-    void Connection::Descriptor::associate_game_player
+    template <class T>
+    void TConnection<T>::Descriptor::associate_game_player
         (game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
     {
         self_player = std::make_unique<game::Player>(
@@ -224,4 +241,6 @@ namespace net
             password
         );
     }
+
+    template class TConnection<net::Socket>;
 }

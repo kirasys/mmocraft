@@ -16,7 +16,7 @@ namespace net
                          .port = conf.server.port, 
                          .max_client_connections = conf.server.max_player,
                          .num_of_event_threads = conf.system.num_of_processors * 2}
-        , _listen_sock{ net::SocketType::TCPv4 }
+        , _listen_sock{ net::SocketProtocol::TCPv4 }
         , io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
         , io_event_pool{ conf.server.max_player }
         , io_accept_event_data { io_event_pool.new_accept_event_data() }
