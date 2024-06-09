@@ -70,7 +70,17 @@ namespace error
             : error_code{ code }
         { }
 
+        inline void reset()
+        {
+            error_code = error::SUCCESS;
+        }
+
         inline bool is_success() const
+        {
+            return error_code == error::SUCCESS;
+        }
+
+        inline bool is_packet_handle_success() const
         {
             return error_code == error::SUCCESS
                 || error_code == error::PACKET_INSUFFIENT_DATA

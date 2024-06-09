@@ -67,7 +67,7 @@ namespace net
             }
 
             auto handle_result = packet_handle_server.handle_packet(descriptor, packet_ptr);
-            if (not handle_result.is_success()) {
+            if (not handle_result.is_packet_handle_success()) {
                 last_error_code = handle_result;
                 break;
             }
@@ -87,7 +87,8 @@ namespace net
 
     void Connection::on_complete(io::IoRecvEvent* event)
     {
-        if (last_error_code.is_strong_success()) {
+        if (last_error_code.is_packet_handle_success()) {
+            last_error_code.reset();
             descriptor.activate_receive_cycle(event);
             return;
         }
