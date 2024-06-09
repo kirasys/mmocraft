@@ -39,7 +39,7 @@ namespace net
     {
         Connection::Descriptor* connection_descriptor;
         error::ResultCode result_code;
-        DeferredPacketResult* next;
+        DeferredPacketResult* next = nullptr;
     };
 
     class PacketEvent
