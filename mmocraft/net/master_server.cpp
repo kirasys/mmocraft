@@ -104,7 +104,7 @@ namespace net
 
             if (result_code.is_login_success()) {
                 result->connection_descriptor->finalize_handshake();
-                return;
+                continue;
             }
 
             result->connection_descriptor->disconnect_deferred(
