@@ -10,6 +10,7 @@
     <ClCompile Include="mock_database.cpp">
       <Filter>mock</Filter>
     </ClCompile>
+    <ClCompile Include="master_server_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

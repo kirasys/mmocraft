@@ -115,6 +115,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="connection_test.cpp" />
+    <ClCompile Include="master_server_test.cpp" />
     <ClCompile Include="mock_database.cpp" />
     <ClCompile Include="mock_socket.cpp" />
     <ClCompile Include="object_pool_test.cpp" />
