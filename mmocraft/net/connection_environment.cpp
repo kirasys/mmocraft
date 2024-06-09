@@ -59,9 +59,10 @@ namespace net
             auto& connection_ptr = connection_node->value;
             auto& connection_descriptor = connection_ptr.get()->descriptor;
 
-            connection_table.insert(&connection_descriptor);
+            // should first activate the event before inserting the connection to the table.
             connection_descriptor.activate_receive_cycle(connection_descriptor.io_recv_event);
 
+            connection_table.insert(&connection_descriptor);
             connection_ptrs.emplace_back(std::move(connection_ptr));
         }
     }
