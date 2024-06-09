@@ -24,7 +24,7 @@ namespace net
         
         unsigned size_of_connections() const
         {
-            return connection_counter.load();
+            return num_of_connections.load();
         }
 
         // Append new allocated conneciton resource to manage life-cycle.
