@@ -55,9 +55,9 @@ namespace net
         _state = ServerCore::State::Running;
     }
 
-    bool ServerCore::post_event(PacketEvent* event, ULONG_PTR event_handler_class)
+    bool ServerCore::post_event(PacketEvent* event, ULONG_PTR event_handler)
     {
-        return io_service.push_event(event, event_handler_class);
+        return io_service.push_event(event, event_handler);
     }
 
     /** 
