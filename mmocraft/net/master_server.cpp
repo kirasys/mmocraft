@@ -5,8 +5,8 @@
 #include <cstring>
 
 #include "config/config.h"
-#include "database/sql_statement.h"
 #include "logging/error.h"
+#include "database/query.h"
 
 namespace net
 {

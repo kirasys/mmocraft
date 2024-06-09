@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="config\config.cpp" />
     <ClCompile Include="database\database_core.cpp" />
+    <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
@@ -47,6 +48,7 @@
   <ItemGroup>
     <ClInclude Include="config\config.h" />
     <ClInclude Include="database\database_core.h" />
+    <ClInclude Include="database\query.h" />
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\player.h" />
@@ -161,7 +163,7 @@
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -189,7 +191,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Comm
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -215,7 +217,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Comm
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -244,7 +246,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Comm
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"</Command>
+lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

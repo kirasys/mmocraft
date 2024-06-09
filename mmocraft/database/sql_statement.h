@@ -4,10 +4,8 @@
 #include <sql.h>
 #include <sqlext.h>
 
-#include "net/packet.h"
-#include "util/common_util.h"
-#include "logging/logger.h"
 #include "win/win_type.h"
+#include "util/common_util.h"
 
 namespace database
 {
@@ -61,38 +59,5 @@ namespace database
 
     private:
         SQLHSTMT statement_handle = SQL_NULL_HSTMT;
-    };
-
-    constexpr const char* sql_select_player_by_username_and_password = "SELECT COUNT(*) FROM player WHERE username = ? AND password = dbo.GetPasswordHash(?)";
-    constexpr const char* sql_select_player_by_username = "SELECT id FROM player WHERE username = ?";
-
-    class PlayerLoginSQL : public SQLStatement
-    {
-    public:
-        PlayerLoginSQL(SQLHDBC);
-
-        bool authenticate(const char* username, const char* password);
-
-    private:
-        char _username[net::PacketFieldConstraint::max_username_length + 1];
-        char _password[net::PacketFieldConstraint::max_password_length + 1];
-    };
-
-    class PlayerSearchSQL : public SQLStatement
-    {
-    public:
-        PlayerSearchSQL(SQLHDBC);
-
-        bool search(const char* username);
-
-        inline SQLUINTEGER get_player_identity_number() const
-        {
-            return player_id;
-        }
-
-    private:
-        char _username[net::PacketFieldConstraint::max_username_length + 1];
-
-        SQLUINTEGER player_id = 0;
     };
 }

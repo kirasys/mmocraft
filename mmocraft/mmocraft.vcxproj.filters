@@ -26,6 +26,7 @@
     <ClCompile Include="net\deferred_packet.cpp" />
     <ClCompile Include="system_initializer.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
+    <ClCompile Include="database\query.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -59,6 +60,7 @@
     <ClInclude Include="system_initializer.h" />
     <ClInclude Include="util\lockfree_stack.h" />
     <ClInclude Include="net\connection_environment.h" />
+    <ClInclude Include="database\query.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />

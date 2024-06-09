@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "sql_statement.h"
 
-#include <string.h>
+#include "logging/logger.h"
 
 #define CHECK_DB_SUCCESS(ret) \
     if ((ret) != SQL_SUCCESS && (ret) != SQL_SUCCESS_WITH_INFO) \
@@ -26,7 +26,8 @@ namespace database
 
     void SQLStatement::close()
     {
-        ::SQLFreeHandle(SQL_HANDLE_STMT, statement_handle);
+        if (SQL_NULL_HSTMT != SQL_NULL_HSTMT)
+            ::SQLFreeHandle(SQL_HANDLE_STMT, statement_handle);
         statement_handle = SQL_NULL_HSTMT;
     }
 
@@ -128,52 +129,5 @@ namespace database
         auto ret = ::SQLBindCol(statement_handle, column_number, SQL_C_ULONG, &value, 0, NULL);
         CHECK_DB_STRONG_SUCCESS(ret);
         return true;
-    }
-
-    PlayerLoginSQL::PlayerLoginSQL(SQLHDBC a_connection_handle)
-        : SQLStatement{a_connection_handle}
-    {
-        this->prepare(sql_select_player_by_username_and_password);
-
-        // bind input parameters.
-        this->inbound_null_terminated_string_parameter(1, _username, sizeof(_username));
-        this->inbound_null_terminated_string_parameter(2, _password, sizeof(_password));
-    }
-
-    bool PlayerLoginSQL::authenticate(const char* a_username, const char* a_password)
-    {
-        ::strcpy_s(_username, a_username);
-        ::strcpy_s(_password, a_password);
-
-        if (this->execute()) {
-            util::defer clear_cursor = [this] { this->close_cursor(); };
-            return this->fetch();
-        }
-
-        return false;
-    }
-
-    PlayerSearchSQL::PlayerSearchSQL(SQLHDBC a_connection_handle)
-        : SQLStatement{ a_connection_handle }
-    {
-        this->prepare(sql_select_player_by_username);
-
-        // bind input parameters.
-        this->inbound_null_terminated_string_parameter(1, _username, sizeof(_username));
-
-        // bind output parameters.
-        this->outbound_unsigned_integer_column(1, player_id);
-    }
-
-    bool PlayerSearchSQL::search(const char* a_username)
-    {
-        ::strcpy_s(_username, a_username);
-
-        if (this->execute()) {
-            util::defer clear_cursor = [this] { this->close_cursor(); };
-            return this->fetch();
-        }
-
-        return false;
     }
 }
