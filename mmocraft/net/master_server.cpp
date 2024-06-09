@@ -133,14 +133,14 @@ namespace net
             
             if (player_type == game::PlayerType::INVALID) {
                 event->push_result(packet->connection_descriptor, error::PACKET_RESULT_FAIL_LOGIN);
-                return;
+                continue;
             }
 
             game::PlayerID player_id = player_search.get_player_identity_number();
 
             if (not connection_env.register_player(player_id)) {
                 event->push_result(packet->connection_descriptor, error::PACKET_RESULT_ALREADY_LOGIN);
-                return;
+                continue;
             }
 
             packet->connection_descriptor->associate_game_player(
