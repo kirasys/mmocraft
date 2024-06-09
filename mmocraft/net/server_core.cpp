@@ -66,7 +66,7 @@ namespace net
 
     void ServerCore::on_complete(io::IoAcceptEvent* event)
     {
-        if (not last_error_code.is_strong_success()) {
+        if (not last_error_code.is_success()) {
             LOG(error) << last_error_code;
             _state = ServerCore::State::Stopped;
             return;

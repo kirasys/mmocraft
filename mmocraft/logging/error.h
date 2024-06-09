@@ -87,11 +87,6 @@ namespace error
                 || error_code == error::PACKET_HANDLE_DEFERRED;
         }
 
-        inline bool is_strong_success() const
-        {
-            return error_code == error::SUCCESS;
-        }
-
         inline bool is_login_success() const
         {
             return error_code == error::PACKET_RESULT_SUCCESS_LOGIN;

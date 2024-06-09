@@ -29,7 +29,7 @@ TEST_F(ServerCoreTest, Connection_Creation_Success) {
     for (unsigned i = 0; i < conf.server.max_player; i++) {
         io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
         server_core.handle_io_event(&io_accept_event);
-        is_success_create_max_player &= server_core.get_last_error().is_strong_success();
+        is_success_create_max_player &= server_core.get_last_error().is_success();
     }
     connection_env.register_pending_connections();
 

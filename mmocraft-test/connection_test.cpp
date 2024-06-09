@@ -114,7 +114,7 @@ TEST_F(ConnectionTest, Handle_Recv_Event_Correctly)
 
     io_recv_event.invoke_handler(SUT_connection, sizeof(set_block_packet) * 3);
 
-    EXPECT_TRUE(SUT_connection.get_last_error().is_strong_success())
+    EXPECT_TRUE(SUT_connection.get_last_error().is_success())
         << "Unexpected error:" << SUT_connection.get_last_error().to_string();
     EXPECT_EQ(mock.get_recv_times(), 1);
     EXPECT_EQ(io_recv_data.size(), 0);
