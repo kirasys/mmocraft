@@ -42,9 +42,7 @@ namespace net
 
             Descriptor() = default;
 
-            Descriptor(win::UniqueSocket&& accepted_socket)
-                : client_socket{ std::move(accepted_socket) }
-            { }
+            Descriptor(Connection*, win::UniqueSocket&&, io::IoRecvEvent*, io::IoSendEvent*, io::IoSendEvent*);
 
             void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
@@ -106,8 +104,6 @@ namespace net
 
         std::size_t process_packets(std::byte*, std::byte*);
 
-        void register_descriptor();
-
         /**
          *  Event Handler Interface
          */
@@ -119,8 +115,6 @@ namespace net
         virtual void on_complete(io::IoSendEvent*) override;
 
         //virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
-
-        Descriptor descriptor;
 
     private:
         error::ResultCode last_error_code;
@@ -136,6 +130,9 @@ namespace net
 
         win::ObjectPool<io::IoRecvEventData>::Pointer io_recv_event_data;
         win::ObjectPool<io::IoRecvEvent>::Pointer io_recv_event;
+
+     public:
+        Descriptor descriptor;
     };
 
     class PacketHandleServer

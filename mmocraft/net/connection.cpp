@@ -15,8 +15,7 @@ namespace net
                                 win::UniqueSocket&& sock,
                                 io::IoCompletionPort& io_service,
                                 io::IoEventPool &io_event_pool)
-        : descriptor{ std::move(sock) }
-        , connection_env{ a_connection_env }
+        : connection_env{ a_connection_env }
         , packet_handle_server{ a_packet_handle_server }
 
         , io_send_event_data{ io_event_pool.new_send_event_data() }
@@ -27,6 +26,8 @@ namespace net
 
         , io_recv_event_data{ io_event_pool.new_recv_event_data() }
         , io_recv_event{ io_event_pool.new_recv_event(io_recv_event_data.get()) }
+
+        , descriptor{this, std::move(sock), io_recv_event.get(), io_immedidate_send_event.get(), io_send_event.get() }
     {
         if (not is_valid())
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
@@ -34,19 +35,22 @@ namespace net
         // allow to service client socket events.
         io_service.register_event_source(descriptor.client_socket.get_handle(), this);
 
-        // register the descriptor.
-        register_descriptor();
+        // turn to online.
+        
     }
 
-    void Connection::register_descriptor()
+    Connection::Descriptor::Descriptor(Connection* a_connection,
+                                        win::UniqueSocket&& a_sock, 
+                                        io::IoRecvEvent* a_io_recv_event,
+                                        io::IoSendEvent* a_io_immediate_send_event,
+                                        io::IoSendEvent* a_io_deferred_send_event)
+        : connection{ a_connection }
+        , client_socket{std::move(a_sock)}
+        , io_recv_event{ a_io_recv_event }
+        , io_send_events{ a_io_immediate_send_event, a_io_deferred_send_event }
+        , online{ true }
     {
-        descriptor.connection = this;
-        descriptor.io_recv_event = io_recv_event.get();
-        descriptor.io_send_events[SendType::IMMEDIATE] = io_immedidate_send_event.get();
-        descriptor.io_send_events[SendType::DEFERRED] = io_send_event.get();
-
-        descriptor.online = true;
-        descriptor.update_last_interaction_time();
+        update_last_interaction_time();
     }
 
     Connection::~Connection()
