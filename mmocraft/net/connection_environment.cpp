@@ -13,7 +13,7 @@ namespace net
 
     void ConnectionEnvironment::append_connection(win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
     {
-        connection_counter.fetch_add(1);
+        ++num_of_connections;
         pending_connections.push(std::move(a_connection_ptr));
     }
 
@@ -48,7 +48,7 @@ namespace net
             ++it;
         }
 
-        connection_counter.fetch_sub(deleted_connection_count);
+        num_of_connections -= deleted_connection_count;
     }
 
     void ConnectionEnvironment::register_pending_connections()

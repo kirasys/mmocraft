@@ -51,7 +51,7 @@ namespace net
         void cleanup_deleted_player();
 
     private:
-        std::atomic<unsigned> connection_counter{ 0 };
+        std::atomic<unsigned> num_of_connections{ 0 };
 
         util::LockfreeStack<win::ObjectPool<net::Connection>::Pointer> pending_connections;
         std::list<win::ObjectPool<net::Connection>::Pointer> connection_ptrs;
