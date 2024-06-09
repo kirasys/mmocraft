@@ -40,6 +40,8 @@ namespace net
             friend Connection;
             friend ConnectionEnvironment;
 
+            Descriptor() = default;
+
             Descriptor(win::UniqueSocket&& accepted_socket)
                 : client_socket{ std::move(accepted_socket) }
             { }
