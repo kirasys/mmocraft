@@ -109,11 +109,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="mock_database.h" />
     <ClInclude Include="mock_socket.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="connection_test.cpp" />
+    <ClCompile Include="mock_database.cpp" />
     <ClCompile Include="mock_socket.cpp" />
     <ClCompile Include="object_pool_test.cpp" />
     <ClCompile Include="pch.cpp">
