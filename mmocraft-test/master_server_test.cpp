@@ -6,7 +6,17 @@
 class MasterServerTest : public testing::Test
 {
 protected:
-    MasterServerTest() = default;
+    MasterServerTest()
+        : connection_descriptor{nullptr, win::UniqueSocket(), nullptr, &io_send_event, &io_deferred_send_event }
+    {
+
+    }
+
+    io::IoSendEventData io_send_data;
+    io::IoSendEvent io_send_event{ &io_send_data };
+
+    io::IoSendEventData io_deferred_send_data;
+    io::IoSendEvent io_deferred_send_event{ &io_deferred_send_data };
 
     net::MasterServer SUT_server;
     net::Connection::Descriptor connection_descriptor;
@@ -55,4 +65,29 @@ TEST_F(MasterServerTest, Handle_Deferred_Handshake_With_Duplicate_Login)
     // first login will success then fail to login due to same player ID.
     EXPECT_TRUE(packet_event.results[0].is_login_success() 
         && not packet_event.results[1].is_login_success());
+}
+
+TEST_F(MasterServerTest, Handle_Deferred_Handshake_Result_Correctly)
+{
+    auto defer_handshake_result = net::DeferredPacketResult{ &connection_descriptor, error::PACKET_RESULT_SUCCESS_LOGIN };
+    
+    connection_descriptor.associate_game_player(1, game::PlayerType::GUEST, "user", "pass");
+    SUT_server.handle_deferred_handshake_packet_result(&defer_handshake_result);
+
+    auto sended_packet_id = net::PacketID(io_deferred_send_data.data()[0]);
+    EXPECT_EQ(sended_packet_id, net::PacketID::Handshake);
+    EXPECT_TRUE(io_deferred_send_data.size() > 0);
+}
+
+TEST_F(MasterServerTest, Handle_Deferred_Handshake_Fail_Result)
+{
+    auto defer_handshake_result = net::DeferredPacketResult{ &connection_descriptor, error::PACKET_RESULT_FAIL_LOGIN };
+
+    connection_descriptor.associate_game_player(1, game::PlayerType::GUEST, "user", "pass");
+    SUT_server.handle_deferred_handshake_packet_result(&defer_handshake_result);
+
+    auto sended_packet_id = net::PacketID(io_deferred_send_data.data()[0]);
+    EXPECT_EQ(sended_packet_id, net::PacketID::DisconnectPlayer);
+    EXPECT_TRUE(io_deferred_send_data.size() > 0);
+    EXPECT_FALSE(connection_descriptor.is_online());
 }
