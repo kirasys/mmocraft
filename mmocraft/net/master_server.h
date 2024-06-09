@@ -19,6 +19,8 @@ namespace net
 
         error::ResultCode handle_handshake_packet(net::Connection::Descriptor&, PacketHandshake&);
 
+        void tick();
+
         void serve_forever();
 
         /**

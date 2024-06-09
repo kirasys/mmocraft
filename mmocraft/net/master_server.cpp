@@ -18,12 +18,7 @@ namespace net
         , deferred_handshake_packet_event{ 
             &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_packet_result
         }
-    { 
-        const auto& conf = config::get_config();
-
-        if (not database_core.connect_with_password(conf.db))
-            throw error::DATABASE_CONNECT;
-
+    {
         /// Schedule interval tasks.
 
         connection_env_task.schedule(
@@ -48,20 +43,32 @@ namespace net
         return error::PACKET_HANDLE_DEFERRED;
     }
 
+    void MasterServer::tick()
+    {
+        connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
+        connection_env.register_pending_connections();
+        connection_env.flush_server_message();
+        connection_env.flush_client_message();
+
+        flush_deferred_packet();
+        handle_deferred_packet_result();
+    }
+
     void MasterServer::serve_forever()
     {
+        const auto& conf = config::get_config();
+
+        // start database system.
+        if (not database_core.connect_with_password(conf.db))
+            throw error::DATABASE_CONNECT;
+
+        // start network I/O system.
         server_core.start_network_io_service();
 
         while (1) {
             std::size_t start_tick = util::current_monotonic_tick();
 
-            connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
-            connection_env.register_pending_connections();
-            connection_env.flush_server_message();
-            connection_env.flush_client_message();
-
-            flush_deferred_packet();
-            handle_deferred_packet_result();
+            this->tick();
 
             std::size_t end_tick = util::current_monotonic_tick();
 
