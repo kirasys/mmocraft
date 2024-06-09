@@ -117,6 +117,7 @@ TEST_F(ConnectionTest, Handle_Recv_Event_Correctly)
     EXPECT_TRUE(SUT_connection.get_last_error().is_success())
         << "Unexpected error:" << SUT_connection.get_last_error().to_string();
     EXPECT_EQ(mock.get_recv_times(), 1);
+    // expect all data have been consumed.
     EXPECT_EQ(io_recv_data.size(), 0);
 }
 
