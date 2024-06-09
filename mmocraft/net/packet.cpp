@@ -110,7 +110,7 @@ namespace net
         if (not util::is_alphanumeric(packet.username.data, packet.username.size))
             return error::PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT;
 
-        if (packet.password.size == 0 || packet.password.size > PacketFieldConstraint::max_password_length)
+        if (packet.password.size > PacketFieldConstraint::max_password_length)
             return error::PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH;
 
         return error::SUCCESS;
