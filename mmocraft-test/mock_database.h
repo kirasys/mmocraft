@@ -1,12 +1,6 @@
 #pragma once
 
-#include <atomic>
-
-#define NOMINMAX
-#include <winsock2.h>
-#include <Windows.h>
-#include <sql.h>
-#include <sqlext.h>
+#include "pch.h"
 
 namespace test
 {
