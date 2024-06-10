@@ -33,9 +33,9 @@ namespace game
     public:
         Player(PlayerID, PlayerType, const char* username, const char* password);
 
-        PlayerID get_identity_number() const
+        PlayerID get_id() const
         {
-            return identity_number;
+            return _id;
         }
 
         PlayerType get_player_type() const
@@ -44,7 +44,7 @@ namespace game
         }
 
     private:
-        PlayerID identity_number;
+        PlayerID _id;
         PlayerType player_type;
         char _username[net::PacketFieldConstraint::max_username_length + 1];
         char _password[net::PacketFieldConstraint::max_password_length + 1];

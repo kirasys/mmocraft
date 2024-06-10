@@ -4,7 +4,7 @@
 namespace game
 {
     Player::Player(PlayerID player_id, PlayerType player_type, const char* username, const char* password)
-        : identity_number{ player_id }
+        : _id{ player_id }
         , player_type{ player_type }
     {
         ::strcpy_s(_username, username);
