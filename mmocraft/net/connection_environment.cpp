@@ -5,13 +5,11 @@
 
 namespace net
 {
-    ConnectionEnvironment::ConnectionEnvironment()
+    ConnectionEnvironment::ConnectionEnvironment(unsigned max_connections)
+        : num_of_max_connections{ max_connections }
+        , player_lookup_table{ new unsigned[max_connections]() }
     {
-        const auto& conf = config::get_config();
-
-        num_of_max_connections = conf.server.max_player;
-        connection_table.reserve(num_of_max_connections);
-        player_lookup_table.reset(new unsigned[num_of_max_connections]);
+        connection_table.reserve(max_connections);
     }
 
     void ConnectionEnvironment::append_connection(win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)

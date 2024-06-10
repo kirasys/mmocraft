@@ -10,9 +10,10 @@
 
 namespace net
 {
-    MasterServer::MasterServer()
-        : connection_env_task{ &connection_env }
-        , server_core{ *this, connection_env }
+    MasterServer::MasterServer(const config::Configuration& conf)
+        : connection_env{ conf.server.max_player }
+        , connection_env_task{ &connection_env }
+        , server_core{ *this, connection_env, conf }
         , database_core{ }
         
         , deferred_handshake_packet_event{ 

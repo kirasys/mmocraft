@@ -13,7 +13,7 @@ namespace net
     class MasterServer : public net::PacketHandleServer
     {
     public:
-        MasterServer();
+        MasterServer(const config::Configuration& conf = config::get_config());
 
         error::ResultCode handle_packet(net::Connection::Descriptor&, Packet*) override;
 

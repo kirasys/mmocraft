@@ -13,8 +13,7 @@ namespace net
     class ConnectionEnvironment : util::NonCopyable
     {
     public:
-        // TODO: pass the max_connection as arguments.
-        ConnectionEnvironment();
+        ConnectionEnvironment(unsigned);
 
         // used for testing purpose only.
         auto get_connection_pointers()
