@@ -3,6 +3,8 @@
 #include "net/connection_environment.h"
 #include "net/server_core.h"
 
+constexpr unsigned max_player_count = 5;
+
 class ServerCoreTest : public testing::Test
 {
 protected:
@@ -18,18 +20,18 @@ protected:
     io::IoAcceptEventData io_accept_data;
     io::IoAcceptEvent io_accept_event{ &io_accept_data };
 
-    net::ConnectionEnvironment connection_env;
+    net::ConnectionEnvironment connection_env{ max_player_count };
 };
 
 TEST_F(ServerCoreTest, Connection_Creation_Success) { 
-    net::ServerCore server_core{ handle_server_stub, connection_env, conf };
+    net::ServerCore SUT_server{ handle_server_stub, connection_env, conf };
     bool is_success_create_max_player = true;
 
     // server core will create new connection.
     for (unsigned i = 0; i < conf.server.max_player; i++) {
         io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
-        server_core.handle_io_event(&io_accept_event);
-        is_success_create_max_player &= server_core.get_last_error().is_success();
+        SUT_server.handle_io_event(&io_accept_event);
+        is_success_create_max_player &= SUT_server.get_last_error().is_success();
     }
     connection_env.register_pending_connections();
 
@@ -38,28 +40,28 @@ TEST_F(ServerCoreTest, Connection_Creation_Success) {
 }
 
 TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
-    net::ServerCore server_core{ handle_server_stub, connection_env, conf };
+    net::ServerCore SUT_server{ handle_server_stub, connection_env, conf };
 
     // try to create more than maximum.
     for (unsigned i = 0; i < conf.server.max_player + 1; i++) {
         io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
-        server_core.handle_io_event(&io_accept_event);
+        SUT_server.handle_io_event(&io_accept_event);
     }
     connection_env.register_pending_connections();
 
-    EXPECT_EQ(server_core.get_last_error().to_error_code(), error::CLIENT_CONNECTION_FULL)
-        << "Unexpected last error: " << server_core.get_last_error().to_string();
+    EXPECT_EQ(SUT_server.get_last_error().to_error_code(), error::CLIENT_CONNECTION_FULL)
+        << "Unexpected last error: " << SUT_server.get_last_error().to_string();
     // lconnection list never be exceed max player count.
     EXPECT_EQ(connection_env.size_of_connections(), conf.server.max_player);
 }
 
 TEST_F(ServerCoreTest, Check_Connection_Timeout) {;
-    net::ServerCore server_core{ handle_server_stub, connection_env, conf };
+    net::ServerCore SUT_server{ handle_server_stub, connection_env, conf };
 
     // server core will create new connection.
     for (unsigned i = 0; i < conf.server.max_player; i++) {
         io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
-        server_core.handle_io_event(&io_accept_event);
+        SUT_server.handle_io_event(&io_accept_event);
     }
     connection_env.register_pending_connections();
 

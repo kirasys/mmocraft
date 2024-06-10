@@ -14,20 +14,15 @@ class ConnectionTest : public testing::Test
 protected:
     ConnectionTest()
         : network_init{}
-        , conf{ config::get_config().clone() }
         , unique_sock{net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED) }
         , SUT_connection{ handle_server_stub, connection_env, std::move(unique_sock), io_service, io_event_pool }
-    {
-        conf.server.max_player = max_player_count;
-    }
+    { }
 
     test::MockSocket mock;
 
     setup::NetworkSystemInitialzer network_init;
-    config::Configuration conf;
-
     win::UniqueSocket unique_sock;
-    net::ConnectionEnvironment connection_env;
+    net::ConnectionEnvironment connection_env{ max_player_count };
 
     io::IoCompletionPort io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS };
     io::IoEventPool io_event_pool{ max_player_count };
@@ -35,6 +30,7 @@ protected:
     net::PacketHandleServerStub handle_server_stub;
     net::Connection SUT_connection;
 };
+
 TEST_F(ConnectionTest, Activate_Recv_Event_Correctly)
 {
     io::IoRecvEventData io_recv_data;
