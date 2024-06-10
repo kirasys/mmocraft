@@ -21,7 +21,7 @@ namespace util
 
         // allocate the output buffer.
         compressed_size = deflateBound(&strm, strm.avail_in);
-        dest.resize(compressed_size + 1);
+        dest.resize(compressed_size);
 
         strm.next_out = reinterpret_cast<z_const Bytef*>(dest.data());
         strm.avail_out = compressed_size;
