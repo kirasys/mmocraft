@@ -1,7 +1,7 @@
 #pragma once
 #include <atomic>
 #include <list>
-#include <unordered_map>
+#include <vector>
 #include <unordered_set>
 
 #include "io/io_event_pool.h"
@@ -13,6 +13,7 @@ namespace net
     class ConnectionEnvironment : util::NonCopyable
     {
     public:
+        // TODO: pass the max_connection as arguments.
         ConnectionEnvironment();
 
         // used for testing purpose only.
@@ -42,22 +43,18 @@ namespace net
 
         void flush_client_message();
 
-        // Register player id to the lookup table.
+        // Register player to the table by issuing unique player id.
         // * deferred packet thread invokes this method.
-        bool register_player(game::PlayerID);
-
-        // Fetch pending players and apply to the player lookup table.
-        // * deferred packet thread invokes this method.
-        void cleanup_deleted_player();
+        std::pair<game::PlayerID, bool> register_player(unsigned);
 
     private:
+        unsigned num_of_max_connections = 0;
         std::atomic<unsigned> num_of_connections{ 0 };
 
         util::LockfreeStack<win::ObjectPool<net::Connection>::Pointer> pending_connections;
         std::list<win::ObjectPool<net::Connection>::Pointer> connection_ptrs;
         std::unordered_set<Connection::Descriptor*> connection_table;
         
-        util::LockfreeStack<game::PlayerID> delete_pending_players;
-        std::unordered_set<game::PlayerID> player_lookup_table;
+        std::unique_ptr<unsigned[]> player_lookup_table;
     };
 }

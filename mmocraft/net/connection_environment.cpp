@@ -1,14 +1,17 @@
 #include "pch.h"
 #include "connection_environment.h"
 
+#include <cassert>
+
 namespace net
 {
     ConnectionEnvironment::ConnectionEnvironment()
     {
         const auto& conf = config::get_config();
 
-        connection_table.reserve(conf.server.max_player);
-        player_lookup_table.reserve(conf.server.max_player);
+        num_of_max_connections = conf.server.max_player;
+        connection_table.reserve(num_of_max_connections);
+        player_lookup_table.reset(new unsigned[num_of_max_connections]);
     }
 
     void ConnectionEnvironment::append_connection(win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
@@ -22,10 +25,8 @@ namespace net
         auto& connection_descriptor = deleted_connection.descriptor;
         connection_table.erase(&connection_descriptor);
 
-        // for the thread-safety, append to the lock-free stack first.
-        if (connection_descriptor.self_player) {
-            delete_pending_players.push(connection_descriptor.self_player->get_identity_number());
-        }
+        if (connection_descriptor.self_player)
+            player_lookup_table[connection_descriptor.self_player->get_id()] = 0;
     }
 
     void ConnectionEnvironment::cleanup_expired_connection()
@@ -91,20 +92,22 @@ namespace net
         }
     }
 
-    bool ConnectionEnvironment::register_player(game::PlayerID a_player_id)
+    std::pair<game::PlayerID, bool> ConnectionEnvironment::register_player(unsigned player_identity)
     {
-        if (player_lookup_table.find(a_player_id) != player_lookup_table.end())
-            return false; // already associated.
+        auto empty_slot = num_of_max_connections;
 
-        player_lookup_table.insert(a_player_id);
-        return true;
-    }
+        for (unsigned i = 0; i < num_of_max_connections; i++) {
+            // check if the user is already logged in.
+            if (player_lookup_table[i] == player_identity)
+                return { 0, false };
+            // find first unused slot.
+            if (player_lookup_table[i] == 0 && empty_slot == num_of_max_connections)
+                empty_slot = i;
+        }
 
-    void ConnectionEnvironment::cleanup_deleted_player()
-    {
-        auto deleted_player_head = delete_pending_players.pop();
+        assert(empty_slot < num_of_max_connections);
+        player_lookup_table[empty_slot] = player_identity;
 
-        for (auto player_node = deleted_player_head.get(); player_node; player_node = player_node->next)
-            player_lookup_table.erase(player_node->value);
+        return { empty_slot, true };
     }
 }

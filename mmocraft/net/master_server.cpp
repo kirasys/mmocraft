@@ -118,8 +118,6 @@ namespace net
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
 
-        connection_env.cleanup_deleted_player();
-
         for (auto packet = packet_head; packet; packet = packet->next) {
             auto player_type = game::PlayerType::INVALID;
 
@@ -136,9 +134,8 @@ namespace net
                 continue;
             }
 
-            game::PlayerID player_id = player_search.get_player_identity_number();
-
-            if (not connection_env.register_player(player_id)) {
+            const auto [player_id, success] = connection_env.register_player(player_search.get_player_identity_number());
+            if (not success) {
                 event->push_result(packet->connection_descriptor, error::PACKET_RESULT_ALREADY_LOGIN);
                 continue;
             }
