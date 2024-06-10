@@ -27,6 +27,7 @@
     <ClCompile Include="system_initializer.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
     <ClCompile Include="database\query.cpp" />
+    <ClCompile Include="util\compressor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -61,6 +62,7 @@
     <ClInclude Include="util\lockfree_stack.h" />
     <ClInclude Include="net\connection_environment.h" />
     <ClInclude Include="database\query.h" />
+    <ClInclude Include="util\compressor.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config\configuration.txt" />
