@@ -70,7 +70,7 @@ namespace net
     {
         if (last_error_code.is_packet_handle_success()) {
             last_error_code.reset();
-            descriptor.activate_receive_cycle(event);
+            descriptor.emit_receive_event(event);
             return;
         }
 
@@ -144,7 +144,7 @@ namespace net
         return false;
     }
 
-    void Connection::Descriptor::activate_receive_cycle(io::IoRecvEvent* event)
+    void Connection::Descriptor::emit_receive_event(io::IoRecvEvent* event)
     {
         if (not online || event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
             event->is_processing = false;
@@ -161,7 +161,7 @@ namespace net
             event->is_processing = false;
     }
 
-    void Connection::Descriptor::activate_send_cycle(io::IoSendEvent* event)
+    void Connection::Descriptor::emit_send_event(io::IoSendEvent* event)
     {
         if (event->data.size() == 0)
             return;
@@ -185,7 +185,7 @@ namespace net
         auto result = disconnect_packet.serialize(io_send_events[SendType::IMMEDIATE]->data);
 
         set_offline();
-        activate_send_cycle(io_send_events[SendType::IMMEDIATE]); // TODO: resolve interleaving problem.
+        emit_send_event(io_send_events[SendType::IMMEDIATE]); // TODO: resolve interleaving problem.
 
         return result;
     }
@@ -199,7 +199,7 @@ namespace net
         auto result = disconnect_packet.serialize(io_send_events[SendType::DEFERRED]->data);
     
         set_offline();
-        activate_send_cycle(io_send_events[SendType::DEFERRED]); // TODO: resolve interleaving problem.
+        emit_send_event(io_send_events[SendType::DEFERRED]); // TODO: resolve interleaving problem.
 
         return result;
     }

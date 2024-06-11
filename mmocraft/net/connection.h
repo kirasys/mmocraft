@@ -64,9 +64,9 @@ namespace net
                 last_interaction_tick = current_tick;
             }
 
-            void activate_receive_cycle(io::IoRecvEvent*);
+            void emit_receive_event(io::IoRecvEvent*);
 
-            void activate_send_cycle(io::IoSendEvent*);
+            void emit_send_event(io::IoSendEvent*);
 
             bool disconnect_immediate(std::string_view);
 

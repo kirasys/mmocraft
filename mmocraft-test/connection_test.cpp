@@ -39,7 +39,7 @@ TEST_F(ConnectionTest, Activate_Recv_Event_Correctly)
     auto recv_buffer_start = reinterpret_cast<char*>(io_recv_data.data());
     auto recv_buffer_space = io::RECV_BUFFER_SIZE;
 
-    SUT_connection.descriptor.activate_receive_cycle(&io_recv_event);
+    SUT_connection.descriptor.emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(io_recv_event.is_processing);
     EXPECT_EQ(mock.get_recv_bytes(), recv_buffer_space);
@@ -47,7 +47,7 @@ TEST_F(ConnectionTest, Activate_Recv_Event_Correctly)
 
     // if receives only 100 bytes
     io_recv_data.push(nullptr, 100);
-    SUT_connection.descriptor.activate_receive_cycle(&io_recv_event);
+    SUT_connection.descriptor.emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(io_recv_event.is_processing);
     EXPECT_EQ(mock.get_recv_bytes(), recv_buffer_space - 100);
@@ -60,7 +60,7 @@ TEST_F(ConnectionTest, Activate_Recv_Event_Fail_Insuffient_Buffer)
     io::IoRecvEvent io_recv_event(&io_recv_data);
 
     io_recv_data.push(nullptr, io::RECV_BUFFER_SIZE);
-    SUT_connection.descriptor.activate_receive_cycle(&io_recv_event);
+    SUT_connection.descriptor.emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(not io_recv_event.is_processing);
     EXPECT_EQ(mock.get_recv_times(), 0);
@@ -76,7 +76,7 @@ TEST_F(ConnectionTest, Activate_Send_Event_Correctly)
 
     // send 100 bytes.
     io_send_data.commit(100);
-    SUT_connection.descriptor.activate_send_cycle(&io_send_event);
+    SUT_connection.descriptor.emit_send_event(&io_send_event);
 
     EXPECT_TRUE(io_send_event.is_processing);
     EXPECT_EQ(mock.get_send_bytes(), 100);
@@ -84,7 +84,7 @@ TEST_F(ConnectionTest, Activate_Send_Event_Correctly)
 
     // complete sending 50 bytes.
     io_send_data.pop(50);
-    SUT_connection.descriptor.activate_send_cycle(&io_send_event);
+    SUT_connection.descriptor.emit_send_event(&io_send_event);
 
     EXPECT_TRUE(io_send_event.is_processing);
     EXPECT_EQ(mock.get_send_bytes(), 50);

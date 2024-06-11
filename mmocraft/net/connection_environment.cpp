@@ -36,7 +36,7 @@ namespace net
         descriptor.connection_table_index = index;
 
         // Note: should first activate the event before registering the connection to the table.
-        descriptor.activate_receive_cycle(descriptor.io_recv_event);
+        descriptor.emit_receive_event(descriptor.io_recv_event);
 
         connection_table[index].connection = a_connection_ptr.get();
         connection_table[index].used.store(true, std::memory_order_release);
@@ -89,7 +89,7 @@ namespace net
 
                 for (auto event : desc.io_send_events) {
                     if (not event->is_processing)
-                        desc.activate_send_cycle(event);
+                        desc.emit_send_event(event);
                 }
             }
         );
