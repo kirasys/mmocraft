@@ -69,7 +69,6 @@ namespace net
         {
             std::string_view ip;
             int port;
-            unsigned max_client_connections; // todo: move to connection environment
             unsigned num_of_event_threads;
         } server_info;
 

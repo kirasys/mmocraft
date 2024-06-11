@@ -38,6 +38,11 @@ namespace net
             return num_of_connections.load();
         }
 
+        unsigned size_of_max_connections() const
+        {
+            return num_of_max_connections;
+        }
+
         // Append new allocated conneciton resource to manage life-cycle.
         // * the accept I/O thread invokes this method, so append to the lock-free stack(pending_connections) first.
         void append_connection(win::ObjectPool<net::Connection>::Pointer&&);

@@ -15,7 +15,6 @@ namespace net
         , connection_env_task{ &connection_env }
         , server_info{ .ip = conf.server.ip,
                          .port = conf.server.port, 
-                         .max_client_connections = conf.server.max_player,
                          .num_of_event_threads = conf.system.num_of_processors * 2}
         , _listen_sock{ net::SocketProtocol::TCPv4 }
         , io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
@@ -94,7 +93,7 @@ namespace net
         // creates unique accept socket first to avoid resource leak.
         auto client_socket = win::UniqueSocket(event->accepted_socket);
 
-        if (connection_env.size_of_connections() >= server_info.max_client_connections) {
+        if (connection_env.size_of_connections() >= connection_env.size_of_max_connections()) {
             last_error_code = error::CLIENT_CONNECTION_FULL;
             return 0;
         }
