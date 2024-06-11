@@ -4,14 +4,17 @@
 #include "mock_database.h"
 #include "net/master_server.h"
 
+constexpr unsigned max_player_count = 5;
+
 class MasterServerTest : public testing::Test
 {
 protected:
     MasterServerTest()
         : conf{ config::get_config().clone() }
-        , connection_descriptor{nullptr, win::UniqueSocket(), nullptr, &io_send_event, &io_deferred_send_event }
+        , connection_env{ max_player_count }
+        , connection_descriptor{ connection_env, win::UniqueSocket(), nullptr, &io_send_event, &io_deferred_send_event }
     {
-        conf.server.max_player = 5;
+        conf.server.max_player = max_player_count;
     }
 
     test::MockDatabase mock;
@@ -23,6 +26,7 @@ protected:
     io::IoSendEventData io_deferred_send_data;
     io::IoSendEvent io_deferred_send_event{ &io_deferred_send_data };
 
+    net::ConnectionEnvironment connection_env;
     net::Connection::Descriptor connection_descriptor;
 };
 
@@ -86,7 +90,7 @@ TEST_F(MasterServerTest, Handle_Deferred_Handshake_Result_Correctly)
     EXPECT_TRUE(io_deferred_send_data.size() > 0);
 }
 
-TEST_F(MasterServerTest, Handle_Deferred_Handshake_Fail_Result)
+TEST_F(MasterServerTest, Handle_Deferred_Handshake_Result_of_Fail)
 {
     net::MasterServer SUT_server{ conf };
     auto defer_handshake_result = net::DeferredPacketResult{ &connection_descriptor, error::PACKET_RESULT_FAIL_LOGIN };

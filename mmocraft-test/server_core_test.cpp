@@ -33,7 +33,6 @@ TEST_F(ServerCoreTest, Connection_Creation_Success) {
         SUT_server.handle_io_event(&io_accept_event);
         is_success_create_max_player &= SUT_server.get_last_error().is_success();
     }
-    connection_env.register_pending_connections();
 
     EXPECT_TRUE(is_success_create_max_player);
     EXPECT_EQ(connection_env.size_of_connections(), conf.server.max_player);
@@ -47,7 +46,6 @@ TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
         io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
         SUT_server.handle_io_event(&io_accept_event);
     }
-    connection_env.register_pending_connections();
 
     EXPECT_EQ(SUT_server.get_last_error().to_error_code(), error::CLIENT_CONNECTION_FULL)
         << "Unexpected last error: " << SUT_server.get_last_error().to_string();
@@ -63,7 +61,6 @@ TEST_F(ServerCoreTest, Check_Connection_Timeout) {;
         io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
         SUT_server.handle_io_event(&io_accept_event);
     }
-    connection_env.register_pending_connections();
 
     auto expired_connection = connection_env.get_connection_pointers().front().get();
 
