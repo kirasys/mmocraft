@@ -12,6 +12,7 @@ namespace net
         (PacketHandleServer& a_packet_handle_server, ConnectionEnvironment& a_connection_env, const config::Configuration& conf)
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
+        , connection_env_task{ &connection_env }
         , server_info{ .ip = conf.server.ip,
                          .port = conf.server.port, 
                          .max_client_connections = conf.server.max_player,
@@ -24,6 +25,13 @@ namespace net
         , connection_pool{ conf.server.max_player }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
+
+        /// Schedule interval tasks.
+
+        connection_env_task.schedule(
+            util::TaskTag::CLEAN_CONNECTION,
+            &ConnectionEnvironment::cleanup_expired_connection,
+            util::MilliSecond(10000));
 
         _state = ServerCore::State::Initialized;
     }
@@ -81,6 +89,8 @@ namespace net
 
     std::size_t ServerCore::handle_io_event(io::IoAcceptEvent* event)
     {
+        connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
+
         // creates unique accept socket first to avoid resource leak.
         auto client_socket = win::UniqueSocket(event->accepted_socket);
 

@@ -12,7 +12,6 @@ namespace net
 {
     MasterServer::MasterServer(const config::Configuration& conf)
         : connection_env{ conf.server.max_player }
-        , connection_env_task{ &connection_env }
         , server_core{ *this, connection_env, conf }
         , database_core{ }
         
@@ -20,12 +19,7 @@ namespace net
             &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_packet_result
         }
     {
-        /// Schedule interval tasks.
 
-        connection_env_task.schedule(
-            util::TaskTag::CLEAN_CONNECTION,
-            &ConnectionEnvironment::cleanup_expired_connection,
-            util::MilliSecond(10000));
     }
 
     error::ResultCode MasterServer::handle_packet(net::Connection::Descriptor& conn_descriptor, Packet* packet)
@@ -46,8 +40,6 @@ namespace net
 
     void MasterServer::tick()
     {
-        connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
-        connection_env.register_pending_connections();
         connection_env.flush_server_message();
         connection_env.flush_client_message();
 
@@ -135,17 +127,14 @@ namespace net
                 continue;
             }
 
-            const auto [player_id, success] = connection_env.register_player(player_search.get_player_identity_number());
-            if (not success) {
+            if (not packet->connection_descriptor->associate_game_player(
+                    player_search.get_player_identity(),
+                    player_type,
+                    packet->username,
+                    packet->password)) {
                 event->push_result(packet->connection_descriptor, error::PACKET_RESULT_ALREADY_LOGIN);
                 continue;
             }
-
-            packet->connection_descriptor->associate_game_player(
-                player_id,
-                player_type,
-                packet->username,
-                packet->password);
 
             event->push_result(packet->connection_descriptor, error::PACKET_RESULT_SUCCESS_LOGIN);
         }

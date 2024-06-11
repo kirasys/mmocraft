@@ -37,7 +37,7 @@ namespace database
         this->inbound_null_terminated_string_parameter(1, _username, sizeof(_username));
 
         // bind output parameters.
-        this->outbound_unsigned_integer_column(1, player_id);
+        this->outbound_unsigned_integer_column(1, player_index);
     }
 
     bool PlayerSearchSQL::search(const char* a_username)

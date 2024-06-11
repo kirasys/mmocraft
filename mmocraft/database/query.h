@@ -27,14 +27,14 @@ namespace database
 
         bool search(const char* username);
 
-        inline SQLUINTEGER get_player_identity_number() const
+        inline SQLUINTEGER get_player_identity() const
         {
-            return player_id;
+            return player_index;
         }
 
     private:
         char _username[net::PacketFieldConstraint::max_username_length + 1];
 
-        SQLUINTEGER player_id = 0;
+        SQLUINTEGER player_index = 0;
     };
 }

@@ -63,12 +63,13 @@ namespace net
         PacketHandleServer& packet_handle_server;
 
         ConnectionEnvironment& connection_env;
+        util::IntervalTaskScheduler<ConnectionEnvironment> connection_env_task;
 
         const struct ServerInfo
         {
             std::string_view ip;
             int port;
-            unsigned max_client_connections;
+            unsigned max_client_connections; // todo: move to connection environment
             unsigned num_of_event_threads;
         } server_info;
 

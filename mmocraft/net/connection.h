@@ -42,14 +42,16 @@ namespace net
 
             Descriptor() = default;
 
-            Descriptor(Connection*, win::UniqueSocket&&, io::IoRecvEvent*, io::IoSendEvent*, io::IoSendEvent*);
+            ~Descriptor();
 
-            void set_offline(std::size_t current_tick = util::current_monotonic_tick());
+            Descriptor(net::ConnectionEnvironment&, win::UniqueSocket&&, io::IoRecvEvent*, io::IoSendEvent*, io::IoSendEvent*);
 
             inline bool is_online() const
             {
                 return online;
             }
+
+            void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
             bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;
 
@@ -72,10 +74,10 @@ namespace net
 
             bool finalize_handshake(SendType send_type = SendType::DEFERRED) const;
 
-            void associate_game_player(game::PlayerID, game::PlayerType, const char* username, const char* password);
+            bool associate_game_player(unsigned, game::PlayerType, const char* username, const char* password);
 
         private:
-            net::Connection* connection = nullptr;
+            net::ConnectionEnvironment& connection_env;
             net::Socket client_socket;
 
             io::IoRecvEvent* io_recv_event = {};
@@ -86,11 +88,13 @@ namespace net
             bool online = false;
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
+
+            unsigned connection_table_index = 0;
         };
 
         Connection(PacketHandleServer&, ConnectionEnvironment&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
 
-        ~Connection();
+        ~Connection() = default;
 
         bool is_valid() const
         {
@@ -119,7 +123,6 @@ namespace net
     private:
         error::ResultCode last_error_code;
 
-        net::ConnectionEnvironment& connection_env;
         net::PacketHandleServer& packet_handle_server;
 
         win::ObjectPool<io::IoSendEventData>::Pointer io_send_event_data;

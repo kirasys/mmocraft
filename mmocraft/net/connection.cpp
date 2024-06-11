@@ -15,8 +15,7 @@ namespace net
                                 win::UniqueSocket&& sock,
                                 io::IoCompletionPort& io_service,
                                 io::IoEventPool &io_event_pool)
-        : connection_env{ a_connection_env }
-        , packet_handle_server{ a_packet_handle_server }
+        : packet_handle_server{ a_packet_handle_server }
 
         , io_send_event_data{ io_event_pool.new_send_event_data() }
         , io_send_event{ io_event_pool.new_send_event(io_send_event_data.get()) }
@@ -27,35 +26,13 @@ namespace net
         , io_recv_event_data{ io_event_pool.new_recv_event_data() }
         , io_recv_event{ io_event_pool.new_recv_event(io_recv_event_data.get()) }
 
-        , descriptor{this, std::move(sock), io_recv_event.get(), io_immedidate_send_event.get(), io_send_event.get() }
+        , descriptor{ a_connection_env, std::move(sock), io_recv_event.get(), io_immedidate_send_event.get(), io_send_event.get() }
     {
         if (not is_valid())
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
 
         // allow to service client socket events.
         io_service.register_event_source(descriptor.client_socket.get_handle(), this);
-
-        // turn to online.
-        
-    }
-
-    Connection::Descriptor::Descriptor(Connection* a_connection,
-                                        win::UniqueSocket&& a_sock, 
-                                        io::IoRecvEvent* a_io_recv_event,
-                                        io::IoSendEvent* a_io_immediate_send_event,
-                                        io::IoSendEvent* a_io_deferred_send_event)
-        : connection{ a_connection }
-        , client_socket{std::move(a_sock)}
-        , io_recv_event{ a_io_recv_event }
-        , io_send_events{ a_io_immediate_send_event, a_io_deferred_send_event }
-        , online{ true }
-    {
-        update_last_interaction_time();
-    }
-
-    Connection::~Connection()
-    {
-        
     }
 
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
@@ -121,6 +98,32 @@ namespace net
      *  Connection descriptor interface
      */
 
+    Connection::Descriptor::Descriptor(net::ConnectionEnvironment& a_connection_env,
+        win::UniqueSocket&& a_sock,
+        io::IoRecvEvent* a_io_recv_event,
+        io::IoSendEvent* a_io_immediate_send_event,
+        io::IoSendEvent* a_io_deferred_send_event)
+        : connection_env{ a_connection_env }
+        , client_socket{ std::move(a_sock) }
+        , io_recv_event{ a_io_recv_event }
+        , io_send_events{ a_io_immediate_send_event, a_io_deferred_send_event }
+        , online{ true }
+    {
+        update_last_interaction_time();
+    }
+
+    Connection::Descriptor::~Descriptor()
+    {
+        connection_env.on_connection_delete(connection_table_index);
+    }
+
+    void Connection::Descriptor::set_offline(std::size_t current_tick)
+    {
+        online = false;
+        last_offline_tick = current_tick;
+        connection_env.on_connection_offline(connection_table_index);
+    }
+
     bool Connection::Descriptor::is_expired(std::size_t current_tick) const
     {
         return current_tick >= last_interaction_tick + REQUIRED_MILLISECONDS_FOR_EXPIRE;
@@ -130,12 +133,6 @@ namespace net
     {
         return not online
             && current_tick >= last_offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
-    }
-
-    void Connection::Descriptor::set_offline(std::size_t current_tick)
-    {
-        online = false;
-        last_offline_tick = current_tick;
     }
 
     bool Connection::Descriptor::try_interact_with_client()
@@ -188,6 +185,8 @@ namespace net
         auto result = disconnect_packet.serialize(io_send_events[SendType::IMMEDIATE]->data);
 
         set_offline();
+        activate_send_cycle(io_send_events[SendType::IMMEDIATE]); // TODO: resolve interleaving problem.
+
         return result;
     }
 
@@ -200,6 +199,8 @@ namespace net
         auto result = disconnect_packet.serialize(io_send_events[SendType::DEFERRED]->data);
     
         set_offline();
+        activate_send_cycle(io_send_events[SendType::DEFERRED]); // TODO: resolve interleaving problem.
+
         return result;
     }
 
@@ -218,14 +219,19 @@ namespace net
         return handshake_packet.serialize(io_send_events[send_type]->data);
     }
 
-    void Connection::Descriptor::associate_game_player
-        (game::PlayerID player_id, game::PlayerType player_type, const char* username, const char* password)
+    bool Connection::Descriptor::associate_game_player
+        (unsigned player_identity, game::PlayerType player_type, const char* username, const char* password)
     {
+        if (not connection_env.set_authentication_key(connection_table_index, player_identity))
+            return false;
+
         self_player = std::make_unique<game::Player>(
-            player_id,
+            connection_table_index,
             player_type,
             username,
             password
         );
+
+        return true;
     }
 }

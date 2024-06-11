@@ -1,30 +1,60 @@
 #include "pch.h"
 #include "connection_environment.h"
 
+#include <algorithm>
 #include <cassert>
 
 namespace net
 {
     ConnectionEnvironment::ConnectionEnvironment(unsigned max_connections)
         : num_of_max_connections{ max_connections }
-        , player_lookup_table{ new unsigned[max_connections]() }
+        , connection_table{ new ConnectionEntry[max_connections]() }
     {
-        connection_table.reserve(max_connections);
+        
+    }
+
+    unsigned ConnectionEnvironment::get_unused_table_index()
+    {
+        // find first unused slot.
+        auto unused_slot = std::find_if(connection_table.get(), connection_table.get() + num_of_max_connections,
+            [](const auto& entry) {
+                return not entry.used.load(std::memory_order_relaxed);
+            }
+        );
+
+        assert(unused_slot - connection_table.get() < num_of_max_connections);
+        return unsigned(unused_slot - connection_table.get());
     }
 
     void ConnectionEnvironment::append_connection(win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
     {
         ++num_of_connections;
-        pending_connections.push(std::move(a_connection_ptr));
+
+        auto& descriptor = a_connection_ptr.get()->descriptor;
+
+        auto index = get_unused_table_index();
+        descriptor.connection_table_index = index;
+
+        // Note: should first activate the event before registering the connection to the table.
+        descriptor.activate_receive_cycle(descriptor.io_recv_event);
+
+        connection_table[index].connection = a_connection_ptr.get();
+        connection_table[index].used.store(true, std::memory_order_release);
+        connection_table[index].online = true;
+
+        connection_ptrs.emplace_back(std::move(a_connection_ptr));
     }
 
-    void ConnectionEnvironment::on_connection_delete(Connection& deleted_connection)
+    void ConnectionEnvironment::on_connection_delete(unsigned index)
     {
-        auto& connection_descriptor = deleted_connection.descriptor;
-        connection_table.erase(&connection_descriptor);
+        connection_table[index].connection = nullptr;
+        connection_table[index].identity = 0;
+        connection_table[index].used.store(false, std::memory_order_release);
+    }
 
-        if (connection_descriptor.self_player)
-            player_lookup_table[connection_descriptor.self_player->get_id()] = 0;
+    void ConnectionEnvironment::on_connection_offline(unsigned index)
+    {
+        connection_table[index].online = false;
     }
 
     void ConnectionEnvironment::cleanup_expired_connection()
@@ -35,7 +65,6 @@ namespace net
             auto& connection = *(*it).get();
 
             if (connection.descriptor.is_safe_delete()) {
-                on_connection_delete(connection);
                 it = connection_ptrs.erase(it);
                 ++deleted_connection_count;
                 continue;
@@ -50,62 +79,52 @@ namespace net
         num_of_connections -= deleted_connection_count;
     }
 
-    void ConnectionEnvironment::register_pending_connections()
-    {
-        auto pending_connection_head = pending_connections.pop();
-
-        for (auto connection_node = pending_connection_head.get(); connection_node; connection_node = connection_node->next) {
-            auto& connection_ptr = connection_node->value;
-            auto& connection_descriptor = connection_ptr.get()->descriptor;
-
-            // should first activate the event before inserting the connection to the table.
-            connection_descriptor.activate_receive_cycle(connection_descriptor.io_recv_event);
-
-            connection_table.insert(&connection_descriptor);
-            connection_ptrs.emplace_back(std::move(connection_ptr));
-        }
-    }
-
     void ConnectionEnvironment::flush_server_message()
     {
-        for (const auto& desc : connection_table) {
-            for (auto event : desc->io_send_events) {
-                if (not event->is_processing)
-                    desc->activate_send_cycle(event);
+        std::for_each_n(connection_table.get(), num_of_max_connections, 
+            [](auto& entry) {
+                if (not entry.online) return;
+
+                auto& desc = entry.connection->descriptor;
+
+                for (auto event : desc.io_send_events) {
+                    if (not event->is_processing)
+                        desc.activate_send_cycle(event);
+                }
             }
-        }
+        );
     }
 
     void ConnectionEnvironment::flush_client_message()
     {
-        for (const auto& desc : connection_table) {
-            if (desc->is_online() && not desc->io_recv_event->is_processing) {
-                desc->io_recv_event->is_processing = true;
+        std::for_each_n(connection_table.get(), num_of_max_connections,
+            [](auto& entry) {
+                if (not entry.online) return;
 
-                // Note: receive event may stop only for one reason: insuffient buffer space.
-                //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
-                desc->io_recv_event->invoke_handler(*desc->connection,
-                    desc->io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
+                auto& desc = entry.connection->descriptor;
+
+                if (not desc.io_recv_event->is_processing) {
+                    desc.io_recv_event->is_processing = true;
+
+                    // Note: receive event may stop only for one reason: insuffient buffer space.
+                    //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
+                    desc.io_recv_event->invoke_handler(*entry.connection,
+                    desc.io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
+                }
             }
-        }
+        );
     }
 
-    std::pair<game::PlayerID, bool> ConnectionEnvironment::register_player(unsigned player_identity)
+    bool ConnectionEnvironment::set_authentication_key(unsigned index, unsigned identity)
     {
-        auto empty_slot = num_of_max_connections;
+        auto is_dulicated_user_not_exist = std::all_of(connection_table.get(), connection_table.get() + num_of_max_connections,
+            [identity](const auto& entry) {
+                return !entry.identity || entry.identity != identity;
+            }
+        );
 
-        for (unsigned i = 0; i < num_of_max_connections; i++) {
-            // check if the user is already logged in.
-            if (player_lookup_table[i] == player_identity)
-                return { 0, false };
-            // find first unused slot.
-            if (player_lookup_table[i] == 0 && empty_slot == num_of_max_connections)
-                empty_slot = i;
-        }
+        connection_table[index].identity = identity;
 
-        assert(empty_slot < num_of_max_connections);
-        player_lookup_table[empty_slot] = player_identity;
-
-        return { empty_slot, true };
+        return is_dulicated_user_not_exist;
     }
 }

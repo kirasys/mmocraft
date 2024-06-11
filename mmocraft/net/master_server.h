@@ -38,7 +38,6 @@ namespace net
         void flush_deferred_packet();
 
         net::ConnectionEnvironment connection_env;
-        util::IntervalTaskScheduler<ConnectionEnvironment> connection_env_task;
 
         net::ServerCore server_core;
 
