@@ -42,7 +42,7 @@ namespace net
         connection_table[index].used.store(true, std::memory_order_release);
         connection_table[index].online = true;
 
-        connection_ptrs.emplace_back(std::move(a_connection_ptr));
+        connection_table[index].connection_life = std::move(a_connection_ptr);
     }
 
     void ConnectionEnvironment::on_connection_delete(unsigned index)
@@ -59,24 +59,25 @@ namespace net
 
     void ConnectionEnvironment::cleanup_expired_connection()
     {
-        int deleted_connection_count = 0;
+        auto deleted_connection_count = std::count_if(connection_table.get(), connection_table.get() + num_of_max_connections,
+            [](auto& entry) {
+                if (not entry.used) return false;
 
-        for (auto it = connection_ptrs.begin(); it != connection_ptrs.end();) {
-            auto& connection = *(*it).get();
+                auto& desc = entry.connection->descriptor;
 
-            if (connection.descriptor.is_safe_delete()) {
-                it = connection_ptrs.erase(it);
-                ++deleted_connection_count;
-                continue;
+                if (desc.is_safe_delete()) {
+                    entry.connection_life.reset();
+                    return true;
+                }
+
+                if (desc.is_expired())
+                    desc.set_offline();
+                
+                return false;
             }
+        );
 
-            if (connection.descriptor.is_expired())
-                connection.descriptor.set_offline();
-
-            ++it;
-        }
-
-        num_of_connections -= deleted_connection_count;
+        num_of_connections -= unsigned(deleted_connection_count);
     }
 
     void ConnectionEnvironment::flush_server_message()

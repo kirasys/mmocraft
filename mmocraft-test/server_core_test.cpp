@@ -62,7 +62,7 @@ TEST_F(ServerCoreTest, Check_Connection_Timeout) {;
         SUT_server.handle_io_event(&io_accept_event);
     }
 
-    auto expired_connection = connection_env.get_connection_pointers().front().get();
+    auto expired_connection = connection_env.get_connection(0);
 
     // trigger connection timeout.
     expired_connection->descriptor.update_last_interaction_time(1);

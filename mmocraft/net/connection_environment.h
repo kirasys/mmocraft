@@ -19,6 +19,7 @@ namespace net
         // but, dereferencing offlined conenctions should be avoid. use this identity instead.
         unsigned identity = 0;      // (always greater than 0)
         net::Connection* connection;
+        win::ObjectPool<net::Connection>::Pointer connection_life;
     };
 
     class ConnectionEnvironment : util::NonCopyable
@@ -27,10 +28,9 @@ namespace net
         ConnectionEnvironment(unsigned);
 
         // used for testing purpose only.
-        auto get_connection_pointers()
-            -> std::list<win::ObjectPool<net::Connection>::Pointer>&
+        auto get_connection(int index)
         {
-            return connection_ptrs;
+            return connection_table[index].connection;
         }
         
         unsigned size_of_connections() const
@@ -68,7 +68,6 @@ namespace net
         std::atomic<unsigned> num_of_connections{ 0 };
 
         unsigned get_unused_table_index();
-        std::list<win::ObjectPool<net::Connection>::Pointer> connection_ptrs;
         std::unique_ptr<ConnectionEntry[]> connection_table;
     };
 }
