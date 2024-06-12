@@ -99,9 +99,9 @@ namespace win
             {
                 if (this != &other) {
                     reset();
-                    _id = other._id;
-                    other._id = INVALID_OBJECT_ID;
+                    std::swap(_id, other._id);
                 }
+                return *this;
             }
 
             object_pointer get()
