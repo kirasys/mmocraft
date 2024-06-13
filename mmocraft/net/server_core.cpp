@@ -15,9 +15,6 @@ namespace net
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }
-        , server_info{ .ip = conf.server_ip(),
-                         .port = conf.server_port(),
-                         .num_of_event_threads = conf.system_num_of_processors() * 2}
         , _listen_sock{ net::SocketProtocol::TCPv4 }
         , io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
         , io_event_pool{ conf.server_max_player() }
@@ -53,12 +50,14 @@ namespace net
 
     void ServerCore::start_network_io_service()
     {
-        _listen_sock.bind(server_info.ip, server_info.port);
+        const auto& conf = config::get_config();
+
+        _listen_sock.bind(conf.server_ip(), conf.server_port());
         _listen_sock.listen();
         _listen_sock.accept(*io_accept_event.get());
-        std::cout << "Listening to " << server_info.ip << ':' << server_info.port << "...\n";
+        std::cout << "Listening to " << conf.server_ip() << ':' << conf.server_port() << "...\n";
 
-        for (unsigned i = 0; i < server_info.num_of_event_threads; i++)
+        for (unsigned i = 0; i < conf.system_num_of_processors() * 2; i++)
             io_service.spawn_event_loop_thread().detach();
 
         _state = ServerCore::State::Running;

@@ -30,7 +30,7 @@ namespace net
             Stopped,
         };
 
-        ServerCore(PacketHandleServer&, ConnectionEnvironment&, const config::Configuration& conf);
+        ServerCore(PacketHandleServer&, ConnectionEnvironment&, const config::Configuration& conf = config::get_config());
 
         ServerCore::State status() const
         {
@@ -64,13 +64,6 @@ namespace net
 
         ConnectionEnvironment& connection_env;
         util::IntervalTaskScheduler<ConnectionEnvironment> connection_env_task;
-
-        const struct ServerInfo
-        {
-            std::string_view ip;
-            int port;
-            unsigned num_of_event_threads;
-        } server_info;
 
         net::Socket _listen_sock;
 
