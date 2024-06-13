@@ -7,12 +7,12 @@
 #include <string_view>
 
 #include "config/config.h"
+#include "proto/config.pb.h"
 #include "logging/error.h"
 #include "system_initializer.h"
 
 namespace
 {
-    logging::LogLevel system_log_level = logging::LogLevel::Info;
     std::ofstream system_log_file_stream;
     std::mutex system_log_mutex;
 }
@@ -41,10 +41,9 @@ namespace logging
 
         setlocale(LC_ALL, ""); // user-default ANSI code page obtained from the operating system
 
-        system_log_level = to_log_level(conf.log.level);
-        system_log_file_stream.open(conf.log.file_path, std::ofstream::out);
+        system_log_file_stream.open(conf.log_file_path(), std::ofstream::out);
         if (not system_log_file_stream.is_open())
-            LOG(fatal) << "Fail to open file: " << conf.log.file_path;
+            CONSOLE_LOG(fatal) << "Fail to open file: " << conf.log_file_path();
 
         setup::add_termination_handler([]() {
             system_log_file_stream.close();
