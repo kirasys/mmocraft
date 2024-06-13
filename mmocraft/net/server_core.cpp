@@ -11,16 +11,16 @@
 namespace net
 {
     ServerCore::ServerCore
-        (PacketHandleServer& a_packet_handle_server, ConnectionEnvironment& a_connection_env, const config::Configuration& conf)
+        (PacketHandleServer& a_packet_handle_server, ConnectionEnvironment& a_connection_env, const config::Configuration_Server& server_conf)
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }
         , _listen_sock{ net::SocketProtocol::TCPv4 }
         , io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
-        , io_event_pool{ conf.server_max_player() }
+        , io_event_pool{ server_conf.max_player() }
         , io_accept_event_data { io_event_pool.new_accept_event_data() }
         , io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
-        , connection_pool{ conf.server_max_player() }
+        , connection_pool{ server_conf.max_player() }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
 
@@ -50,14 +50,15 @@ namespace net
 
     void ServerCore::start_network_io_service()
     {
-        const auto& conf = config::get_config();
+        auto& server_conf = config::get_server_config();
+        auto& system_conf = config::get_system_config();
 
-        _listen_sock.bind(conf.server_ip(), conf.server_port());
+        _listen_sock.bind(server_conf.ip(), server_conf.port());
         _listen_sock.listen();
         _listen_sock.accept(*io_accept_event.get());
-        std::cout << "Listening to " << conf.server_ip() << ':' << conf.server_port() << "...\n";
+        std::cout << "Listening to " << server_conf.ip() << ':' << server_conf.port() << "...\n";
 
-        for (unsigned i = 0; i < conf.system_num_of_processors() * 2; i++)
+        for (unsigned i = 0; i < system_conf.num_of_processors() * 2; i++)
             io_service.spawn_event_loop_thread().detach();
 
         _state = ServerCore::State::Running;

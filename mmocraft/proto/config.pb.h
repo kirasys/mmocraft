@@ -48,13 +48,966 @@ namespace config {
 class Configuration;
 struct ConfigurationDefaultTypeInternal;
 extern ConfigurationDefaultTypeInternal _Configuration_default_instance_;
+class Configuration_Database;
+struct Configuration_DatabaseDefaultTypeInternal;
+extern Configuration_DatabaseDefaultTypeInternal _Configuration_Database_default_instance_;
+class Configuration_Log;
+struct Configuration_LogDefaultTypeInternal;
+extern Configuration_LogDefaultTypeInternal _Configuration_Log_default_instance_;
+class Configuration_Server;
+struct Configuration_ServerDefaultTypeInternal;
+extern Configuration_ServerDefaultTypeInternal _Configuration_Server_default_instance_;
+class Configuration_System;
+struct Configuration_SystemDefaultTypeInternal;
+extern Configuration_SystemDefaultTypeInternal _Configuration_System_default_instance_;
+class Configuration_World;
+struct Configuration_WorldDefaultTypeInternal;
+extern Configuration_WorldDefaultTypeInternal _Configuration_World_default_instance_;
 }  // namespace config
 PROTOBUF_NAMESPACE_OPEN
 template<> ::config::Configuration* Arena::CreateMaybeMessage<::config::Configuration>(Arena*);
+template<> ::config::Configuration_Database* Arena::CreateMaybeMessage<::config::Configuration_Database>(Arena*);
+template<> ::config::Configuration_Log* Arena::CreateMaybeMessage<::config::Configuration_Log>(Arena*);
+template<> ::config::Configuration_Server* Arena::CreateMaybeMessage<::config::Configuration_Server>(Arena*);
+template<> ::config::Configuration_System* Arena::CreateMaybeMessage<::config::Configuration_System>(Arena*);
+template<> ::config::Configuration_World* Arena::CreateMaybeMessage<::config::Configuration_World>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace config {
 
 // ===================================================================
+
+class Configuration_Server final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:config.Configuration.Server) */ {
+ public:
+  inline Configuration_Server() : Configuration_Server(nullptr) {}
+  ~Configuration_Server() override;
+  explicit PROTOBUF_CONSTEXPR Configuration_Server(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Configuration_Server(const Configuration_Server& from);
+  Configuration_Server(Configuration_Server&& from) noexcept
+    : Configuration_Server() {
+    *this = ::std::move(from);
+  }
+
+  inline Configuration_Server& operator=(const Configuration_Server& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Configuration_Server& operator=(Configuration_Server&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Configuration_Server& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Configuration_Server* internal_default_instance() {
+    return reinterpret_cast<const Configuration_Server*>(
+               &_Configuration_Server_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    0;
+
+  friend void swap(Configuration_Server& a, Configuration_Server& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Configuration_Server* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Configuration_Server* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Configuration_Server* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Configuration_Server>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Configuration_Server& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Configuration_Server& from) {
+    Configuration_Server::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Configuration_Server* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "config.Configuration.Server";
+  }
+  protected:
+  explicit Configuration_Server(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kIpFieldNumber = 1,
+    kServerNameFieldNumber = 4,
+    kMotdFieldNumber = 5,
+    kPortFieldNumber = 2,
+    kMaxPlayerFieldNumber = 3,
+  };
+  // string ip = 1;
+  void clear_ip();
+  const std::string& ip() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_ip(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_ip();
+  PROTOBUF_NODISCARD std::string* release_ip();
+  void set_allocated_ip(std::string* ip);
+  private:
+  const std::string& _internal_ip() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_ip(const std::string& value);
+  std::string* _internal_mutable_ip();
+  public:
+
+  // string server_name = 4;
+  void clear_server_name();
+  const std::string& server_name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_server_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_server_name();
+  PROTOBUF_NODISCARD std::string* release_server_name();
+  void set_allocated_server_name(std::string* server_name);
+  private:
+  const std::string& _internal_server_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_server_name(const std::string& value);
+  std::string* _internal_mutable_server_name();
+  public:
+
+  // string motd = 5;
+  void clear_motd();
+  const std::string& motd() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_motd(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_motd();
+  PROTOBUF_NODISCARD std::string* release_motd();
+  void set_allocated_motd(std::string* motd);
+  private:
+  const std::string& _internal_motd() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_motd(const std::string& value);
+  std::string* _internal_mutable_motd();
+  public:
+
+  // int32 port = 2;
+  void clear_port();
+  int32_t port() const;
+  void set_port(int32_t value);
+  private:
+  int32_t _internal_port() const;
+  void _internal_set_port(int32_t value);
+  public:
+
+  // uint32 max_player = 3;
+  void clear_max_player();
+  uint32_t max_player() const;
+  void set_max_player(uint32_t value);
+  private:
+  uint32_t _internal_max_player() const;
+  void _internal_set_max_player(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:config.Configuration.Server)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr ip_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr server_name_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr motd_;
+    int32_t port_;
+    uint32_t max_player_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_config_2eproto;
+};
+// -------------------------------------------------------------------
+
+class Configuration_World final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:config.Configuration.World) */ {
+ public:
+  inline Configuration_World() : Configuration_World(nullptr) {}
+  ~Configuration_World() override;
+  explicit PROTOBUF_CONSTEXPR Configuration_World(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Configuration_World(const Configuration_World& from);
+  Configuration_World(Configuration_World&& from) noexcept
+    : Configuration_World() {
+    *this = ::std::move(from);
+  }
+
+  inline Configuration_World& operator=(const Configuration_World& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Configuration_World& operator=(Configuration_World&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Configuration_World& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Configuration_World* internal_default_instance() {
+    return reinterpret_cast<const Configuration_World*>(
+               &_Configuration_World_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    1;
+
+  friend void swap(Configuration_World& a, Configuration_World& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Configuration_World* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Configuration_World* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Configuration_World* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Configuration_World>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Configuration_World& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Configuration_World& from) {
+    Configuration_World::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Configuration_World* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "config.Configuration.World";
+  }
+  protected:
+  explicit Configuration_World(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kSaveDirFieldNumber = 4,
+    kWidthFieldNumber = 1,
+    kHeightFieldNumber = 2,
+    kLengthFieldNumber = 3,
+  };
+  // string save_dir = 4;
+  void clear_save_dir();
+  const std::string& save_dir() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_save_dir(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_save_dir();
+  PROTOBUF_NODISCARD std::string* release_save_dir();
+  void set_allocated_save_dir(std::string* save_dir);
+  private:
+  const std::string& _internal_save_dir() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_save_dir(const std::string& value);
+  std::string* _internal_mutable_save_dir();
+  public:
+
+  // int32 width = 1;
+  void clear_width();
+  int32_t width() const;
+  void set_width(int32_t value);
+  private:
+  int32_t _internal_width() const;
+  void _internal_set_width(int32_t value);
+  public:
+
+  // int32 height = 2;
+  void clear_height();
+  int32_t height() const;
+  void set_height(int32_t value);
+  private:
+  int32_t _internal_height() const;
+  void _internal_set_height(int32_t value);
+  public:
+
+  // int32 length = 3;
+  void clear_length();
+  int32_t length() const;
+  void set_length(int32_t value);
+  private:
+  int32_t _internal_length() const;
+  void _internal_set_length(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:config.Configuration.World)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr save_dir_;
+    int32_t width_;
+    int32_t height_;
+    int32_t length_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_config_2eproto;
+};
+// -------------------------------------------------------------------
+
+class Configuration_Database final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:config.Configuration.Database) */ {
+ public:
+  inline Configuration_Database() : Configuration_Database(nullptr) {}
+  ~Configuration_Database() override;
+  explicit PROTOBUF_CONSTEXPR Configuration_Database(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Configuration_Database(const Configuration_Database& from);
+  Configuration_Database(Configuration_Database&& from) noexcept
+    : Configuration_Database() {
+    *this = ::std::move(from);
+  }
+
+  inline Configuration_Database& operator=(const Configuration_Database& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Configuration_Database& operator=(Configuration_Database&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Configuration_Database& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Configuration_Database* internal_default_instance() {
+    return reinterpret_cast<const Configuration_Database*>(
+               &_Configuration_Database_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  friend void swap(Configuration_Database& a, Configuration_Database& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Configuration_Database* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Configuration_Database* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Configuration_Database* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Configuration_Database>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Configuration_Database& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Configuration_Database& from) {
+    Configuration_Database::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Configuration_Database* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "config.Configuration.Database";
+  }
+  protected:
+  explicit Configuration_Database(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kDriverNameFieldNumber = 1,
+    kServerAddressFieldNumber = 2,
+    kDatabaseNameFieldNumber = 3,
+    kUseridFieldNumber = 4,
+    kPasswordFieldNumber = 5,
+  };
+  // string driver_name = 1;
+  void clear_driver_name();
+  const std::string& driver_name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_driver_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_driver_name();
+  PROTOBUF_NODISCARD std::string* release_driver_name();
+  void set_allocated_driver_name(std::string* driver_name);
+  private:
+  const std::string& _internal_driver_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_driver_name(const std::string& value);
+  std::string* _internal_mutable_driver_name();
+  public:
+
+  // string server_address = 2;
+  void clear_server_address();
+  const std::string& server_address() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_server_address(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_server_address();
+  PROTOBUF_NODISCARD std::string* release_server_address();
+  void set_allocated_server_address(std::string* server_address);
+  private:
+  const std::string& _internal_server_address() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_server_address(const std::string& value);
+  std::string* _internal_mutable_server_address();
+  public:
+
+  // string database_name = 3;
+  void clear_database_name();
+  const std::string& database_name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_database_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_database_name();
+  PROTOBUF_NODISCARD std::string* release_database_name();
+  void set_allocated_database_name(std::string* database_name);
+  private:
+  const std::string& _internal_database_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_database_name(const std::string& value);
+  std::string* _internal_mutable_database_name();
+  public:
+
+  // string userid = 4;
+  void clear_userid();
+  const std::string& userid() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_userid(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_userid();
+  PROTOBUF_NODISCARD std::string* release_userid();
+  void set_allocated_userid(std::string* userid);
+  private:
+  const std::string& _internal_userid() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_userid(const std::string& value);
+  std::string* _internal_mutable_userid();
+  public:
+
+  // string password = 5;
+  void clear_password();
+  const std::string& password() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_password(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_password();
+  PROTOBUF_NODISCARD std::string* release_password();
+  void set_allocated_password(std::string* password);
+  private:
+  const std::string& _internal_password() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_password(const std::string& value);
+  std::string* _internal_mutable_password();
+  public:
+
+  // @@protoc_insertion_point(class_scope:config.Configuration.Database)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr driver_name_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr server_address_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr database_name_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr userid_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr password_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_config_2eproto;
+};
+// -------------------------------------------------------------------
+
+class Configuration_Log final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:config.Configuration.Log) */ {
+ public:
+  inline Configuration_Log() : Configuration_Log(nullptr) {}
+  ~Configuration_Log() override;
+  explicit PROTOBUF_CONSTEXPR Configuration_Log(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Configuration_Log(const Configuration_Log& from);
+  Configuration_Log(Configuration_Log&& from) noexcept
+    : Configuration_Log() {
+    *this = ::std::move(from);
+  }
+
+  inline Configuration_Log& operator=(const Configuration_Log& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Configuration_Log& operator=(Configuration_Log&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Configuration_Log& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Configuration_Log* internal_default_instance() {
+    return reinterpret_cast<const Configuration_Log*>(
+               &_Configuration_Log_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  friend void swap(Configuration_Log& a, Configuration_Log& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Configuration_Log* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Configuration_Log* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Configuration_Log* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Configuration_Log>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Configuration_Log& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Configuration_Log& from) {
+    Configuration_Log::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Configuration_Log* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "config.Configuration.Log";
+  }
+  protected:
+  explicit Configuration_Log(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kLogFilePathFieldNumber = 1,
+  };
+  // string log_file_path = 1;
+  void clear_log_file_path();
+  const std::string& log_file_path() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_log_file_path(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_log_file_path();
+  PROTOBUF_NODISCARD std::string* release_log_file_path();
+  void set_allocated_log_file_path(std::string* log_file_path);
+  private:
+  const std::string& _internal_log_file_path() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_log_file_path(const std::string& value);
+  std::string* _internal_mutable_log_file_path();
+  public:
+
+  // @@protoc_insertion_point(class_scope:config.Configuration.Log)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr log_file_path_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_config_2eproto;
+};
+// -------------------------------------------------------------------
+
+class Configuration_System final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:config.Configuration.System) */ {
+ public:
+  inline Configuration_System() : Configuration_System(nullptr) {}
+  ~Configuration_System() override;
+  explicit PROTOBUF_CONSTEXPR Configuration_System(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Configuration_System(const Configuration_System& from);
+  Configuration_System(Configuration_System&& from) noexcept
+    : Configuration_System() {
+    *this = ::std::move(from);
+  }
+
+  inline Configuration_System& operator=(const Configuration_System& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Configuration_System& operator=(Configuration_System&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Configuration_System& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Configuration_System* internal_default_instance() {
+    return reinterpret_cast<const Configuration_System*>(
+               &_Configuration_System_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    4;
+
+  friend void swap(Configuration_System& a, Configuration_System& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Configuration_System* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Configuration_System* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Configuration_System* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Configuration_System>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Configuration_System& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Configuration_System& from) {
+    Configuration_System::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Configuration_System* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "config.Configuration.System";
+  }
+  protected:
+  explicit Configuration_System(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPageSizeFieldNumber = 1,
+    kAlllocationGranularityFieldNumber = 2,
+    kNumOfProcessorsFieldNumber = 3,
+  };
+  // uint32 page_size = 1;
+  void clear_page_size();
+  uint32_t page_size() const;
+  void set_page_size(uint32_t value);
+  private:
+  uint32_t _internal_page_size() const;
+  void _internal_set_page_size(uint32_t value);
+  public:
+
+  // uint32 alllocation_granularity = 2;
+  void clear_alllocation_granularity();
+  uint32_t alllocation_granularity() const;
+  void set_alllocation_granularity(uint32_t value);
+  private:
+  uint32_t _internal_alllocation_granularity() const;
+  void _internal_set_alllocation_granularity(uint32_t value);
+  public:
+
+  // uint32 num_of_processors = 3;
+  void clear_num_of_processors();
+  uint32_t num_of_processors() const;
+  void set_num_of_processors(uint32_t value);
+  private:
+  uint32_t _internal_num_of_processors() const;
+  void _internal_set_num_of_processors(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:config.Configuration.System)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint32_t page_size_;
+    uint32_t alllocation_granularity_;
+    uint32_t num_of_processors_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_config_2eproto;
+};
+// -------------------------------------------------------------------
 
 class Configuration final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:config.Configuration) */ {
@@ -104,7 +1057,7 @@ class Configuration final :
                &_Configuration_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    0;
+    5;
 
   friend void swap(Configuration& a, Configuration& b) {
     a.Swap(&b);
@@ -174,239 +1127,110 @@ class Configuration final :
 
   // nested types ----------------------------------------------------
 
+  typedef Configuration_Server Server;
+  typedef Configuration_World World;
+  typedef Configuration_Database Database;
+  typedef Configuration_Log Log;
+  typedef Configuration_System System;
+
   // accessors -------------------------------------------------------
 
   enum : int {
-    kServerIpFieldNumber = 1,
-    kServerNameFieldNumber = 4,
-    kServerMotdFieldNumber = 5,
-    kWorldSaveDirFieldNumber = 109,
-    kDatabaseDriverNameFieldNumber = 201,
-    kDatabaseServerAddressFieldNumber = 202,
-    kDatabaseNameFieldNumber = 203,
-    kDatabaseUseridFieldNumber = 204,
-    kDatabasePasswordFieldNumber = 205,
-    kLogFilePathFieldNumber = 301,
-    kServerPortFieldNumber = 2,
-    kServerMaxPlayerFieldNumber = 3,
-    kWorldWidthFieldNumber = 106,
-    kWorldHeightFieldNumber = 107,
-    kWorldLengthFieldNumber = 108,
-    kSystemPageSizeFieldNumber = 401,
-    kSystemAlllocationGranularityFieldNumber = 402,
-    kSystemNumOfProcessorsFieldNumber = 403,
+    kServerFieldNumber = 1,
+    kWorldFieldNumber = 2,
+    kDatabaseFieldNumber = 3,
+    kLogFieldNumber = 4,
+    kSystemFieldNumber = 5,
   };
-  // string server_ip = 1;
-  void clear_server_ip();
-  const std::string& server_ip() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_server_ip(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_server_ip();
-  PROTOBUF_NODISCARD std::string* release_server_ip();
-  void set_allocated_server_ip(std::string* server_ip);
+  // .config.Configuration.Server server = 1;
+  bool has_server() const;
   private:
-  const std::string& _internal_server_ip() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_server_ip(const std::string& value);
-  std::string* _internal_mutable_server_ip();
+  bool _internal_has_server() const;
   public:
+  void clear_server();
+  const ::config::Configuration_Server& server() const;
+  PROTOBUF_NODISCARD ::config::Configuration_Server* release_server();
+  ::config::Configuration_Server* mutable_server();
+  void set_allocated_server(::config::Configuration_Server* server);
+  private:
+  const ::config::Configuration_Server& _internal_server() const;
+  ::config::Configuration_Server* _internal_mutable_server();
+  public:
+  void unsafe_arena_set_allocated_server(
+      ::config::Configuration_Server* server);
+  ::config::Configuration_Server* unsafe_arena_release_server();
 
-  // string server_name = 4;
-  void clear_server_name();
-  const std::string& server_name() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_server_name(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_server_name();
-  PROTOBUF_NODISCARD std::string* release_server_name();
-  void set_allocated_server_name(std::string* server_name);
+  // .config.Configuration.World world = 2;
+  bool has_world() const;
   private:
-  const std::string& _internal_server_name() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_server_name(const std::string& value);
-  std::string* _internal_mutable_server_name();
+  bool _internal_has_world() const;
   public:
+  void clear_world();
+  const ::config::Configuration_World& world() const;
+  PROTOBUF_NODISCARD ::config::Configuration_World* release_world();
+  ::config::Configuration_World* mutable_world();
+  void set_allocated_world(::config::Configuration_World* world);
+  private:
+  const ::config::Configuration_World& _internal_world() const;
+  ::config::Configuration_World* _internal_mutable_world();
+  public:
+  void unsafe_arena_set_allocated_world(
+      ::config::Configuration_World* world);
+  ::config::Configuration_World* unsafe_arena_release_world();
 
-  // string server_motd = 5;
-  void clear_server_motd();
-  const std::string& server_motd() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_server_motd(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_server_motd();
-  PROTOBUF_NODISCARD std::string* release_server_motd();
-  void set_allocated_server_motd(std::string* server_motd);
+  // .config.Configuration.Database database = 3;
+  bool has_database() const;
   private:
-  const std::string& _internal_server_motd() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_server_motd(const std::string& value);
-  std::string* _internal_mutable_server_motd();
+  bool _internal_has_database() const;
   public:
+  void clear_database();
+  const ::config::Configuration_Database& database() const;
+  PROTOBUF_NODISCARD ::config::Configuration_Database* release_database();
+  ::config::Configuration_Database* mutable_database();
+  void set_allocated_database(::config::Configuration_Database* database);
+  private:
+  const ::config::Configuration_Database& _internal_database() const;
+  ::config::Configuration_Database* _internal_mutable_database();
+  public:
+  void unsafe_arena_set_allocated_database(
+      ::config::Configuration_Database* database);
+  ::config::Configuration_Database* unsafe_arena_release_database();
 
-  // string world_save_dir = 109;
-  void clear_world_save_dir();
-  const std::string& world_save_dir() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_world_save_dir(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_world_save_dir();
-  PROTOBUF_NODISCARD std::string* release_world_save_dir();
-  void set_allocated_world_save_dir(std::string* world_save_dir);
+  // .config.Configuration.Log log = 4;
+  bool has_log() const;
   private:
-  const std::string& _internal_world_save_dir() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_world_save_dir(const std::string& value);
-  std::string* _internal_mutable_world_save_dir();
+  bool _internal_has_log() const;
   public:
+  void clear_log();
+  const ::config::Configuration_Log& log() const;
+  PROTOBUF_NODISCARD ::config::Configuration_Log* release_log();
+  ::config::Configuration_Log* mutable_log();
+  void set_allocated_log(::config::Configuration_Log* log);
+  private:
+  const ::config::Configuration_Log& _internal_log() const;
+  ::config::Configuration_Log* _internal_mutable_log();
+  public:
+  void unsafe_arena_set_allocated_log(
+      ::config::Configuration_Log* log);
+  ::config::Configuration_Log* unsafe_arena_release_log();
 
-  // string database_driver_name = 201;
-  void clear_database_driver_name();
-  const std::string& database_driver_name() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_database_driver_name(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_database_driver_name();
-  PROTOBUF_NODISCARD std::string* release_database_driver_name();
-  void set_allocated_database_driver_name(std::string* database_driver_name);
+  // .config.Configuration.System system = 5;
+  bool has_system() const;
   private:
-  const std::string& _internal_database_driver_name() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_database_driver_name(const std::string& value);
-  std::string* _internal_mutable_database_driver_name();
+  bool _internal_has_system() const;
   public:
-
-  // string database_server_address = 202;
-  void clear_database_server_address();
-  const std::string& database_server_address() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_database_server_address(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_database_server_address();
-  PROTOBUF_NODISCARD std::string* release_database_server_address();
-  void set_allocated_database_server_address(std::string* database_server_address);
+  void clear_system();
+  const ::config::Configuration_System& system() const;
+  PROTOBUF_NODISCARD ::config::Configuration_System* release_system();
+  ::config::Configuration_System* mutable_system();
+  void set_allocated_system(::config::Configuration_System* system);
   private:
-  const std::string& _internal_database_server_address() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_database_server_address(const std::string& value);
-  std::string* _internal_mutable_database_server_address();
+  const ::config::Configuration_System& _internal_system() const;
+  ::config::Configuration_System* _internal_mutable_system();
   public:
-
-  // string database_name = 203;
-  void clear_database_name();
-  const std::string& database_name() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_database_name(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_database_name();
-  PROTOBUF_NODISCARD std::string* release_database_name();
-  void set_allocated_database_name(std::string* database_name);
-  private:
-  const std::string& _internal_database_name() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_database_name(const std::string& value);
-  std::string* _internal_mutable_database_name();
-  public:
-
-  // string database_userid = 204;
-  void clear_database_userid();
-  const std::string& database_userid() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_database_userid(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_database_userid();
-  PROTOBUF_NODISCARD std::string* release_database_userid();
-  void set_allocated_database_userid(std::string* database_userid);
-  private:
-  const std::string& _internal_database_userid() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_database_userid(const std::string& value);
-  std::string* _internal_mutable_database_userid();
-  public:
-
-  // string database_password = 205;
-  void clear_database_password();
-  const std::string& database_password() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_database_password(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_database_password();
-  PROTOBUF_NODISCARD std::string* release_database_password();
-  void set_allocated_database_password(std::string* database_password);
-  private:
-  const std::string& _internal_database_password() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_database_password(const std::string& value);
-  std::string* _internal_mutable_database_password();
-  public:
-
-  // string log_file_path = 301;
-  void clear_log_file_path();
-  const std::string& log_file_path() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_log_file_path(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_log_file_path();
-  PROTOBUF_NODISCARD std::string* release_log_file_path();
-  void set_allocated_log_file_path(std::string* log_file_path);
-  private:
-  const std::string& _internal_log_file_path() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_log_file_path(const std::string& value);
-  std::string* _internal_mutable_log_file_path();
-  public:
-
-  // int32 server_port = 2;
-  void clear_server_port();
-  int32_t server_port() const;
-  void set_server_port(int32_t value);
-  private:
-  int32_t _internal_server_port() const;
-  void _internal_set_server_port(int32_t value);
-  public:
-
-  // uint32 server_max_player = 3;
-  void clear_server_max_player();
-  uint32_t server_max_player() const;
-  void set_server_max_player(uint32_t value);
-  private:
-  uint32_t _internal_server_max_player() const;
-  void _internal_set_server_max_player(uint32_t value);
-  public:
-
-  // int32 world_width = 106;
-  void clear_world_width();
-  int32_t world_width() const;
-  void set_world_width(int32_t value);
-  private:
-  int32_t _internal_world_width() const;
-  void _internal_set_world_width(int32_t value);
-  public:
-
-  // int32 world_height = 107;
-  void clear_world_height();
-  int32_t world_height() const;
-  void set_world_height(int32_t value);
-  private:
-  int32_t _internal_world_height() const;
-  void _internal_set_world_height(int32_t value);
-  public:
-
-  // int32 world_length = 108;
-  void clear_world_length();
-  int32_t world_length() const;
-  void set_world_length(int32_t value);
-  private:
-  int32_t _internal_world_length() const;
-  void _internal_set_world_length(int32_t value);
-  public:
-
-  // uint32 system_page_size = 401;
-  void clear_system_page_size();
-  uint32_t system_page_size() const;
-  void set_system_page_size(uint32_t value);
-  private:
-  uint32_t _internal_system_page_size() const;
-  void _internal_set_system_page_size(uint32_t value);
-  public:
-
-  // uint32 system_alllocation_granularity = 402;
-  void clear_system_alllocation_granularity();
-  uint32_t system_alllocation_granularity() const;
-  void set_system_alllocation_granularity(uint32_t value);
-  private:
-  uint32_t _internal_system_alllocation_granularity() const;
-  void _internal_set_system_alllocation_granularity(uint32_t value);
-  public:
-
-  // uint32 system_num_of_processors = 403;
-  void clear_system_num_of_processors();
-  uint32_t system_num_of_processors() const;
-  void set_system_num_of_processors(uint32_t value);
-  private:
-  uint32_t _internal_system_num_of_processors() const;
-  void _internal_set_system_num_of_processors(uint32_t value);
-  public:
+  void unsafe_arena_set_allocated_system(
+      ::config::Configuration_System* system);
+  ::config::Configuration_System* unsafe_arena_release_system();
 
   // @@protoc_insertion_point(class_scope:config.Configuration)
  private:
@@ -416,24 +1240,11 @@ class Configuration final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr server_ip_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr server_name_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr server_motd_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr world_save_dir_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr database_driver_name_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr database_server_address_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr database_name_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr database_userid_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr database_password_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr log_file_path_;
-    int32_t server_port_;
-    uint32_t server_max_player_;
-    int32_t world_width_;
-    int32_t world_height_;
-    int32_t world_length_;
-    uint32_t system_page_size_;
-    uint32_t system_alllocation_granularity_;
-    uint32_t system_num_of_processors_;
+    ::config::Configuration_Server* server_;
+    ::config::Configuration_World* world_;
+    ::config::Configuration_Database* database_;
+    ::config::Configuration_Log* log_;
+    ::config::Configuration_System* system_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -448,134 +1259,134 @@ class Configuration final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// Configuration
+// Configuration_Server
 
-// string server_ip = 1;
-inline void Configuration::clear_server_ip() {
-  _impl_.server_ip_.ClearToEmpty();
+// string ip = 1;
+inline void Configuration_Server::clear_ip() {
+  _impl_.ip_.ClearToEmpty();
 }
-inline const std::string& Configuration::server_ip() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.server_ip)
-  return _internal_server_ip();
+inline const std::string& Configuration_Server::ip() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Server.ip)
+  return _internal_ip();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_server_ip(ArgT0&& arg0, ArgT... args) {
+void Configuration_Server::set_ip(ArgT0&& arg0, ArgT... args) {
  
- _impl_.server_ip_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.server_ip)
+ _impl_.ip_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.Server.ip)
 }
-inline std::string* Configuration::mutable_server_ip() {
-  std::string* _s = _internal_mutable_server_ip();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.server_ip)
+inline std::string* Configuration_Server::mutable_ip() {
+  std::string* _s = _internal_mutable_ip();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Server.ip)
   return _s;
 }
-inline const std::string& Configuration::_internal_server_ip() const {
-  return _impl_.server_ip_.Get();
+inline const std::string& Configuration_Server::_internal_ip() const {
+  return _impl_.ip_.Get();
 }
-inline void Configuration::_internal_set_server_ip(const std::string& value) {
+inline void Configuration_Server::_internal_set_ip(const std::string& value) {
   
-  _impl_.server_ip_.Set(value, GetArenaForAllocation());
+  _impl_.ip_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_server_ip() {
+inline std::string* Configuration_Server::_internal_mutable_ip() {
   
-  return _impl_.server_ip_.Mutable(GetArenaForAllocation());
+  return _impl_.ip_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_server_ip() {
-  // @@protoc_insertion_point(field_release:config.Configuration.server_ip)
-  return _impl_.server_ip_.Release();
+inline std::string* Configuration_Server::release_ip() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Server.ip)
+  return _impl_.ip_.Release();
 }
-inline void Configuration::set_allocated_server_ip(std::string* server_ip) {
-  if (server_ip != nullptr) {
+inline void Configuration_Server::set_allocated_ip(std::string* ip) {
+  if (ip != nullptr) {
     
   } else {
     
   }
-  _impl_.server_ip_.SetAllocated(server_ip, GetArenaForAllocation());
+  _impl_.ip_.SetAllocated(ip, GetArenaForAllocation());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.server_ip_.IsDefault()) {
-    _impl_.server_ip_.Set("", GetArenaForAllocation());
+  if (_impl_.ip_.IsDefault()) {
+    _impl_.ip_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.server_ip)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Server.ip)
 }
 
-// int32 server_port = 2;
-inline void Configuration::clear_server_port() {
-  _impl_.server_port_ = 0;
+// int32 port = 2;
+inline void Configuration_Server::clear_port() {
+  _impl_.port_ = 0;
 }
-inline int32_t Configuration::_internal_server_port() const {
-  return _impl_.server_port_;
+inline int32_t Configuration_Server::_internal_port() const {
+  return _impl_.port_;
 }
-inline int32_t Configuration::server_port() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.server_port)
-  return _internal_server_port();
+inline int32_t Configuration_Server::port() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Server.port)
+  return _internal_port();
 }
-inline void Configuration::_internal_set_server_port(int32_t value) {
+inline void Configuration_Server::_internal_set_port(int32_t value) {
   
-  _impl_.server_port_ = value;
+  _impl_.port_ = value;
 }
-inline void Configuration::set_server_port(int32_t value) {
-  _internal_set_server_port(value);
-  // @@protoc_insertion_point(field_set:config.Configuration.server_port)
+inline void Configuration_Server::set_port(int32_t value) {
+  _internal_set_port(value);
+  // @@protoc_insertion_point(field_set:config.Configuration.Server.port)
 }
 
-// uint32 server_max_player = 3;
-inline void Configuration::clear_server_max_player() {
-  _impl_.server_max_player_ = 0u;
+// uint32 max_player = 3;
+inline void Configuration_Server::clear_max_player() {
+  _impl_.max_player_ = 0u;
 }
-inline uint32_t Configuration::_internal_server_max_player() const {
-  return _impl_.server_max_player_;
+inline uint32_t Configuration_Server::_internal_max_player() const {
+  return _impl_.max_player_;
 }
-inline uint32_t Configuration::server_max_player() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.server_max_player)
-  return _internal_server_max_player();
+inline uint32_t Configuration_Server::max_player() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Server.max_player)
+  return _internal_max_player();
 }
-inline void Configuration::_internal_set_server_max_player(uint32_t value) {
+inline void Configuration_Server::_internal_set_max_player(uint32_t value) {
   
-  _impl_.server_max_player_ = value;
+  _impl_.max_player_ = value;
 }
-inline void Configuration::set_server_max_player(uint32_t value) {
-  _internal_set_server_max_player(value);
-  // @@protoc_insertion_point(field_set:config.Configuration.server_max_player)
+inline void Configuration_Server::set_max_player(uint32_t value) {
+  _internal_set_max_player(value);
+  // @@protoc_insertion_point(field_set:config.Configuration.Server.max_player)
 }
 
 // string server_name = 4;
-inline void Configuration::clear_server_name() {
+inline void Configuration_Server::clear_server_name() {
   _impl_.server_name_.ClearToEmpty();
 }
-inline const std::string& Configuration::server_name() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.server_name)
+inline const std::string& Configuration_Server::server_name() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Server.server_name)
   return _internal_server_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_server_name(ArgT0&& arg0, ArgT... args) {
+void Configuration_Server::set_server_name(ArgT0&& arg0, ArgT... args) {
  
  _impl_.server_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.server_name)
+  // @@protoc_insertion_point(field_set:config.Configuration.Server.server_name)
 }
-inline std::string* Configuration::mutable_server_name() {
+inline std::string* Configuration_Server::mutable_server_name() {
   std::string* _s = _internal_mutable_server_name();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.server_name)
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Server.server_name)
   return _s;
 }
-inline const std::string& Configuration::_internal_server_name() const {
+inline const std::string& Configuration_Server::_internal_server_name() const {
   return _impl_.server_name_.Get();
 }
-inline void Configuration::_internal_set_server_name(const std::string& value) {
+inline void Configuration_Server::_internal_set_server_name(const std::string& value) {
   
   _impl_.server_name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_server_name() {
+inline std::string* Configuration_Server::_internal_mutable_server_name() {
   
   return _impl_.server_name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_server_name() {
-  // @@protoc_insertion_point(field_release:config.Configuration.server_name)
+inline std::string* Configuration_Server::release_server_name() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Server.server_name)
   return _impl_.server_name_.Release();
 }
-inline void Configuration::set_allocated_server_name(std::string* server_name) {
+inline void Configuration_Server::set_allocated_server_name(std::string* server_name) {
   if (server_name != nullptr) {
     
   } else {
@@ -587,305 +1398,313 @@ inline void Configuration::set_allocated_server_name(std::string* server_name) {
     _impl_.server_name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.server_name)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Server.server_name)
 }
 
-// string server_motd = 5;
-inline void Configuration::clear_server_motd() {
-  _impl_.server_motd_.ClearToEmpty();
+// string motd = 5;
+inline void Configuration_Server::clear_motd() {
+  _impl_.motd_.ClearToEmpty();
 }
-inline const std::string& Configuration::server_motd() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.server_motd)
-  return _internal_server_motd();
+inline const std::string& Configuration_Server::motd() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Server.motd)
+  return _internal_motd();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_server_motd(ArgT0&& arg0, ArgT... args) {
+void Configuration_Server::set_motd(ArgT0&& arg0, ArgT... args) {
  
- _impl_.server_motd_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.server_motd)
+ _impl_.motd_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.Server.motd)
 }
-inline std::string* Configuration::mutable_server_motd() {
-  std::string* _s = _internal_mutable_server_motd();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.server_motd)
+inline std::string* Configuration_Server::mutable_motd() {
+  std::string* _s = _internal_mutable_motd();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Server.motd)
   return _s;
 }
-inline const std::string& Configuration::_internal_server_motd() const {
-  return _impl_.server_motd_.Get();
+inline const std::string& Configuration_Server::_internal_motd() const {
+  return _impl_.motd_.Get();
 }
-inline void Configuration::_internal_set_server_motd(const std::string& value) {
+inline void Configuration_Server::_internal_set_motd(const std::string& value) {
   
-  _impl_.server_motd_.Set(value, GetArenaForAllocation());
+  _impl_.motd_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_server_motd() {
+inline std::string* Configuration_Server::_internal_mutable_motd() {
   
-  return _impl_.server_motd_.Mutable(GetArenaForAllocation());
+  return _impl_.motd_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_server_motd() {
-  // @@protoc_insertion_point(field_release:config.Configuration.server_motd)
-  return _impl_.server_motd_.Release();
+inline std::string* Configuration_Server::release_motd() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Server.motd)
+  return _impl_.motd_.Release();
 }
-inline void Configuration::set_allocated_server_motd(std::string* server_motd) {
-  if (server_motd != nullptr) {
+inline void Configuration_Server::set_allocated_motd(std::string* motd) {
+  if (motd != nullptr) {
     
   } else {
     
   }
-  _impl_.server_motd_.SetAllocated(server_motd, GetArenaForAllocation());
+  _impl_.motd_.SetAllocated(motd, GetArenaForAllocation());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.server_motd_.IsDefault()) {
-    _impl_.server_motd_.Set("", GetArenaForAllocation());
+  if (_impl_.motd_.IsDefault()) {
+    _impl_.motd_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.server_motd)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Server.motd)
 }
 
-// int32 world_width = 106;
-inline void Configuration::clear_world_width() {
-  _impl_.world_width_ = 0;
+// -------------------------------------------------------------------
+
+// Configuration_World
+
+// int32 width = 1;
+inline void Configuration_World::clear_width() {
+  _impl_.width_ = 0;
 }
-inline int32_t Configuration::_internal_world_width() const {
-  return _impl_.world_width_;
+inline int32_t Configuration_World::_internal_width() const {
+  return _impl_.width_;
 }
-inline int32_t Configuration::world_width() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.world_width)
-  return _internal_world_width();
+inline int32_t Configuration_World::width() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.World.width)
+  return _internal_width();
 }
-inline void Configuration::_internal_set_world_width(int32_t value) {
+inline void Configuration_World::_internal_set_width(int32_t value) {
   
-  _impl_.world_width_ = value;
+  _impl_.width_ = value;
 }
-inline void Configuration::set_world_width(int32_t value) {
-  _internal_set_world_width(value);
-  // @@protoc_insertion_point(field_set:config.Configuration.world_width)
+inline void Configuration_World::set_width(int32_t value) {
+  _internal_set_width(value);
+  // @@protoc_insertion_point(field_set:config.Configuration.World.width)
 }
 
-// int32 world_height = 107;
-inline void Configuration::clear_world_height() {
-  _impl_.world_height_ = 0;
+// int32 height = 2;
+inline void Configuration_World::clear_height() {
+  _impl_.height_ = 0;
 }
-inline int32_t Configuration::_internal_world_height() const {
-  return _impl_.world_height_;
+inline int32_t Configuration_World::_internal_height() const {
+  return _impl_.height_;
 }
-inline int32_t Configuration::world_height() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.world_height)
-  return _internal_world_height();
+inline int32_t Configuration_World::height() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.World.height)
+  return _internal_height();
 }
-inline void Configuration::_internal_set_world_height(int32_t value) {
+inline void Configuration_World::_internal_set_height(int32_t value) {
   
-  _impl_.world_height_ = value;
+  _impl_.height_ = value;
 }
-inline void Configuration::set_world_height(int32_t value) {
-  _internal_set_world_height(value);
-  // @@protoc_insertion_point(field_set:config.Configuration.world_height)
+inline void Configuration_World::set_height(int32_t value) {
+  _internal_set_height(value);
+  // @@protoc_insertion_point(field_set:config.Configuration.World.height)
 }
 
-// int32 world_length = 108;
-inline void Configuration::clear_world_length() {
-  _impl_.world_length_ = 0;
+// int32 length = 3;
+inline void Configuration_World::clear_length() {
+  _impl_.length_ = 0;
 }
-inline int32_t Configuration::_internal_world_length() const {
-  return _impl_.world_length_;
+inline int32_t Configuration_World::_internal_length() const {
+  return _impl_.length_;
 }
-inline int32_t Configuration::world_length() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.world_length)
-  return _internal_world_length();
+inline int32_t Configuration_World::length() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.World.length)
+  return _internal_length();
 }
-inline void Configuration::_internal_set_world_length(int32_t value) {
+inline void Configuration_World::_internal_set_length(int32_t value) {
   
-  _impl_.world_length_ = value;
+  _impl_.length_ = value;
 }
-inline void Configuration::set_world_length(int32_t value) {
-  _internal_set_world_length(value);
-  // @@protoc_insertion_point(field_set:config.Configuration.world_length)
+inline void Configuration_World::set_length(int32_t value) {
+  _internal_set_length(value);
+  // @@protoc_insertion_point(field_set:config.Configuration.World.length)
 }
 
-// string world_save_dir = 109;
-inline void Configuration::clear_world_save_dir() {
-  _impl_.world_save_dir_.ClearToEmpty();
+// string save_dir = 4;
+inline void Configuration_World::clear_save_dir() {
+  _impl_.save_dir_.ClearToEmpty();
 }
-inline const std::string& Configuration::world_save_dir() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.world_save_dir)
-  return _internal_world_save_dir();
+inline const std::string& Configuration_World::save_dir() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.World.save_dir)
+  return _internal_save_dir();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_world_save_dir(ArgT0&& arg0, ArgT... args) {
+void Configuration_World::set_save_dir(ArgT0&& arg0, ArgT... args) {
  
- _impl_.world_save_dir_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.world_save_dir)
+ _impl_.save_dir_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.World.save_dir)
 }
-inline std::string* Configuration::mutable_world_save_dir() {
-  std::string* _s = _internal_mutable_world_save_dir();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.world_save_dir)
+inline std::string* Configuration_World::mutable_save_dir() {
+  std::string* _s = _internal_mutable_save_dir();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.World.save_dir)
   return _s;
 }
-inline const std::string& Configuration::_internal_world_save_dir() const {
-  return _impl_.world_save_dir_.Get();
+inline const std::string& Configuration_World::_internal_save_dir() const {
+  return _impl_.save_dir_.Get();
 }
-inline void Configuration::_internal_set_world_save_dir(const std::string& value) {
+inline void Configuration_World::_internal_set_save_dir(const std::string& value) {
   
-  _impl_.world_save_dir_.Set(value, GetArenaForAllocation());
+  _impl_.save_dir_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_world_save_dir() {
+inline std::string* Configuration_World::_internal_mutable_save_dir() {
   
-  return _impl_.world_save_dir_.Mutable(GetArenaForAllocation());
+  return _impl_.save_dir_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_world_save_dir() {
-  // @@protoc_insertion_point(field_release:config.Configuration.world_save_dir)
-  return _impl_.world_save_dir_.Release();
+inline std::string* Configuration_World::release_save_dir() {
+  // @@protoc_insertion_point(field_release:config.Configuration.World.save_dir)
+  return _impl_.save_dir_.Release();
 }
-inline void Configuration::set_allocated_world_save_dir(std::string* world_save_dir) {
-  if (world_save_dir != nullptr) {
+inline void Configuration_World::set_allocated_save_dir(std::string* save_dir) {
+  if (save_dir != nullptr) {
     
   } else {
     
   }
-  _impl_.world_save_dir_.SetAllocated(world_save_dir, GetArenaForAllocation());
+  _impl_.save_dir_.SetAllocated(save_dir, GetArenaForAllocation());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.world_save_dir_.IsDefault()) {
-    _impl_.world_save_dir_.Set("", GetArenaForAllocation());
+  if (_impl_.save_dir_.IsDefault()) {
+    _impl_.save_dir_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.world_save_dir)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.World.save_dir)
 }
 
-// string database_driver_name = 201;
-inline void Configuration::clear_database_driver_name() {
-  _impl_.database_driver_name_.ClearToEmpty();
+// -------------------------------------------------------------------
+
+// Configuration_Database
+
+// string driver_name = 1;
+inline void Configuration_Database::clear_driver_name() {
+  _impl_.driver_name_.ClearToEmpty();
 }
-inline const std::string& Configuration::database_driver_name() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.database_driver_name)
-  return _internal_database_driver_name();
+inline const std::string& Configuration_Database::driver_name() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Database.driver_name)
+  return _internal_driver_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_database_driver_name(ArgT0&& arg0, ArgT... args) {
+void Configuration_Database::set_driver_name(ArgT0&& arg0, ArgT... args) {
  
- _impl_.database_driver_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.database_driver_name)
+ _impl_.driver_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.Database.driver_name)
 }
-inline std::string* Configuration::mutable_database_driver_name() {
-  std::string* _s = _internal_mutable_database_driver_name();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.database_driver_name)
+inline std::string* Configuration_Database::mutable_driver_name() {
+  std::string* _s = _internal_mutable_driver_name();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Database.driver_name)
   return _s;
 }
-inline const std::string& Configuration::_internal_database_driver_name() const {
-  return _impl_.database_driver_name_.Get();
+inline const std::string& Configuration_Database::_internal_driver_name() const {
+  return _impl_.driver_name_.Get();
 }
-inline void Configuration::_internal_set_database_driver_name(const std::string& value) {
+inline void Configuration_Database::_internal_set_driver_name(const std::string& value) {
   
-  _impl_.database_driver_name_.Set(value, GetArenaForAllocation());
+  _impl_.driver_name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_database_driver_name() {
+inline std::string* Configuration_Database::_internal_mutable_driver_name() {
   
-  return _impl_.database_driver_name_.Mutable(GetArenaForAllocation());
+  return _impl_.driver_name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_database_driver_name() {
-  // @@protoc_insertion_point(field_release:config.Configuration.database_driver_name)
-  return _impl_.database_driver_name_.Release();
+inline std::string* Configuration_Database::release_driver_name() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Database.driver_name)
+  return _impl_.driver_name_.Release();
 }
-inline void Configuration::set_allocated_database_driver_name(std::string* database_driver_name) {
-  if (database_driver_name != nullptr) {
+inline void Configuration_Database::set_allocated_driver_name(std::string* driver_name) {
+  if (driver_name != nullptr) {
     
   } else {
     
   }
-  _impl_.database_driver_name_.SetAllocated(database_driver_name, GetArenaForAllocation());
+  _impl_.driver_name_.SetAllocated(driver_name, GetArenaForAllocation());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.database_driver_name_.IsDefault()) {
-    _impl_.database_driver_name_.Set("", GetArenaForAllocation());
+  if (_impl_.driver_name_.IsDefault()) {
+    _impl_.driver_name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.database_driver_name)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Database.driver_name)
 }
 
-// string database_server_address = 202;
-inline void Configuration::clear_database_server_address() {
-  _impl_.database_server_address_.ClearToEmpty();
+// string server_address = 2;
+inline void Configuration_Database::clear_server_address() {
+  _impl_.server_address_.ClearToEmpty();
 }
-inline const std::string& Configuration::database_server_address() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.database_server_address)
-  return _internal_database_server_address();
+inline const std::string& Configuration_Database::server_address() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Database.server_address)
+  return _internal_server_address();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_database_server_address(ArgT0&& arg0, ArgT... args) {
+void Configuration_Database::set_server_address(ArgT0&& arg0, ArgT... args) {
  
- _impl_.database_server_address_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.database_server_address)
+ _impl_.server_address_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.Database.server_address)
 }
-inline std::string* Configuration::mutable_database_server_address() {
-  std::string* _s = _internal_mutable_database_server_address();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.database_server_address)
+inline std::string* Configuration_Database::mutable_server_address() {
+  std::string* _s = _internal_mutable_server_address();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Database.server_address)
   return _s;
 }
-inline const std::string& Configuration::_internal_database_server_address() const {
-  return _impl_.database_server_address_.Get();
+inline const std::string& Configuration_Database::_internal_server_address() const {
+  return _impl_.server_address_.Get();
 }
-inline void Configuration::_internal_set_database_server_address(const std::string& value) {
+inline void Configuration_Database::_internal_set_server_address(const std::string& value) {
   
-  _impl_.database_server_address_.Set(value, GetArenaForAllocation());
+  _impl_.server_address_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_database_server_address() {
+inline std::string* Configuration_Database::_internal_mutable_server_address() {
   
-  return _impl_.database_server_address_.Mutable(GetArenaForAllocation());
+  return _impl_.server_address_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_database_server_address() {
-  // @@protoc_insertion_point(field_release:config.Configuration.database_server_address)
-  return _impl_.database_server_address_.Release();
+inline std::string* Configuration_Database::release_server_address() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Database.server_address)
+  return _impl_.server_address_.Release();
 }
-inline void Configuration::set_allocated_database_server_address(std::string* database_server_address) {
-  if (database_server_address != nullptr) {
+inline void Configuration_Database::set_allocated_server_address(std::string* server_address) {
+  if (server_address != nullptr) {
     
   } else {
     
   }
-  _impl_.database_server_address_.SetAllocated(database_server_address, GetArenaForAllocation());
+  _impl_.server_address_.SetAllocated(server_address, GetArenaForAllocation());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.database_server_address_.IsDefault()) {
-    _impl_.database_server_address_.Set("", GetArenaForAllocation());
+  if (_impl_.server_address_.IsDefault()) {
+    _impl_.server_address_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.database_server_address)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Database.server_address)
 }
 
-// string database_name = 203;
-inline void Configuration::clear_database_name() {
+// string database_name = 3;
+inline void Configuration_Database::clear_database_name() {
   _impl_.database_name_.ClearToEmpty();
 }
-inline const std::string& Configuration::database_name() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.database_name)
+inline const std::string& Configuration_Database::database_name() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Database.database_name)
   return _internal_database_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_database_name(ArgT0&& arg0, ArgT... args) {
+void Configuration_Database::set_database_name(ArgT0&& arg0, ArgT... args) {
  
  _impl_.database_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.database_name)
+  // @@protoc_insertion_point(field_set:config.Configuration.Database.database_name)
 }
-inline std::string* Configuration::mutable_database_name() {
+inline std::string* Configuration_Database::mutable_database_name() {
   std::string* _s = _internal_mutable_database_name();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.database_name)
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Database.database_name)
   return _s;
 }
-inline const std::string& Configuration::_internal_database_name() const {
+inline const std::string& Configuration_Database::_internal_database_name() const {
   return _impl_.database_name_.Get();
 }
-inline void Configuration::_internal_set_database_name(const std::string& value) {
+inline void Configuration_Database::_internal_set_database_name(const std::string& value) {
   
   _impl_.database_name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_database_name() {
+inline std::string* Configuration_Database::_internal_mutable_database_name() {
   
   return _impl_.database_name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_database_name() {
-  // @@protoc_insertion_point(field_release:config.Configuration.database_name)
+inline std::string* Configuration_Database::release_database_name() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Database.database_name)
   return _impl_.database_name_.Release();
 }
-inline void Configuration::set_allocated_database_name(std::string* database_name) {
+inline void Configuration_Database::set_allocated_database_name(std::string* database_name) {
   if (database_name != nullptr) {
     
   } else {
@@ -897,145 +1716,149 @@ inline void Configuration::set_allocated_database_name(std::string* database_nam
     _impl_.database_name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.database_name)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Database.database_name)
 }
 
-// string database_userid = 204;
-inline void Configuration::clear_database_userid() {
-  _impl_.database_userid_.ClearToEmpty();
+// string userid = 4;
+inline void Configuration_Database::clear_userid() {
+  _impl_.userid_.ClearToEmpty();
 }
-inline const std::string& Configuration::database_userid() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.database_userid)
-  return _internal_database_userid();
+inline const std::string& Configuration_Database::userid() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Database.userid)
+  return _internal_userid();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_database_userid(ArgT0&& arg0, ArgT... args) {
+void Configuration_Database::set_userid(ArgT0&& arg0, ArgT... args) {
  
- _impl_.database_userid_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.database_userid)
+ _impl_.userid_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.Database.userid)
 }
-inline std::string* Configuration::mutable_database_userid() {
-  std::string* _s = _internal_mutable_database_userid();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.database_userid)
+inline std::string* Configuration_Database::mutable_userid() {
+  std::string* _s = _internal_mutable_userid();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Database.userid)
   return _s;
 }
-inline const std::string& Configuration::_internal_database_userid() const {
-  return _impl_.database_userid_.Get();
+inline const std::string& Configuration_Database::_internal_userid() const {
+  return _impl_.userid_.Get();
 }
-inline void Configuration::_internal_set_database_userid(const std::string& value) {
+inline void Configuration_Database::_internal_set_userid(const std::string& value) {
   
-  _impl_.database_userid_.Set(value, GetArenaForAllocation());
+  _impl_.userid_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_database_userid() {
+inline std::string* Configuration_Database::_internal_mutable_userid() {
   
-  return _impl_.database_userid_.Mutable(GetArenaForAllocation());
+  return _impl_.userid_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_database_userid() {
-  // @@protoc_insertion_point(field_release:config.Configuration.database_userid)
-  return _impl_.database_userid_.Release();
+inline std::string* Configuration_Database::release_userid() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Database.userid)
+  return _impl_.userid_.Release();
 }
-inline void Configuration::set_allocated_database_userid(std::string* database_userid) {
-  if (database_userid != nullptr) {
+inline void Configuration_Database::set_allocated_userid(std::string* userid) {
+  if (userid != nullptr) {
     
   } else {
     
   }
-  _impl_.database_userid_.SetAllocated(database_userid, GetArenaForAllocation());
+  _impl_.userid_.SetAllocated(userid, GetArenaForAllocation());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.database_userid_.IsDefault()) {
-    _impl_.database_userid_.Set("", GetArenaForAllocation());
+  if (_impl_.userid_.IsDefault()) {
+    _impl_.userid_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.database_userid)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Database.userid)
 }
 
-// string database_password = 205;
-inline void Configuration::clear_database_password() {
-  _impl_.database_password_.ClearToEmpty();
+// string password = 5;
+inline void Configuration_Database::clear_password() {
+  _impl_.password_.ClearToEmpty();
 }
-inline const std::string& Configuration::database_password() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.database_password)
-  return _internal_database_password();
+inline const std::string& Configuration_Database::password() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Database.password)
+  return _internal_password();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_database_password(ArgT0&& arg0, ArgT... args) {
+void Configuration_Database::set_password(ArgT0&& arg0, ArgT... args) {
  
- _impl_.database_password_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.database_password)
+ _impl_.password_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.Database.password)
 }
-inline std::string* Configuration::mutable_database_password() {
-  std::string* _s = _internal_mutable_database_password();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.database_password)
+inline std::string* Configuration_Database::mutable_password() {
+  std::string* _s = _internal_mutable_password();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Database.password)
   return _s;
 }
-inline const std::string& Configuration::_internal_database_password() const {
-  return _impl_.database_password_.Get();
+inline const std::string& Configuration_Database::_internal_password() const {
+  return _impl_.password_.Get();
 }
-inline void Configuration::_internal_set_database_password(const std::string& value) {
+inline void Configuration_Database::_internal_set_password(const std::string& value) {
   
-  _impl_.database_password_.Set(value, GetArenaForAllocation());
+  _impl_.password_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_database_password() {
+inline std::string* Configuration_Database::_internal_mutable_password() {
   
-  return _impl_.database_password_.Mutable(GetArenaForAllocation());
+  return _impl_.password_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_database_password() {
-  // @@protoc_insertion_point(field_release:config.Configuration.database_password)
-  return _impl_.database_password_.Release();
+inline std::string* Configuration_Database::release_password() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Database.password)
+  return _impl_.password_.Release();
 }
-inline void Configuration::set_allocated_database_password(std::string* database_password) {
-  if (database_password != nullptr) {
+inline void Configuration_Database::set_allocated_password(std::string* password) {
+  if (password != nullptr) {
     
   } else {
     
   }
-  _impl_.database_password_.SetAllocated(database_password, GetArenaForAllocation());
+  _impl_.password_.SetAllocated(password, GetArenaForAllocation());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.database_password_.IsDefault()) {
-    _impl_.database_password_.Set("", GetArenaForAllocation());
+  if (_impl_.password_.IsDefault()) {
+    _impl_.password_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.database_password)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Database.password)
 }
 
-// string log_file_path = 301;
-inline void Configuration::clear_log_file_path() {
+// -------------------------------------------------------------------
+
+// Configuration_Log
+
+// string log_file_path = 1;
+inline void Configuration_Log::clear_log_file_path() {
   _impl_.log_file_path_.ClearToEmpty();
 }
-inline const std::string& Configuration::log_file_path() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.log_file_path)
+inline const std::string& Configuration_Log::log_file_path() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Log.log_file_path)
   return _internal_log_file_path();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void Configuration::set_log_file_path(ArgT0&& arg0, ArgT... args) {
+void Configuration_Log::set_log_file_path(ArgT0&& arg0, ArgT... args) {
  
  _impl_.log_file_path_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:config.Configuration.log_file_path)
+  // @@protoc_insertion_point(field_set:config.Configuration.Log.log_file_path)
 }
-inline std::string* Configuration::mutable_log_file_path() {
+inline std::string* Configuration_Log::mutable_log_file_path() {
   std::string* _s = _internal_mutable_log_file_path();
-  // @@protoc_insertion_point(field_mutable:config.Configuration.log_file_path)
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Log.log_file_path)
   return _s;
 }
-inline const std::string& Configuration::_internal_log_file_path() const {
+inline const std::string& Configuration_Log::_internal_log_file_path() const {
   return _impl_.log_file_path_.Get();
 }
-inline void Configuration::_internal_set_log_file_path(const std::string& value) {
+inline void Configuration_Log::_internal_set_log_file_path(const std::string& value) {
   
   _impl_.log_file_path_.Set(value, GetArenaForAllocation());
 }
-inline std::string* Configuration::_internal_mutable_log_file_path() {
+inline std::string* Configuration_Log::_internal_mutable_log_file_path() {
   
   return _impl_.log_file_path_.Mutable(GetArenaForAllocation());
 }
-inline std::string* Configuration::release_log_file_path() {
-  // @@protoc_insertion_point(field_release:config.Configuration.log_file_path)
+inline std::string* Configuration_Log::release_log_file_path() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Log.log_file_path)
   return _impl_.log_file_path_.Release();
 }
-inline void Configuration::set_allocated_log_file_path(std::string* log_file_path) {
+inline void Configuration_Log::set_allocated_log_file_path(std::string* log_file_path) {
   if (log_file_path != nullptr) {
     
   } else {
@@ -1047,72 +1870,540 @@ inline void Configuration::set_allocated_log_file_path(std::string* log_file_pat
     _impl_.log_file_path_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:config.Configuration.log_file_path)
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Log.log_file_path)
 }
 
-// uint32 system_page_size = 401;
-inline void Configuration::clear_system_page_size() {
-  _impl_.system_page_size_ = 0u;
+// -------------------------------------------------------------------
+
+// Configuration_System
+
+// uint32 page_size = 1;
+inline void Configuration_System::clear_page_size() {
+  _impl_.page_size_ = 0u;
 }
-inline uint32_t Configuration::_internal_system_page_size() const {
-  return _impl_.system_page_size_;
+inline uint32_t Configuration_System::_internal_page_size() const {
+  return _impl_.page_size_;
 }
-inline uint32_t Configuration::system_page_size() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.system_page_size)
-  return _internal_system_page_size();
+inline uint32_t Configuration_System::page_size() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.System.page_size)
+  return _internal_page_size();
 }
-inline void Configuration::_internal_set_system_page_size(uint32_t value) {
+inline void Configuration_System::_internal_set_page_size(uint32_t value) {
   
-  _impl_.system_page_size_ = value;
+  _impl_.page_size_ = value;
 }
-inline void Configuration::set_system_page_size(uint32_t value) {
-  _internal_set_system_page_size(value);
-  // @@protoc_insertion_point(field_set:config.Configuration.system_page_size)
+inline void Configuration_System::set_page_size(uint32_t value) {
+  _internal_set_page_size(value);
+  // @@protoc_insertion_point(field_set:config.Configuration.System.page_size)
 }
 
-// uint32 system_alllocation_granularity = 402;
-inline void Configuration::clear_system_alllocation_granularity() {
-  _impl_.system_alllocation_granularity_ = 0u;
+// uint32 alllocation_granularity = 2;
+inline void Configuration_System::clear_alllocation_granularity() {
+  _impl_.alllocation_granularity_ = 0u;
 }
-inline uint32_t Configuration::_internal_system_alllocation_granularity() const {
-  return _impl_.system_alllocation_granularity_;
+inline uint32_t Configuration_System::_internal_alllocation_granularity() const {
+  return _impl_.alllocation_granularity_;
 }
-inline uint32_t Configuration::system_alllocation_granularity() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.system_alllocation_granularity)
-  return _internal_system_alllocation_granularity();
+inline uint32_t Configuration_System::alllocation_granularity() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.System.alllocation_granularity)
+  return _internal_alllocation_granularity();
 }
-inline void Configuration::_internal_set_system_alllocation_granularity(uint32_t value) {
+inline void Configuration_System::_internal_set_alllocation_granularity(uint32_t value) {
   
-  _impl_.system_alllocation_granularity_ = value;
+  _impl_.alllocation_granularity_ = value;
 }
-inline void Configuration::set_system_alllocation_granularity(uint32_t value) {
-  _internal_set_system_alllocation_granularity(value);
-  // @@protoc_insertion_point(field_set:config.Configuration.system_alllocation_granularity)
+inline void Configuration_System::set_alllocation_granularity(uint32_t value) {
+  _internal_set_alllocation_granularity(value);
+  // @@protoc_insertion_point(field_set:config.Configuration.System.alllocation_granularity)
 }
 
-// uint32 system_num_of_processors = 403;
-inline void Configuration::clear_system_num_of_processors() {
-  _impl_.system_num_of_processors_ = 0u;
+// uint32 num_of_processors = 3;
+inline void Configuration_System::clear_num_of_processors() {
+  _impl_.num_of_processors_ = 0u;
 }
-inline uint32_t Configuration::_internal_system_num_of_processors() const {
-  return _impl_.system_num_of_processors_;
+inline uint32_t Configuration_System::_internal_num_of_processors() const {
+  return _impl_.num_of_processors_;
 }
-inline uint32_t Configuration::system_num_of_processors() const {
-  // @@protoc_insertion_point(field_get:config.Configuration.system_num_of_processors)
-  return _internal_system_num_of_processors();
+inline uint32_t Configuration_System::num_of_processors() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.System.num_of_processors)
+  return _internal_num_of_processors();
 }
-inline void Configuration::_internal_set_system_num_of_processors(uint32_t value) {
+inline void Configuration_System::_internal_set_num_of_processors(uint32_t value) {
   
-  _impl_.system_num_of_processors_ = value;
+  _impl_.num_of_processors_ = value;
 }
-inline void Configuration::set_system_num_of_processors(uint32_t value) {
-  _internal_set_system_num_of_processors(value);
-  // @@protoc_insertion_point(field_set:config.Configuration.system_num_of_processors)
+inline void Configuration_System::set_num_of_processors(uint32_t value) {
+  _internal_set_num_of_processors(value);
+  // @@protoc_insertion_point(field_set:config.Configuration.System.num_of_processors)
+}
+
+// -------------------------------------------------------------------
+
+// Configuration
+
+// .config.Configuration.Server server = 1;
+inline bool Configuration::_internal_has_server() const {
+  return this != internal_default_instance() && _impl_.server_ != nullptr;
+}
+inline bool Configuration::has_server() const {
+  return _internal_has_server();
+}
+inline void Configuration::clear_server() {
+  if (GetArenaForAllocation() == nullptr && _impl_.server_ != nullptr) {
+    delete _impl_.server_;
+  }
+  _impl_.server_ = nullptr;
+}
+inline const ::config::Configuration_Server& Configuration::_internal_server() const {
+  const ::config::Configuration_Server* p = _impl_.server_;
+  return p != nullptr ? *p : reinterpret_cast<const ::config::Configuration_Server&>(
+      ::config::_Configuration_Server_default_instance_);
+}
+inline const ::config::Configuration_Server& Configuration::server() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.server)
+  return _internal_server();
+}
+inline void Configuration::unsafe_arena_set_allocated_server(
+    ::config::Configuration_Server* server) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.server_);
+  }
+  _impl_.server_ = server;
+  if (server) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:config.Configuration.server)
+}
+inline ::config::Configuration_Server* Configuration::release_server() {
+  
+  ::config::Configuration_Server* temp = _impl_.server_;
+  _impl_.server_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::config::Configuration_Server* Configuration::unsafe_arena_release_server() {
+  // @@protoc_insertion_point(field_release:config.Configuration.server)
+  
+  ::config::Configuration_Server* temp = _impl_.server_;
+  _impl_.server_ = nullptr;
+  return temp;
+}
+inline ::config::Configuration_Server* Configuration::_internal_mutable_server() {
+  
+  if (_impl_.server_ == nullptr) {
+    auto* p = CreateMaybeMessage<::config::Configuration_Server>(GetArenaForAllocation());
+    _impl_.server_ = p;
+  }
+  return _impl_.server_;
+}
+inline ::config::Configuration_Server* Configuration::mutable_server() {
+  ::config::Configuration_Server* _msg = _internal_mutable_server();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.server)
+  return _msg;
+}
+inline void Configuration::set_allocated_server(::config::Configuration_Server* server) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.server_;
+  }
+  if (server) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(server);
+    if (message_arena != submessage_arena) {
+      server = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, server, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.server_ = server;
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.server)
+}
+
+// .config.Configuration.World world = 2;
+inline bool Configuration::_internal_has_world() const {
+  return this != internal_default_instance() && _impl_.world_ != nullptr;
+}
+inline bool Configuration::has_world() const {
+  return _internal_has_world();
+}
+inline void Configuration::clear_world() {
+  if (GetArenaForAllocation() == nullptr && _impl_.world_ != nullptr) {
+    delete _impl_.world_;
+  }
+  _impl_.world_ = nullptr;
+}
+inline const ::config::Configuration_World& Configuration::_internal_world() const {
+  const ::config::Configuration_World* p = _impl_.world_;
+  return p != nullptr ? *p : reinterpret_cast<const ::config::Configuration_World&>(
+      ::config::_Configuration_World_default_instance_);
+}
+inline const ::config::Configuration_World& Configuration::world() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.world)
+  return _internal_world();
+}
+inline void Configuration::unsafe_arena_set_allocated_world(
+    ::config::Configuration_World* world) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.world_);
+  }
+  _impl_.world_ = world;
+  if (world) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:config.Configuration.world)
+}
+inline ::config::Configuration_World* Configuration::release_world() {
+  
+  ::config::Configuration_World* temp = _impl_.world_;
+  _impl_.world_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::config::Configuration_World* Configuration::unsafe_arena_release_world() {
+  // @@protoc_insertion_point(field_release:config.Configuration.world)
+  
+  ::config::Configuration_World* temp = _impl_.world_;
+  _impl_.world_ = nullptr;
+  return temp;
+}
+inline ::config::Configuration_World* Configuration::_internal_mutable_world() {
+  
+  if (_impl_.world_ == nullptr) {
+    auto* p = CreateMaybeMessage<::config::Configuration_World>(GetArenaForAllocation());
+    _impl_.world_ = p;
+  }
+  return _impl_.world_;
+}
+inline ::config::Configuration_World* Configuration::mutable_world() {
+  ::config::Configuration_World* _msg = _internal_mutable_world();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.world)
+  return _msg;
+}
+inline void Configuration::set_allocated_world(::config::Configuration_World* world) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.world_;
+  }
+  if (world) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(world);
+    if (message_arena != submessage_arena) {
+      world = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, world, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.world_ = world;
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.world)
+}
+
+// .config.Configuration.Database database = 3;
+inline bool Configuration::_internal_has_database() const {
+  return this != internal_default_instance() && _impl_.database_ != nullptr;
+}
+inline bool Configuration::has_database() const {
+  return _internal_has_database();
+}
+inline void Configuration::clear_database() {
+  if (GetArenaForAllocation() == nullptr && _impl_.database_ != nullptr) {
+    delete _impl_.database_;
+  }
+  _impl_.database_ = nullptr;
+}
+inline const ::config::Configuration_Database& Configuration::_internal_database() const {
+  const ::config::Configuration_Database* p = _impl_.database_;
+  return p != nullptr ? *p : reinterpret_cast<const ::config::Configuration_Database&>(
+      ::config::_Configuration_Database_default_instance_);
+}
+inline const ::config::Configuration_Database& Configuration::database() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.database)
+  return _internal_database();
+}
+inline void Configuration::unsafe_arena_set_allocated_database(
+    ::config::Configuration_Database* database) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.database_);
+  }
+  _impl_.database_ = database;
+  if (database) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:config.Configuration.database)
+}
+inline ::config::Configuration_Database* Configuration::release_database() {
+  
+  ::config::Configuration_Database* temp = _impl_.database_;
+  _impl_.database_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::config::Configuration_Database* Configuration::unsafe_arena_release_database() {
+  // @@protoc_insertion_point(field_release:config.Configuration.database)
+  
+  ::config::Configuration_Database* temp = _impl_.database_;
+  _impl_.database_ = nullptr;
+  return temp;
+}
+inline ::config::Configuration_Database* Configuration::_internal_mutable_database() {
+  
+  if (_impl_.database_ == nullptr) {
+    auto* p = CreateMaybeMessage<::config::Configuration_Database>(GetArenaForAllocation());
+    _impl_.database_ = p;
+  }
+  return _impl_.database_;
+}
+inline ::config::Configuration_Database* Configuration::mutable_database() {
+  ::config::Configuration_Database* _msg = _internal_mutable_database();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.database)
+  return _msg;
+}
+inline void Configuration::set_allocated_database(::config::Configuration_Database* database) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.database_;
+  }
+  if (database) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(database);
+    if (message_arena != submessage_arena) {
+      database = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, database, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.database_ = database;
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.database)
+}
+
+// .config.Configuration.Log log = 4;
+inline bool Configuration::_internal_has_log() const {
+  return this != internal_default_instance() && _impl_.log_ != nullptr;
+}
+inline bool Configuration::has_log() const {
+  return _internal_has_log();
+}
+inline void Configuration::clear_log() {
+  if (GetArenaForAllocation() == nullptr && _impl_.log_ != nullptr) {
+    delete _impl_.log_;
+  }
+  _impl_.log_ = nullptr;
+}
+inline const ::config::Configuration_Log& Configuration::_internal_log() const {
+  const ::config::Configuration_Log* p = _impl_.log_;
+  return p != nullptr ? *p : reinterpret_cast<const ::config::Configuration_Log&>(
+      ::config::_Configuration_Log_default_instance_);
+}
+inline const ::config::Configuration_Log& Configuration::log() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.log)
+  return _internal_log();
+}
+inline void Configuration::unsafe_arena_set_allocated_log(
+    ::config::Configuration_Log* log) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.log_);
+  }
+  _impl_.log_ = log;
+  if (log) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:config.Configuration.log)
+}
+inline ::config::Configuration_Log* Configuration::release_log() {
+  
+  ::config::Configuration_Log* temp = _impl_.log_;
+  _impl_.log_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::config::Configuration_Log* Configuration::unsafe_arena_release_log() {
+  // @@protoc_insertion_point(field_release:config.Configuration.log)
+  
+  ::config::Configuration_Log* temp = _impl_.log_;
+  _impl_.log_ = nullptr;
+  return temp;
+}
+inline ::config::Configuration_Log* Configuration::_internal_mutable_log() {
+  
+  if (_impl_.log_ == nullptr) {
+    auto* p = CreateMaybeMessage<::config::Configuration_Log>(GetArenaForAllocation());
+    _impl_.log_ = p;
+  }
+  return _impl_.log_;
+}
+inline ::config::Configuration_Log* Configuration::mutable_log() {
+  ::config::Configuration_Log* _msg = _internal_mutable_log();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.log)
+  return _msg;
+}
+inline void Configuration::set_allocated_log(::config::Configuration_Log* log) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.log_;
+  }
+  if (log) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(log);
+    if (message_arena != submessage_arena) {
+      log = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, log, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.log_ = log;
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.log)
+}
+
+// .config.Configuration.System system = 5;
+inline bool Configuration::_internal_has_system() const {
+  return this != internal_default_instance() && _impl_.system_ != nullptr;
+}
+inline bool Configuration::has_system() const {
+  return _internal_has_system();
+}
+inline void Configuration::clear_system() {
+  if (GetArenaForAllocation() == nullptr && _impl_.system_ != nullptr) {
+    delete _impl_.system_;
+  }
+  _impl_.system_ = nullptr;
+}
+inline const ::config::Configuration_System& Configuration::_internal_system() const {
+  const ::config::Configuration_System* p = _impl_.system_;
+  return p != nullptr ? *p : reinterpret_cast<const ::config::Configuration_System&>(
+      ::config::_Configuration_System_default_instance_);
+}
+inline const ::config::Configuration_System& Configuration::system() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.system)
+  return _internal_system();
+}
+inline void Configuration::unsafe_arena_set_allocated_system(
+    ::config::Configuration_System* system) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.system_);
+  }
+  _impl_.system_ = system;
+  if (system) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:config.Configuration.system)
+}
+inline ::config::Configuration_System* Configuration::release_system() {
+  
+  ::config::Configuration_System* temp = _impl_.system_;
+  _impl_.system_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::config::Configuration_System* Configuration::unsafe_arena_release_system() {
+  // @@protoc_insertion_point(field_release:config.Configuration.system)
+  
+  ::config::Configuration_System* temp = _impl_.system_;
+  _impl_.system_ = nullptr;
+  return temp;
+}
+inline ::config::Configuration_System* Configuration::_internal_mutable_system() {
+  
+  if (_impl_.system_ == nullptr) {
+    auto* p = CreateMaybeMessage<::config::Configuration_System>(GetArenaForAllocation());
+    _impl_.system_ = p;
+  }
+  return _impl_.system_;
+}
+inline ::config::Configuration_System* Configuration::mutable_system() {
+  ::config::Configuration_System* _msg = _internal_mutable_system();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.system)
+  return _msg;
+}
+inline void Configuration::set_allocated_system(::config::Configuration_System* system) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.system_;
+  }
+  if (system) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(system);
+    if (message_arena != submessage_arena) {
+      system = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, system, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.system_ = system;
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.system)
 }
 
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 
 // @@protoc_insertion_point(namespace_scope)
 

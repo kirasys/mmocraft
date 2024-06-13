@@ -30,7 +30,7 @@ namespace net
             Stopped,
         };
 
-        ServerCore(PacketHandleServer&, ConnectionEnvironment&, const config::Configuration& conf = config::get_config());
+        ServerCore(PacketHandleServer&, ConnectionEnvironment&, const config::Configuration_Server& conf = config::get_server_config());
 
         ServerCore::State status() const
         {

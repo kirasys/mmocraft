@@ -57,10 +57,10 @@ namespace setup
         net::Socket::initialize_system();
 
         // save system
-        const auto& conf = config::get_config();
+        const auto& world_conf = config::get_world_config();
 
-        if (not fs::exists(conf.world_save_dir()))
-            fs::create_directories(conf.world_save_dir());
+        if (not fs::exists(world_conf.save_dir()))
+            fs::create_directories(world_conf.save_dir());
     }
 
     void add_termination_handler(std::terminate_handler handler)

@@ -3,31 +3,42 @@ syntax = "proto3";
 package config;
 
 message Configuration {
-    // server config (starts from 0)
-    string server_ip = 1;
-    int32  server_port = 2;
-    uint32 server_max_player = 3;
-    string server_name = 4;
-    string server_motd = 5;
+    message Server {
+        string ip = 1;
+        int32  port = 2;
+        uint32 max_player = 3;
+        string server_name = 4;
+        string motd = 5;
+    }
 
-    // world config (starts from 100)
-    int32  world_width = 106;
-    int32  world_height = 107;
-    int32  world_length = 108;
-    string world_save_dir = 109;
+    message World {
+        int32  width = 1;
+        int32  height = 2;
+        int32  length = 3;
+        string save_dir = 4;
+    }
 
-    // database config (starts from 200)
-    string database_driver_name = 201;
-    string database_server_address = 202;
-    string database_name = 203;
-    string database_userid = 204;
-    string database_password = 205;
+    message Database {
+        string driver_name = 1;
+        string server_address = 2;
+        string database_name = 3;
+        string userid = 4;
+        string password = 5;
+    }
 
-    // log config (starts from 300)
-    string log_file_path = 301;
+    message Log {
+        string log_file_path = 1;
+    }
 
-    // system config (starts from 400)
-    uint32 system_page_size = 401;
-    uint32 system_alllocation_granularity = 402;
-    uint32 system_num_of_processors = 403;
+    message System {
+        uint32 page_size = 1;
+        uint32 alllocation_granularity = 2;
+        uint32 num_of_processors = 3;
+    }
+
+   Server server = 1;
+   World world = 2;
+   Database database = 3;
+   Log log = 4;
+   System system = 5;
 }

@@ -211,10 +211,10 @@ namespace net
         if (not online)
             return false;
 
-        const auto& conf = config::get_config();
+        const auto& server_conf = config::get_server_config();
 
         PacketHandshake handshake_packet{
-            conf.server_name(), conf.server_motd(),
+            server_conf.server_name(), server_conf.motd(),
             self_player->get_player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
         };
 

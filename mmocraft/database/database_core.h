@@ -32,7 +32,7 @@ namespace database
 
 		bool connect(std::string_view connection_string);
 
-		bool connect_with_password(const config::Configuration&);
+		bool connect_with_password(const config::Configuration_Database&);
 
 		void disconnect();
 

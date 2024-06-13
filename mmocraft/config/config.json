@@ -1,21 +1,26 @@
 {
-  "server_ip": "127.0.0.1",
-  "server_port": 12345,
-  "server_max_player": 1000,
+ "server": {
+  "ip": "127.0.0.1",
+  "port": 12345,
+  "max_player": 1000,
   "server_name": "Massive Minecraft Classic Server",
-  "server_motd": "welcome to mmocraft server.",
-  "world_width": 1024,
-  "world_height": 256,
-  "world_length": 1024,
-  "world_save_dir": "world\\",
-  "database_driver_name": "ODBC Driver 17 for SQL Server",
-  "database_server_address": "DESKTOP-G3KIELI\\MINESQLSERVER",
+  "motd": "welcome to mmocraft server."
+ },
+ "world": {
+  "width": 1024,
+  "height": 256,
+  "length": 1024,
+  "save_dir": "world\\"
+ },
+ "database": {
+  "driver_name": "ODBC Driver 17 for SQL Server",
+  "server_address": "",
   "database_name": "mmocraft",
-  "database_userid": "mmocraft_login",
-  "database_password": "12341234",
-  "log_file_path": "server.log",
-  "system_page_size": 0,
-  "system_alllocation_granularity": 0,
-  "system_num_of_processors": 0
+  "userid": "mmocraft_login",
+  "password": "12341234"
+ },
+ "log": {
+  "log_file_path": "server.log"
+ }
 }
 

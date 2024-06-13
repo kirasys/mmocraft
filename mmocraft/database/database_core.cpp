@@ -56,15 +56,15 @@ namespace database
         return true;
     }
 
-    bool DatabaseCore::connect_with_password(const config::Configuration& conf)
+    bool DatabaseCore::connect_with_password(const config::Configuration_Database& conf)
     {
         const std::string connection_string{
             std::format("Driver={{{}}}; Server={}; Database={}; UID={}; PWD={}; Trusted_Connection=yes",
-                        conf.database_driver_name(),
-                        conf.database_server_address(),
+                        conf.driver_name(),
+                        conf.server_address(),
                         conf.database_name(),
-                        conf.database_userid(),
-                        conf.database_password())
+                        conf.userid(),
+                        conf.password())
         };
 
         return connect(connection_string);

@@ -11,9 +11,9 @@
 
 namespace net
 {
-    MasterServer::MasterServer(const config::Configuration& conf)
-        : connection_env{ conf.server_max_player() }
-        , server_core{ *this, connection_env, conf }
+    MasterServer::MasterServer(const config::Configuration_Server& server_conf)
+        : connection_env{ server_conf.max_player() }
+        , server_core{ *this, connection_env, server_conf }
         , database_core{ }
         
         , deferred_handshake_packet_event{ 
@@ -50,7 +50,7 @@ namespace net
 
     void MasterServer::serve_forever()
     {
-        const auto& conf = config::get_config();
+        const auto& conf = config::get_database_config();
 
         // start database system.
         if (not database_core.connect_with_password(conf))

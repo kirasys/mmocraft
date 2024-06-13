@@ -37,13 +37,13 @@ namespace logging
 
     void initialize_system()
     {
-        const auto& conf = config::get_config();
+        const auto& log_conf = config::get_log_config();
 
         setlocale(LC_ALL, ""); // user-default ANSI code page obtained from the operating system
 
-        system_log_file_stream.open(conf.log_file_path(), std::ofstream::out);
+        system_log_file_stream.open(log_conf.log_file_path(), std::ofstream::out);
         if (not system_log_file_stream.is_open())
-            CONSOLE_LOG(fatal) << "Fail to open file: " << conf.log_file_path();
+            CONSOLE_LOG(fatal) << "Fail to open file: " << log_conf.log_file_path();
 
         setup::add_termination_handler([]() {
             system_log_file_stream.close();

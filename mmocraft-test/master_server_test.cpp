@@ -1,6 +1,8 @@
 #include "pch.h"
 #include <vector>
 
+#include "config/config.h"
+#include "proto/config.pb.h"
 #include "mock_database.h"
 #include "net/master_server.h"
 
@@ -10,15 +12,14 @@ class MasterServerTest : public testing::Test
 {
 protected:
     MasterServerTest()
-        : conf{ config::get_config().clone() }
-        , connection_env{ max_player_count }
+        : connection_env{ max_player_count }
         , connection_descriptor{ connection_env, win::UniqueSocket(), nullptr, &io_send_event, &io_deferred_send_event }
     {
-        conf.server.max_player = max_player_count;
+        config::set_default_configuration();
+        config::get_server_config().set_max_player(max_player_count);
     }
 
     test::MockDatabase mock;
-    config::Configuration conf;
 
     io::IoSendEventData io_send_data;
     io::IoSendEvent io_send_event{ &io_send_data };
@@ -50,7 +51,7 @@ public:
 };
 TEST_F(MasterServerTest, Handle_Handshake_Correctly)
 {
-    net::MasterServer SUT_server{ conf };
+    net::MasterServer SUT_server;
     auto handshake_packet = net::PacketHandshake{ "servername", "motd", net::UserType::NORMAL };
 
     auto handle_result = SUT_server.handle_handshake_packet(connection_descriptor, handshake_packet);
@@ -60,7 +61,7 @@ TEST_F(MasterServerTest, Handle_Handshake_Correctly)
 
 TEST_F(MasterServerTest, Handle_Deferred_Handshake_With_Duplicate_Login)
 {
-    net::MasterServer SUT_server{ conf };
+    net::MasterServer SUT_server;
 
     auto packet_event = MockPacketEvent();
     // links two deferred handshake packets.
@@ -79,9 +80,9 @@ TEST_F(MasterServerTest, Handle_Deferred_Handshake_With_Duplicate_Login)
 
 TEST_F(MasterServerTest, Handle_Deferred_Handshake_Result_Correctly)
 {
-    net::MasterServer SUT_server{ conf };
+    net::MasterServer SUT_server;
     auto defer_handshake_result = net::DeferredPacketResult{ &connection_descriptor, error::PACKET_RESULT_SUCCESS_LOGIN };
-    
+
     connection_descriptor.associate_game_player(1, game::PlayerType::GUEST, "user", "pass");
     SUT_server.handle_deferred_handshake_packet_result(&defer_handshake_result);
 
@@ -92,7 +93,7 @@ TEST_F(MasterServerTest, Handle_Deferred_Handshake_Result_Correctly)
 
 TEST_F(MasterServerTest, Handle_Deferred_Handshake_Result_of_Fail)
 {
-    net::MasterServer SUT_server{ conf };
+    net::MasterServer SUT_server;
     auto defer_handshake_result = net::DeferredPacketResult{ &connection_descriptor, error::PACKET_RESULT_FAIL_LOGIN };
 
     connection_descriptor.associate_game_player(1, game::PlayerType::GUEST, "user", "pass");
