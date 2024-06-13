@@ -28,6 +28,8 @@
     <ClCompile Include="net\connection_environment.cpp" />
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="util\compressor.cpp" />
+    <ClCompile Include="game\world.cpp" />
+    <ClCompile Include="proto\config.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -63,9 +65,9 @@
     <ClInclude Include="net\connection_environment.h" />
     <ClInclude Include="database\query.h" />
     <ClInclude Include="util\compressor.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="config\configuration.txt" />
+    <ClInclude Include="game\world.h" />
+    <ClInclude Include="game\block.h" />
+    <ClInclude Include="proto\config.pb.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />
@@ -75,5 +77,9 @@
     <None Include="database\sql\routines\create_login_and_user.sql" />
     <None Include="database\sql\routines\create_functions.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
+    <None Include="config\config.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="proto\config.proto" />
   </ItemGroup>
 </Project>

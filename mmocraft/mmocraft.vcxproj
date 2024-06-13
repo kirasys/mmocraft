@@ -24,7 +24,12 @@
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
+    <ClCompile Include="game\world.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
+    <ClCompile Include="proto\config.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="system_initializer.cpp" />
     <ClCompile Include="io\io_event.cpp" />
     <ClCompile Include="io\io_service.cpp" />
@@ -51,9 +56,12 @@
     <ClInclude Include="database\database_core.h" />
     <ClInclude Include="database\query.h" />
     <ClInclude Include="database\sql_statement.h" />
+    <ClInclude Include="game\block.h" />
     <ClInclude Include="game\entity.h" />
+    <ClInclude Include="game\world.h" />
     <ClInclude Include="game\player.h" />
     <ClInclude Include="net\connection_environment.h" />
+    <ClInclude Include="proto\config.pb.h" />
     <ClInclude Include="system_initializer.h" />
     <ClInclude Include="io\io_event.h" />
     <ClInclude Include="io\io_event_pool.h" />
@@ -82,9 +90,7 @@
     <ClInclude Include="win\win_type.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="config\configuration.txt" />
-  </ItemGroup>
-  <ItemGroup>
+    <None Include="config\config.json" />
     <None Include="database\sql\clean.sql" />
     <None Include="database\sql\configure.sql" />
     <None Include="database\sql\routines\create_database.sql" />
@@ -92,6 +98,17 @@
     <None Include="database\sql\routines\create_login_and_user.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="database\sql\variables.sql" />
+    <CustomBuild Include="proto\config.proto">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -170,7 +187,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>26495;</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -196,7 +213,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(Pr
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>26495;</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -223,7 +240,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(Pr
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>26495;</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -250,7 +267,7 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(Pr
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>26495;</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
