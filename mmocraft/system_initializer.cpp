@@ -18,12 +18,13 @@ namespace
         for (auto handler : system_terminatio_handlers)
             handler();
 
+        std::cerr << "Unexpected fatal error occured! exiting.." << std::endl;
         std::exit(0);
     }
 
     void termination_routine_for_signal(int signal)
     {
-        return;
+        termination_routine();
     }
 }
 
