@@ -147,7 +147,7 @@ namespace net
 
         DECLARE_PACKET_READ_METHOD(PacketHandshake);
 
-        PacketHandshake(std::string_view a_server_name, std::string_view a_motd, UserType a_user_type)
+        PacketHandshake(const std::string& a_server_name, const std::string& a_motd, UserType a_user_type)
             : Packet{ PacketID::Handshake }
             , server_name{ a_server_name.data(), a_server_name.size() }
             , motd{ a_motd.data(), a_motd.size() }
