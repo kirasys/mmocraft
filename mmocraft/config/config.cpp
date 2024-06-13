@@ -9,6 +9,9 @@
 #include "logging/error.h"
 #include "logging/logger.h"
 #include "proto/config.pb.h"
+#include "util/protobuf_util.h"
+
+namespace fs = std::filesystem;
 
 namespace {
     config::Configuration g_configuration;
@@ -54,31 +57,18 @@ namespace config {
     {
         set_default_configuration();
 
-        google::protobuf::util::JsonPrintOptions options;
-        options.add_whitespace = true;
-        options.always_print_primitive_fields = true;
-        options.preserve_proto_field_names = true;
-
-        std::string config_json;
-        google::protobuf::util::MessageToJsonString(g_configuration, &config_json, options);
-
-        std::ofstream config_file(config_file_path);
-        CONSOLE_LOG_IF(fatal, config_file.fail()) << "Fail to create config file at \"" << config_file_path << '"';
-
-        config_file << config_json << std::endl;
+        util::proto_message_to_json_file(g_configuration, config_file_path);
     }
 
     void load_config()
     {
-        if (not std::filesystem::exists(config_file_path)) {
+        if (not fs::exists(config_file_path)) {
             generate_config();
             CONSOLE_LOG(fatal) << "Configuration file is generated at \"" << config_file_path << "\". "
                 << "Please fill in appropriate values.";
         }
 
-        std::ifstream config_file(config_file_path);
-        std::string config_json((std::istreambuf_iterator<char>(config_file)), std::istreambuf_iterator<char>());
-        google::protobuf::util::JsonStringToMessage(config_json, &g_configuration);
+        util::json_file_to_proto_message(&g_configuration, config_file_path);
 
         set_system_configuration();
     }

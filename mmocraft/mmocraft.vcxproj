@@ -49,6 +49,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="util\compressor.cpp" />
+    <ClCompile Include="util\protobuf_util.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +83,7 @@
     <ClInclude Include="util\interval_task.h" />
     <ClInclude Include="util\lockfree_stack.h" />
     <ClInclude Include="util\noncopyable.h" />
+    <ClInclude Include="util\protobuf_util.h" />
     <ClInclude Include="util\string_util.h" />
     <ClInclude Include="util\time_util.h" />
     <ClInclude Include="win\object_pool.h" />

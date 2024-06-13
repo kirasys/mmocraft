@@ -30,6 +30,7 @@
     <ClCompile Include="util\compressor.cpp" />
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="proto\config.pb.cc" />
+    <ClCompile Include="util\protobuf_util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -68,6 +69,7 @@
     <ClInclude Include="game\world.h" />
     <ClInclude Include="game\block.h" />
     <ClInclude Include="proto\config.pb.h" />
+    <ClInclude Include="util\protobuf_util.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />
