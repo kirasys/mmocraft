@@ -6,6 +6,7 @@
 #include <string>
 
 #include "logging/error.h"
+#include "proto/config.pb.h"
 
 #define CHECK_DB_SUCCESS(ret) \
     if ((ret) != SQL_SUCCESS && (ret) != SQL_SUCCESS_WITH_INFO) \
@@ -55,11 +56,15 @@ namespace database
         return true;
     }
 
-    bool DatabaseCore::connect_with_password(const config::Configuration::DatabaseConfig& conf)
+    bool DatabaseCore::connect_with_password(const config::Configuration& conf)
     {
         const std::string connection_string{
             std::format("Driver={{{}}}; Server={}; Database={}; UID={}; PWD={}; Trusted_Connection=yes",
-                        conf.driver_name, conf.server_address, conf.database, conf.userid, conf.password)
+                        conf.database_driver_name(),
+                        conf.database_server_address(),
+                        conf.database_name(),
+                        conf.database_userid(),
+                        conf.database_password())
         };
 
         return connect(connection_string);

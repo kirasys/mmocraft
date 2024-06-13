@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "config/config.h"
+#include "proto/config.pb.h"
 #include "logging/error.h"
 #include "net/packet.h"
 #include "net/server_core.h"
@@ -212,7 +214,7 @@ namespace net
         const auto& conf = config::get_config();
 
         PacketHandshake handshake_packet{
-            conf.server.server_name, conf.server.motd, 
+            conf.server_name(), conf.server_motd(),
             self_player->get_player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
         };
 

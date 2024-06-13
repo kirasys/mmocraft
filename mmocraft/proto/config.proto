@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package config;
+
+message Configuration {
+    // server config (starts from 0)
+    string server_ip = 1;
+    int32  server_port = 2;
+    uint32 server_max_player = 3;
+    string server_name = 4;
+    string server_motd = 5;
+
+    // world config (starts from 100)
+    int32  world_width = 106;
+    int32  world_height = 107;
+    int32  world_length = 108;
+    string world_save_dir = 109;
+
+    // database config (starts from 200)
+    string database_driver_name = 201;
+    string database_server_address = 202;
+    string database_name = 203;
+    string database_userid = 204;
+    string database_password = 205;
+
+    // log config (starts from 300)
+    string log_file_path = 301;
+
+    // system config (starts from 400)
+    uint32 system_page_size = 401;
+    uint32 system_alllocation_granularity = 402;
+    uint32 system_num_of_processors = 403;
+}

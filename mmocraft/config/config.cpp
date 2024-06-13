@@ -1,170 +1,95 @@
 #include "pch.h"
 #include "config.h"
 
-#include <fstream>
-#include <sstream>
-#include <map>
+#include <iostream>
 #include <string>
-#include <string_view>
-#include <algorithm>
+#include <filesystem>
+#include <google/protobuf/util/json_util.h>
 
 #include "logging/error.h"
 #include "logging/logger.h"
+#include "proto/config.pb.h"
 
 namespace {
-    void trim(std::string_view& line) noexcept {
-        line.remove_prefix(std::min(line.find_first_not_of(' '), line.size()));
-        if (line.back() == ' ')
-            line.remove_suffix(line.size() - line.find_last_not_of(' ') - 1);
-    }
+    config::Configuration g_configuration;
 }
 
 namespace config {
-    using ConfigMap = std::map<std::string, std::string>;
+    void set_default_configuration()
+    {
+        // server default values
+        g_configuration.set_server_ip("127.0.0.1");
+        g_configuration.set_server_port(12345);
+        g_configuration.set_server_max_player(1000);
+        g_configuration.set_server_name("Massive Minecraft Classic Server");
+        g_configuration.set_server_motd("welcome to mmocraft server.");
 
-    // global variables
+        // world default values
+        g_configuration.set_world_width(1024);
+        g_configuration.set_world_height(256);
+        g_configuration.set_world_length(1024);
+        g_configuration.set_world_save_dir("world\\");
 
-    const char* config_file_path = "config/configuration.txt";
+        // log default values
+        g_configuration.set_log_file_path("server.log");
 
-    Configuration configuration;
-    
-    // private functions
+        // database default values
+        g_configuration.set_database_driver_name("ODBC Driver 17 for SQL Server");
+        g_configuration.set_database_name("mmocraft");
+        g_configuration.set_database_userid("mmocraft_login");
+        g_configuration.set_database_password("12341234");
+    }
 
-    ConfigMap parse_config(std::stringstream& config_ss) {
-        ConfigMap config_map;
+    void set_system_configuration()
+    {
+        SYSTEM_INFO sys_info;
+        ::GetSystemInfo(&sys_info);
 
-        std::string line;
-        while (std::getline(config_ss >> std::ws, line)) {
-            if (line.size() && (line[0] == '#' || line[0] == '['))
-                continue;
+        g_configuration.set_system_page_size(sys_info.dwPageSize);
+        g_configuration.set_system_alllocation_granularity(sys_info.dwAllocationGranularity);
+        g_configuration.set_system_num_of_processors(sys_info.dwNumberOfProcessors);
+    }
 
-            auto colon_pos = line.find(':');
-            if (colon_pos == std::string::npos)
-                continue;
+    void generate_config()
+    {
+        set_default_configuration();
 
-            std::string_view key = line;
-            key.remove_suffix(key.size() - colon_pos);
-            trim(key);
+        google::protobuf::util::JsonPrintOptions options;
+        options.add_whitespace = true;
+        options.always_print_primitive_fields = true;
+        options.preserve_proto_field_names = true;
 
-            std::string_view value = line;
-            value.remove_prefix(colon_pos + 1);
-            trim(value);
+        std::string config_json;
+        google::protobuf::util::MessageToJsonString(g_configuration, &config_json, options);
 
-            config_map[std::string(key)] = std::string(value);
+        std::ofstream config_file(config_file_path);
+        CONSOLE_LOG_IF(fatal, config_file.fail()) << "Fail to create config file at \"" << config_file_path << '"';
+
+        config_file << config_json << std::endl;
+    }
+
+    void load_config()
+    {
+        if (not std::filesystem::exists(config_file_path)) {
+            generate_config();
+            CONSOLE_LOG(fatal) << "Configuration file is generated at \"" << config_file_path << "\". "
+                << "Please fill in appropriate values.";
         }
 
-        return config_map;
+        std::ifstream config_file(config_file_path);
+        std::string config_json((std::istreambuf_iterator<char>(config_file)), std::istreambuf_iterator<char>());
+        google::protobuf::util::JsonStringToMessage(config_json, &g_configuration);
+
+        set_system_configuration();
     }
 
-    std::tuple<ConfigMap, bool> read_config(const char* config_filepath) {
-        std::ifstream config_stm(config_filepath, std::ifstream::in);
-
-        if (config_stm.fail())
-            return { {}, false };
-
-        std::stringstream config_ss;
-        config_ss << config_stm.rdbuf();
-
-        return { parse_config(config_ss), true };
-    }
-
-    void load_log_config(Configuration::LogConfig& conf, ConfigMap conf_map)
+    const Configuration& get_config()
     {
-        auto end = conf_map.end();
-
-        // Log configuration
-        if (conf_map.find("log_level") != end)
-            conf.level = conf_map.at("log_level");
-
-        if (conf_map.find("log_file_path") != end)
-            conf.file_path = conf_map.at("log_file_path");
-    }
-
-    void load_system_config(Configuration::SystemConfig& conf, ConfigMap conf_map)
-    {
-        auto end = conf_map.end();
-
-        {
-            SYSTEM_INFO sys_info;
-            GetSystemInfo(&sys_info);
-
-            conf.page_size				 = sys_info.dwPageSize;
-            conf.alllocation_granularity = sys_info.dwAllocationGranularity;
-            conf.num_of_processors = sys_info.dwNumberOfProcessors;
-        }
-
-        if (conf_map.find("memory_pool_size") != end)
-            conf.memory_pool_size = MegaBytes{ std::stoi(conf_map.at("memory_pool_size")) };
-    }
-
-    void load_server_config(Configuration::ServerConfig& conf, ConfigMap conf_map)
-    {
-        auto end = conf_map.end();
-
-        if (conf_map.find("ip") != end)
-            conf.ip = conf_map.at("ip");
-
-        if (conf_map.find("port") != end)
-            conf.port = std::stoi(conf_map.at("port"));
-
-        if (conf_map.find("max_player") != end)
-            conf.max_player = std::stoi(conf_map.at("max_player"));
-
-        if (conf_map.find("server_name") != end)
-            conf.server_name = conf_map.at("server_name");
-
-        if (conf_map.find("motd") != end)
-            conf.motd = conf_map.at("motd");
-    }
-
-    void load_database_config(Configuration::DatabaseConfig& conf, ConfigMap conf_map)
-    {
-        auto end = conf_map.end();
-
-        if (conf_map.find("driver_name") != end)
-            conf.driver_name = conf_map.at("driver_name");
-
-        if (conf_map.find("server_address") != end)
-            conf.server_address = conf_map.at("server_address");
-
-        if (conf_map.find("database") != end)
-            conf.database = conf_map.at("database");
-
-        if (conf_map.find("userid") != end)
-            conf.userid = conf_map.at("userid");
-
-        if (conf_map.find("password") != end)
-            conf.password = conf_map.at("password");
-    }
-
-    // public functions
-
-    bool load_config(Configuration& conf) {
-        auto [conf_map, success] = read_config(config_file_path);
-        if (!success) return false;
-
-        try {
-            load_log_config(conf.log, conf_map);
-            load_system_config(conf.system, conf_map);
-            load_server_config(conf.server, conf_map);
-            load_database_config(conf.db, conf_map);
-        }
-        catch (const std::exception& ex) {
-            CONSOLE_LOG(error) << "Fail to setting config: " << ex.what();
-            return false;
-        }
-
-        return true;
-    }
-
-    const Configuration& get_config() {
-        return configuration;
+        return g_configuration;
     }
 
     void initialize_system()
     {
-        configuration.loaded = load_config(configuration);
-        CONSOLE_LOG_IF(fatal, not configuration.loaded) 
-            << "Fail to load configuration file at \"" << config_file_path << "\"";
+        load_config();
     }
 }

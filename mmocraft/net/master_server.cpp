@@ -5,13 +5,14 @@
 #include <cstring>
 
 #include "config/config.h"
+#include "proto/config.pb.h"
 #include "logging/error.h"
 #include "database/query.h"
 
 namespace net
 {
     MasterServer::MasterServer(const config::Configuration& conf)
-        : connection_env{ conf.server.max_player }
+        : connection_env{ conf.server_max_player() }
         , server_core{ *this, connection_env, conf }
         , database_core{ }
         
@@ -52,7 +53,7 @@ namespace net
         const auto& conf = config::get_config();
 
         // start database system.
-        if (not database_core.connect_with_password(conf.db))
+        if (not database_core.connect_with_password(conf))
             throw error::DATABASE_CONNECT;
 
         // start network I/O system.

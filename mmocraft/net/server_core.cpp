@@ -3,6 +3,8 @@
 
 #include <cassert>
 
+#include "config/config.h"
+#include "proto/config.pb.h"
 #include "logging/error.h"
 #include "net/connection_environment.h"
 
@@ -13,15 +15,15 @@ namespace net
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }
-        , server_info{ .ip = conf.server.ip,
-                         .port = conf.server.port, 
-                         .num_of_event_threads = conf.system.num_of_processors * 2}
+        , server_info{ .ip = conf.server_ip(),
+                         .port = conf.server_port(),
+                         .num_of_event_threads = conf.system_num_of_processors() * 2}
         , _listen_sock{ net::SocketProtocol::TCPv4 }
         , io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
-        , io_event_pool{ conf.server.max_player }
+        , io_event_pool{ conf.server_max_player() }
         , io_accept_event_data { io_event_pool.new_accept_event_data() }
         , io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
-        , connection_pool{ conf.server.max_player }
+        , connection_pool{ conf.server_max_player() }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
 
