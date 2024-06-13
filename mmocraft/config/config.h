@@ -1,6 +1,7 @@
 #pragma once
 
 namespace config {
+    constexpr const char* config_dir = "config/";
     constexpr const char* config_file_path = "config/config.json";
 
     class Configuration;
