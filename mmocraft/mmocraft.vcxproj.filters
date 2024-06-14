@@ -31,6 +31,8 @@
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="proto\config.pb.cc" />
     <ClCompile Include="util\protobuf_util.cpp" />
+    <ClCompile Include="proto\world_metadata.pb.cc" />
+    <ClCompile Include="win\file_mapping.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -70,6 +72,9 @@
     <ClInclude Include="game\block.h" />
     <ClInclude Include="proto\config.pb.h" />
     <ClInclude Include="util\protobuf_util.h" />
+    <ClInclude Include="proto\world_metadata.pb.h" />
+    <ClInclude Include="win\file_mapping.h" />
+    <ClInclude Include="net\connection_key.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />
@@ -83,5 +88,6 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="proto\config.proto" />
+    <CustomBuild Include="proto\world_metadata.proto" />
   </ItemGroup>
 </Project>
