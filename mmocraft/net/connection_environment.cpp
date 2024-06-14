@@ -30,7 +30,7 @@ namespace net
         return unsigned(unused_slot - connection_table.get());
     }
 
-    void ConnectionEnvironment::add_connection(ConnectionKey key, win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
+    void ConnectionEnvironment::on_connection_create(ConnectionKey key, win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
     {
         ++num_of_connections;
 

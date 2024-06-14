@@ -47,7 +47,7 @@ namespace net
             io_event_pool
         );
 
-        connection_env.add_connection(connection_key, std::move(connection_ptr));
+        connection_env.on_connection_create(connection_key, std::move(connection_ptr));
     }
 
     void ServerCore::start_network_io_service()

@@ -49,15 +49,20 @@ namespace net
 
         unsigned get_unused_slot();
 
-        // Append new allocated conneciton resource to manage life-cycle.
-        // * the accept I/O thread invokes this method, so append to the lock-free stack(pending_connections) first.
-        void add_connection(ConnectionKey, win::ObjectPool<net::Connection>::Pointer&&);
+        // Invoked after connection constructor finished.
+        // Register new created conneciton to the table and owns connection resource.
+        // * the accept I/O thread invokes this method.
+        void on_connection_create(ConnectionKey, win::ObjectPool<net::Connection>::Pointer&&);
 
+        // Invoked at the connection destructor.
+        // * the accept I/O thread invokes this method.
         void on_connection_delete(ConnectionKey);
 
+        // Invoked when connection goes offline. (thread-safe)
         void on_connection_offline(ConnectionKey);
 
         // Check unresponsiveness connections (timeout) and delete these connection.
+        // * the accept I/O thread invokes this method.
         void cleanup_expired_connection();
 
         void for_each_descriptor(void (*func) (net::Connection::Descriptor&));
