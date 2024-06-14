@@ -4,7 +4,7 @@
 #include <utility>
 #include <type_traits>
 
-#include "win_type.h"
+#include "win/win_type.h"
 #include "util/common_util.h"
 
 namespace {
@@ -30,8 +30,8 @@ namespace win
         }
 
         UniqueSocket(UniqueSocket&& other) noexcept
+            : _handle{ other._handle }
         {
-            _handle = other._handle;
             other._handle = INVALID_SOCKET;
         }
 
@@ -67,10 +67,8 @@ namespace win
         
         void reset(win::Socket handle = INVALID_SOCKET)
         {
-            if (is_valid()) {
-                std::swap(_handle, handle);
-                ::closesocket(handle);
-            }
+            clear();
+            _handle = handle;
         }
 
         bool is_valid() const
@@ -88,11 +86,68 @@ namespace win
         win::Socket _handle;
     };
 
-    using UniqueHandle = std::unique_ptr<std::remove_pointer_t<win::Handle>, decltype(::CloseHandle)*>;
-    inline auto make_unique_handle(win::Handle handle)
+    class UniqueHandle : util::NonCopyable
     {
-        return UniqueHandle(handle, ::CloseHandle);
-    }
+    public:
+        UniqueHandle() noexcept
+            : _handle{ INVALID_HANDLE_VALUE }
+        { }
+
+        UniqueHandle(win::Handle handle) noexcept
+            : _handle(handle)
+        { }
+
+        ~UniqueHandle()
+        {
+            clear();
+        }
+
+        bool is_valid() const
+        {
+            return _handle != INVALID_HANDLE_VALUE;
+        }
+
+        UniqueHandle(UniqueHandle&& other) noexcept
+            : _handle{ other._handle }
+        {
+            other._handle = INVALID_HANDLE_VALUE;
+        }
+
+        UniqueHandle& operator=(UniqueHandle&& other) noexcept
+        {
+            if (_handle != other._handle) {
+                clear();
+                _handle = other._handle;
+                other._handle = INVALID_HANDLE_VALUE;
+            }
+            return *this;
+        }
+
+        win::Handle get()
+        {
+            return _handle;
+        }
+
+        win::Handle get() const
+        {
+            return _handle;
+        }
+
+        void reset(win::Handle handle = INVALID_HANDLE_VALUE)
+        {
+            clear();
+            _handle = handle;
+        }
+
+    private:
+        void clear()
+        {
+            if (is_valid())
+                ::CloseHandle(_handle);
+        }
+
+        win::Handle _handle;
+    };
 
     class SharedHandle
     {
