@@ -2,44 +2,60 @@
 
 #include "system_initializer.h"
 #include "config/config.h"
+#include "proto/config.pb.h"
 #include "net/connection.h"
 #include "net/connection_environment.h"
+#include "net/server_core.h"
 
 #include "mock_socket.h"
 
-constexpr unsigned max_player_count = 10;
+constexpr unsigned max_player_count = 5;
 
 class ConnectionTest : public testing::Test
 {
 protected:
     ConnectionTest()
-        : network_init{}
-        , unique_sock{net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED) }
-        , SUT_connection{ handle_server_stub, connection_env, std::move(unique_sock), io_service, io_event_pool }
-    { }
+        : system_init(
+            []() {
+                net::Socket::initialize_system();
+                config::set_default_configuration();
+                config::get_server_config().set_max_player(max_player_count);
+            }
+        )
+    {
+       
+    }
+
+    void create_connection(int n)
+    {
+        for (int i = 0; i < n; i++)
+            server_core.new_connection(win::UniqueSocket());
+    }
+
+    setup::SystemInitialzer system_init;
 
     test::MockSocket mock;
 
-    setup::NetworkSystemInitialzer network_init;
-    win::UniqueSocket unique_sock;
-    net::ConnectionEnvironment connection_env{ max_player_count };
-
-    io::IoCompletionPort io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS };
-    io::IoEventPool io_event_pool{ max_player_count };
-
     net::PacketHandleServerStub handle_server_stub;
-    net::Connection SUT_connection;
+    io::IoAcceptEventData io_accept_data;
+    io::IoAcceptEvent io_accept_event{ &io_accept_data };
+
+    net::ConnectionEnvironment connection_env{ max_player_count };
+    net::ServerCore server_core{ handle_server_stub, connection_env };
 };
 
-TEST_F(ConnectionTest, Activate_Recv_Event_Correctly)
+TEST_F(ConnectionTest, Emit_Recv_Event_Correctly)
 {
+    create_connection(1);
+    auto SUT_connection = connection_env.get_connection(0);
+
     io::IoRecvEventData io_recv_data;
     io::IoRecvEvent io_recv_event(&io_recv_data);
 
     auto recv_buffer_start = reinterpret_cast<char*>(io_recv_data.data());
     auto recv_buffer_space = io::RECV_BUFFER_SIZE;
 
-    SUT_connection.descriptor.emit_receive_event(&io_recv_event);
+    SUT_connection->descriptor.emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(io_recv_event.is_processing);
     EXPECT_EQ(mock.get_recv_bytes(), recv_buffer_space);
@@ -47,27 +63,33 @@ TEST_F(ConnectionTest, Activate_Recv_Event_Correctly)
 
     // if receives only 100 bytes
     io_recv_data.push(nullptr, 100);
-    SUT_connection.descriptor.emit_receive_event(&io_recv_event);
+    SUT_connection->descriptor.emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(io_recv_event.is_processing);
     EXPECT_EQ(mock.get_recv_bytes(), recv_buffer_space - 100);
     EXPECT_EQ(mock.get_recv_buffer(), recv_buffer_start + 100);
 }
 
-TEST_F(ConnectionTest, Activate_Recv_Event_Fail_Insuffient_Buffer)
+TEST_F(ConnectionTest, Emit_Recv_Event_Fail_Insuffient_Buffer)
 {
+    create_connection(1);
+    auto SUT_connection = connection_env.get_connection(0);
+
     io::IoRecvEventData io_recv_data;
     io::IoRecvEvent io_recv_event(&io_recv_data);
 
     io_recv_data.push(nullptr, io::RECV_BUFFER_SIZE);
-    SUT_connection.descriptor.emit_receive_event(&io_recv_event);
+    SUT_connection->descriptor.emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(not io_recv_event.is_processing);
-    EXPECT_EQ(mock.get_recv_times(), 0);
+    EXPECT_EQ(mock.get_recv_times(), 0 + 1);
 }
 
-TEST_F(ConnectionTest, Activate_Send_Event_Correctly)
+TEST_F(ConnectionTest, Send_Event_Correctly)
 {
+    create_connection(1);
+    auto SUT_connection = connection_env.get_connection(0);
+
     io::IoSendEventData io_send_data;
     io::IoSendEvent io_send_event(&io_send_data);
 
@@ -76,7 +98,7 @@ TEST_F(ConnectionTest, Activate_Send_Event_Correctly)
 
     // send 100 bytes.
     io_send_data.commit(100);
-    SUT_connection.descriptor.emit_send_event(&io_send_event);
+    SUT_connection->descriptor.emit_send_event(&io_send_event);
 
     EXPECT_TRUE(io_send_event.is_processing);
     EXPECT_EQ(mock.get_send_bytes(), 100);
@@ -84,7 +106,7 @@ TEST_F(ConnectionTest, Activate_Send_Event_Correctly)
 
     // complete sending 50 bytes.
     io_send_data.pop(50);
-    SUT_connection.descriptor.emit_send_event(&io_send_event);
+    SUT_connection->descriptor.emit_send_event(&io_send_event);
 
     EXPECT_TRUE(io_send_event.is_processing);
     EXPECT_EQ(mock.get_send_bytes(), 50);
@@ -93,6 +115,9 @@ TEST_F(ConnectionTest, Activate_Send_Event_Correctly)
 
 TEST_F(ConnectionTest, Handle_Recv_Event_Correctly)
 {
+    create_connection(1);
+    auto SUT_connection = connection_env.get_connection(0);
+
     io::IoRecvEventData io_recv_data;
     io::IoRecvEvent io_recv_event(&io_recv_data);
 
@@ -108,17 +133,20 @@ TEST_F(ConnectionTest, Handle_Recv_Event_Correctly)
     for (int i = 0; i < 3; i++)
         std::memcpy(recv_buffer_start + i * sizeof(set_block_packet), set_block_packet, sizeof(set_block_packet));
 
-    io_recv_event.invoke_handler(SUT_connection, sizeof(set_block_packet) * 3);
+    io_recv_event.invoke_handler(*SUT_connection, sizeof(set_block_packet) * 3);
 
-    EXPECT_TRUE(SUT_connection.get_last_error().is_success())
-        << "Unexpected error:" << SUT_connection.get_last_error().to_string();
-    EXPECT_EQ(mock.get_recv_times(), 1);
+    EXPECT_TRUE(SUT_connection->get_last_error().is_success())
+        << "Unexpected error:" << SUT_connection->get_last_error().to_string();
+    EXPECT_EQ(mock.get_recv_times(), 1 + 1);
     // expect all data have been consumed.
     EXPECT_EQ(io_recv_data.size(), 0);
 }
 
 TEST_F(ConnectionTest, Handle_Recv_Event_Partial_Packet_Correctly)
 {
+    create_connection(1);
+    auto SUT_connection = connection_env.get_connection(0);
+
     io::IoRecvEventData io_recv_data;
     io::IoRecvEvent io_recv_event(&io_recv_data);
 
@@ -133,10 +161,10 @@ TEST_F(ConnectionTest, Handle_Recv_Event_Partial_Packet_Correctly)
     auto recv_buffer_start = io_recv_data.data();
     std::memcpy(recv_buffer_start, set_block_partial_packet, sizeof(set_block_partial_packet));
 
-    io_recv_event.invoke_handler(SUT_connection, sizeof(set_block_partial_packet));
+    io_recv_event.invoke_handler(*SUT_connection, sizeof(set_block_partial_packet));
 
     // expect going to receive nonetheless insuffient packet data error.
-    EXPECT_EQ(mock.get_recv_times(), 1);
+    EXPECT_EQ(mock.get_recv_times(), 1 + 1);
     // expect packet data is unchanged.
     EXPECT_EQ(io_recv_data.size(), sizeof(set_block_partial_packet)); 
 }
