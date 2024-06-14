@@ -9,7 +9,11 @@
 
 namespace util
 {
-    void proto_message_to_json_file(const google::protobuf::Message& message, const char* file_path);
+    void proto_message_to_json_file(const google::protobuf::Message& message, const std::filesystem::path&);
 
-    void json_file_to_proto_message(google::protobuf::Message* message, const char* file_path);
+    void proto_message_to_json_file(const google::protobuf::Message& message, const char*);
+
+    void json_file_to_proto_message(google::protobuf::Message* message, const std::filesystem::path&);
+
+    void json_file_to_proto_message(google::protobuf::Message* message, const char*);
 }

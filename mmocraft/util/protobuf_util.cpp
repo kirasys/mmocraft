@@ -1,9 +1,13 @@
 #include "pch.h"
 #include "protobuf_util.h"
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 namespace util
 {
-    void proto_message_to_json_file(const google::protobuf::Message& message, const char* file_path)
+    void proto_message_to_json_file(const google::protobuf::Message& message, const fs::path& file_path)
     {
         google::protobuf::util::JsonPrintOptions options;
         options.add_whitespace = true;
@@ -18,10 +22,20 @@ namespace util
         config_file << config_json << std::endl;
     }
 
-    void json_file_to_proto_message(google::protobuf::Message* message, const char* file_path)
+    void proto_message_to_json_file(const google::protobuf::Message& message, const char* file_path)
+    {
+        proto_message_to_json_file(message, fs::path(file_path));
+    }
+
+    void json_file_to_proto_message(google::protobuf::Message* message, const fs::path& file_path)
     {
         std::ifstream config_file(file_path);
         std::string config_json((std::istreambuf_iterator<char>(config_file)), std::istreambuf_iterator<char>());
         google::protobuf::util::JsonStringToMessage(config_json, message);
+    }
+
+    void json_file_to_proto_message(google::protobuf::Message* message, const char* file_path)
+    {
+        json_file_to_proto_message(message, fs::path(file_path));
     }
 }
