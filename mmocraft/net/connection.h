@@ -84,9 +84,9 @@ namespace net
 
             bool send_handshake_packet(const net::PacketHandshake&, SendType send_type = SendType::DEFERRED) const;
 
-            static void flush_server_message(net::ConnectionEnvironment&);
+            static void flush_send(net::ConnectionEnvironment&);
 
-            static void flush_client_message(net::ConnectionEnvironment&);
+            static void flush_receive(net::ConnectionEnvironment&);
 
         private:
             net::ConnectionKey _connection_key;

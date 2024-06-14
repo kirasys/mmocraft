@@ -42,8 +42,8 @@ namespace net
 
     void MasterServer::tick()
     {
-        Connection::Descriptor::flush_server_message(connection_env);
-        Connection::Descriptor::flush_client_message(connection_env);
+        Connection::Descriptor::flush_send(connection_env);
+        Connection::Descriptor::flush_receive(connection_env);
 
         flush_deferred_packet();
         handle_deferred_packet_result();

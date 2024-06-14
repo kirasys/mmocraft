@@ -223,7 +223,7 @@ namespace net
         return packet.serialize(io_send_events[send_type]->data);
     }
 
-    void Connection::Descriptor::flush_server_message(net::ConnectionEnvironment& connection_env)
+    void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection::Descriptor& desc) {
             for (auto event : desc.io_send_events) {
@@ -235,7 +235,7 @@ namespace net
         connection_env.for_each_descriptor(flush_message);
     }
 
-    void Connection::Descriptor::flush_client_message(net::ConnectionEnvironment& connection_env)
+    void Connection::Descriptor::flush_receive(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection& conn) {
             for (auto event : conn.descriptor.io_send_events) {
