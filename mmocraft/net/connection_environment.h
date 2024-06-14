@@ -17,9 +17,13 @@ namespace net
 
         // it's the same as player identity number, so we can get it by dereferencing the connection.
         // but, dereferencing offlined conenctions should be avoid. use this identity instead.
+        // it is used to verify that no same (identity) users already logged in.
         unsigned identity = 0;      // (always greater than 0)
+
         net::Connection* connection;
         win::ObjectPool<net::Connection>::Pointer connection_life;
+
+        std::uint32_t created_at = 0;
     };
 
     class ConnectionEnvironment : util::NonCopyable
@@ -47,9 +51,9 @@ namespace net
         // * the accept I/O thread invokes this method, so append to the lock-free stack(pending_connections) first.
         void append_connection(win::ObjectPool<net::Connection>::Pointer&&);
 
-        void on_connection_delete(unsigned);
+        void on_connection_delete(ConnectionKey);
 
-        void on_connection_offline(unsigned);
+        void on_connection_offline(ConnectionKey);
 
         // Check unresponsiveness connections (timeout) and delete these connection.
         void cleanup_expired_connection();
@@ -60,9 +64,11 @@ namespace net
 
         // Set identity if there are no already logged in users using same identity.
         // * deferred packet thread invokes this method.
-        bool set_authentication_key(unsigned, unsigned);
+        bool set_authentication_identity(ConnectionKey, unsigned);
 
     private:
+        static std::atomic<std::uint32_t> connection_id_counter;
+        
         unsigned num_of_max_connections = 0;
         // number of active connections. it is used to limit accepting new clients.
         std::atomic<unsigned> num_of_connections{ 0 };

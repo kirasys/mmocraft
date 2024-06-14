@@ -21,6 +21,35 @@ namespace net
 
     class ConnectionEnvironment;
 
+    // ConnectionKey class is used when need to safely access the connection.
+    class ConnectionKey
+    {
+    public:
+        ConnectionKey() : key{ 0 }
+        { }
+
+        ConnectionKey(unsigned index, std::size_t created_at) : key{ index | (created_at << 32) }
+        { }
+
+        inline unsigned index() const
+        {
+            return key & 0xFFFFFFFF;
+        }
+
+        inline unsigned created_at() const
+        {
+            return unsigned(key >> 32);
+        }
+
+        inline bool is_expird(std::uint64_t tick) const
+        {
+            return created_at() != tick;
+        }
+
+    private:
+        std::uint64_t key;
+    };
+
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
     {
         // The minecrft beta server will disconnect a client,
@@ -89,7 +118,7 @@ namespace net
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
 
-            unsigned connection_table_index = 0;
+            ConnectionKey connection_key;
         };
 
         Connection(PacketHandleServer&, ConnectionEnvironment&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);

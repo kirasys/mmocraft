@@ -116,14 +116,14 @@ namespace net
 
     Connection::Descriptor::~Descriptor()
     {
-        connection_env.on_connection_delete(connection_table_index);
+        connection_env.on_connection_delete(connection_key);
     }
 
     void Connection::Descriptor::set_offline(std::size_t current_tick)
     {
         online = false;
         last_offline_tick = current_tick;
-        connection_env.on_connection_offline(connection_table_index);
+        connection_env.on_connection_offline(connection_key);
     }
 
     bool Connection::Descriptor::is_expired(std::size_t current_tick) const
@@ -224,11 +224,11 @@ namespace net
     bool Connection::Descriptor::associate_game_player
         (unsigned player_identity, game::PlayerType player_type, const char* username, const char* password)
     {
-        if (not connection_env.set_authentication_key(connection_table_index, player_identity))
-            return false;
+        if (not connection_env.set_authentication_identity(connection_key, player_identity))
+            return false; // already logged in.
 
         self_player = std::make_unique<game::Player>(
-            connection_table_index,
+            connection_key.index(),
             player_type,
             username,
             password

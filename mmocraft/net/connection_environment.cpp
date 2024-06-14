@@ -4,8 +4,12 @@
 #include <algorithm>
 #include <cassert>
 
+#include "util/time_util.h"
+
 namespace net
 {
+    std::atomic<std::uint32_t> ConnectionEnvironment::connection_id_counter{ 0 };
+
     ConnectionEnvironment::ConnectionEnvironment(unsigned max_connections)
         : num_of_max_connections{ max_connections }
         , connection_table{ new ConnectionEntry[max_connections]() }
@@ -33,11 +37,13 @@ namespace net
         auto& descriptor = a_connection_ptr.get()->descriptor;
 
         auto index = get_unused_table_index();
-        descriptor.connection_table_index = index;
+        auto created_at = util::current_monotonic_tick32();
+        descriptor.connection_key = ConnectionKey(index, created_at);
 
         // Note: should first activate the event before registering the connection to the table.
         descriptor.emit_receive_event(descriptor.io_recv_event);
 
+        connection_table[index].created_at = std::uint32_t(created_at);
         connection_table[index].connection = a_connection_ptr.get();
         connection_table[index].used.store(true, std::memory_order_release);
         connection_table[index].online = true;
@@ -45,15 +51,18 @@ namespace net
         connection_table[index].connection_life = std::move(a_connection_ptr);
     }
 
-    void ConnectionEnvironment::on_connection_delete(unsigned index)
+    void ConnectionEnvironment::on_connection_delete(ConnectionKey key)
     {
+        auto index = key.index();
+        connection_table[index].created_at = 0;
         connection_table[index].connection = nullptr;
         connection_table[index].identity = 0;
         connection_table[index].used.store(false, std::memory_order_release);
     }
 
-    void ConnectionEnvironment::on_connection_offline(unsigned index)
+    void ConnectionEnvironment::on_connection_offline(ConnectionKey key)
     {
+        auto index = key.index();
         connection_table[index].online = false;
     }
 
@@ -116,7 +125,7 @@ namespace net
         );
     }
 
-    bool ConnectionEnvironment::set_authentication_key(unsigned index, unsigned identity)
+    bool ConnectionEnvironment::set_authentication_identity(ConnectionKey connection_key, unsigned identity)
     {
         auto is_dulicated_user_not_exist = std::all_of(connection_table.get(), connection_table.get() + num_of_max_connections,
             [identity](const auto& entry) {
@@ -124,7 +133,7 @@ namespace net
             }
         );
 
-        connection_table[index].identity = identity;
+        connection_table[connection_key.index()].identity = identity;
 
         return is_dulicated_user_not_exist;
     }
