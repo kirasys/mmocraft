@@ -8,9 +8,9 @@ namespace setup
 
     void add_termination_handler(std::terminate_handler handler);
 
-    class NetworkSystemInitialzer
+    class SystemInitialzer
     {
     public:
-        NetworkSystemInitialzer();
+        SystemInitialzer(void (*func)());
     };
 }

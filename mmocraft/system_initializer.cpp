@@ -68,8 +68,8 @@ namespace setup
         system_terminatio_handlers.push_back(handler);
     }
 
-    NetworkSystemInitialzer::NetworkSystemInitialzer()
+    SystemInitialzer::SystemInitialzer(void (*func)())
     {
-        net::Socket::initialize_system();
+        func();
     }
 }
