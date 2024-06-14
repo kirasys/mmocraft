@@ -53,7 +53,7 @@ namespace game
 
     void World::on_player_handshake_success(net::ConnectionKey connection_key)
     {
-        if (auto conn = connection_env.try_acquire_connection(connection_key)) {
+        if (auto desc = connection_env.try_acquire_descriptor(connection_key)) {
             const auto& server_conf = config::get_server_config();
 
             net::PacketHandshake handshake_packet{
@@ -61,7 +61,7 @@ namespace game
                 players[connection_key.index()]->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
             };
 
-            conn->descriptor.send_handshake_packet(handshake_packet);
+            desc->send_handshake_packet(handshake_packet);
         }
     }
 
