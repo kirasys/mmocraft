@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package game;
+
+message WorldMetadata {
+    int32 format_version = 1;
+
+    int32 width = 2;
+    int32 height = 3;
+    int32 length = 4;
+    int32 volume = 5;
+
+    int32 spawn_x = 6;
+    int32 spawn_y = 7;
+    int32 spawn_z = 8;
+    int32 spawn_yaw = 9;
+    int32 spawn_pitch = 10;
+
+    uint64 created_at = 11;
+}
