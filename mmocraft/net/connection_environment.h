@@ -6,6 +6,7 @@
 
 #include "io/io_event_pool.h"
 #include "net/connection.h"
+#include "net/connection_key.h"
 #include "util/lockfree_stack.h"
 
 namespace net
@@ -14,11 +15,6 @@ namespace net
     {
         std::atomic<bool> used{ false };
         bool will_delete = true;
-
-        // it's the same as player identity number, so we can get it by dereferencing the connection.
-        // but, dereferencing offlined conenctions should be avoid. use this identity instead.
-        // it is used to verify that no same (identity) users already logged in.
-        unsigned identity = 0;      // (always greater than 0)
 
         net::Connection* connection;
         win::ObjectPool<net::Connection>::Pointer connection_life;
@@ -35,6 +31,17 @@ namespace net
         auto get_connection(int index)
         {
             return connection_table[index].connection;
+        }
+
+        std::uint32_t is_expired(ConnectionKey key)
+        {
+            return connection_table[key.index()].will_delete 
+                || key.created_at() != connection_table[key.index()].created_at;
+        }
+
+        net::Connection* try_acquire_connection(ConnectionKey key)
+        {
+            return is_expired(key) ? nullptr : connection_table[key.index()].connection;
         }
         
         unsigned size_of_connections() const
@@ -68,10 +75,6 @@ namespace net
         void for_each_descriptor(void (*func) (net::Connection::Descriptor&));
 
         void for_each_connection(void (*func) (net::Connection&));
-
-        // Set identity if there are no already logged in users using same identity.
-        // * deferred packet thread invokes this method.
-        bool set_authentication_identity(ConnectionKey, unsigned);
 
     private:
         static std::atomic<std::uint32_t> connection_id_counter;

@@ -3,9 +3,10 @@
 
 namespace game
 {
-    Player::Player(PlayerID player_id, PlayerType player_type, const char* username, const char* password)
-        : _id{ player_id }
-        , player_type{ player_type }
+    Player::Player(net::ConnectionKey a_connection_key, unsigned identity, PlayerType player_type, const char* username, const char* password)
+        : _connection_key{ a_connection_key }
+        , _identity{ identity }
+        , _player_type{ player_type }
     {
         ::strcpy_s(_username, username);
         if (player_type == PlayerType::NEW_USER)

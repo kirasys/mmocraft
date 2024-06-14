@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "net/packet.h"
+#include "net/connection_key.h"
 #include "util/common_util.h"
 
 namespace game
@@ -31,21 +32,38 @@ namespace game
     class Player : util::NonCopyable
     {
     public:
-        Player(PlayerID, PlayerType, const char* username, const char* password);
+        Player(net::ConnectionKey, unsigned identity, PlayerType, const char* username, const char* password);
 
-        PlayerID get_id() const
+        net::ConnectionKey connection_key() const
         {
-            return _id;
+            return _connection_key;
         }
 
-        PlayerType get_player_type() const
+        unsigned identity() const
         {
-            return player_type;
+            return _identity;
         }
+
+        PlayerType player_type() const
+        {
+            return _player_type;
+        }
+
+        PlayerID game_id() const
+        {
+            return PlayerID(_connection_key.index());
+        }
+
 
     private:
-        PlayerID _id;
-        PlayerType player_type;
+        net::ConnectionKey _connection_key;
+
+        // it's used to verify that no same (identity) users already logged in.
+        // same as player row number of the database's table (so always greater than 0)
+        unsigned _identity;
+
+        PlayerType _player_type;
+
         char _username[net::PacketFieldConstraint::max_username_length + 1];
         char _password[net::PacketFieldConstraint::max_password_length + 1];
     };

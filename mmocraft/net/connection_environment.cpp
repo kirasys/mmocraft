@@ -48,7 +48,6 @@ namespace net
         auto index = key.index();
         connection_table[index].created_at = 0;
         connection_table[index].connection = nullptr;
-        connection_table[index].identity = 0;
         connection_table[index].used.store(false, std::memory_order_release);
     }
 
@@ -97,18 +96,5 @@ namespace net
                 if (not entry.will_delete) func(*entry.connection);
             }
         );
-    }
-
-    bool ConnectionEnvironment::set_authentication_identity(ConnectionKey connection_key, unsigned identity)
-    {
-        auto is_dulicated_user_not_exist = std::all_of(connection_table.get(), connection_table.get() + num_of_max_connections,
-            [identity](const auto& entry) {
-                return !entry.identity || entry.identity != identity;
-            }
-        );
-
-        connection_table[connection_key.index()].identity = identity;
-
-        return is_dulicated_user_not_exist;
     }
 }

@@ -2,6 +2,8 @@
 
 #include "database/database_core.h"
 
+#include "game/world.h"
+
 #include "net/connection.h"
 #include "net/connection_environment.h"
 #include "net/deferred_packet.h"
@@ -42,6 +44,8 @@ namespace net
         net::ServerCore server_core;
 
         database::DatabaseCore database_core;
+
+        game::World world;
 
         DeferredPacketEvent<PacketHandshake, MasterServer> deferred_handshake_packet_event;
         PacketEvent* deferred_packet_events[1] = {

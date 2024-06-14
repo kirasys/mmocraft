@@ -5,15 +5,14 @@
 #include <string>
 #include <memory>
 
+#include "config/config.h"
 #include "net/socket.h"
 #include "net/packet.h"
-#include "net/connection.h"
 #include "net/deferred_packet.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
 #include "util/common_util.h"
-#include "config/config.h"
 
 namespace net
 {

@@ -115,7 +115,7 @@ namespace net
         io::IoRecvEvent* a_io_recv_event,
         io::IoSendEvent* a_io_immediate_send_event,
         io::IoSendEvent* a_io_deferred_send_event)
-        : connection_key{ a_connection_key }
+        : _connection_key{ a_connection_key }
         , connection_env{ a_connection_env }
         , client_socket{ std::move(a_sock) }
         , io_recv_event{ a_io_recv_event }
@@ -131,14 +131,14 @@ namespace net
 
     Connection::Descriptor::~Descriptor()
     {
-        connection_env.on_connection_delete(connection_key);
+        connection_env.on_connection_delete(_connection_key);
     }
 
     void Connection::Descriptor::set_offline(std::size_t current_tick)
     {
         online = false;
         last_offline_tick = current_tick;
-        connection_env.on_connection_offline(connection_key);
+        connection_env.on_connection_offline(_connection_key);
     }
 
     bool Connection::Descriptor::is_expired(std::size_t current_tick) const
@@ -221,35 +221,9 @@ namespace net
         return result;
     }
 
-    bool Connection::Descriptor::finalize_handshake(SendType send_type) const
+    bool Connection::Descriptor::send_handshake_packet(const net::PacketHandshake& packet, SendType send_type) const
     {
-        if (not online)
-            return false;
-
-        const auto& server_conf = config::get_server_config();
-
-        PacketHandshake handshake_packet{
-            server_conf.server_name(), server_conf.motd(),
-            self_player->get_player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
-        };
-
-        return handshake_packet.serialize(io_send_events[send_type]->data);
-    }
-
-    bool Connection::Descriptor::associate_game_player
-        (unsigned player_identity, game::PlayerType player_type, const char* username, const char* password)
-    {
-        if (not connection_env.set_authentication_identity(connection_key, player_identity))
-            return false; // already logged in.
-
-        self_player = std::make_unique<game::Player>(
-            connection_key.index(),
-            player_type,
-            username,
-            password
-        );
-
-        return true;
+        return packet.serialize(io_send_events[send_type]->data);
     }
 
     void Connection::Descriptor::flush_server_message(net::ConnectionEnvironment& connection_env)

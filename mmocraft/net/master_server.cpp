@@ -15,6 +15,7 @@ namespace net
         : connection_env{ server_conf.max_player() }
         , server_core{ *this, connection_env, server_conf }
         , database_core{ }
+        , world{ connection_env }
         
         , deferred_handshake_packet_event{ 
             &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_packet_result
@@ -97,7 +98,7 @@ namespace net
             auto result_code = result->result_code;
 
             if (result_code.is_login_success()) {
-                result->connection_descriptor->finalize_handshake();
+                world.on_player_handshake_success(result->connection_descriptor->connection_key());
                 continue;
             }
 
@@ -128,11 +129,12 @@ namespace net
                 continue;
             }
 
-            if (not packet->connection_descriptor->associate_game_player(
+            if (not world.add_player(
+                    packet->connection_descriptor->connection_key(),
                     player_search.get_player_identity(),
                     player_type,
                     packet->username,
-                    packet->password)) {
+                    packet->password )) {
                 event->push_result(packet->connection_descriptor, error::PACKET_RESULT_ALREADY_LOGIN);
                 continue;
             }

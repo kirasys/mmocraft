@@ -11,6 +11,7 @@
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "net/socket.h"
+#include "net/connection_key.h"
 #include "win/smart_handle.h"
 #include "util/common_util.h"
 #include "util/interval_task.h"
@@ -20,35 +21,6 @@ namespace net
     class PacketHandleServer;
 
     class ConnectionEnvironment;
-
-    // ConnectionKey class is used when need to safely access the connection.
-    class ConnectionKey
-    {
-    public:
-        ConnectionKey() : key{ 0 }
-        { }
-
-        ConnectionKey(unsigned index, std::size_t created_at) : key{ index | (created_at << 32) }
-        { }
-
-        inline unsigned index() const
-        {
-            return key & 0xFFFFFFFF;
-        }
-
-        inline unsigned created_at() const
-        {
-            return unsigned(key >> 32);
-        }
-
-        inline bool is_expird(std::uint64_t tick) const
-        {
-            return created_at() != tick;
-        }
-
-    private:
-        std::uint64_t key;
-    };
 
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
     {
@@ -84,9 +56,9 @@ namespace net
                 return online;
             }
 
-            win::Socket socket_handle() const
+            ConnectionKey connection_key() const
             {
-                return client_socket.get_handle();
+                return _connection_key;
             }
 
             void set_offline(std::size_t current_tick = util::current_monotonic_tick());
@@ -110,24 +82,20 @@ namespace net
 
             bool disconnect_deferred(std::string_view);
 
-            bool finalize_handshake(SendType send_type = SendType::DEFERRED) const;
-
-            bool associate_game_player(unsigned, game::PlayerType, const char* username, const char* password);
+            bool send_handshake_packet(const net::PacketHandshake&, SendType send_type = SendType::DEFERRED) const;
 
             static void flush_server_message(net::ConnectionEnvironment&);
 
             static void flush_client_message(net::ConnectionEnvironment&);
 
         private:
-            net::ConnectionKey connection_key;
+            net::ConnectionKey _connection_key;
             net::ConnectionEnvironment& connection_env;
 
             net::Socket client_socket;
 
             io::IoRecvEvent* io_recv_event = {};
             io::IoSendEvent* io_send_events[2] = {};
-
-            std::unique_ptr<game::Player> self_player;
 
             bool online = false;
             std::size_t last_offline_tick = 0;
