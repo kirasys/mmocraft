@@ -80,7 +80,7 @@ namespace net
 
             bool disconnect(SendType send_type, std::string_view);
 
-            bool send_handshake_packet(const net::PacketHandshake&, SendType send_type = SendType::DEFERRED) const;
+            bool send_handshake_packet(const net::PacketHandshake&) const;
 
             static void flush_send(net::ConnectionEnvironment&);
 

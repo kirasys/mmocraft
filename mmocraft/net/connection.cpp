@@ -204,9 +204,9 @@ namespace net
         return result;
     }
 
-    bool Connection::Descriptor::send_handshake_packet(const net::PacketHandshake& packet, SendType send_type) const
+    bool Connection::Descriptor::send_handshake_packet(const net::PacketHandshake& packet) const
     {
-        return packet.serialize(io_send_events[send_type]->data);
+        return packet.serialize(io_send_events[SendType::DEFERRED]->data);
     }
 
     void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
