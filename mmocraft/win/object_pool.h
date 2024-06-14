@@ -17,7 +17,7 @@
 
 namespace win
 {
-    extern std::atomic<std::uint32_t> num_of_free_object_pool;
+    extern std::atomic<std::uint8_t> num_of_free_object_pool;
     extern void* pool_table[];
 
     enum ObjectPoolErrorCode
