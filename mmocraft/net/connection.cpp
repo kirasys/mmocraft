@@ -34,7 +34,7 @@ namespace net
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
 
         // allow to service client socket events.
-        io_service.register_event_source(descriptor.client_socket.get_handle(), this);
+        io_service.register_event_source(descriptor.socket_handle(), this);
     }
 
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)

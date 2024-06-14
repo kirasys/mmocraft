@@ -66,7 +66,6 @@ namespace net
 
         struct Descriptor : util::NonCopyable, util::NonMovable
         {
-            friend Connection;
             friend ConnectionEnvironment;
 
             Descriptor() = default;
@@ -78,6 +77,11 @@ namespace net
             inline bool is_online() const
             {
                 return online;
+            }
+
+            win::Socket socket_handle() const
+            {
+                return client_socket.get_handle();
             }
 
             void set_offline(std::size_t current_tick = util::current_monotonic_tick());
@@ -106,7 +110,9 @@ namespace net
             bool associate_game_player(unsigned, game::PlayerType, const char* username, const char* password);
 
         private:
+            net::ConnectionKey connection_key;
             net::ConnectionEnvironment& connection_env;
+
             net::Socket client_socket;
 
             io::IoRecvEvent* io_recv_event = {};
@@ -117,8 +123,6 @@ namespace net
             bool online = false;
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
-
-            ConnectionKey connection_key;
         };
 
         Connection(PacketHandleServer&, ConnectionEnvironment&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
