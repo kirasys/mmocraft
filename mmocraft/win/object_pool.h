@@ -90,8 +90,8 @@ namespace win
             }
 
             Pointer(Pointer&& other) noexcept
+                : _id{ other._id }
             {
-                _id = other._id;
                 other._id = INVALID_OBJECT_ID;
             }
 
