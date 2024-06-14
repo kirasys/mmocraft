@@ -26,12 +26,6 @@ protected:
        
     }
 
-    void create_connection(int n)
-    {
-        for (int i = 0; i < n; i++)
-            server_core.new_connection(win::UniqueSocket());
-    }
-
     setup::SystemInitialzer system_init;
 
     test::MockSocket mock;
@@ -46,8 +40,8 @@ protected:
 
 TEST_F(ConnectionTest, Emit_Recv_Event_Correctly)
 {
-    create_connection(1);
-    auto SUT_connection = connection_env.get_connection(0);
+    auto connection_key = server_core.new_connection();
+    auto SUT_connection_descriptor = connection_env.try_acquire_descriptor(connection_key);
 
     io::IoRecvEventData io_recv_data;
     io::IoRecvEvent io_recv_event(&io_recv_data);
@@ -55,7 +49,7 @@ TEST_F(ConnectionTest, Emit_Recv_Event_Correctly)
     auto recv_buffer_start = reinterpret_cast<char*>(io_recv_data.data());
     auto recv_buffer_space = io::RECV_BUFFER_SIZE;
 
-    SUT_connection->descriptor.emit_receive_event(&io_recv_event);
+    SUT_connection_descriptor->emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(io_recv_event.is_processing);
     EXPECT_EQ(mock.get_recv_bytes(), recv_buffer_space);
@@ -63,7 +57,7 @@ TEST_F(ConnectionTest, Emit_Recv_Event_Correctly)
 
     // if receives only 100 bytes
     io_recv_data.push(nullptr, 100);
-    SUT_connection->descriptor.emit_receive_event(&io_recv_event);
+    SUT_connection_descriptor->emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(io_recv_event.is_processing);
     EXPECT_EQ(mock.get_recv_bytes(), recv_buffer_space - 100);
@@ -72,14 +66,14 @@ TEST_F(ConnectionTest, Emit_Recv_Event_Correctly)
 
 TEST_F(ConnectionTest, Emit_Recv_Event_Fail_Insuffient_Buffer)
 {
-    create_connection(1);
-    auto SUT_connection = connection_env.get_connection(0);
+    auto connection_key = server_core.new_connection();
+    auto SUT_connection_descriptor = connection_env.try_acquire_descriptor(connection_key);
 
     io::IoRecvEventData io_recv_data;
     io::IoRecvEvent io_recv_event(&io_recv_data);
 
     io_recv_data.push(nullptr, io::RECV_BUFFER_SIZE);
-    SUT_connection->descriptor.emit_receive_event(&io_recv_event);
+    SUT_connection_descriptor->emit_receive_event(&io_recv_event);
 
     EXPECT_TRUE(not io_recv_event.is_processing);
     EXPECT_EQ(mock.get_recv_times(), 0 + 1);
@@ -87,8 +81,8 @@ TEST_F(ConnectionTest, Emit_Recv_Event_Fail_Insuffient_Buffer)
 
 TEST_F(ConnectionTest, Send_Event_Correctly)
 {
-    create_connection(1);
-    auto SUT_connection = connection_env.get_connection(0);
+    auto connection_key = server_core.new_connection();
+    auto SUT_connection_descriptor = connection_env.try_acquire_descriptor(connection_key);
 
     io::IoSendEventData io_send_data;
     io::IoSendEvent io_send_event(&io_send_data);
@@ -98,7 +92,7 @@ TEST_F(ConnectionTest, Send_Event_Correctly)
 
     // send 100 bytes.
     io_send_data.commit(100);
-    SUT_connection->descriptor.emit_send_event(&io_send_event);
+    SUT_connection_descriptor->emit_send_event(&io_send_event);
 
     EXPECT_TRUE(io_send_event.is_processing);
     EXPECT_EQ(mock.get_send_bytes(), 100);
@@ -106,7 +100,7 @@ TEST_F(ConnectionTest, Send_Event_Correctly)
 
     // complete sending 50 bytes.
     io_send_data.pop(50);
-    SUT_connection->descriptor.emit_send_event(&io_send_event);
+    SUT_connection_descriptor->emit_send_event(&io_send_event);
 
     EXPECT_TRUE(io_send_event.is_processing);
     EXPECT_EQ(mock.get_send_bytes(), 50);
@@ -115,8 +109,8 @@ TEST_F(ConnectionTest, Send_Event_Correctly)
 
 TEST_F(ConnectionTest, Handle_Recv_Event_Correctly)
 {
-    create_connection(1);
-    auto SUT_connection = connection_env.get_connection(0);
+    auto connection_key = server_core.new_connection();
+    auto SUT_connection = connection_env.try_acquire_connection(connection_key);
 
     io::IoRecvEventData io_recv_data;
     io::IoRecvEvent io_recv_event(&io_recv_data);
@@ -144,8 +138,8 @@ TEST_F(ConnectionTest, Handle_Recv_Event_Correctly)
 
 TEST_F(ConnectionTest, Handle_Recv_Event_Partial_Packet_Correctly)
 {
-    create_connection(1);
-    auto SUT_connection = connection_env.get_connection(0);
+    auto connection_key = server_core.new_connection();
+    auto SUT_connection = connection_env.try_acquire_connection(connection_key);
 
     io::IoRecvEventData io_recv_data;
     io::IoRecvEvent io_recv_event(&io_recv_data);

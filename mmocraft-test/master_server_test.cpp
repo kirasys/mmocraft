@@ -24,12 +24,6 @@ protected:
 
     }
 
-    void create_connection(int n)
-    {
-        for (int i = 0; i < n; i++)
-            server_core.new_connection(win::UniqueSocket());
-    }
-
     setup::SystemInitialzer system_init;
     test::MockDatabase mock;
 
@@ -52,7 +46,7 @@ public:
 
     virtual bool is_exist_pending_result() const { return false; }
 
-    virtual void push_result(net::Connection::Descriptor*, error::ErrorCode error_code) override
+    virtual void push_result(net::ConnectionKey, error::ErrorCode error_code) override
     {
         results.push_back(error_code);
     }
@@ -62,12 +56,13 @@ public:
 TEST_F(MasterServerTest, Handle_Handshake_Correctly)
 {
     net::MasterServer SUT_server;
+
+    auto connection_key = server_core.new_connection();
     auto handshake_packet = net::PacketHandshake{ "servername", "motd", net::UserType::NORMAL };
 
-    create_connection(1);
-    auto connection = connection_env.get_connection(0);
-
-    auto handle_result = SUT_server.handle_handshake_packet(connection->descriptor, handshake_packet);
+    auto handle_result = SUT_server.handle_handshake_packet(
+        *connection_env.try_acquire_descriptor(connection_key),
+        handshake_packet);
 
     EXPECT_TRUE(handle_result.is_packet_handle_success());
 }
@@ -76,16 +71,19 @@ TEST_F(MasterServerTest, Handle_Deferred_Handshake_With_Duplicate_Login)
 {
     net::MasterServer SUT_server;
 
-    create_connection(1);
-    auto connection = connection_env.get_connection(0);
-
-    auto packet_event = MockPacketEvent();
+    auto connection_key = server_core.new_connection();
+\
     // links two deferred handshake packets.
     auto handshake_packet = net::PacketHandshake{ "user", "pass", net::UserType::NORMAL };
-    auto defer_handshake_packet = net::DeferredPacket<net::PacketHandshake>{ &connection->descriptor, handshake_packet };
-    auto defer_handshake_packet_next = net::DeferredPacket<net::PacketHandshake>{ &connection->descriptor, handshake_packet };
+    auto defer_handshake_packet = net::DeferredPacket<net::PacketHandshake>{
+        connection_key,
+        handshake_packet};
+    auto defer_handshake_packet_next = net::DeferredPacket<net::PacketHandshake>{ 
+        connection_key,
+        handshake_packet };
     defer_handshake_packet.next = &defer_handshake_packet_next;
 
+    auto packet_event = MockPacketEvent();
     mock.set_outbound_integer(1); // set player id
     SUT_server.handle_deferred_handshake_packet(&packet_event, &defer_handshake_packet);
 
