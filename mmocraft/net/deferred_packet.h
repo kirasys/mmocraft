@@ -8,7 +8,7 @@
 
 #include "logging/error.h"
 #include "net/packet.h"
-#include "net/connection.h"
+#include "net/connection_key.h"
 #include "util/common_util.h"
 
 namespace net
@@ -22,22 +22,22 @@ namespace net
     template <>
     struct DeferredPacket<PacketHandshake>
     {
-        DeferredPacket<PacketHandshake>(Connection::Descriptor* desc, const PacketHandshake& src_packet)
-            : connection_descriptor{ desc }
+        DeferredPacket<PacketHandshake>(net::ConnectionKey key, const PacketHandshake& src_packet)
+            : connection_key{ key }
         {
             ::strcpy_s(username, src_packet.username.data);
             ::strcpy_s(password, src_packet.password.data);
         }
 
         DeferredPacket<PacketHandshake>* next = nullptr;
-        Connection::Descriptor* connection_descriptor;
+        net::ConnectionKey connection_key;
         char username[net::PacketFieldConstraint::max_username_length + 1];
         char password[net::PacketFieldConstraint::max_password_length + 1];
     };
 
     struct DeferredPacketResult
     {
-        Connection::Descriptor* connection_descriptor;
+        net::ConnectionKey connection_key;
         error::ResultCode result_code;
         DeferredPacketResult* next = nullptr;
     };
@@ -73,7 +73,7 @@ namespace net
 
         virtual bool is_exist_pending_result() const = 0;
 
-        virtual void push_result(Connection::Descriptor*, error::ErrorCode) = 0;
+        virtual void push_result(net::ConnectionKey, error::ErrorCode) = 0;
     };
 
 
@@ -122,9 +122,9 @@ namespace net
             return pending_result_head.load(std::memory_order_relaxed) != nullptr;
         }
 
-        void push_packet(Connection::Descriptor* desc, const PacketType& src_packet)
+        void push_packet(net::ConnectionKey key, const PacketType& src_packet)
         {
-            auto new_packet = new DeferredPacket<PacketType>(desc, src_packet);
+            auto new_packet = new DeferredPacket<PacketType>(key, src_packet);
 
             new_packet->next = pending_packet_head.load(std::memory_order_relaxed);
 
@@ -148,10 +148,10 @@ namespace net
             );
         }
 
-        void push_result(Connection::Descriptor* desc, error::ErrorCode error_code) override
+        void push_result(net::ConnectionKey key, error::ErrorCode error_code) override
         {
             auto new_packet = new DeferredPacketResult{
-                .connection_descriptor = desc,
+                .connection_key = key,
                 .result_code = error_code,
                 .next = pending_result_head.load(std::memory_order_relaxed)
             };

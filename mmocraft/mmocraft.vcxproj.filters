@@ -23,7 +23,6 @@
     <ClCompile Include="database\database_core.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
-    <ClCompile Include="net\deferred_packet.cpp" />
     <ClCompile Include="system_initializer.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
     <ClCompile Include="database\query.cpp" />

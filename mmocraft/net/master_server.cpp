@@ -36,7 +36,7 @@ namespace net
 
     error::ResultCode MasterServer::handle_handshake_packet(net::Connection::Descriptor& conn_descriptor, PacketHandshake& packet)
     {
-        deferred_handshake_packet_event.push_packet(&conn_descriptor, packet);
+        deferred_handshake_packet_event.push_packet(conn_descriptor.connection_key(), packet);
         return error::PACKET_HANDLE_DEFERRED;
     }
 
@@ -98,13 +98,15 @@ namespace net
             auto result_code = result->result_code;
 
             if (result_code.is_login_success()) {
-                world.on_player_handshake_success(result->connection_descriptor->connection_key());
+                world.on_player_handshake_success(result->connection_key);
                 continue;
             }
 
-            result->connection_descriptor->disconnect_deferred(
-                result_code.to_string()
-            );
+            if (auto desc = connection_env.try_acquire_descriptor(result->connection_key)) {
+                desc->disconnect_deferred(
+                    result_code.to_string()
+                );
+            }
         }
     }
 
@@ -125,21 +127,21 @@ namespace net
             }
             
             if (player_type == game::PlayerType::INVALID) {
-                event->push_result(packet->connection_descriptor, error::PACKET_RESULT_FAIL_LOGIN);
+                event->push_result(packet->connection_key, error::PACKET_RESULT_FAIL_LOGIN);
                 continue;
             }
 
             if (not world.add_player(
-                    packet->connection_descriptor->connection_key(),
+                    packet->connection_key,
                     player_search.get_player_identity(),
                     player_type,
                     packet->username,
                     packet->password )) {
-                event->push_result(packet->connection_descriptor, error::PACKET_RESULT_ALREADY_LOGIN);
+                event->push_result(packet->connection_key, error::PACKET_RESULT_ALREADY_LOGIN);
                 continue;
             }
 
-            event->push_result(packet->connection_descriptor, error::PACKET_RESULT_SUCCESS_LOGIN);
+            event->push_result(packet->connection_key, error::PACKET_RESULT_SUCCESS_LOGIN);
         }
     }
 }

@@ -209,9 +209,6 @@ namespace net
 
     bool Connection::Descriptor::disconnect_deferred(std::string_view reason)
     {
-        if (not online)
-            return false;
-
         net::PacketDisconnectPlayer disconnect_packet{ reason };
         auto result = disconnect_packet.serialize(io_send_events[SendType::DEFERRED]->data);
     

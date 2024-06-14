@@ -33,15 +33,20 @@ namespace net
             return connection_table[index].connection;
         }
 
-        std::uint32_t is_expired(ConnectionKey key)
+        std::uint32_t is_expired(ConnectionKey key) const
         {
             return connection_table[key.index()].will_delete 
                 || key.created_at() != connection_table[key.index()].created_at;
         }
 
-        net::Connection* try_acquire_connection(ConnectionKey key)
+        net::Connection* try_acquire_connection(ConnectionKey key) const
         {
             return is_expired(key) ? nullptr : connection_table[key.index()].connection;
+        }
+
+        net::Connection::Descriptor* try_acquire_descriptor(ConnectionKey key) const
+        {
+            return is_expired(key) ? nullptr : &connection_table[key.index()].connection->descriptor;
         }
         
         unsigned size_of_connections() const

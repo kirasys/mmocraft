@@ -8,6 +8,7 @@
 #include "config/config.h"
 #include "net/socket.h"
 #include "net/packet.h"
+#include "net/connection.h"
 #include "net/deferred_packet.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
@@ -45,7 +46,7 @@ namespace net
 
         bool post_event(PacketEvent* event, ULONG_PTR event_handler_class);
 
-        void new_connection(win::UniqueSocket &&client_sock);
+        net::ConnectionKey new_connection(win::UniqueSocket &&client_sock = win::UniqueSocket());
 
         /**
          *  Event handler interface 
