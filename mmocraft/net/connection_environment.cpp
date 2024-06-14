@@ -12,7 +12,7 @@ namespace net
 
     ConnectionEnvironment::ConnectionEnvironment(unsigned max_connections)
         : num_of_max_connections{ max_connections }
-        , connection_table{ new ConnectionEntry[max_connections]() }
+        , connection_table(max_connections)
     {
         
     }
@@ -20,46 +20,46 @@ namespace net
     unsigned ConnectionEnvironment::get_unused_slot()
     {
         // find first unused slot.
-        auto unused_slot = std::find_if(connection_table.get(), connection_table.get() + num_of_max_connections,
+        auto unused_slot = std::find_if(connection_table.begin(), connection_table.end(),
             [](const auto& entry) {
                 return not entry.used.load(std::memory_order_relaxed);
             }
         );
 
-        assert(unused_slot - connection_table.get() < num_of_max_connections);
-        return unsigned(unused_slot - connection_table.get());
+        assert(unused_slot - connection_table.begin() < num_of_max_connections);
+        return unsigned(unused_slot - connection_table.begin());
     }
 
     void ConnectionEnvironment::on_connection_create(ConnectionKey key, win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
     {
         ++num_of_connections;
 
-        auto index = key.index();
-        connection_table[index].created_at = key.created_at();
-        connection_table[index].connection = a_connection_ptr.get();
-        connection_table[index].used.store(true, std::memory_order_release);
-        connection_table[index].will_delete = false;
+        auto& entry = connection_table[key.index()];
+        entry.created_at = key.created_at();
+        entry.connection = a_connection_ptr.get();
+        entry.used.store(true, std::memory_order_release);
+        entry.will_delete = false;
 
-        connection_table[index].connection_life = std::move(a_connection_ptr);
+        entry.connection_life = std::move(a_connection_ptr);
     }
 
     void ConnectionEnvironment::on_connection_delete(ConnectionKey key)
     {
-        auto index = key.index();
-        connection_table[index].created_at = 0;
-        connection_table[index].connection = nullptr;
-        connection_table[index].used.store(false, std::memory_order_release);
+        auto& entry = connection_table[key.index()];
+        entry.created_at = 0;
+        entry.connection = nullptr;
+        entry.used.store(false, std::memory_order_release);
     }
 
     void ConnectionEnvironment::on_connection_offline(ConnectionKey key)
     {
-        auto index = key.index();
-        connection_table[index].will_delete = true;
+        auto& entry = connection_table[key.index()];
+        entry.will_delete = true;
     }
 
     void ConnectionEnvironment::cleanup_expired_connection()
     {
-        auto deleted_connection_count = std::count_if(connection_table.get(), connection_table.get() + num_of_max_connections,
+        auto deleted_connection_count = std::count_if(connection_table.begin(), connection_table.end(),
             [](auto& entry) {
                 if (not entry.used) return false;
 
@@ -82,7 +82,7 @@ namespace net
 
     void ConnectionEnvironment::for_each_descriptor(void (*func) (net::Connection::Descriptor&))
     {
-        std::for_each_n(connection_table.get(), num_of_max_connections,
+        std::for_each(connection_table.begin(), connection_table.end(),
             [func](auto& entry) { 
                 if (not entry.will_delete) func(entry.connection->descriptor);
             }
@@ -91,7 +91,7 @@ namespace net
 
     void ConnectionEnvironment::for_each_connection(void (*func) (net::Connection&))
     {
-        std::for_each_n(connection_table.get(), num_of_max_connections,
+        std::for_each(connection_table.begin(), connection_table.end(),
             [func](auto& entry) {
                 if (not entry.will_delete) func(*entry.connection);
             }

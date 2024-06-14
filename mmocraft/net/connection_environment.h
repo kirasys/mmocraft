@@ -16,7 +16,7 @@ namespace net
         std::atomic<bool> used{ false };
         bool will_delete = true;
 
-        net::Connection* connection;
+        net::Connection* connection = nullptr;
         win::ObjectPool<net::Connection>::Pointer connection_life;
 
         std::uint32_t created_at = 0;
@@ -83,6 +83,6 @@ namespace net
         // number of active connections. it is used to limit accepting new clients.
         std::atomic<unsigned> num_of_connections{ 0 };
 
-        std::unique_ptr<ConnectionEntry[]> connection_table;
+        std::vector<ConnectionEntry> connection_table;
     };
 }
