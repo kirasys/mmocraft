@@ -83,7 +83,7 @@ namespace net
             return;
         }
 
-        descriptor.disconnect_immediate(last_error_code.to_string());
+        descriptor.disconnect(SendType::IMMEDIATE, last_error_code.to_string());
         event->is_processing = false;
     }
 
@@ -193,27 +193,13 @@ namespace net
             event->is_processing = false;
     }
 
-    bool Connection::Descriptor::disconnect_immediate(std::string_view reason)
-    {
-        if (not online)
-            return false;
-
-        net::PacketDisconnectPlayer disconnect_packet{ reason };
-        auto result = disconnect_packet.serialize(io_send_events[SendType::IMMEDIATE]->data);
-
-        set_offline();
-        emit_send_event(io_send_events[SendType::IMMEDIATE]); // TODO: resolve interleaving problem.
-
-        return result;
-    }
-
-    bool Connection::Descriptor::disconnect_deferred(std::string_view reason)
+    bool Connection::Descriptor::disconnect(SendType send_type, std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        auto result = disconnect_packet.serialize(io_send_events[SendType::DEFERRED]->data);
+        auto result = disconnect_packet.serialize(io_send_events[send_type]->data);
     
         set_offline();
-        emit_send_event(io_send_events[SendType::DEFERRED]); // TODO: resolve interleaving problem.
+        emit_send_event(io_send_events[send_type]); // TODO: resolve interleaving problem.
 
         return result;
     }

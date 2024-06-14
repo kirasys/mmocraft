@@ -103,9 +103,7 @@ namespace net
             }
 
             if (auto desc = connection_env.try_acquire_descriptor(result->connection_key)) {
-                desc->disconnect_deferred(
-                    result_code.to_string()
-                );
+                desc->disconnect(net::SendType::DEFERRED, result_code.to_string());
             }
         }
     }

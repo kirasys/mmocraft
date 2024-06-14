@@ -22,6 +22,12 @@ namespace net
 
     class ConnectionEnvironment;
 
+    enum SendType
+    {
+        IMMEDIATE,
+        DEFERRED,
+    };
+
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
     {
         // The minecrft beta server will disconnect a client,
@@ -30,12 +36,6 @@ namespace net
         static constexpr unsigned REQUIRED_MILLISECONDS_FOR_SECURE_DELETION = 5 * 1000;
 
     public:
-        enum SendType
-        {
-            IMMEDIATE,
-            DEFERRED,
-        };
-
         struct Descriptor : util::NonCopyable, util::NonMovable
         {
             Descriptor() = default;
@@ -78,9 +78,7 @@ namespace net
 
             void emit_send_event(io::IoSendEvent*);
 
-            bool disconnect_immediate(std::string_view);
-
-            bool disconnect_deferred(std::string_view);
+            bool disconnect(SendType send_type, std::string_view);
 
             bool send_handshake_packet(const net::PacketHandshake&, SendType send_type = SendType::DEFERRED) const;
 
