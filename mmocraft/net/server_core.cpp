@@ -36,16 +36,18 @@ namespace net
 
     void ServerCore::new_connection(win::UniqueSocket &&client_sock)
     {
-        // create a server for single client.
+        auto connection_key = ConnectionKey(connection_env.get_unused_slot(), util::current_monotonic_tick32());
+
         auto connection_ptr = connection_pool.new_object(
             packet_handle_server,
+            connection_key,
             connection_env,
             std::move(client_sock),
             io_service,
             io_event_pool
         );
 
-        connection_env.append_connection(std::move(connection_ptr));
+        connection_env.add_connection(connection_key, std::move(connection_ptr));
     }
 
     void ServerCore::start_network_io_service()

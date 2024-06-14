@@ -13,6 +13,7 @@
 namespace net
 {
     Connection::Connection(net::PacketHandleServer& a_packet_handle_server,
+                                net::ConnectionKey a_connection_key,
                                 net::ConnectionEnvironment& a_connection_env,
                                 win::UniqueSocket&& sock,
                                 io::IoCompletionPort& io_service,
@@ -28,13 +29,19 @@ namespace net
         , io_recv_event_data{ io_event_pool.new_recv_event_data() }
         , io_recv_event{ io_event_pool.new_recv_event(io_recv_event_data.get()) }
 
-        , descriptor{ a_connection_env, std::move(sock), io_recv_event.get(), io_immedidate_send_event.get(), io_send_event.get() }
+        , descriptor{ 
+            this,
+            a_connection_key,
+            a_connection_env, 
+            std::move(sock), 
+            io_service,
+            io_recv_event.get(), 
+            io_immedidate_send_event.get(), 
+            io_send_event.get()
+        }
     {
         if (not is_valid())
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
-
-        // allow to service client socket events.
-        io_service.register_event_source(descriptor.socket_handle(), this);
     }
 
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
@@ -100,18 +107,26 @@ namespace net
      *  Connection descriptor interface
      */
 
-    Connection::Descriptor::Descriptor(net::ConnectionEnvironment& a_connection_env,
+    Connection::Descriptor::Descriptor(net::Connection* a_connection,
+        net::ConnectionKey a_connection_key,
+        net::ConnectionEnvironment& a_connection_env,
         win::UniqueSocket&& a_sock,
+        io::IoService& a_io_service,
         io::IoRecvEvent* a_io_recv_event,
         io::IoSendEvent* a_io_immediate_send_event,
         io::IoSendEvent* a_io_deferred_send_event)
-        : connection_env{ a_connection_env }
+        : connection_key{ a_connection_key }
+        , connection_env{ a_connection_env }
         , client_socket{ std::move(a_sock) }
         , io_recv_event{ a_io_recv_event }
         , io_send_events{ a_io_immediate_send_event, a_io_deferred_send_event }
         , online{ true }
     {
         update_last_interaction_time();
+
+        // start to service client socket events.
+        a_io_service.register_event_source(client_socket.get_handle(), a_connection);
+        emit_receive_event(io_recv_event);
     }
 
     Connection::Descriptor::~Descriptor()
@@ -235,5 +250,35 @@ namespace net
         );
 
         return true;
+    }
+
+    void Connection::Descriptor::flush_server_message(net::ConnectionEnvironment& connection_env)
+    {
+        auto flush_message = [](Connection::Descriptor& desc) {
+            for (auto event : desc.io_send_events) {
+                if (not event->is_processing)
+                    desc.emit_send_event(event);
+            }
+        };
+
+        connection_env.for_each_descriptor(flush_message);
+    }
+
+    void Connection::Descriptor::flush_client_message(net::ConnectionEnvironment& connection_env)
+    {
+        auto flush_message = [](Connection& conn) {
+            for (auto event : conn.descriptor.io_send_events) {
+                if (not conn.descriptor.io_recv_event->is_processing) {
+                    conn.descriptor.io_recv_event->is_processing = true;
+
+                    // Note: receive event may stop only for one reason: insuffient buffer space.
+                    //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
+                    conn.descriptor.io_recv_event->invoke_handler(conn,
+                        conn.descriptor.io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
+                }
+            }
+        };
+
+        connection_env.for_each_connection(flush_message);
     }
 }

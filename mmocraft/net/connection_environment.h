@@ -13,7 +13,7 @@ namespace net
     struct ConnectionEntry
     {
         std::atomic<bool> used{ false };
-        bool online = false;
+        bool will_delete = true;
 
         // it's the same as player identity number, so we can get it by dereferencing the connection.
         // but, dereferencing offlined conenctions should be avoid. use this identity instead.
@@ -47,9 +47,11 @@ namespace net
             return num_of_max_connections;
         }
 
+        unsigned get_unused_slot();
+
         // Append new allocated conneciton resource to manage life-cycle.
         // * the accept I/O thread invokes this method, so append to the lock-free stack(pending_connections) first.
-        void append_connection(win::ObjectPool<net::Connection>::Pointer&&);
+        void add_connection(ConnectionKey, win::ObjectPool<net::Connection>::Pointer&&);
 
         void on_connection_delete(ConnectionKey);
 
@@ -58,9 +60,9 @@ namespace net
         // Check unresponsiveness connections (timeout) and delete these connection.
         void cleanup_expired_connection();
 
-        void flush_server_message();
+        void for_each_descriptor(void (*func) (net::Connection::Descriptor&));
 
-        void flush_client_message();
+        void for_each_connection(void (*func) (net::Connection&));
 
         // Set identity if there are no already logged in users using same identity.
         // * deferred packet thread invokes this method.
@@ -73,7 +75,6 @@ namespace net
         // number of active connections. it is used to limit accepting new clients.
         std::atomic<unsigned> num_of_connections{ 0 };
 
-        unsigned get_unused_table_index();
         std::unique_ptr<ConnectionEntry[]> connection_table;
     };
 }

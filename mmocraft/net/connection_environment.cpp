@@ -17,7 +17,7 @@ namespace net
         
     }
 
-    unsigned ConnectionEnvironment::get_unused_table_index()
+    unsigned ConnectionEnvironment::get_unused_slot()
     {
         // find first unused slot.
         auto unused_slot = std::find_if(connection_table.get(), connection_table.get() + num_of_max_connections,
@@ -30,23 +30,15 @@ namespace net
         return unsigned(unused_slot - connection_table.get());
     }
 
-    void ConnectionEnvironment::append_connection(win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
+    void ConnectionEnvironment::add_connection(ConnectionKey key, win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
     {
         ++num_of_connections;
 
-        auto& descriptor = a_connection_ptr.get()->descriptor;
-
-        auto index = get_unused_table_index();
-        auto created_at = util::current_monotonic_tick32();
-        descriptor.connection_key = ConnectionKey(index, created_at);
-
-        // Note: should first activate the event before registering the connection to the table.
-        descriptor.emit_receive_event(descriptor.io_recv_event);
-
-        connection_table[index].created_at = std::uint32_t(created_at);
+        auto index = key.index();
+        connection_table[index].created_at = key.created_at();
         connection_table[index].connection = a_connection_ptr.get();
         connection_table[index].used.store(true, std::memory_order_release);
-        connection_table[index].online = true;
+        connection_table[index].will_delete = false;
 
         connection_table[index].connection_life = std::move(a_connection_ptr);
     }
@@ -63,7 +55,7 @@ namespace net
     void ConnectionEnvironment::on_connection_offline(ConnectionKey key)
     {
         auto index = key.index();
-        connection_table[index].online = false;
+        connection_table[index].will_delete = true;
     }
 
     void ConnectionEnvironment::cleanup_expired_connection()
@@ -89,38 +81,20 @@ namespace net
         num_of_connections -= unsigned(deleted_connection_count);
     }
 
-    void ConnectionEnvironment::flush_server_message()
+    void ConnectionEnvironment::for_each_descriptor(void (*func) (net::Connection::Descriptor&))
     {
-        std::for_each_n(connection_table.get(), num_of_max_connections, 
-            [](auto& entry) {
-                if (not entry.online) return;
-
-                auto& desc = entry.connection->descriptor;
-
-                for (auto event : desc.io_send_events) {
-                    if (not event->is_processing)
-                        desc.emit_send_event(event);
-                }
+        std::for_each_n(connection_table.get(), num_of_max_connections,
+            [func](auto& entry) { 
+                if (not entry.will_delete) func(entry.connection->descriptor);
             }
         );
     }
 
-    void ConnectionEnvironment::flush_client_message()
+    void ConnectionEnvironment::for_each_connection(void (*func) (net::Connection&))
     {
         std::for_each_n(connection_table.get(), num_of_max_connections,
-            [](auto& entry) {
-                if (not entry.online) return;
-
-                auto& desc = entry.connection->descriptor;
-
-                if (not desc.io_recv_event->is_processing) {
-                    desc.io_recv_event->is_processing = true;
-
-                    // Note: receive event may stop only for one reason: insuffient buffer space.
-                    //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
-                    desc.io_recv_event->invoke_handler(*entry.connection,
-                    desc.io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
-                }
+            [func](auto& entry) {
+                if (not entry.will_delete) func(*entry.connection);
             }
         );
     }
