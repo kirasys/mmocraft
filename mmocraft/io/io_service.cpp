@@ -14,7 +14,7 @@ namespace io
     void IoCompletionPort::register_event_source(win::Handle event_source, IoEventHandler* event_handler)
     {
         if (::CreateIoCompletionPort(event_source, _handle, ULONG_PTR(event_handler), DWORD(0)) == NULL)
-            throw error::IO_SERVICE_CREATE_COMPLETION_PORT;
+            CONSOLE_LOG(error) << "Unable to attach io completion port.";
     }
 
     void IoCompletionPort::register_event_source(win::Socket event_source, IoEventHandler* event_handler)
