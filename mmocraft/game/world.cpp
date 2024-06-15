@@ -65,7 +65,7 @@ namespace game
         }
     }
 
-    bool World::load(const char* a_save_dir)
+    bool World::load_filesystem_world(std::string_view a_save_dir)
     {
         if (last_saved_tick) {
             CONSOLE_LOG(error) << "World is already loaded.";

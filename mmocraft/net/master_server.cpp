@@ -51,14 +51,19 @@ namespace net
 
     void MasterServer::serve_forever()
     {
-        const auto& conf = config::get_database_config();
+        const auto& db_conf = config::get_database_config();
 
         // start database system.
-        if (not database_core.connect_with_password(conf))
+        if (not database_core.connect_with_password(db_conf))
             throw error::DATABASE_CONNECT;
 
         // start network I/O system.
         server_core.start_network_io_service();
+
+        // load world map.
+        const auto& world_conf = config::get_world_config();
+
+        world.load_filesystem_world(world_conf.save_dir());
 
         while (1) {
             std::size_t start_tick = util::current_monotonic_tick();
