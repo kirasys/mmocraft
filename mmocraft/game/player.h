@@ -29,10 +29,29 @@ namespace game
         ADMIN,
     };
 
+    enum PlayerState
+    {
+        Initialized,
+
+        Handshake_Success,
+
+        World_Initialized,
+    };
+
     class Player : util::NonCopyable
     {
     public:
         Player(net::ConnectionKey, unsigned identity, PlayerType, const char* username, const char* password);
+
+        PlayerState state() const
+        {
+            return _state;
+        }
+
+        PlayerState set_state(PlayerState state)
+        {
+            _state = state;
+        }
 
         net::ConnectionKey connection_key() const
         {
@@ -56,6 +75,8 @@ namespace game
 
 
     private:
+        PlayerState _state = PlayerState::Initialized;
+
         net::ConnectionKey _connection_key;
 
         // it's used to verify that no same (identity) users already logged in.

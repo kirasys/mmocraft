@@ -2,6 +2,7 @@
 #include "world.h"
 
 #include <algorithm>
+#include <bitset>
 #include <cstring>
 #include <iostream>
 
@@ -62,7 +63,31 @@ namespace game
             };
 
             desc->send_handshake_packet(handshake_packet);
+
+            players[connection_key.index()]->set_state(game::PlayerState::Handshake_Success);
         }
+    }
+
+    void World::tick()
+    {
+        std::vector<unsigned> handshaked_player_indexs;
+        auto is_handshaked_player = [] (const game::Player* player) {
+            return player->state() == game::PlayerState::Handshake_Success;
+        };
+
+        // search player indexs given conditions matched.
+
+        bool (*filter_funcs[])(const game::Player*) = {
+            is_handshaked_player,
+        };
+
+        std::vector<unsigned>* matched_index_sets[] = {
+            &handshaked_player_indexs,
+        };
+
+        connection_env.poll_players(players, std::size(filter_funcs), filter_funcs, matched_index_sets);
+
+        // 
     }
 
     bool World::load_filesystem_world(std::string_view a_save_dir)

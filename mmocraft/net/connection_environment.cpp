@@ -46,7 +46,7 @@ namespace net
     void ConnectionEnvironment::on_connection_delete(ConnectionKey key)
     {
         auto& entry = connection_table[key.index()];
-        entry.created_at = 0;
+        entry.created_at = INVALID_TICK;
         entry.connection = nullptr;
         entry.used.store(false, std::memory_order_release);
     }
@@ -82,19 +82,45 @@ namespace net
 
     void ConnectionEnvironment::for_each_descriptor(void (*func) (net::Connection::Descriptor&))
     {
-        std::for_each(connection_table.begin(), connection_table.end(),
-            [func](auto& entry) { 
-                if (not entry.will_delete) func(entry.connection->descriptor);
-            }
-        );
+        for (auto& entry : connection_table) {
+            if (not entry.will_delete)
+                func(entry.connection->descriptor);
+        }
     }
 
     void ConnectionEnvironment::for_each_connection(void (*func) (net::Connection&))
     {
-        std::for_each(connection_table.begin(), connection_table.end(),
-            [func](auto& entry) {
-                if (not entry.will_delete) func(*entry.connection);
+        for (auto& entry : connection_table) {
+            if (not entry.will_delete)
+                func(*entry.connection);
+        }
+    }
+
+    void ConnectionEnvironment::select_players(unsigned n, std::bitset<1024>* bit_sets[], unsigned max_bit[], bool(*filter_funcs[])(net::ConnectionKey))
+    {
+        
+    }
+
+    void ConnectionEnvironment::poll_players(std::vector<std::unique_ptr<game::Player>>& players,
+                                                unsigned filter_count,
+                                                bool(*filters[])(const game::Player*),
+                                                std::vector<unsigned>* matched_index_sets[])
+    {
+        for (unsigned index = 0; index < connection_table.size(); index++) {
+            auto& entry = connection_table[index];
+            if (entry.will_delete)
+                continue;
+
+            // ensure safely accessing player pointers.
+            // Note: even if the player is freed by another thread, we can invoke non-virtual const method. (may return garbage value)
+            auto player = players[index].get();
+            if (!player || player->connection_key().created_at() != entry.created_at)
+                continue;
+
+            for (unsigned i = 0; i < filter_count; i++) {
+                if (filters[i](player))
+                    matched_index_sets[i]->push_back(index);
             }
-        );
+        }
     }
 }

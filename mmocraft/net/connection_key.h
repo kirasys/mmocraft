@@ -27,6 +27,11 @@ namespace net
             return unsigned(key >> 32);
         }
 
+        bool operator==(ConnectionKey rhs) const
+        {
+            return key == rhs.key;
+        }
+
     private:
         std::uint64_t key;
     };

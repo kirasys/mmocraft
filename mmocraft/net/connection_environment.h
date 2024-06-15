@@ -1,13 +1,17 @@
 #pragma once
 #include <atomic>
+#include <bitset>
 #include <list>
 #include <vector>
 #include <unordered_set>
 
 #include "io/io_event_pool.h"
+#include "game/player.h"
 #include "net/connection.h"
 #include "net/connection_key.h"
 #include "util/lockfree_stack.h"
+
+#define INVALID_TICK 0xDEADBEEF
 
 namespace net
 {
@@ -19,7 +23,7 @@ namespace net
         net::Connection* connection = nullptr;
         win::ObjectPool<net::Connection>::Pointer connection_life;
 
-        std::uint32_t created_at = 0;
+        std::uint32_t created_at = INVALID_TICK;
     };
 
     class ConnectionEnvironment : util::NonCopyable
@@ -80,6 +84,13 @@ namespace net
         void for_each_descriptor(void (*func) (net::Connection::Descriptor&));
 
         void for_each_connection(void (*func) (net::Connection&));
+
+        void select_players(unsigned n, std::bitset<1024>* [], unsigned [], bool(*[])(net::ConnectionKey));
+
+        void poll_players(std::vector<std::unique_ptr<game::Player>>&,
+                            unsigned filter_count,
+                            bool(*[])(const game::Player*),
+                            std::vector<unsigned>* matched_index_sets[]);
 
     private:
         static std::atomic<std::uint32_t> connection_id_counter;

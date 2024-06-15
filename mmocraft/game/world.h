@@ -33,11 +33,13 @@ namespace game
     public:
         World(net::ConnectionEnvironment&);
 
-        bool load_filesystem_world(std::string_view);
-
         bool add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username, const char* password);   
 
         void on_player_handshake_success(net::ConnectionKey);
+
+        void tick();
+
+        bool load_filesystem_world(std::string_view);
 
     private:
         void load_metadata();
