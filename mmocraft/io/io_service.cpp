@@ -3,7 +3,7 @@
 
 #include "logging/error.h"
 #include "logging/logger.h"
-#include "net/deferred_packet.h"
+#include "io/task.h"
 
 namespace io
 {
@@ -22,12 +22,12 @@ namespace io
         register_event_source(win::Handle(event_source), event_handler);
     }
 
-    bool IoCompletionPort::push_event(void* event, ULONG_PTR event_handler_inst)
+    bool IoCompletionPort::schedule_task(void* task, void* task_handler_inst)
     {
         return ::PostQueuedCompletionStatus(_handle, 
-            DWORD(io::CUSTOM_EVENT_SIGNAL),
-            event_handler_inst,
-            LPOVERLAPPED(event)) != 0;
+            DWORD(io::IO_TASK_SIGNAL),
+            ULONG_PTR(task_handler_inst),
+            LPOVERLAPPED(task)) != 0;
     }
 
     void IoCompletionPort::close() noexcept
@@ -62,10 +62,10 @@ namespace io
             }
 
             try {
-                if (transferred_bytes_or_signal == CUSTOM_EVENT_SIGNAL) {
-                    auto packet_event = reinterpret_cast<net::PacketEvent*>(overlapped);
+                if (transferred_bytes_or_signal == IO_TASK_SIGNAL) {
+                    auto task = reinterpret_cast<io::Task*>(overlapped);
 
-                    packet_event->invoke_handler(completion_key);
+                    task->invoke_handler(completion_key);
                 }
                 else {
                     auto io_event = CONTAINING_RECORD(overlapped, io::IoEvent, overlapped);

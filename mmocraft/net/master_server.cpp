@@ -17,8 +17,8 @@ namespace net
         , database_core{ }
         , world{ connection_env }
         
-        , deferred_handshake_packet_event{ 
-            &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_packet_result
+        , deferred_handshake_packet_task{
+            &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_result
         }
     {
 
@@ -36,7 +36,7 @@ namespace net
 
     error::ResultCode MasterServer::handle_handshake_packet(net::Connection::Descriptor& conn_descriptor, PacketHandshake& packet)
     {
-        deferred_handshake_packet_event.push_packet(conn_descriptor.connection_key(), packet);
+        deferred_handshake_packet_task.push_packet(conn_descriptor.connection_key(), packet);
         return error::PACKET_HANDLE_DEFERRED;
     }
 
@@ -79,10 +79,9 @@ namespace net
 
     void MasterServer::flush_deferred_packet()
     {
-        for (auto event : deferred_packet_events) {
-            if (event->is_exist_pending_packet()
-                && event->transit_state(PacketEvent::Unused, PacketEvent::Processing)) {
-                server_core.post_event(event, ULONG_PTR(this));
+        for (auto task : deferred_packet_tasks) {
+            if (task->exists() && task->transit_state(io::Task::Unused, io::Task::Processing)) {
+                server_core.schedule_task(task, this);
             }
         }
     }
@@ -93,11 +92,11 @@ namespace net
 
     void MasterServer::handle_deferred_packet_result()
     {
-        for (auto event : deferred_packet_events)
-            event->invoke_result_handler(/*handler_instance=*/ this);
+        for (auto task : deferred_packet_tasks)
+            task->invoke_result_handler(/*handler_instance=*/ this);
     }
 
-    void MasterServer::handle_deferred_handshake_packet_result(const DeferredPacketResult* results)
+    void MasterServer::handle_deferred_handshake_result(const DeferredPacketResult* results)
     {
         for (auto result = results; result; result = result->next) {
             auto result_code = result->result_code;
@@ -113,7 +112,7 @@ namespace net
         }
     }
 
-    void MasterServer::handle_deferred_handshake_packet(net::PacketEvent* event, const DeferredPacket<PacketHandshake>* packet_head)
+    void MasterServer::handle_deferred_handshake_packet(io::Task* task, const DeferredPacket<PacketHandshake>* packet_head)
     {
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
@@ -130,7 +129,7 @@ namespace net
             }
             
             if (player_type == game::PlayerType::INVALID) {
-                event->push_result(packet->connection_key, error::PACKET_RESULT_FAIL_LOGIN);
+                task->push_result(packet->connection_key, error::PACKET_RESULT_FAIL_LOGIN);
                 continue;
             }
 
@@ -140,11 +139,11 @@ namespace net
                     player_type,
                     packet->username,
                     packet->password )) {
-                event->push_result(packet->connection_key, error::PACKET_RESULT_ALREADY_LOGIN);
+                task->push_result(packet->connection_key, error::PACKET_RESULT_ALREADY_LOGIN);
                 continue;
             }
 
-            event->push_result(packet->connection_key, error::PACKET_RESULT_SUCCESS_LOGIN);
+            task->push_result(packet->connection_key, error::PACKET_RESULT_SUCCESS_LOGIN);
         }
     }
 }

@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 
+#include "io/task.h"
 #include "logging/error.h"
 #include "net/packet.h"
 #include "net/connection_key.h"
@@ -42,59 +43,24 @@ namespace net
         DeferredPacketResult* next = nullptr;
     };
 
-    class PacketEvent
-    {
-    public:
-        enum State
-        {
-            Unused,
-            Processing,
-            Failed,
-        };
-
-        virtual ~PacketEvent() = default;
-
-        State _state = Unused;
-
-        bool transit_state(State old_state, State new_state)
-        {
-            if (_state == old_state) {
-                _state = new_state;
-                return true;
-            }
-            return false;
-        }
-
-        virtual void invoke_handler(ULONG_PTR event_handler_inst) = 0;
-
-        virtual void invoke_result_handler(void* result_handler_inst) = 0;
-
-        virtual bool is_exist_pending_packet() const = 0;
-
-        virtual bool is_exist_pending_result() const = 0;
-
-        virtual void push_result(net::ConnectionKey, error::ErrorCode) = 0;
-    };
-
-
     template <typename PacketType, typename HandlerClass>
-    class DeferredPacketEvent: public PacketEvent
+    class DeferredPacketTask: public io::Task
     {
     public:
-        using handler_type = void (HandlerClass::*const)(PacketEvent*, const DeferredPacket<PacketType>*);
+        using handler_type = void (HandlerClass::*const)(io::Task*, const DeferredPacket<PacketType>*);
         using result_handler_type = void (HandlerClass::* const)(const DeferredPacketResult*);
 
-        DeferredPacketEvent(handler_type a_handler, result_handler_type a_result_handler)
+        DeferredPacketTask(handler_type a_handler, result_handler_type a_result_handler)
             : _handler{ a_handler }
             , _result_handler{ a_result_handler }
         { }
 
-        virtual void invoke_handler(ULONG_PTR event_handler_inst) override
+        virtual void invoke_handler(ULONG_PTR task_handler_inst) override
         {
             auto head_ptr = pop_pending_packet();
 
             std::invoke(_handler,
-                *reinterpret_cast<HandlerClass*>(event_handler_inst),
+                *reinterpret_cast<HandlerClass*>(task_handler_inst),
                 this,
                 head_ptr.get()
             );
@@ -112,12 +78,12 @@ namespace net
             );
         }
 
-        virtual bool is_exist_pending_packet() const override
+        virtual bool exists() const override
         {
             return pending_packet_head.load(std::memory_order_relaxed) != nullptr;
         }
 
-        virtual bool is_exist_pending_result() const override
+        virtual bool result_exists() const override
         {
             return pending_result_head.load(std::memory_order_relaxed) != nullptr;
         }

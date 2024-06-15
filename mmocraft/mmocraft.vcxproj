@@ -67,6 +67,7 @@
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\world.h" />
     <ClInclude Include="game\player.h" />
+    <ClInclude Include="io\task.h" />
     <ClInclude Include="net\connection_environment.h" />
     <ClInclude Include="net\connection_key.h" />
     <ClInclude Include="proto\config.pb.h" />

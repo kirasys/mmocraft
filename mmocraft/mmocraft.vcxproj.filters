@@ -74,6 +74,7 @@
     <ClInclude Include="proto\world_metadata.pb.h" />
     <ClInclude Include="win\file_mapping.h" />
     <ClInclude Include="net\connection_key.h" />
+    <ClInclude Include="io\task.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

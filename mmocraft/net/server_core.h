@@ -44,7 +44,7 @@ namespace net
 
         void start_network_io_service();
 
-        bool post_event(PacketEvent* event, ULONG_PTR event_handler_class);
+        bool schedule_task(io::Task* task, void* task_handler_inst);
 
         net::ConnectionKey new_connection(win::UniqueSocket &&client_sock = win::UniqueSocket());
 

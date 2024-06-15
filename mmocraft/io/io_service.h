@@ -52,7 +52,7 @@ namespace io
 
         void register_event_source(win::Socket event_source, IoEventHandler* event_handler);
 
-        bool push_event(void* event, ULONG_PTR event_handler_inst);
+        bool schedule_task(void* task, void* task_handler_inst);
 
         void run_event_loop_forever(DWORD get_event_timeout_ms = INFINITE);
 

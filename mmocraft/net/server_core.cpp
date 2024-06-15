@@ -67,9 +67,9 @@ namespace net
         _state = ServerCore::State::Running;
     }
 
-    bool ServerCore::post_event(PacketEvent* event, ULONG_PTR event_handler)
+    bool ServerCore::schedule_task(io::Task* task, void* task_handler_inst)
     {
-        return io_service.push_event(event, event_handler);
+        return io_service.schedule_task(task, task_handler_inst);
     }
 
     /** 

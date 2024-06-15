@@ -29,9 +29,9 @@ namespace net
          *  Deferred packet handler methods.
          */
 
-        void handle_deferred_handshake_packet_result(const DeferredPacketResult*);
+        void handle_deferred_handshake_result(const DeferredPacketResult*);
 
-        void handle_deferred_handshake_packet(net::PacketEvent*, const DeferredPacket<PacketHandshake>*);
+        void handle_deferred_handshake_packet(io::Task*, const DeferredPacket<PacketHandshake>*);
 
     private:
 
@@ -47,9 +47,9 @@ namespace net
 
         game::World world;
 
-        DeferredPacketEvent<PacketHandshake, MasterServer> deferred_handshake_packet_event;
-        PacketEvent* deferred_packet_events[1] = {
-            &deferred_handshake_packet_event
+        DeferredPacketTask<PacketHandshake, MasterServer> deferred_handshake_packet_task;
+        io::Task* deferred_packet_tasks[1] = {
+            &deferred_handshake_packet_task
         };
 
     };
