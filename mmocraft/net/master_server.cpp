@@ -13,13 +13,16 @@ namespace net
 {
     MasterServer::MasterServer(const config::Configuration_Server& server_conf)
         : connection_env{ server_conf.max_player() }
-        , server_core{ *this, connection_env, server_conf }
+        , io_service { io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
+        , server_core{ *this, connection_env, io_service, server_conf }
         , database_core{ }
         , world{ connection_env }
         
         , deferred_handshake_packet_task{
-            &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_result
+            &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_result, this
         }
+
+        , block_transfer_task{ &game::World::block_data_transfer_task, &world }
     {
 
     }
@@ -47,6 +50,8 @@ namespace net
 
         flush_deferred_packet();
         handle_deferred_packet_result();
+
+        schedule_world_task();
     }
 
     void MasterServer::serve_forever()
@@ -81,9 +86,15 @@ namespace net
     {
         for (auto task : deferred_packet_tasks) {
             if (task->exists() && task->transit_state(io::Task::Unused, io::Task::Processing)) {
-                server_core.schedule_task(task, this);
+                io_service.schedule_task(task);
             }
         }
+    }
+
+    void MasterServer::schedule_world_task()
+    {
+        if (block_transfer_task.transit_state(io::Task::Unused, io::Task::Processing))
+            io_service.schedule_task(&block_transfer_task);
     }
 
     /**
@@ -112,7 +123,7 @@ namespace net
         }
     }
 
-    void MasterServer::handle_deferred_handshake_packet(io::Task* task, const DeferredPacket<PacketHandshake>* packet_head)
+    void MasterServer::handle_deferred_handshake_packet(net::PacketTask* task, const DeferredPacket<PacketHandshake>* packet_head)
     {
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };

@@ -11,12 +11,12 @@
 namespace net
 {
     ServerCore::ServerCore
-        (PacketHandleServer& a_packet_handle_server, ConnectionEnvironment& a_connection_env, const config::Configuration_Server& server_conf)
+        (PacketHandleServer& a_packet_handle_server, ConnectionEnvironment& a_connection_env, io::IoService& a_io_service, const config::Configuration_Server& server_conf)
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }
         , _listen_sock{ net::SocketProtocol::TCPv4 }
-        , io_service{ io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
+        , io_service{ a_io_service }
         , io_event_pool{ server_conf.max_player() }
         , io_accept_event_data { io_event_pool.new_accept_event_data() }
         , io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
@@ -65,11 +65,6 @@ namespace net
             io_service.spawn_event_loop_thread().detach();
 
         _state = ServerCore::State::Running;
-    }
-
-    bool ServerCore::schedule_task(io::Task* task, void* task_handler_inst)
-    {
-        return io_service.schedule_task(task, task_handler_inst);
     }
 
     /** 

@@ -30,7 +30,7 @@ namespace net
             Stopped,
         };
 
-        ServerCore(PacketHandleServer&, ConnectionEnvironment&, const config::Configuration_Server& conf = config::get_server_config());
+        ServerCore(PacketHandleServer&, ConnectionEnvironment&, io::IoService&, const config::Configuration_Server& conf = config::get_server_config());
 
         ServerCore::State status() const
         {
@@ -43,8 +43,6 @@ namespace net
         }
 
         void start_network_io_service();
-
-        bool schedule_task(io::Task* task, void* task_handler_inst);
 
         net::ConnectionKey new_connection(win::UniqueSocket &&client_sock = win::UniqueSocket());
 
@@ -67,7 +65,7 @@ namespace net
 
         net::Socket _listen_sock;
 
-        io::IoCompletionPort io_service;
+        io::IoService& io_service;
 
         io::IoEventPool io_event_pool;
         win::ObjectPool<io::IoAcceptEventData>::Pointer io_accept_event_data;

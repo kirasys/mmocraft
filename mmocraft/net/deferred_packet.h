@@ -43,16 +43,27 @@ namespace net
         DeferredPacketResult* next = nullptr;
     };
 
-    template <typename PacketType, typename HandlerClass>
-    class DeferredPacketTask: public io::Task
+    class PacketTask : public io::Task
     {
     public:
-        using handler_type = void (HandlerClass::*const)(io::Task*, const DeferredPacket<PacketType>*);
+        virtual void invoke_result_handler(void* result_handler_inst) = 0;
+
+        virtual bool result_exists() const = 0;
+
+        virtual void push_result(net::ConnectionKey, error::ErrorCode) = 0;
+    };
+
+    template <typename PacketType, typename HandlerClass>
+    class DeferredPacketTask: public PacketTask
+    {
+    public:
+        using handler_type = void (HandlerClass::*const)(net::PacketTask*, const DeferredPacket<PacketType>*);
         using result_handler_type = void (HandlerClass::* const)(const DeferredPacketResult*);
 
-        DeferredPacketTask(handler_type a_handler, result_handler_type a_result_handler)
-            : _handler{ a_handler }
-            , _result_handler{ a_result_handler }
+        DeferredPacketTask(handler_type handler, result_handler_type result_handler, HandlerClass* handler_inst = nullptr)
+            : _handler{ _handler }
+            , _handler_inst{ handler_inst }
+            , _result_handler{ result_handler }
         { }
 
         virtual void invoke_handler(ULONG_PTR task_handler_inst) override
@@ -60,7 +71,7 @@ namespace net
             auto head_ptr = pop_pending_packet();
 
             std::invoke(_handler,
-                *reinterpret_cast<HandlerClass*>(task_handler_inst),
+                _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(task_handler_inst),
                 this,
                 head_ptr.get()
             );
@@ -146,6 +157,7 @@ namespace net
 
     private:
         handler_type _handler;
+        HandlerClass* _handler_inst = nullptr;
         result_handler_type _result_handler;
 
         std::atomic<DeferredPacket<PacketType>*> pending_packet_head{ nullptr };

@@ -3,6 +3,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <string_view>
 #include <ctime>
 #include <unordered_map>
@@ -78,6 +79,10 @@ namespace net
 
             void emit_send_event(io::IoSendEvent*);
 
+            bool emit_multicast_send_event(io::IoSendEventSharedData*);
+
+            void multicast_send(io::IoSendEventSharedData*);
+
             bool disconnect(SendType send_type, std::string_view);
 
             bool send_handshake_packet(const net::PacketHandshake&) const;
@@ -95,12 +100,17 @@ namespace net
             io::IoRecvEvent* io_recv_event = {};
             io::IoSendEvent* io_send_events[2] = {};
 
+            std::mutex multicast_data_append_lock;
+            std::vector<io::IoSendEventSharedData*> multicast_datas;
+            static constexpr unsigned num_of_multicast_event = 8;
+            std::vector<io::IoSendEvent> io_multicast_send_events;
+
             bool online = false;
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
         };
 
-        Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::IoCompletionPort& , io::IoEventPool&);
+        Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::IoService& , io::IoEventPool&);
 
         ~Connection() = default;
 

@@ -31,7 +31,7 @@ namespace net
 
         void handle_deferred_handshake_result(const DeferredPacketResult*);
 
-        void handle_deferred_handshake_packet(io::Task*, const DeferredPacket<PacketHandshake>*);
+        void handle_deferred_handshake_packet(net::PacketTask*, const DeferredPacket<PacketHandshake>*);
 
     private:
 
@@ -39,7 +39,11 @@ namespace net
 
         void flush_deferred_packet();
 
+        void schedule_world_task();
+
         net::ConnectionEnvironment connection_env;
+
+        io::IoCompletionPort io_service;
 
         net::ServerCore server_core;
 
@@ -48,9 +52,10 @@ namespace net
         game::World world;
 
         DeferredPacketTask<PacketHandshake, MasterServer> deferred_handshake_packet_task;
-        io::Task* deferred_packet_tasks[1] = {
+        net::PacketTask* deferred_packet_tasks[1] = {
             &deferred_handshake_packet_task
         };
 
+        io::SimpleTask<game::World> block_transfer_task;
     };
 }

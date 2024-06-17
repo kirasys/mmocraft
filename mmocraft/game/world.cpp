@@ -22,6 +22,7 @@ namespace game
 {
     World::World(net::ConnectionEnvironment& a_connection_env)
         : connection_env{ a_connection_env }
+        , block_data_multicast{ a_connection_env }
         , players(connection_env.size_of_max_connections())
     {
 
@@ -63,9 +64,19 @@ namespace game
             };
 
             desc->send_handshake_packet(handshake_packet);
-
-            players[connection_key.index()]->set_state(game::PlayerState::Handshake_Success);
+            handshaked_players.push(connection_key);
         }
+    }
+
+    void World::block_data_transfer_task()
+    {
+        std::vector<net::ConnectionKey> block_data_receivers;
+
+        auto handshaked_player_ptr = handshaked_players.pop();
+        for (auto player_node = handshaked_player_ptr.get(); player_node; player_node = player_node->next)
+            block_data_receivers.push_back(player_node->value);
+
+        //block_data_multicast.send(block_data_receivers, )
     }
 
     void World::tick()

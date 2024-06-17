@@ -8,8 +8,10 @@
 #include "game/player.h"
 #include "proto/world_metadata.pb.h"
 #include "net/connection_key.h"
+#include "net/multicast_manager.h"
 #include "win/file_mapping.h"
 #include "util/common_util.h"
+#include "util/lockfree_stack.h"
 
 namespace net
 {
@@ -37,6 +39,8 @@ namespace game
 
         void on_player_handshake_success(net::ConnectionKey);
 
+        void block_data_transfer_task();
+
         void tick();
 
         bool load_filesystem_world(std::string_view);
@@ -53,8 +57,10 @@ namespace game
         void create_metadata_file(Coordinate3D map_size) const;
 
         net::ConnectionEnvironment& connection_env;
+        net::MulticastManager block_data_multicast;
 
         std::vector<std::unique_ptr<game::Player>> players;
+        util::LockfreeStack<net::ConnectionKey> handshaked_players;
 
         WorldMetadata _metadata;
 

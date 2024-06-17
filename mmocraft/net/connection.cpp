@@ -16,7 +16,7 @@ namespace net
                                 net::ConnectionKey a_connection_key,
                                 net::ConnectionEnvironment& a_connection_env,
                                 win::UniqueSocket&& sock,
-                                io::IoCompletionPort& io_service,
+                                io::IoService& io_service,
                                 io::IoEventPool &io_event_pool)
         : packet_handle_server{ a_packet_handle_server }
 
@@ -124,6 +124,10 @@ namespace net
     {
         update_last_interaction_time();
 
+        // pre-assign fixed length multicast events.
+        for (unsigned i = 0; i < num_of_multicast_event; i++)
+            io_multicast_send_events.emplace_back(nullptr);
+
         // start to service client socket events.
         a_io_service.register_event_source(client_socket.get_handle(), a_connection);
         emit_receive_event(io_recv_event);
@@ -193,6 +197,39 @@ namespace net
             event->is_processing = false;
     }
 
+    bool Connection::Descriptor::emit_multicast_send_event(io::IoSendEventSharedData* event_data)
+    {
+        auto unused_event = std::find_if(io_multicast_send_events.begin(), io_multicast_send_events.end(),
+            [](auto& event) {
+                return not event.is_processing;
+            }
+        );
+
+        if (unused_event == io_multicast_send_events.end()) {
+            LOG(error) << "Insufficient multicast events.";
+            return false;
+        }
+
+        unused_event->set_data(event_data);
+
+        WSABUF wbuf[1] = {};
+        wbuf[0].buf = reinterpret_cast<char*>(event_data->begin());
+        wbuf[0].len = ULONG(event_data->size());
+
+        // should assign flag first to avoid data race.
+        unused_event->is_processing = true;
+        if (not client_socket.send(&unused_event->overlapped, wbuf))
+            return unused_event->is_processing = false;
+        
+        return true;
+    }
+
+    void Connection::Descriptor::multicast_send(io::IoSendEventSharedData* event_data)
+    {
+        std::lock_guard<std::mutex> lock(multicast_data_append_lock);
+        multicast_datas.push_back(event_data);
+    }
+
     bool Connection::Descriptor::disconnect(SendType send_type, std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
@@ -212,9 +249,22 @@ namespace net
     void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection::Descriptor& desc) {
+            // flush immedidate, deferred messages.
             for (auto event : desc.io_send_events) {
                 if (not event->is_processing)
                     desc.emit_send_event(event);
+            }
+
+            // flush multicast messages.
+            std::vector<io::IoSendEventSharedData*> multicast_datas;
+
+            {
+                std::lock_guard<std::mutex> lock(desc.multicast_data_append_lock);
+                multicast_datas.swap(desc.multicast_datas);
+            }
+
+            for (auto& event_data : multicast_datas) {
+                desc.emit_multicast_send_event(event_data);
             }
         };
 

@@ -46,10 +46,10 @@ namespace io
     void IoSendEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal)
     {
         // pre-processing
+        data->pop(transferred_bytes_or_signal);
+
         if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
             return;
-
-        data->pop(transferred_bytes_or_signal);
 
         event_handler.on_complete(this);
     }
