@@ -133,6 +133,40 @@ namespace net
         return true;
     }
 
+    PacketLevelDataChunk::PacketLevelDataChunk(char* block_data, unsigned block_data_size)
+        : Packet{ PacketID::LevelDataChunk }
+        , compressor{ block_data, block_data_size }
+    {
+        max_chunk_count = (compressor.deflate_bound() - 1) / chunk_size + 1;
+    }
+
+    std::size_t PacketLevelDataChunk::serialize(std::unique_ptr<std::byte[]>& serialized_data)
+    {
+        auto data_capacity = max_chunk_count * (chunk_size + 4);
+        serialized_data.reset(new std::byte[data_capacity]);
+
+        std::byte* buf_start = serialized_data.get();
+
+        auto remain_bytes = 0;
+        while ((remain_bytes = compressor.deflate_n(buf_start + 3, chunk_size)), remain_bytes != chunk_size) {
+            PacketStructure::write_byte(buf_start, id);
+
+            // write chunk length.
+            PacketStructure::write_short(buf_start, PacketFieldType::Short(chunk_size - remain_bytes));
+            
+            // write chunk data (already written)
+            buf_start += chunk_size;
+
+            // write percent complete
+            PacketStructure::write_byte(buf_start, 0); 
+        }
+
+        // add null padding
+        std::memset(buf_start - remain_bytes - 1, 0, remain_bytes != chunk_size ? remain_bytes : 0);
+
+        return buf_start - serialized_data.get();
+    }
+
     std::byte* PacketSetBlock::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);

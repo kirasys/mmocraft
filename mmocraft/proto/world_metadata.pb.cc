@@ -27,7 +27,7 @@ PROTOBUF_CONSTEXPR WorldMetadata::WorldMetadata(
   , /*decltype(_impl_.width_)*/0
   , /*decltype(_impl_.height_)*/0
   , /*decltype(_impl_.length_)*/0
-  , /*decltype(_impl_.volume_)*/0
+  , /*decltype(_impl_.volume_)*/0u
   , /*decltype(_impl_.spawn_x_)*/0
   , /*decltype(_impl_.spawn_y_)*/0
   , /*decltype(_impl_.spawn_z_)*/0
@@ -80,7 +80,7 @@ const char descriptor_table_protodef_world_5fmetadata_2eproto[] PROTOBUF_SECTION
   "\n\024world_metadata.proto\022\004game\"\325\001\n\rWorldMe"
   "tadata\022\026\n\016format_version\030\001 \001(\005\022\r\n\005width\030"
   "\002 \001(\005\022\016\n\006height\030\003 \001(\005\022\016\n\006length\030\004 \001(\005\022\016\n"
-  "\006volume\030\005 \001(\005\022\017\n\007spawn_x\030\006 \001(\005\022\017\n\007spawn_"
+  "\006volume\030\005 \001(\r\022\017\n\007spawn_x\030\006 \001(\005\022\017\n\007spawn_"
   "y\030\007 \001(\005\022\017\n\007spawn_z\030\010 \001(\005\022\021\n\tspawn_yaw\030\t "
   "\001(\005\022\023\n\013spawn_pitch\030\n \001(\005\022\022\n\ncreated_at\030\013"
   " \001(\004b\006proto3"
@@ -147,7 +147,7 @@ inline void WorldMetadata::SharedCtor(
     , decltype(_impl_.width_){0}
     , decltype(_impl_.height_){0}
     , decltype(_impl_.length_){0}
-    , decltype(_impl_.volume_){0}
+    , decltype(_impl_.volume_){0u}
     , decltype(_impl_.spawn_x_){0}
     , decltype(_impl_.spawn_y_){0}
     , decltype(_impl_.spawn_z_){0}
@@ -225,7 +225,7 @@ const char* WorldMetadata::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         } else
           goto handle_unusual;
         continue;
-      // int32 volume = 5;
+      // uint32 volume = 5;
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
           _impl_.volume_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
@@ -334,10 +334,10 @@ uint8_t* WorldMetadata::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_length(), target);
   }
 
-  // int32 volume = 5;
+  // uint32 volume = 5;
   if (this->_internal_volume() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_volume(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(5, this->_internal_volume(), target);
   }
 
   // int32 spawn_x = 6;
@@ -412,9 +412,9 @@ size_t WorldMetadata::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_length());
   }
 
-  // int32 volume = 5;
+  // uint32 volume = 5;
   if (this->_internal_volume() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_volume());
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_volume());
   }
 
   // int32 spawn_x = 6;

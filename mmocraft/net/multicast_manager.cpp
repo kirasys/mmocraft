@@ -3,12 +3,16 @@
 
 namespace net
 {
-    void MulticastManager::send(std::vector<net::ConnectionKey>& receivers, std::unique_ptr<std::byte>&& data, unsigned data_size)
+    void MulticastManager::send(std::vector<net::ConnectionKey>& receivers, std::unique_ptr<std::byte[]>&& data, std::size_t data_size)
     {
         if (util::current_monotonic_tick() > gc_timeout)
             gc();
 
-        auto& event_data = event_data_pool.emplace(std::move(data), data_size, data_size, receivers.size());
+        auto& event_data = event_data_pool.emplace(
+                  /*data = */ std::move(data),
+             /*data_size = */ unsigned(data_size),
+         /*data_capacity = */ unsigned(data_size),
+             /*ref_count = */ receivers.size());
 
         for (auto connection_key : receivers) {
             if (auto desc = connection_env.try_acquire_descriptor(connection_key)) {

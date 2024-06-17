@@ -225,13 +225,13 @@ class WorldMetadata final :
   void _internal_set_length(int32_t value);
   public:
 
-  // int32 volume = 5;
+  // uint32 volume = 5;
   void clear_volume();
-  int32_t volume() const;
-  void set_volume(int32_t value);
+  uint32_t volume() const;
+  void set_volume(uint32_t value);
   private:
-  int32_t _internal_volume() const;
-  void _internal_set_volume(int32_t value);
+  uint32_t _internal_volume() const;
+  void _internal_set_volume(uint32_t value);
   public:
 
   // int32 spawn_x = 6;
@@ -300,7 +300,7 @@ class WorldMetadata final :
     int32_t width_;
     int32_t height_;
     int32_t length_;
-    int32_t volume_;
+    uint32_t volume_;
     int32_t spawn_x_;
     int32_t spawn_y_;
     int32_t spawn_z_;
@@ -403,22 +403,22 @@ inline void WorldMetadata::set_length(int32_t value) {
   // @@protoc_insertion_point(field_set:game.WorldMetadata.length)
 }
 
-// int32 volume = 5;
+// uint32 volume = 5;
 inline void WorldMetadata::clear_volume() {
-  _impl_.volume_ = 0;
+  _impl_.volume_ = 0u;
 }
-inline int32_t WorldMetadata::_internal_volume() const {
+inline uint32_t WorldMetadata::_internal_volume() const {
   return _impl_.volume_;
 }
-inline int32_t WorldMetadata::volume() const {
+inline uint32_t WorldMetadata::volume() const {
   // @@protoc_insertion_point(field_get:game.WorldMetadata.volume)
   return _internal_volume();
 }
-inline void WorldMetadata::_internal_set_volume(int32_t value) {
+inline void WorldMetadata::_internal_set_volume(uint32_t value) {
   
   _impl_.volume_ = value;
 }
-inline void WorldMetadata::set_volume(int32_t value) {
+inline void WorldMetadata::set_volume(uint32_t value) {
   _internal_set_volume(value);
   // @@protoc_insertion_point(field_set:game.WorldMetadata.volume)
 }

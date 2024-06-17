@@ -21,7 +21,7 @@ namespace net
 
         }
 
-        void send(std::vector<net::ConnectionKey>& receivers, std::unique_ptr<std::byte>&& data, unsigned data_size);
+        void send(std::vector<net::ConnectionKey>& receivers, std::unique_ptr<std::byte[]>&& data, std::size_t data_size);
 
         void gc();
 

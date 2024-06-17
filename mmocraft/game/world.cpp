@@ -10,6 +10,7 @@
 #include "config/config.h"
 #include "proto/config.pb.h"
 #include "proto/world_metadata.pb.h"
+#include "net/packet.h"
 #include "net/connection_environment.h"
 #include "util/time_util.h"
 #include "util/protobuf_util.h"
@@ -70,13 +71,20 @@ namespace game
 
     void World::block_data_transfer_task()
     {
+        // compress and serialize block datas.
+        net::PacketLevelDataChunk level_packet(block_mapping.data(), _metadata.volume());
+
+        std::unique_ptr<std::byte[]> serialized_level_packet;
+        auto compressed_size = level_packet.serialize(serialized_level_packet);
+
+        // send level data packets to handshake complete players.
         std::vector<net::ConnectionKey> block_data_receivers;
 
         auto handshaked_player_ptr = handshaked_players.pop();
         for (auto player_node = handshaked_player_ptr.get(); player_node; player_node = player_node->next)
             block_data_receivers.push_back(player_node->value);
 
-        //block_data_multicast.send(block_data_receivers, )
+        block_data_multicast.send(block_data_receivers, std::move(serialized_level_packet), compressed_size);
     }
 
     void World::tick()

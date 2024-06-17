@@ -8,6 +8,7 @@
 
 #include "io/io_event.h"
 #include "logging/error.h"
+#include "util/compressor.h"
 
 #define DECLARE_PACKET_READ_METHOD(packet_type) \
     static std::byte* parse(std::byte* buf_start, std::byte* buf_end, net::Packet*); \
@@ -165,6 +166,19 @@ namespace net
         }
 
         bool serialize(io::IoEventData&) const;
+    };
+
+    struct PacketLevelDataChunk : Packet
+    {
+        static constexpr unsigned chunk_size = 1024;
+        std::size_t max_chunk_count = 0;
+
+        PacketLevelDataChunk(char* block_data, unsigned block_data_size);
+
+        std::size_t serialize(std::unique_ptr<std::byte[]>&);
+        
+    private:
+        util::Compressor compressor;
     };
 
     struct PacketSetBlock : Packet
