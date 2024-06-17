@@ -87,6 +87,8 @@ namespace net
 
             bool send_handshake_packet(const net::PacketHandshake&) const;
 
+            bool send_level_init_packet(const net::PacketLevelInit&) const;
+
             static void flush_send(net::ConnectionEnvironment&);
 
             static void flush_receive(net::ConnectionEnvironment&);

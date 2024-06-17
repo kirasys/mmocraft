@@ -251,6 +251,11 @@ namespace net
         return packet.serialize(*io_send_events[SendType::DEFERRED]->data);
     }
 
+    bool Connection::Descriptor::send_level_init_packet(const net::PacketLevelInit& packet) const
+    {
+        return packet.serialize(*io_send_events[SendType::DEFERRED]->data);
+    }
+
     void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection::Descriptor& desc) {

@@ -63,8 +63,11 @@ namespace game
                 server_conf.server_name(), server_conf.motd(),
                 players[connection_key.index()]->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
             };
+            net::PacketLevelInit level_init_packet;
 
             desc->send_handshake_packet(handshake_packet);
+            desc->send_level_init_packet(level_init_packet);
+
             handshaked_players.push(connection_key);
         }
     }
@@ -72,7 +75,11 @@ namespace game
     void World::block_data_transfer_task()
     {
         // compress and serialize block datas.
-        net::PacketLevelDataChunk level_packet(block_mapping.data(), _metadata.volume());
+        net::PacketLevelDataChunk level_packet(block_mapping.data(), _metadata.volume(),
+            net::PacketFieldType::Short(_metadata.width()),
+            net::PacketFieldType::Short(_metadata.height()),
+            net::PacketFieldType::Short(_metadata.length())
+        );
 
         std::unique_ptr<std::byte[]> serialized_level_packet;
         auto compressed_size = level_packet.serialize(serialized_level_packet);

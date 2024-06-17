@@ -133,16 +133,30 @@ namespace net
         return true;
     }
 
-    PacketLevelDataChunk::PacketLevelDataChunk(char* block_data, unsigned block_data_size)
+    bool PacketLevelInit::serialize(io::IoEventData& event_data) const
+    {
+        if (size_of_serialized() > event_data.unused_size())
+            return false;
+
+        std::byte* buf_start = event_data.data();
+        PacketStructure::write_byte(buf_start, id);
+        event_data.commit(1);
+
+        return true;
+    }
+
+    PacketLevelDataChunk::PacketLevelDataChunk
+        (char* block_data, unsigned block_data_size, PacketFieldType::Short width, PacketFieldType::Short height, PacketFieldType::Short length)
         : Packet{ PacketID::LevelDataChunk }
         , compressor{ block_data, block_data_size }
+        , x{ width }, y{ height }, z{ length }
     {
         max_chunk_count = (compressor.deflate_bound() - 1) / chunk_size + 1;
     }
 
     std::size_t PacketLevelDataChunk::serialize(std::unique_ptr<std::byte[]>& serialized_data)
     {
-        auto data_capacity = max_chunk_count * (chunk_size + 4);
+        auto data_capacity = max_chunk_count * (chunk_size + 4) + 7; // LevelData + LevelFinalize 
         serialized_data.reset(new std::byte[data_capacity]);
 
         std::byte* buf_start = serialized_data.get();
@@ -163,6 +177,12 @@ namespace net
 
         // add null padding
         std::memset(buf_start - remain_bytes - 1, 0, remain_bytes != chunk_size ? remain_bytes : 0);
+
+        // write level finalize information.
+        PacketStructure::write_byte(buf_start, PacketID::LevelFinalize);
+        PacketStructure::write_short(buf_start, x);
+        PacketStructure::write_short(buf_start, y);
+        PacketStructure::write_short(buf_start, z);
 
         return buf_start - serialized_data.get();
     }

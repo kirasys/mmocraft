@@ -168,12 +168,29 @@ namespace net
         bool serialize(io::IoEventData&) const;
     };
 
+    struct PacketLevelInit : Packet
+    {
+        PacketLevelInit()
+            : Packet{PacketID::LevelInitialize}
+        { }
+
+        inline std::size_t size_of_serialized() const
+        {
+            return 1;
+        }
+
+        bool serialize(io::IoEventData&) const;
+    };
+
     struct PacketLevelDataChunk : Packet
     {
         static constexpr unsigned chunk_size = 1024;
         std::size_t max_chunk_count = 0;
+        PacketFieldType::Short x;
+        PacketFieldType::Short y;
+        PacketFieldType::Short z;
 
-        PacketLevelDataChunk(char* block_data, unsigned block_data_size);
+        PacketLevelDataChunk(char* block_data, unsigned block_data_size, PacketFieldType::Short, PacketFieldType::Short, PacketFieldType::Short);
 
         std::size_t serialize(std::unique_ptr<std::byte[]>&);
         
