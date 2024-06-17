@@ -14,8 +14,10 @@ namespace io
     void IoRecvEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal)
     {
         // pre-processing
-        if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
+        if (transferred_bytes_or_signal == EOF_SIGNAL) { // EOF
+            event_handler.on_error();
             return;
+        }
 
         if (transferred_bytes_or_signal != RETRY_SIGNAL)
             data->push(nullptr, transferred_bytes_or_signal); // data was already appended by I/O. just update size only.
@@ -48,8 +50,10 @@ namespace io
         // pre-processing
         data->pop(transferred_bytes_or_signal);
 
-        if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
+        if (transferred_bytes_or_signal == EOF_SIGNAL) { // EOF
+            event_handler.on_error();
             return;
+        }
 
         event_handler.on_complete(this);
     }

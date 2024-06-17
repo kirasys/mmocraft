@@ -71,6 +71,11 @@ namespace net
      *  Event handler interface
      */
 
+    void ServerCore::on_error()
+    {
+        _state = ServerCore::State::Stopped;
+    }
+
     void ServerCore::on_complete(io::IoAcceptEvent* event)
     {
         if (not last_error_code.is_success()) {

@@ -73,6 +73,11 @@ namespace net
      *  Event Handler Interface
      */
     
+    void Connection::on_error()
+    {
+        descriptor.set_offline();
+    }
+
     /// recv event handler
 
     void Connection::on_complete(io::IoRecvEvent* event)

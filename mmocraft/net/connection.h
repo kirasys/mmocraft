@@ -130,6 +130,8 @@ namespace net
          *  Event Handler Interface
          */
 
+        virtual void on_error() override;
+
         virtual void on_complete(io::IoRecvEvent*) override;
 
         virtual std::size_t handle_io_event(io::IoRecvEvent*) override;

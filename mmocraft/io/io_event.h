@@ -202,7 +202,7 @@ namespace io
     class IoSendEventSharedData : public IoEventData
     {
     public:
-        IoSendEventSharedData(std::unique_ptr<std::byte>&& data, unsigned data_size, unsigned data_capacity, std::size_t ref_count)
+        IoSendEventSharedData(std::unique_ptr<std::byte[]>&& data, unsigned data_size, unsigned data_capacity, std::size_t ref_count)
             : _data{ std::move(data) }
             , _data_size{ data_size }
             , _data_capacity{ data_capacity }
@@ -277,7 +277,7 @@ namespace io
         }
 
     private:
-        std::unique_ptr<std::byte> _data;
+        std::unique_ptr<std::byte[]> _data;
         unsigned _data_size;
         unsigned _data_capacity;
 
@@ -338,6 +338,8 @@ namespace io
     class IoEventHandler
     {
     public:
+        virtual void on_error() = 0;
+
         virtual void on_complete(IoAcceptEvent*) { assert(false); }
 
         virtual void on_complete(IoRecvEvent*) { assert(false); }
