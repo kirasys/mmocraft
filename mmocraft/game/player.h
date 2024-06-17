@@ -48,7 +48,7 @@ namespace game
             return _state;
         }
 
-        PlayerState set_state(PlayerState state)
+        void set_state(PlayerState state)
         {
             _state = state;
         }
