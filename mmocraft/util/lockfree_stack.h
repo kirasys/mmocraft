@@ -43,9 +43,9 @@ namespace util
             );
         }
 
-        bool is_empty() const
+        bool empty() const
         {
-            return _head.load(std::memory_order_relaxed) != nullptr;
+            return _head.load(std::memory_order_relaxed) == nullptr;
         }
 
     private:

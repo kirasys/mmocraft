@@ -61,7 +61,7 @@ namespace net
         using result_handler_type = void (HandlerClass::* const)(const DeferredPacketResult*);
 
         DeferredPacketTask(handler_type handler, result_handler_type result_handler, HandlerClass* handler_inst = nullptr)
-            : _handler{ _handler }
+            : _handler{ handler }
             , _handler_inst{ handler_inst }
             , _result_handler{ result_handler }
         { }

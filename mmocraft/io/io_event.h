@@ -56,8 +56,6 @@ namespace io
 
         // raw buffer manipulation
 
-        virtual std::byte* data() = 0;
-
         virtual void commit(std::size_t n) = 0;
     };
 
@@ -101,11 +99,6 @@ namespace io
         bool push(std::byte*, std::size_t n) override;
 
         void pop(std::size_t n) override;
-
-        std::byte* data()
-        {
-            return _data;
-        }
 
         void commit(std::size_t n)
         {
@@ -175,11 +168,6 @@ namespace io
         {
             data_head += int(n);
             assert(data_head <= sizeof(_data));
-        }
-
-        std::byte* data() override
-        {
-            return _data;
         }
 
         void commit(std::size_t n) override
@@ -259,11 +247,6 @@ namespace io
         {
             // TODO: handling partial send;
             _ref_count--;
-        }
-
-        std::byte* data() override
-        {
-            return _data.get();
         }
 
         void commit(std::size_t n) override

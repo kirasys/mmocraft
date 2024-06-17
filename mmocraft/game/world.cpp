@@ -72,6 +72,11 @@ namespace game
         }
     }
 
+    bool World::need_block_transfer() const
+    {
+        return not handshaked_players.empty();
+    }
+
     void World::block_data_transfer_task()
     {
         // compress and serialize block datas.

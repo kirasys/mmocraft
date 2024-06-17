@@ -39,6 +39,8 @@ namespace game
 
         void on_player_handshake_success(net::ConnectionKey);
 
+        bool need_block_transfer() const;
+
         void block_data_transfer_task();
 
         void tick();

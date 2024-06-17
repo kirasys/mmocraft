@@ -121,14 +121,14 @@ namespace net
         if (size_of_serialized() > event_data.unused_size())
             return false;
 
-        std::byte* buf_start = event_data.data();
+        std::byte* buf_start = event_data.begin_unused();
         PacketStructure::write_byte(buf_start, id);
         PacketStructure::write_byte(buf_start, protocol_version);
         PacketStructure::write_string(buf_start, server_name);
         PacketStructure::write_string(buf_start, motd);
         PacketStructure::write_byte(buf_start, user_type);
 
-        event_data.commit(buf_start - event_data.data());
+        event_data.commit(buf_start - event_data.begin_unused());
 
         return true;
     }
@@ -138,7 +138,7 @@ namespace net
         if (size_of_serialized() > event_data.unused_size())
             return false;
 
-        std::byte* buf_start = event_data.data();
+        std::byte* buf_start = event_data.begin_unused();
         PacketStructure::write_byte(buf_start, id);
         event_data.commit(1);
 
@@ -213,11 +213,11 @@ namespace net
         if (size_of_serialized() > event_data.unused_size())
             return false;
 
-        std::byte* buf_start = event_data.data();
+        std::byte* buf_start = event_data.begin_unused();
         PacketStructure::write_byte(buf_start, id);
         PacketStructure::write_string(buf_start, reason);
         
-        event_data.commit(buf_start - event_data.data());
+        event_data.commit(buf_start - event_data.begin_unused());
 
         return true;
     }

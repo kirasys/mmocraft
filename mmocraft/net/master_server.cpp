@@ -93,7 +93,7 @@ namespace net
 
     void MasterServer::schedule_world_task()
     {
-        if (block_transfer_task.transit_state(io::Task::Unused, io::Task::Processing))
+        if (world.need_block_transfer() && block_transfer_task.transit_state(io::Task::Unused, io::Task::Processing))
             io_service.schedule_task(&block_transfer_task);
     }
 

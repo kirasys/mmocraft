@@ -25,7 +25,7 @@ namespace net
     {
         unsigned num_of_deleted = 0;
 
-        while (not event_data_pool.front().is_safe_delete()) {
+        while (not event_data_pool.empty() && not event_data_pool.front().is_safe_delete()) {
             event_data_pool.pop();
             num_of_deleted++;
         }
