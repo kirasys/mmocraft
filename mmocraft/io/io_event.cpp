@@ -18,14 +18,14 @@ namespace io
             return;
 
         if (transferred_bytes_or_signal != RETRY_SIGNAL)
-            data.push(nullptr, transferred_bytes_or_signal); // data was already appended by I/O. just update size only.
+            data->push(nullptr, transferred_bytes_or_signal); // data was already appended by I/O. just update size only.
 
         // deliver events to the owner.
         auto processed_bytes = event_handler.handle_io_event(this);
 
         // post-processing
         if (processed_bytes)
-            data.pop(processed_bytes);
+            data->pop(processed_bytes);
 
         event_handler.on_complete(this);
     }
@@ -49,7 +49,7 @@ namespace io
         if (transferred_bytes_or_signal == EOF_SIGNAL)	// EOF
             return;
 
-        data.pop(transferred_bytes_or_signal);
+        data->pop(transferred_bytes_or_signal);
 
         event_handler.on_complete(this);
     }

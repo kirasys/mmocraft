@@ -207,10 +207,10 @@ namespace io
 
         // NOTE: separate buffer space for better locality.
         //       the allocator(may be pool) responsible for release.
-        IoEventData& data;
+        IoEventData* data;
 
         IoEvent(IoEventData* a_data)
-            : data{ *a_data }
+            : data{ a_data }
         { }
 
         virtual ~IoEvent() = default;

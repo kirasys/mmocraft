@@ -93,7 +93,7 @@ error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event)
     DWORD bytes_received;
     BOOL success = event.fnAcceptEx(
         _handle, event.accepted_socket,
-        LPVOID(event.data.begin()),
+        LPVOID(event.data->begin()),
         0, // does not recevice packet data.
         sizeof(SOCKADDR_STORAGE) + 16, sizeof(SOCKADDR_STORAGE) + 16,
         &bytes_received,

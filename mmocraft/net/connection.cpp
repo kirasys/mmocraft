@@ -92,7 +92,7 @@ namespace net
         if (not descriptor.try_interact_with_client()) // timeout case: connection will be deleted soon.
             return 0; 
 
-        return process_packets(event->data.begin(), event->data.end());
+        return process_packets(event->data->begin(), event->data->end());
     }
 
     /// send event handler
@@ -163,14 +163,14 @@ namespace net
 
     void Connection::Descriptor::emit_receive_event(io::IoRecvEvent* event)
     {
-        if (not online || event->data.unused_size() < PacketStructure::max_size_of_packet_struct()) {
+        if (not online || event->data->unused_size() < PacketStructure::max_size_of_packet_struct()) {
             event->is_processing = false;
             return;
         }
 
         WSABUF wbuf[1] = {};
-        wbuf[0].buf = reinterpret_cast<char*>(event->data.begin_unused());
-        wbuf[0].len = ULONG(event->data.unused_size());
+        wbuf[0].buf = reinterpret_cast<char*>(event->data->begin_unused());
+        wbuf[0].len = ULONG(event->data->unused_size());
 
         // should assign flag first to avoid data race.
         event->is_processing = true;
@@ -180,12 +180,12 @@ namespace net
 
     void Connection::Descriptor::emit_send_event(io::IoSendEvent* event)
     {
-        if (event->data.size() == 0)
+        if (event->data->size() == 0)
             return;
 
         WSABUF wbuf[1] = {};
-        wbuf[0].buf = reinterpret_cast<char*>(event->data.begin());
-        wbuf[0].len = ULONG(event->data.size());
+        wbuf[0].buf = reinterpret_cast<char*>(event->data->begin());
+        wbuf[0].len = ULONG(event->data->size());
 
         // should assign flag first to avoid data race.
         event->is_processing = true; 
@@ -196,7 +196,7 @@ namespace net
     bool Connection::Descriptor::disconnect(SendType send_type, std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        auto result = disconnect_packet.serialize(io_send_events[send_type]->data);
+        auto result = disconnect_packet.serialize(*io_send_events[send_type]->data);
     
         set_offline();
         emit_send_event(io_send_events[send_type]); // TODO: resolve interleaving problem.
@@ -206,7 +206,7 @@ namespace net
 
     bool Connection::Descriptor::send_handshake_packet(const net::PacketHandshake& packet) const
     {
-        return packet.serialize(io_send_events[SendType::DEFERRED]->data);
+        return packet.serialize(*io_send_events[SendType::DEFERRED]->data);
     }
 
     void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
@@ -231,7 +231,7 @@ namespace net
                     // Note: receive event may stop only for one reason: insuffient buffer space.
                     //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
                     conn.descriptor.io_recv_event->invoke_handler(conn,
-                        conn.descriptor.io_recv_event->data.size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
+                        conn.descriptor.io_recv_event->data->size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
                 }
             }
         };
