@@ -54,7 +54,7 @@ namespace game
         
         void create_new_world() const;
 
-        void create_block_file(Coordinate3D map_size) const;
+        void create_block_file(Coordinate3D map_size, unsigned long map_volume) const;
 
         void create_metadata_file(Coordinate3D map_size) const;
 

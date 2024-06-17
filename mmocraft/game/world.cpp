@@ -37,7 +37,7 @@ namespace game
     {
         bool is_already_logged_in = std::any_of(players.begin(), players.end(),
             [player_identity](std::unique_ptr<game::Player>& player) {
-                return player && player->identity() == player_identity;
+                return player_identity && player && player->identity() == player_identity;
             }
         );
 
@@ -160,18 +160,22 @@ namespace game
         const auto& world_conf = config::get_world_config();
 
         auto map_size = Coordinate3D{ short(world_conf.width()), short(world_conf.height()), short(world_conf.length())};
-        auto map_volume = map_size.x * map_size.y * map_size.z;
+        unsigned long map_volume = map_size.x * map_size.y * map_size.z;
         
         // write world files to the disk.
-        create_block_file(map_size);
+        create_block_file(map_size, map_volume);
         create_metadata_file(map_size);
     }
 
-    void World::create_block_file(Coordinate3D map_size) const
+    void World::create_block_file(Coordinate3D map_size, unsigned long map_volume) const
     {
         auto blocks_ptr = WorldMapGenerator::generate_flat_world(map_size);
 
         std::ofstream block_file(block_data_path);
+        // block data header (map volume)
+        map_volume = ::htonl(map_volume);
+        block_file.write(reinterpret_cast<char*>(&map_volume), sizeof(map_volume));
+        // raw block data
         block_file.write(blocks_ptr.get(), map_size.x * map_size.y * map_size.z);
     }
 
@@ -205,7 +209,7 @@ namespace game
         auto num_of_dirt_block = plain_size * (map_size.y / 2);
         std::memset(blocks, BLOCK_DIRT, num_of_dirt_block);
         std::memset(blocks + num_of_dirt_block, BLOCK_GRASS, plain_size);
-        std::memset(blocks, BLOCK_BEDROCK, plain_size);
+        std::memset(blocks, BLOCK_WATER, plain_size);
 
         return std::unique_ptr<BlockID[]>(blocks);
     }
