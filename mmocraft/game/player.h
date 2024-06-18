@@ -36,6 +36,8 @@ namespace game
         Handshake_Completed,
 
         Level_Initialized,
+
+        Assigned_PlayerID,
     };
 
     class Player : util::NonCopyable
