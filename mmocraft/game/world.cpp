@@ -29,7 +29,7 @@ namespace game
 
     }
 
-    bool World::add_player(net::ConnectionKey connection_key, 
+    game::Player* World::add_player(net::ConnectionKey connection_key, 
                             unsigned player_identity,
                             game::PlayerType player_type,
                             const char* username,
@@ -41,19 +41,23 @@ namespace game
             }
         );
 
+        game::Player* player = nullptr;
+
         if (not is_already_logged_in) {
-            players[connection_key.index()].reset(new game::Player(
+            player = new game::Player(
                 connection_key,
                 player_identity,
                 player_type,
                 username,
                 password
-            ));
+            );
+
+            players[connection_key.index()].reset(player);
         }
 
-        return not is_already_logged_in;
+        return player;
     }
-
+    /*
     void World::on_player_handshake_success(net::ConnectionKey connection_key)
     {
         if (auto desc = connection_env.try_acquire_descriptor(connection_key)) {
@@ -71,7 +75,7 @@ namespace game
             handshaked_players.push(connection_key);
         }
     }
-
+    */
     bool World::need_block_transfer() const
     {
         return not handshaked_players.empty();
@@ -87,7 +91,7 @@ namespace game
         );
 
         std::unique_ptr<std::byte[]> serialized_level_packet;
-        auto compressed_size = level_packet.serialize(serialized_level_packet);
+        auto packet_size = level_packet.serialize(serialized_level_packet);
 
         // send level data packets to handshake complete players.
         std::vector<net::ConnectionKey> block_data_receivers;
@@ -96,14 +100,14 @@ namespace game
         for (auto player_node = handshaked_player_ptr.get(); player_node; player_node = player_node->next)
             block_data_receivers.push_back(player_node->value);
 
-        block_data_multicast.send(block_data_receivers, std::move(serialized_level_packet), compressed_size);
+        block_data_multicast.send(block_data_receivers, std::move(serialized_level_packet), packet_size);
     }
 
     void World::tick()
     {
         std::vector<unsigned> handshaked_player_indexs;
         auto is_handshaked_player = [] (const game::Player* player) {
-            return player->state() == game::PlayerState::Handshake_Success;
+            return player->state() == game::PlayerState::Level_Initialized;
         };
 
         // search player indexs given conditions matched.

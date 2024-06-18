@@ -264,6 +264,23 @@ namespace net
         return packet.serialize(*io_send_events[SendType::DEFERRED]->data);
     }
 
+    void Connection::Descriptor::on_handshake_success(game::Player* player)
+    {
+        const auto& server_conf = config::get_server_config();
+
+        net::PacketHandshake handshake_packet{
+            server_conf.server_name(), server_conf.motd(),
+            player->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
+        };
+        net::PacketLevelInit level_init_packet;
+
+        send_handshake_packet(handshake_packet);
+        send_level_init_packet(level_init_packet);
+
+        _player = player;
+        _player->set_state(game::PlayerState::Handshake_Completed);
+    }
+
     bool Connection::Descriptor::send_level_init_packet(const net::PacketLevelInit& packet)
     {
         std::lock_guard<std::mutex> lock(deferred_send_lock);

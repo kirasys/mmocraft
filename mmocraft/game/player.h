@@ -33,9 +33,9 @@ namespace game
     {
         Initialized,
 
-        Handshake_Success,
+        Handshake_Completed,
 
-        World_Initialized,
+        Level_Initialized,
     };
 
     class Player : util::NonCopyable

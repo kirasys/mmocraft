@@ -35,9 +35,9 @@ namespace game
     public:
         World(net::ConnectionEnvironment&);
 
-        bool add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username, const char* password);   
+        game::Player* add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username, const char* password);   
 
-        void on_player_handshake_success(net::ConnectionKey);
+        //void on_player_handshake_success(net::ConnectionKey);
 
         bool need_block_transfer() const;
 

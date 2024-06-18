@@ -89,6 +89,8 @@ namespace net
 
             bool send_handshake_packet(const net::PacketHandshake&);
 
+            void on_handshake_success(game::Player*);
+
             bool send_level_init_packet(const net::PacketLevelInit&);
 
             static void flush_send(net::ConnectionEnvironment&);
@@ -114,6 +116,8 @@ namespace net
 
             std::mutex deferred_send_lock;
             std::mutex multicast_data_append_lock;
+
+            game::Player* _player;
         };
 
         Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::IoService& , io::IoEventPool&);

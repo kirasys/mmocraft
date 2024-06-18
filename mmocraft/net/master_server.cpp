@@ -122,17 +122,19 @@ namespace net
                     continue;
                 }
 
-                if (not world.add_player(
+                auto player = world.add_player(
                         packet->connection_key,
                         player_search.get_player_identity(),
                         player_type,
                         packet->username,
-                        packet->password)) {
+                        packet->password);
+
+                if (player == nullptr) {
                     desc->disconnect(net::SendType::DEFERRED, error::PACKET_RESULT_ALREADY_LOGIN);
                     continue;
                 }
 
-                world.on_player_handshake_success(packet->connection_key);
+                desc->on_handshake_success(player);
             }
         }
     }
