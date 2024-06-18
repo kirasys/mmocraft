@@ -18,9 +18,7 @@ namespace net
         , database_core{ }
         , world{ connection_env }
         
-        , deferred_handshake_packet_task{
-            &MasterServer::handle_deferred_handshake_packet, &MasterServer::handle_deferred_handshake_result, this
-        }
+        , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this }
 
         , block_transfer_task{ &game::World::block_data_transfer_task, &world }
     {
@@ -49,7 +47,6 @@ namespace net
         Connection::Descriptor::flush_receive(connection_env);
 
         flush_deferred_packet();
-        handle_deferred_packet_result();
 
         schedule_world_task();
     }
@@ -101,29 +98,7 @@ namespace net
      *  Deferred packet handler methods.
      */
 
-    void MasterServer::handle_deferred_packet_result()
-    {
-        for (auto task : deferred_packet_tasks)
-            task->invoke_result_handler(/*handler_instance=*/ this);
-    }
-
-    void MasterServer::handle_deferred_handshake_result(const DeferredPacketResult* results)
-    {
-        for (auto result = results; result; result = result->next) {
-            auto result_code = result->result_code;
-
-            if (result_code.is_login_success()) {
-                world.on_player_handshake_success(result->connection_key);
-                continue;
-            }
-
-            if (auto desc = connection_env.try_acquire_descriptor(result->connection_key)) {
-                desc->disconnect(net::SendType::DEFERRED, result_code.to_string());
-            }
-        }
-    }
-
-    void MasterServer::handle_deferred_handshake_packet(net::PacketTask* task, const DeferredPacket<PacketHandshake>* packet_head)
+    void MasterServer::handle_deferred_handshake_packet(io::Task* task, const DeferredPacket<PacketHandshake>* packet_head)
     {
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
@@ -139,22 +114,26 @@ namespace net
                     ? game::PlayerType::AUTHENTICATED_USER : game::PlayerType::ADMIN;
             }
             
-            if (player_type == game::PlayerType::INVALID) {
-                task->push_result(packet->connection_key, error::PACKET_RESULT_FAIL_LOGIN);
-                continue;
-            }
+            // return handshake result to clients.
 
-            if (not world.add_player(
-                    packet->connection_key,
-                    player_search.get_player_identity(),
-                    player_type,
-                    packet->username,
-                    packet->password )) {
-                task->push_result(packet->connection_key, error::PACKET_RESULT_ALREADY_LOGIN);
-                continue;
-            }
+            if (auto desc = connection_env.try_acquire_descriptor(packet->connection_key)) {
+                if (player_type == game::PlayerType::INVALID) {
+                    desc->disconnect(net::SendType::DEFERRED, error::PACKET_RESULT_FAIL_LOGIN);
+                    continue;
+                }
 
-            task->push_result(packet->connection_key, error::PACKET_RESULT_SUCCESS_LOGIN);
+                if (not world.add_player(
+                        packet->connection_key,
+                        player_search.get_player_identity(),
+                        player_type,
+                        packet->username,
+                        packet->password)) {
+                    desc->disconnect(net::SendType::DEFERRED, error::PACKET_RESULT_ALREADY_LOGIN);
+                    continue;
+                }
+
+                world.on_player_handshake_success(packet->connection_key);
+            }
         }
     }
 }

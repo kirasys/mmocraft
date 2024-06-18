@@ -3,7 +3,6 @@
 
 #include "logging/error.h"
 #include "logging/logger.h"
-#include "io/task.h"
 
 namespace io
 {
@@ -22,7 +21,7 @@ namespace io
         register_event_source(win::Handle(event_source), event_handler);
     }
 
-    bool IoCompletionPort::schedule_task(void* task, void* task_handler_inst)
+    bool IoCompletionPort::schedule_task(io::Task* task, void* task_handler_inst)
     {
         return ::PostQueuedCompletionStatus(_handle, 
             DWORD(io::IO_TASK_SIGNAL),

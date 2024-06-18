@@ -4,6 +4,7 @@
 #include <thread>
 #include <memory>
 
+#include "io/task.h"
 #include "io/io_event.h"
 #include "logging/error.h"
 #include "win/win_type.h"
@@ -52,7 +53,7 @@ namespace io
 
         void register_event_source(win::Socket event_source, IoEventHandler* event_handler);
 
-        bool schedule_task(void* task, void* task_handler_inst = nullptr);
+        bool schedule_task(io::Task* task, void* task_handler_inst = nullptr);
 
         void run_event_loop_forever(DWORD get_event_timeout_ms = INFINITE);
 

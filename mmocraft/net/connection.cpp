@@ -238,7 +238,14 @@ namespace net
     bool Connection::Descriptor::disconnect(SendType send_type, std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        auto result = disconnect_packet.serialize(*io_send_events[send_type]->data);
+        bool result = false;
+
+        if (send_type == SendType::IMMEDIATE) 
+            result = disconnect_packet.serialize(*io_send_events[send_type]->data);
+        else {
+            std::lock_guard<std::mutex> lock(deferred_send_lock);
+            result = disconnect_packet.serialize(*io_send_events[send_type]->data);
+        }
     
         set_offline();
         emit_send_event(io_send_events[send_type]); // TODO: resolve interleaving problem.
@@ -246,13 +253,20 @@ namespace net
         return result;
     }
 
-    bool Connection::Descriptor::send_handshake_packet(const net::PacketHandshake& packet) const
+    bool Connection::Descriptor::disconnect(SendType send_type, error::ResultCode result)
     {
+        return disconnect(send_type, result.to_string());
+    }
+
+    bool Connection::Descriptor::send_handshake_packet(const net::PacketHandshake& packet)
+    {
+        std::lock_guard<std::mutex> lock(deferred_send_lock);
         return packet.serialize(*io_send_events[SendType::DEFERRED]->data);
     }
 
-    bool Connection::Descriptor::send_level_init_packet(const net::PacketLevelInit& packet) const
+    bool Connection::Descriptor::send_level_init_packet(const net::PacketLevelInit& packet)
     {
+        std::lock_guard<std::mutex> lock(deferred_send_lock);
         return packet.serialize(*io_send_events[SendType::DEFERRED]->data);
     }
 

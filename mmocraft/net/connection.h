@@ -85,9 +85,11 @@ namespace net
 
             bool disconnect(SendType send_type, std::string_view);
 
-            bool send_handshake_packet(const net::PacketHandshake&) const;
+            bool disconnect(SendType send_type, error::ResultCode);
 
-            bool send_level_init_packet(const net::PacketLevelInit&) const;
+            bool send_handshake_packet(const net::PacketHandshake&);
+
+            bool send_level_init_packet(const net::PacketLevelInit&);
 
             static void flush_send(net::ConnectionEnvironment&);
 
@@ -102,7 +104,6 @@ namespace net
             io::IoRecvEvent* io_recv_event = {};
             io::IoSendEvent* io_send_events[2] = {};
 
-            std::mutex multicast_data_append_lock;
             std::vector<io::IoSendEventSharedData*> multicast_datas;
             static constexpr unsigned num_of_multicast_event = 8;
             std::vector<io::IoSendEvent> io_multicast_send_events;
@@ -110,6 +111,9 @@ namespace net
             bool online = false;
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
+
+            std::mutex deferred_send_lock;
+            std::mutex multicast_data_append_lock;
         };
 
         Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::IoService& , io::IoEventPool&);

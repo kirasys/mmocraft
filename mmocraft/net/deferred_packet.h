@@ -36,34 +36,15 @@ namespace net
         char password[net::PacketFieldConstraint::max_password_length + 1];
     };
 
-    struct DeferredPacketResult
-    {
-        net::ConnectionKey connection_key;
-        error::ResultCode result_code;
-        DeferredPacketResult* next = nullptr;
-    };
-
-    class PacketTask : public io::Task
-    {
-    public:
-        virtual void invoke_result_handler(void* result_handler_inst) = 0;
-
-        virtual bool result_exists() const = 0;
-
-        virtual void push_result(net::ConnectionKey, error::ErrorCode) = 0;
-    };
-
     template <typename PacketType, typename HandlerClass>
-    class DeferredPacketTask: public PacketTask
+    class DeferredPacketTask: public io::Task
     {
     public:
-        using handler_type = void (HandlerClass::*const)(net::PacketTask*, const DeferredPacket<PacketType>*);
-        using result_handler_type = void (HandlerClass::* const)(const DeferredPacketResult*);
+        using handler_type = void (HandlerClass::*const)(io::Task*, const DeferredPacket<PacketType>*);
 
-        DeferredPacketTask(handler_type handler, result_handler_type result_handler, HandlerClass* handler_inst = nullptr)
+        DeferredPacketTask(handler_type handler, HandlerClass* handler_inst = nullptr)
             : _handler{ handler }
             , _handler_inst{ handler_inst }
-            , _result_handler{ result_handler }
         { }
 
         virtual void invoke_handler(ULONG_PTR task_handler_inst) override
@@ -79,24 +60,9 @@ namespace net
             transit_state(State::Processing, State::Unused);
         }
 
-        virtual void invoke_result_handler(void* result_handler_inst) override
-        {
-            auto result_ptr = pop_pending_result();
-
-            std::invoke(_result_handler,
-                *reinterpret_cast<HandlerClass*>(result_handler_inst),
-                result_ptr.get()
-            );
-        }
-
         virtual bool exists() const override
         {
             return pending_packet_head.load(std::memory_order_relaxed) != nullptr;
-        }
-
-        virtual bool result_exists() const override
-        {
-            return pending_result_head.load(std::memory_order_relaxed) != nullptr;
         }
 
         void push_packet(net::ConnectionKey key, const PacketType& src_packet)
@@ -125,42 +91,10 @@ namespace net
             );
         }
 
-        void push_result(net::ConnectionKey key, error::ErrorCode error_code) override
-        {
-            auto new_packet = new DeferredPacketResult{
-                .connection_key = key,
-                .result_code = error_code,
-                .next = pending_result_head.load(std::memory_order_relaxed)
-            };
-
-            while (!pending_result_head.compare_exchange_weak(new_packet->next, new_packet,
-                std::memory_order_release, std::memory_order_relaxed));
-        }
-
-        static void delete_results(DeferredPacketResult* head)
-        {
-            for (auto result = head, next_result = head; result; result = next_result) {
-                next_result = result->next;
-                delete result;
-            }
-        }
-
-        using result_ptr_type = std::unique_ptr<DeferredPacketResult, decltype(delete_results)*>;
-
-        auto pop_pending_result() -> result_ptr_type
-        {
-            return result_ptr_type(
-                pending_result_head.exchange(nullptr, std::memory_order_relaxed),
-                delete_results
-            );
-        }
-
     private:
         handler_type _handler;
         HandlerClass* _handler_inst = nullptr;
-        result_handler_type _result_handler;
 
         std::atomic<DeferredPacket<PacketType>*> pending_packet_head{ nullptr };
-        std::atomic<DeferredPacketResult*> pending_result_head{ nullptr };
     };
 }
