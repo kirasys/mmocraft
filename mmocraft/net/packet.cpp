@@ -221,4 +221,18 @@ namespace net
 
         return true;
     }
+
+    bool PacketSetPlayerID::serialize(io::IoEventData& event_data) const
+    {
+        if (size_of_serialized() > event_data.unused_size())
+            return false;
+
+        std::byte* buf_start = event_data.begin_unused();
+        PacketStructure::write_byte(buf_start, id);
+        PacketStructure::write_byte(buf_start, player_id);
+
+        event_data.commit(buf_start - event_data.begin_unused());
+
+        return true;
+    }
 }

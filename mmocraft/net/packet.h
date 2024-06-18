@@ -88,6 +88,9 @@ namespace net
         UndefineModel = 0x34,
         ExtEntityTeleport = 0x36,
 
+        /* Custom Protocol */
+        SetPlayerID = 0x37,
+
         INVALID = 0xFF,
         
         // Indicate size of the enum class.
@@ -222,6 +225,23 @@ namespace net
         inline std::size_t size_of_serialized() const
         {
             return sizeof(Packet::id) + reason.size_with_padding;
+        }
+
+        bool serialize(io::IoEventData&) const;
+    };
+
+    struct PacketSetPlayerID : Packet
+    {
+        PacketFieldType::Byte player_id;
+
+        PacketSetPlayerID(unsigned a_player_id)
+            : Packet{ PacketID::SetPlayerID }
+            , player_id(PacketFieldType::Byte(a_player_id))
+        { }
+
+        inline std::size_t size_of_serialized() const
+        {
+            return 2;
         }
 
         bool serialize(io::IoEventData&) const;

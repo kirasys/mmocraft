@@ -100,6 +100,8 @@ namespace net
 
             bool send_level_init_packet(const net::PacketLevelInit&);
 
+            bool send_set_player_id_packet(const net::PacketSetPlayerID&);
+
             static void flush_send(net::ConnectionEnvironment&);
 
             static void flush_receive(net::ConnectionEnvironment&);

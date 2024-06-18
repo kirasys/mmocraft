@@ -87,9 +87,17 @@ namespace game
         auto transit_player_state = [this](net::Connection::Descriptor& desc, game::Player& player) {
             switch (player.state()) {
             case game::PlayerState::Handshake_Completed:
+            {
                 if (multicast_manager.send(net::MuticastTag::Level_Data, desc))
                     player.set_state(PlayerState::Level_Initialized);
                 break;
+            }
+            case game::PlayerState::Level_Initialized:
+            {
+                net::PacketSetPlayerID packet(player.game_id());
+                desc.send_set_player_id_packet(packet);
+            }
+            break;
             }
         };
 

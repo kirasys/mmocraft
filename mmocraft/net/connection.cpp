@@ -294,6 +294,11 @@ namespace net
         return packet.serialize(*io_send_events[SenderType::DEFERRED_THREAD]->data);
     }
 
+    bool Connection::Descriptor::send_set_player_id_packet(const net::PacketSetPlayerID& packet)
+    {
+        return packet.serialize(*io_send_events[SenderType::TICK_THREAD]->data);
+    }
+
     void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection::Descriptor& desc) {
