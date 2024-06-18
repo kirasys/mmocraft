@@ -23,10 +23,13 @@ namespace net
 
     class ConnectionEnvironment;
 
-    enum SendType
+    enum SenderType
     {
-        IMMEDIATE,
-        DEFERRED,
+        CONNECTION_THREAD,
+        DEFERRED_THREAD,
+        TICK_THREAD,
+
+        SenderType_Count,
     };
 
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
@@ -49,8 +52,7 @@ namespace net
                 win::UniqueSocket&&,
                 io::IoService&,
                 io::IoRecvEvent*,
-                io::IoSendEvent*,
-                io::IoSendEvent*);
+                win::ObjectPool<io::IoSendEvent>::Pointer[]);
 
             inline bool is_online() const
             {
@@ -88,9 +90,9 @@ namespace net
 
             void multicast_send(io::IoSendEventSharedData*);
 
-            bool disconnect(SendType send_type, std::string_view);
+            bool disconnect(SenderType, std::string_view);
 
-            bool disconnect(SendType send_type, error::ResultCode);
+            bool disconnect(SenderType, error::ResultCode);
 
             bool send_handshake_packet(const net::PacketHandshake&);
 
@@ -109,7 +111,7 @@ namespace net
             net::Socket client_socket;
 
             io::IoRecvEvent* io_recv_event = {};
-            io::IoSendEvent* io_send_events[2] = {};
+            io::IoSendEvent* io_send_events[SenderType_Count] = {};
 
             std::vector<io::IoSendEventSharedData*> multicast_datas;
             static constexpr unsigned num_of_multicast_event = 8;
@@ -131,7 +133,7 @@ namespace net
 
         bool is_valid() const
         {
-            return io_send_event && io_recv_event;
+            return send_event_datas[SenderType_Count - 1] && send_events[SenderType_Count - 1] && io_recv_event;
         }
 
         error::ResultCode get_last_error() const
@@ -160,11 +162,8 @@ namespace net
 
         net::PacketHandleServer& packet_handle_server;
 
-        win::ObjectPool<io::IoSendEventData>::Pointer io_send_event_data;
-        win::ObjectPool<io::IoSendEvent>::Pointer io_send_event;
-
-        win::ObjectPool<io::IoSendEventSmallData>::Pointer io_immedidate_send_event_data;
-        win::ObjectPool<io::IoSendEvent>::Pointer io_immedidate_send_event;
+        win::ObjectPool<io::IoSendEventData>::Pointer send_event_datas[SenderType_Count];
+        win::ObjectPool<io::IoSendEvent>::Pointer send_events[SenderType_Count];
 
         win::ObjectPool<io::IoRecvEventData>::Pointer io_recv_event_data;
         win::ObjectPool<io::IoRecvEvent>::Pointer io_recv_event;

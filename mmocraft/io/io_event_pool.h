@@ -20,8 +20,8 @@ namespace io
             , recv_event_pool{ max_capacity }
             , recv_event_data_pool{ max_capacity + 1}
 
-            , send_event_pool{ 2 * max_capacity }
-            , send_event_data_pool{ max_capacity }
+            , send_event_pool{ 3 * max_capacity }
+            , send_event_data_pool{ 3 * max_capacity }
             , send_event_small_data_pool{ max_capacity }
         { }
 

@@ -20,11 +20,16 @@ namespace net
                                 io::IoEventPool &io_event_pool)
         : packet_handle_server{ a_packet_handle_server }
 
-        , io_send_event_data{ io_event_pool.new_send_event_data() }
-        , io_send_event{ io_event_pool.new_send_event(io_send_event_data.get()) }
-
-        , io_immedidate_send_event_data{ io_event_pool.new_send_event_small_data() }
-        , io_immedidate_send_event{ io_event_pool.new_send_event(io_immedidate_send_event_data.get()) }
+        , send_event_datas{
+            io_event_pool.new_send_event_data(),
+            io_event_pool.new_send_event_data(),
+            io_event_pool.new_send_event_data()
+        }
+        , send_events{
+            io_event_pool.new_send_event(send_event_datas[0].get()),
+            io_event_pool.new_send_event(send_event_datas[1].get()),
+            io_event_pool.new_send_event(send_event_datas[2].get()),
+        }
 
         , io_recv_event_data{ io_event_pool.new_recv_event_data() }
         , io_recv_event{ io_event_pool.new_recv_event(io_recv_event_data.get()) }
@@ -36,8 +41,7 @@ namespace net
             std::move(sock), 
             io_service,
             io_recv_event.get(), 
-            io_immedidate_send_event.get(), 
-            io_send_event.get()
+            send_events
         }
     {
         if (not is_valid())
@@ -88,7 +92,7 @@ namespace net
             return;
         }
 
-        descriptor.disconnect(SendType::IMMEDIATE, last_error_code.to_string());
+        descriptor.disconnect(SenderType::CONNECTION_THREAD, last_error_code.to_string());
         event->is_processing = false;
     }
 
@@ -118,13 +122,16 @@ namespace net
         win::UniqueSocket&& a_sock,
         io::IoService& a_io_service,
         io::IoRecvEvent* a_io_recv_event,
-        io::IoSendEvent* a_io_immediate_send_event,
-        io::IoSendEvent* a_io_deferred_send_event)
+        win::ObjectPool<io::IoSendEvent>::Pointer send_events[])
         : _connection_key{ a_connection_key }
         , connection_env{ a_connection_env }
         , client_socket{ std::move(a_sock) }
         , io_recv_event{ a_io_recv_event }
-        , io_send_events{ a_io_immediate_send_event, a_io_deferred_send_event }
+        , io_send_events{ 
+            send_events[SenderType::CONNECTION_THREAD].get(),
+            send_events[SenderType::DEFERRED_THREAD].get(),
+            send_events[SenderType::TICK_THREAD].get()
+        }
         , online{ true }
     {
         update_last_interaction_time();
@@ -235,33 +242,33 @@ namespace net
         multicast_datas.push_back(event_data);
     }
 
-    bool Connection::Descriptor::disconnect(SendType send_type, std::string_view reason)
+    bool Connection::Descriptor::disconnect(SenderType sender_type, std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
         bool result = false;
 
-        if (send_type == SendType::IMMEDIATE) 
-            result = disconnect_packet.serialize(*io_send_events[send_type]->data);
-        else {
+        if (sender_type == SenderType::DEFERRED_THREAD) {
             std::lock_guard<std::mutex> lock(deferred_send_lock);
-            result = disconnect_packet.serialize(*io_send_events[send_type]->data);
+            result = disconnect_packet.serialize(*io_send_events[sender_type]->data);
         }
+        else
+            result = disconnect_packet.serialize(*io_send_events[sender_type]->data);
     
         set_offline();
-        emit_send_event(io_send_events[send_type]); // TODO: resolve interleaving problem.
+        emit_send_event(io_send_events[sender_type]); // TODO: resolve interleaving problem.
 
         return result;
     }
 
-    bool Connection::Descriptor::disconnect(SendType send_type, error::ResultCode result)
+    bool Connection::Descriptor::disconnect(SenderType sender_type, error::ResultCode result)
     {
-        return disconnect(send_type, result.to_string());
+        return disconnect(sender_type, result.to_string());
     }
 
     bool Connection::Descriptor::send_handshake_packet(const net::PacketHandshake& packet)
     {
         std::lock_guard<std::mutex> lock(deferred_send_lock);
-        return packet.serialize(*io_send_events[SendType::DEFERRED]->data);
+        return packet.serialize(*io_send_events[SenderType::DEFERRED_THREAD]->data);
     }
 
     void Connection::Descriptor::on_handshake_success(game::Player* player)
@@ -284,7 +291,7 @@ namespace net
     bool Connection::Descriptor::send_level_init_packet(const net::PacketLevelInit& packet)
     {
         std::lock_guard<std::mutex> lock(deferred_send_lock);
-        return packet.serialize(*io_send_events[SendType::DEFERRED]->data);
+        return packet.serialize(*io_send_events[SenderType::DEFERRED_THREAD]->data);
     }
 
     void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
