@@ -19,8 +19,6 @@ namespace net
         , world{ connection_env }
         
         , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this }
-
-        , block_transfer_task{ &game::World::block_data_transfer_task, &world }
     {
 
     }
@@ -47,8 +45,6 @@ namespace net
         Connection::Descriptor::flush_receive(connection_env);
 
         flush_deferred_packet();
-
-        schedule_world_task();
     }
 
     void MasterServer::serve_forever()
@@ -71,6 +67,7 @@ namespace net
             std::size_t start_tick = util::current_monotonic_tick();
 
             this->tick();
+            world.tick();
 
             std::size_t end_tick = util::current_monotonic_tick();
 
@@ -86,12 +83,6 @@ namespace net
                 io_service.schedule_task(task);
             }
         }
-    }
-
-    void MasterServer::schedule_world_task()
-    {
-        if (world.need_block_transfer() && block_transfer_task.transit_state(io::Task::Unused, io::Task::Processing))
-            io_service.schedule_task(&block_transfer_task);
     }
 
     /**

@@ -62,6 +62,11 @@ namespace net
                 return _connection_key;
             }
 
+            game::Player* get_connected_player()
+            {
+                return _player;
+            }
+
             void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
             bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;

@@ -290,7 +290,7 @@ namespace net
     void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection::Descriptor& desc) {
-            // flush immedidate, deferred messages.
+            // flush immedidate and deferred messages.
             for (auto event : desc.io_send_events) {
                 if (not event->is_processing)
                     desc.emit_send_event(event);

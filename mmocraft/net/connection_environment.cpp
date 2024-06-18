@@ -80,7 +80,15 @@ namespace net
         num_of_connections -= unsigned(deleted_connection_count);
     }
 
-    void ConnectionEnvironment::for_each_descriptor(void (*func) (net::Connection::Descriptor&))
+    void ConnectionEnvironment::for_each_connection(void (*func) (net::Connection&))
+    {
+        for (auto& entry : connection_table) {
+            if (not entry.will_delete)
+                func(*entry.connection);
+        }
+    }
+
+    void ConnectionEnvironment::for_each_descriptor(std::function<void(net::Connection::Descriptor&)> const& func)
     {
         for (auto& entry : connection_table) {
             if (not entry.will_delete)
@@ -88,11 +96,11 @@ namespace net
         }
     }
 
-    void ConnectionEnvironment::for_each_connection(void (*func) (net::Connection&))
+    void ConnectionEnvironment::for_each_player(std::function<void(net::Connection::Descriptor&, game::Player&)> const& func)
     {
         for (auto& entry : connection_table) {
-            if (not entry.will_delete)
-                func(*entry.connection);
+            if (not entry.will_delete && entry.connection->descriptor.get_connected_player())
+                func(entry.connection->descriptor, *entry.connection->descriptor.get_connected_player());
         }
     }
 

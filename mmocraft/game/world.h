@@ -35,13 +35,9 @@ namespace game
     public:
         World(net::ConnectionEnvironment&);
 
-        game::Player* add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username, const char* password);   
+        game::Player* add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username, const char* password);
 
-        //void on_player_handshake_success(net::ConnectionKey);
-
-        bool need_block_transfer() const;
-
-        void block_data_transfer_task();
+        void caching_compressed_block_data();
 
         void tick();
 
@@ -59,7 +55,7 @@ namespace game
         void create_metadata_file(Coordinate3D map_size) const;
 
         net::ConnectionEnvironment& connection_env;
-        net::MulticastManager block_data_multicast;
+        net::MulticastManager multicast_manager;
 
         std::vector<std::unique_ptr<game::Player>> players;
         util::LockfreeStack<net::ConnectionKey> handshaked_players;
@@ -73,6 +69,9 @@ namespace game
         std::filesystem::path save_dir;
         std::filesystem::path block_data_path;
         std::filesystem::path world_metadata_path;
+
+        static constexpr std::size_t block_data_cache_lifetime = 2 * 1000; // 2 seconds
+        std::size_t block_data_cache_expired_at = 0;
     };
 
     class WorldMapGenerator

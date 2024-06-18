@@ -26,11 +26,8 @@ namespace io
 
         bool transit_state(State old_state, State new_state)
         {
-            if (_state == old_state) {
-                _state = new_state;
-                return true;
-            }
-            return false;
+            _state = _state == old_state ? new_state : old_state;
+            return _state == new_state;
         }
 
         virtual void invoke_handler(ULONG_PTR task_handler_inst) = 0;

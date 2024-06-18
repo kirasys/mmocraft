@@ -190,11 +190,10 @@ namespace io
     class IoSendEventSharedData : public IoEventData
     {
     public:
-        IoSendEventSharedData(std::unique_ptr<std::byte[]>&& data, unsigned data_size, unsigned data_capacity, std::size_t ref_count)
+        IoSendEventSharedData(std::unique_ptr<std::byte[]>&& data, unsigned data_size, unsigned data_capacity)
             : _data{ std::move(data) }
             , _data_size{ data_size }
             , _data_capacity{ data_capacity }
-            , _ref_count{ unsigned(ref_count) }
             , lifetime_end_at{max_data_lifetime + util::current_monotonic_tick()}
         { }
 
@@ -246,7 +245,6 @@ namespace io
         void pop(std::size_t) override
         {
             // TODO: handling partial send;
-            _ref_count--;
         }
 
         void commit(std::size_t n) override
@@ -254,17 +252,20 @@ namespace io
             _data_size += unsigned(n);
         }
 
+        void update_lifetime()
+        {
+            lifetime_end_at = max_data_lifetime + util::current_monotonic_tick();
+        }
+
         bool is_safe_delete() const
         {
-            return _ref_count == 0 || util::current_monotonic_tick() > lifetime_end_at;
+            return lifetime_end_at < util::current_monotonic_tick();
         }
 
     private:
         std::unique_ptr<std::byte[]> _data;
         unsigned _data_size;
         unsigned _data_capacity;
-
-        unsigned _ref_count;
 
         static constexpr std::size_t max_data_lifetime = 5 * 1000; // 5 seconds.
         std::size_t lifetime_end_at;

@@ -11,6 +11,7 @@
 #include "proto/config.pb.h"
 #include "proto/world_metadata.pb.h"
 #include "net/packet.h"
+#include "net/connection.h"
 #include "net/connection_environment.h"
 #include "util/time_util.h"
 #include "util/protobuf_util.h"
@@ -23,7 +24,7 @@ namespace game
 {
     World::World(net::ConnectionEnvironment& a_connection_env)
         : connection_env{ a_connection_env }
-        , block_data_multicast{ a_connection_env }
+        , multicast_manager{ a_connection_env }
         , players(connection_env.size_of_max_connections())
     {
 
@@ -53,36 +54,21 @@ namespace game
             );
 
             players[connection_key.index()].reset(player);
+
+            // prepare compressed block data for new player.
+            caching_compressed_block_data();
         }
 
         return player;
     }
-    /*
-    void World::on_player_handshake_success(net::ConnectionKey connection_key)
+
+    void World::caching_compressed_block_data()
     {
-        if (auto desc = connection_env.try_acquire_descriptor(connection_key)) {
-            const auto& server_conf = config::get_server_config();
+        if (block_data_cache_expired_at > util::current_monotonic_tick())
+            return;
 
-            net::PacketHandshake handshake_packet{
-                server_conf.server_name(), server_conf.motd(),
-                players[connection_key.index()]->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
-            };
-            net::PacketLevelInit level_init_packet;
+        block_data_cache_expired_at = block_data_cache_lifetime + util::current_monotonic_tick();
 
-            desc->send_handshake_packet(handshake_packet);
-            desc->send_level_init_packet(level_init_packet);
-
-            handshaked_players.push(connection_key);
-        }
-    }
-    */
-    bool World::need_block_transfer() const
-    {
-        return not handshaked_players.empty();
-    }
-
-    void World::block_data_transfer_task()
-    {
         // compress and serialize block datas.
         net::PacketLevelDataChunk level_packet(block_mapping.data(), _metadata.volume(),
             net::PacketFieldType::Short(_metadata.width()),
@@ -93,36 +79,21 @@ namespace game
         std::unique_ptr<std::byte[]> serialized_level_packet;
         auto packet_size = level_packet.serialize(serialized_level_packet);
 
-        // send level data packets to handshake complete players.
-        std::vector<net::ConnectionKey> block_data_receivers;
-
-        auto handshaked_player_ptr = handshaked_players.pop();
-        for (auto player_node = handshaked_player_ptr.get(); player_node; player_node = player_node->next)
-            block_data_receivers.push_back(player_node->value);
-
-        block_data_multicast.send(block_data_receivers, std::move(serialized_level_packet), packet_size);
+        multicast_manager.set_multicast_data(net::MuticastTag::Level_Data, std::move(serialized_level_packet), packet_size);
     }
 
     void World::tick()
     {
-        std::vector<unsigned> handshaked_player_indexs;
-        auto is_handshaked_player = [] (const game::Player* player) {
-            return player->state() == game::PlayerState::Level_Initialized;
+        auto transit_player_state = [this](net::Connection::Descriptor& desc, game::Player& player) {
+            switch (player.state()) {
+            case game::PlayerState::Handshake_Completed:
+                if (multicast_manager.send(net::MuticastTag::Level_Data, desc))
+                    player.set_state(PlayerState::Level_Initialized);
+                break;
+            }
         };
 
-        // search player indexs given conditions matched.
-
-        bool (*filter_funcs[])(const game::Player*) = {
-            is_handshaked_player,
-        };
-
-        std::vector<unsigned>* matched_index_sets[] = {
-            &handshaked_player_indexs,
-        };
-
-        connection_env.poll_players(players, std::size(filter_funcs), filter_funcs, matched_index_sets);
-
-        // 
+        connection_env.for_each_player(transit_player_state);
     }
 
     bool World::load_filesystem_world(std::string_view a_save_dir)

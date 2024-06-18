@@ -53,6 +53,12 @@ namespace game
             _state = state;
         }
 
+        bool transit_state(PlayerState old_state, PlayerState new_state)
+        {
+            _state = _state == old_state ? new_state : old_state;
+            return _state == new_state;
+        }
+
         net::ConnectionKey connection_key() const
         {
             return _connection_key;

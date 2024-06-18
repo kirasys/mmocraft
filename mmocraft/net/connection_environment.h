@@ -1,6 +1,7 @@
 #pragma once
 #include <atomic>
 #include <bitset>
+#include <functional>
 #include <list>
 #include <vector>
 #include <unordered_set>
@@ -81,9 +82,11 @@ namespace net
         // * the accept I/O thread invokes this method.
         void cleanup_expired_connection();
 
-        void for_each_descriptor(void (*func) (net::Connection::Descriptor&));
-
         void for_each_connection(void (*func) (net::Connection&));
+
+        void for_each_descriptor(std::function<void(net::Connection::Descriptor&)> const&);
+
+        void for_each_player(std::function<void(net::Connection::Descriptor&, game::Player&)> const&);
 
         void select_players(unsigned n, std::bitset<1024>* [], unsigned [], bool(*[])(net::ConnectionKey));
 

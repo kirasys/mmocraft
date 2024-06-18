@@ -51,7 +51,5 @@ namespace net
         io::Task *deferred_packet_tasks[1] = {
             &deferred_handshake_packet_task
         };
-
-        io::SimpleTask<game::World> block_transfer_task;
     };
 }
