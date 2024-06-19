@@ -192,17 +192,16 @@ namespace net
 
     void Connection::Descriptor::emit_send_event(io::IoSendEvent* event)
     {
-        if (event->data->size() == 0)
-            return;
-
         WSABUF wbuf[1] = {};
         wbuf[0].buf = reinterpret_cast<char*>(event->data->begin());
         wbuf[0].len = ULONG(event->data->size());
 
-        // should assign flag first to avoid data race.
-        event->is_processing = true; 
-        if (not client_socket.send(&event->overlapped, wbuf))
-            event->is_processing = false;
+        if (wbuf[0].len) {
+            // should assign flag first to avoid data race.
+            event->is_processing = true;
+            if (not client_socket.send(&event->overlapped, wbuf))
+                event->is_processing = false;
+        }
     }
 
     bool Connection::Descriptor::emit_multicast_send_event(io::IoSendEventSharedData* event_data)
@@ -211,7 +210,7 @@ namespace net
         wbuf[0].buf = reinterpret_cast<char*>(event_data->begin());
         wbuf[0].len = ULONG(event_data->size());
 
-        {
+        if (wbuf[0].len) {
             std::lock_guard<std::mutex> lock(multicast_send_lock);
 
             auto unused_event = std::find_if(io_multicast_send_events.begin(), io_multicast_send_events.end(),
