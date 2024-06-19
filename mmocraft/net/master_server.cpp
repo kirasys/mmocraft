@@ -29,6 +29,7 @@ namespace net
         case PacketID::Handshake:
             return handle_handshake_packet(conn_descriptor, *static_cast<PacketHandshake*>(packet));
         default:
+            CONSOLE_LOG(error) << "Unimplemented packet id: " << int(packet->id);
             return error::PACKET_UNIMPLEMENTED_ID;
         }
     }
@@ -79,7 +80,7 @@ namespace net
     void MasterServer::flush_deferred_packet()
     {
         for (auto task : deferred_packet_tasks) {
-            if (task->exists() && not task->busy()) {
+            if (task->exists() && task->transit_state(io::Task::Unused, io::Task::Processing)) {
                 io_service.schedule_task(task);
             }
         }
