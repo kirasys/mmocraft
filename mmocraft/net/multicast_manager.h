@@ -25,7 +25,6 @@ namespace net
     public:
         MulticastManager(net::ConnectionEnvironment& conn_env)
             : connection_env{ conn_env }
-            , gc_timeout{ util::current_monotonic_tick() + gc_intervals }
         {
 
         }
@@ -36,18 +35,19 @@ namespace net
 
         bool send(MuticastTag, net::Connection::Descriptor&);
 
-        void gc();
+        void gc(MuticastTag);
 
     private:
         bool is_active_event_data(const io::IoSendEventSharedData&) const;
 
         net::ConnectionEnvironment& connection_env;
 
-        std::queue<io::IoSendEventSharedData> event_data_pool;
+        std::queue<io::IoSendEventSharedData> event_data_queues[MuticastTag::MuticastTag_Count];
 
         io::IoSendEventSharedData* active_event_datas[MuticastTag::MuticastTag_Count];
 
+        std::size_t gc_timeouts[MuticastTag::MuticastTag_Count];
+
         static constexpr std::size_t gc_intervals = 5 * 1000; // 5 seconds
-        std::size_t gc_timeout = 0;
     };
 }
