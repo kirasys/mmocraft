@@ -268,17 +268,22 @@ namespace net
         _player->set_state(game::PlayerState::Handshake_Completed);
     }
 
-    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketHandshake& packet)
+    bool Connection::Descriptor::send_raw_data(ThreadType sender_type, const std::byte* data, std::size_t data_size) const
+    {
+        return io_send_events[sender_type]->data->push(data, data_size);
+    }
+
+    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketHandshake& packet) const
     {
         return packet.serialize(*io_send_events[sender_type]->data);
     }
 
-    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketLevelInit& packet)
+    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketLevelInit& packet) const
     {
         return packet.serialize(*io_send_events[sender_type]->data);
     }
 
-    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketSetPlayerID& packet)
+    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketSetPlayerID& packet) const
     {
         return packet.serialize(*io_send_events[sender_type]->data);
     }

@@ -12,6 +12,7 @@
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "net/socket.h"
+#include "net/packet.h"
 #include "net/connection_key.h"
 #include "win/smart_handle.h"
 #include "util/common_util.h"
@@ -92,11 +93,13 @@ namespace net
 
             void on_handshake_success(game::Player*);
 
-            bool send_packet(ThreadType, const net::PacketHandshake&);
+            bool send_raw_data(ThreadType, const std::byte*, std::size_t) const;
 
-            bool send_packet(ThreadType, const net::PacketLevelInit&);
+            bool send_packet(ThreadType, const net::PacketHandshake&) const;
 
-            bool send_packet(ThreadType, const net::PacketSetPlayerID&);
+            bool send_packet(ThreadType, const net::PacketLevelInit&) const;
+
+            bool send_packet(ThreadType, const net::PacketSetPlayerID&) const;
 
             static void flush_send(net::ConnectionEnvironment&);
 
