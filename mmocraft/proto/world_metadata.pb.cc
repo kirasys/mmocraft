@@ -31,8 +31,8 @@ PROTOBUF_CONSTEXPR WorldMetadata::WorldMetadata(
   , /*decltype(_impl_.spawn_x_)*/0
   , /*decltype(_impl_.spawn_y_)*/0
   , /*decltype(_impl_.spawn_z_)*/0
-  , /*decltype(_impl_.spawn_yaw_)*/0
-  , /*decltype(_impl_.spawn_pitch_)*/0
+  , /*decltype(_impl_.spawn_yaw_)*/0u
+  , /*decltype(_impl_.spawn_pitch_)*/0u
   , /*decltype(_impl_.created_at_)*/uint64_t{0u}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct WorldMetadataDefaultTypeInternal {
@@ -82,7 +82,7 @@ const char descriptor_table_protodef_world_5fmetadata_2eproto[] PROTOBUF_SECTION
   "\002 \001(\005\022\016\n\006height\030\003 \001(\005\022\016\n\006length\030\004 \001(\005\022\016\n"
   "\006volume\030\005 \001(\r\022\017\n\007spawn_x\030\006 \001(\005\022\017\n\007spawn_"
   "y\030\007 \001(\005\022\017\n\007spawn_z\030\010 \001(\005\022\021\n\tspawn_yaw\030\t "
-  "\001(\005\022\023\n\013spawn_pitch\030\n \001(\005\022\022\n\ncreated_at\030\013"
+  "\001(\r\022\023\n\013spawn_pitch\030\n \001(\r\022\022\n\ncreated_at\030\013"
   " \001(\004b\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_world_5fmetadata_2eproto_once;
@@ -151,8 +151,8 @@ inline void WorldMetadata::SharedCtor(
     , decltype(_impl_.spawn_x_){0}
     , decltype(_impl_.spawn_y_){0}
     , decltype(_impl_.spawn_z_){0}
-    , decltype(_impl_.spawn_yaw_){0}
-    , decltype(_impl_.spawn_pitch_){0}
+    , decltype(_impl_.spawn_yaw_){0u}
+    , decltype(_impl_.spawn_pitch_){0u}
     , decltype(_impl_.created_at_){uint64_t{0u}}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -257,7 +257,7 @@ const char* WorldMetadata::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         } else
           goto handle_unusual;
         continue;
-      // int32 spawn_yaw = 9;
+      // uint32 spawn_yaw = 9;
       case 9:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 72)) {
           _impl_.spawn_yaw_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
@@ -265,7 +265,7 @@ const char* WorldMetadata::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         } else
           goto handle_unusual;
         continue;
-      // int32 spawn_pitch = 10;
+      // uint32 spawn_pitch = 10;
       case 10:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
           _impl_.spawn_pitch_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
@@ -358,16 +358,16 @@ uint8_t* WorldMetadata::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt32ToArray(8, this->_internal_spawn_z(), target);
   }
 
-  // int32 spawn_yaw = 9;
+  // uint32 spawn_yaw = 9;
   if (this->_internal_spawn_yaw() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(9, this->_internal_spawn_yaw(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(9, this->_internal_spawn_yaw(), target);
   }
 
-  // int32 spawn_pitch = 10;
+  // uint32 spawn_pitch = 10;
   if (this->_internal_spawn_pitch() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(10, this->_internal_spawn_pitch(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(10, this->_internal_spawn_pitch(), target);
   }
 
   // uint64 created_at = 11;
@@ -432,14 +432,14 @@ size_t WorldMetadata::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_spawn_z());
   }
 
-  // int32 spawn_yaw = 9;
+  // uint32 spawn_yaw = 9;
   if (this->_internal_spawn_yaw() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_spawn_yaw());
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_spawn_yaw());
   }
 
-  // int32 spawn_pitch = 10;
+  // uint32 spawn_pitch = 10;
   if (this->_internal_spawn_pitch() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_spawn_pitch());
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_spawn_pitch());
   }
 
   // uint64 created_at = 11;

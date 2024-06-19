@@ -261,22 +261,22 @@ class WorldMetadata final :
   void _internal_set_spawn_z(int32_t value);
   public:
 
-  // int32 spawn_yaw = 9;
+  // uint32 spawn_yaw = 9;
   void clear_spawn_yaw();
-  int32_t spawn_yaw() const;
-  void set_spawn_yaw(int32_t value);
+  uint32_t spawn_yaw() const;
+  void set_spawn_yaw(uint32_t value);
   private:
-  int32_t _internal_spawn_yaw() const;
-  void _internal_set_spawn_yaw(int32_t value);
+  uint32_t _internal_spawn_yaw() const;
+  void _internal_set_spawn_yaw(uint32_t value);
   public:
 
-  // int32 spawn_pitch = 10;
+  // uint32 spawn_pitch = 10;
   void clear_spawn_pitch();
-  int32_t spawn_pitch() const;
-  void set_spawn_pitch(int32_t value);
+  uint32_t spawn_pitch() const;
+  void set_spawn_pitch(uint32_t value);
   private:
-  int32_t _internal_spawn_pitch() const;
-  void _internal_set_spawn_pitch(int32_t value);
+  uint32_t _internal_spawn_pitch() const;
+  void _internal_set_spawn_pitch(uint32_t value);
   public:
 
   // uint64 created_at = 11;
@@ -304,8 +304,8 @@ class WorldMetadata final :
     int32_t spawn_x_;
     int32_t spawn_y_;
     int32_t spawn_z_;
-    int32_t spawn_yaw_;
-    int32_t spawn_pitch_;
+    uint32_t spawn_yaw_;
+    uint32_t spawn_pitch_;
     uint64_t created_at_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -483,42 +483,42 @@ inline void WorldMetadata::set_spawn_z(int32_t value) {
   // @@protoc_insertion_point(field_set:game.WorldMetadata.spawn_z)
 }
 
-// int32 spawn_yaw = 9;
+// uint32 spawn_yaw = 9;
 inline void WorldMetadata::clear_spawn_yaw() {
-  _impl_.spawn_yaw_ = 0;
+  _impl_.spawn_yaw_ = 0u;
 }
-inline int32_t WorldMetadata::_internal_spawn_yaw() const {
+inline uint32_t WorldMetadata::_internal_spawn_yaw() const {
   return _impl_.spawn_yaw_;
 }
-inline int32_t WorldMetadata::spawn_yaw() const {
+inline uint32_t WorldMetadata::spawn_yaw() const {
   // @@protoc_insertion_point(field_get:game.WorldMetadata.spawn_yaw)
   return _internal_spawn_yaw();
 }
-inline void WorldMetadata::_internal_set_spawn_yaw(int32_t value) {
+inline void WorldMetadata::_internal_set_spawn_yaw(uint32_t value) {
   
   _impl_.spawn_yaw_ = value;
 }
-inline void WorldMetadata::set_spawn_yaw(int32_t value) {
+inline void WorldMetadata::set_spawn_yaw(uint32_t value) {
   _internal_set_spawn_yaw(value);
   // @@protoc_insertion_point(field_set:game.WorldMetadata.spawn_yaw)
 }
 
-// int32 spawn_pitch = 10;
+// uint32 spawn_pitch = 10;
 inline void WorldMetadata::clear_spawn_pitch() {
-  _impl_.spawn_pitch_ = 0;
+  _impl_.spawn_pitch_ = 0u;
 }
-inline int32_t WorldMetadata::_internal_spawn_pitch() const {
+inline uint32_t WorldMetadata::_internal_spawn_pitch() const {
   return _impl_.spawn_pitch_;
 }
-inline int32_t WorldMetadata::spawn_pitch() const {
+inline uint32_t WorldMetadata::spawn_pitch() const {
   // @@protoc_insertion_point(field_get:game.WorldMetadata.spawn_pitch)
   return _internal_spawn_pitch();
 }
-inline void WorldMetadata::_internal_set_spawn_pitch(int32_t value) {
+inline void WorldMetadata::_internal_set_spawn_pitch(uint32_t value) {
   
   _impl_.spawn_pitch_ = value;
 }
-inline void WorldMetadata::set_spawn_pitch(int32_t value) {
+inline void WorldMetadata::set_spawn_pitch(uint32_t value) {
   _internal_set_spawn_pitch(value);
   // @@protoc_insertion_point(field_set:game.WorldMetadata.spawn_pitch)
 }

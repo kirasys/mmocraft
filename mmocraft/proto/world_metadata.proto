@@ -13,8 +13,8 @@ message WorldMetadata {
     int32 spawn_x = 6;
     int32 spawn_y = 7;
     int32 spawn_z = 8;
-    int32 spawn_yaw = 9;
-    int32 spawn_pitch = 10;
+    uint32 spawn_yaw = 9;
+    uint32 spawn_pitch = 10;
 
     uint64 created_at = 11;
 }
