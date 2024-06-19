@@ -86,8 +86,6 @@ namespace net
 
             bool emit_multicast_send_event(io::IoSendEventSharedData*);
 
-            void multicast_send(io::IoSendEventSharedData*);
-
             bool disconnect(ThreadType, std::string_view);
 
             bool disconnect(ThreadType, error::ResultCode);
@@ -113,15 +111,14 @@ namespace net
             io::IoRecvEvent* io_recv_event = {};
             io::IoSendEvent* io_send_events[ThreadType_Count] = {};
 
-            std::vector<io::IoSendEventSharedData*> multicast_datas;
             static constexpr unsigned num_of_multicast_event = 8;
             std::vector<io::IoSendEvent> io_multicast_send_events;
+            std::mutex multicast_send_lock;
 
             bool online = false;
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
 
-            std::mutex multicast_data_append_lock;
 
             game::Player* _player;
         };
