@@ -23,11 +23,11 @@ namespace net
 
     class ConnectionEnvironment;
 
-    enum SenderType
+    enum ThreadType
     {
         Tick_Thread,
         Any_Thread,
-        SenderType_Count,
+        ThreadType_Count,
     };
 
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
@@ -88,17 +88,17 @@ namespace net
 
             void multicast_send(io::IoSendEventSharedData*);
 
-            bool disconnect(SenderType, std::string_view);
+            bool disconnect(ThreadType, std::string_view);
 
-            bool disconnect(SenderType, error::ResultCode);
+            bool disconnect(ThreadType, error::ResultCode);
 
             void on_handshake_success(game::Player*);
 
-            bool send_packet(SenderType, const net::PacketHandshake&);
+            bool send_packet(ThreadType, const net::PacketHandshake&);
 
-            bool send_packet(SenderType, const net::PacketLevelInit&);
+            bool send_packet(ThreadType, const net::PacketLevelInit&);
 
-            bool send_packet(SenderType, const net::PacketSetPlayerID&);
+            bool send_packet(ThreadType, const net::PacketSetPlayerID&);
 
             static void flush_send(net::ConnectionEnvironment&);
 
@@ -111,7 +111,7 @@ namespace net
             net::Socket client_socket;
 
             io::IoRecvEvent* io_recv_event = {};
-            io::IoSendEvent* io_send_events[SenderType_Count] = {};
+            io::IoSendEvent* io_send_events[ThreadType_Count] = {};
 
             std::vector<io::IoSendEventSharedData*> multicast_datas;
             static constexpr unsigned num_of_multicast_event = 8;
@@ -132,7 +132,7 @@ namespace net
 
         bool is_valid() const
         {
-            return send_event_lockfree_data && send_events[SenderType_Count - 1] && io_recv_event;
+            return send_event_lockfree_data && send_events[ThreadType_Count - 1] && io_recv_event;
         }
 
         error::ResultCode get_last_error() const
@@ -163,7 +163,7 @@ namespace net
 
         win::ObjectPool<io::IoSendEventData>::Pointer send_event_data;
         win::ObjectPool<io::IoSendEventLockFreeData>::Pointer send_event_lockfree_data;
-        win::ObjectPool<io::IoSendEvent>::Pointer send_events[SenderType_Count];
+        win::ObjectPool<io::IoSendEvent>::Pointer send_events[ThreadType_Count];
 
         win::ObjectPool<io::IoRecvEventData>::Pointer io_recv_event_data;
         win::ObjectPool<io::IoRecvEvent>::Pointer io_recv_event;

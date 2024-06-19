@@ -95,7 +95,7 @@ namespace game
             case game::PlayerState::Level_Initialized:
             {
                 net::PacketSetPlayerID packet(player.game_id());
-                if (desc.send_packet(net::SenderType::Tick_Thread, packet))
+                if (desc.send_packet(net::ThreadType::Tick_Thread, packet))
                     player.set_state(PlayerState::Assigned_PlayerID);
             }
             break;

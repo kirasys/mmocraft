@@ -89,7 +89,7 @@ namespace net
             return;
         }
 
-        descriptor.disconnect(SenderType::Any_Thread, last_error_code.to_string());
+        descriptor.disconnect(ThreadType::Any_Thread, last_error_code.to_string());
         event->is_processing = false;
     }
 
@@ -125,8 +125,8 @@ namespace net
         , client_socket{ std::move(a_sock) }
         , io_recv_event{ a_io_recv_event }
         , io_send_events{ 
-            send_events[SenderType::Tick_Thread].get(),
-            send_events[SenderType::Any_Thread].get(),
+            send_events[ThreadType::Tick_Thread].get(),
+            send_events[ThreadType::Any_Thread].get(),
         }
         , online{ true }
     {
@@ -238,7 +238,7 @@ namespace net
         multicast_datas.push_back(event_data);
     }
 
-    bool Connection::Descriptor::disconnect(SenderType sender_type, std::string_view reason)
+    bool Connection::Descriptor::disconnect(ThreadType sender_type, std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
         bool result = disconnect_packet.serialize(*io_send_events[sender_type]->data);
@@ -249,7 +249,7 @@ namespace net
         return result;
     }
 
-    bool Connection::Descriptor::disconnect(SenderType sender_type, error::ResultCode result)
+    bool Connection::Descriptor::disconnect(ThreadType sender_type, error::ResultCode result)
     {
         return disconnect(sender_type, result.to_string());
     }
@@ -264,24 +264,24 @@ namespace net
         };
         net::PacketLevelInit level_init_packet;
 
-        send_packet(SenderType::Any_Thread, handshake_packet);
-        send_packet(SenderType::Any_Thread, level_init_packet);
+        send_packet(ThreadType::Any_Thread, handshake_packet);
+        send_packet(ThreadType::Any_Thread, level_init_packet);
 
         _player = player;
         _player->set_state(game::PlayerState::Handshake_Completed);
     }
 
-    bool Connection::Descriptor::send_packet(SenderType sender_type, const net::PacketHandshake& packet)
+    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketHandshake& packet)
     {
         return packet.serialize(*io_send_events[sender_type]->data);
     }
 
-    bool Connection::Descriptor::send_packet(SenderType sender_type, const net::PacketLevelInit& packet)
+    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketLevelInit& packet)
     {
         return packet.serialize(*io_send_events[sender_type]->data);
     }
 
-    bool Connection::Descriptor::send_packet(SenderType sender_type, const net::PacketSetPlayerID& packet)
+    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketSetPlayerID& packet)
     {
         return packet.serialize(*io_send_events[sender_type]->data);
     }
