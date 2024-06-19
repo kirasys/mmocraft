@@ -108,8 +108,11 @@ namespace net
     {
         for (std::size_t i = 0; i < connection_table.size(); i++) {
             auto& entry = connection_table[i];
+            if (entry.will_delete)
+                continue;
+
             auto player = entry.connection->descriptor.get_connected_player();
-            if (not entry.will_delete && player && filter(player))
+            if (player && filter(player))
                 found.push_back(player);
         }
 
