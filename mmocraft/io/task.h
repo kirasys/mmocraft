@@ -24,6 +24,11 @@ namespace io
             return _state;
         }
 
+        bool busy() const
+        {
+            return _state == State::Processing;
+        }
+
         bool transit_state(State old_state, State new_state)
         {
             _state = _state == old_state ? new_state : old_state;
@@ -55,10 +60,11 @@ namespace io
             transit_state(State::Processing, State::Unused);
         }
 
-        virtual bool exists() const
+        bool exists() const
         {
-            return status() == State::Unused;
+            return true;
         }
+
     private:
         handler_type _handler;
         HandlerClass* _handler_inst = nullptr;
