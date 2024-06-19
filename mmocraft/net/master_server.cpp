@@ -67,7 +67,7 @@ namespace net
             std::size_t start_tick = util::current_monotonic_tick();
 
             this->tick();
-            world.tick();
+            world.tick(io_service);
 
             std::size_t end_tick = util::current_monotonic_tick();
 
@@ -79,7 +79,7 @@ namespace net
     void MasterServer::flush_deferred_packet()
     {
         for (auto task : deferred_packet_tasks) {
-            if (task->exists() && task->transit_state(io::Task::Unused, io::Task::Processing)) {
+            if (task->exists() && not task->busy()) {
                 io_service.schedule_task(task);
             }
         }
