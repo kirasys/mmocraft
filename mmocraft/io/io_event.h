@@ -51,7 +51,7 @@ namespace io
 
         virtual std::size_t unused_size() const = 0;
         
-        virtual bool push(std::byte* data, std::size_t n) = 0;
+        virtual bool push(const std::byte* data, std::size_t n) = 0;
 
         virtual void pop(std::size_t n) = 0;
     };
@@ -93,7 +93,7 @@ namespace io
             return sizeof(_data) - _size;
         }
 
-        bool push(std::byte*, std::size_t n) override;
+        bool push(const std::byte*, std::size_t n) override;
 
         void pop(std::size_t n) override;
 
@@ -142,7 +142,7 @@ namespace io
             return sizeof(_data) - data_tail;
         }
 
-        bool push(std::byte* data, std::size_t n) override
+        bool push(const std::byte* data, std::size_t n) override
         {
             if (data_head == data_tail)
                 data_head = data_tail = 0;
@@ -208,7 +208,7 @@ namespace io
             return sizeof(_data) - data_tail.load(std::memory_order_relaxed);
         }
 
-        bool push(std::byte* data, std::size_t n) override
+        bool push(const std::byte* data, std::size_t n) override
         {
             auto old_tail = data_tail.load(std::memory_order_relaxed);
             do {
@@ -282,7 +282,7 @@ namespace io
             return _data_capacity - _data_size;
         }
 
-        bool push(std::byte* data, std::size_t n) override
+        bool push(const std::byte* data, std::size_t n) override
         {
             if (n > unused_size())
                 return false;

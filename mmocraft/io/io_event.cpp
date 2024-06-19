@@ -32,7 +32,7 @@ namespace io
         event_handler.on_complete(this);
     }
 
-    bool IoRecvEventData::push(std::byte*, std::size_t n)
+    bool IoRecvEventData::push(const std::byte*, std::size_t n)
     {
         // data was already appended by I/O.
         _size += n;
