@@ -23,13 +23,6 @@ namespace game
     constexpr const char* block_data_filename = "blocks.bin";
     constexpr const char* world_metadata_filename = "metadata.json";
 
-    struct Coordinate3D
-    {
-        short x = 0;
-        short y = 0;
-        short z = 0;
-    };
-
     class World : util::NonCopyable
     {
     public:
@@ -39,7 +32,9 @@ namespace game
 
         void caching_compressed_block_data();
 
-        void tick();
+        void spawn_player();
+
+        void tick(io::IoCompletionPort&);
 
         bool load_filesystem_world(std::string_view);
 
@@ -58,7 +53,8 @@ namespace game
         net::MulticastManager multicast_manager;
 
         std::vector<std::unique_ptr<game::Player>> players;
-        util::LockfreeStack<net::ConnectionKey> spawn_wait_players;
+        util::LockfreeStack<game::Player*> spawn_wait_players;
+        io::SimpleTask<game::World> spawn_player_task;
 
         WorldMetadata _metadata;
 

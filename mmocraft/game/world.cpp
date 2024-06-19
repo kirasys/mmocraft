@@ -26,6 +26,7 @@ namespace game
         : connection_env{ a_connection_env }
         , multicast_manager{ a_connection_env }
         , players(connection_env.size_of_max_connections())
+        , spawn_player_task{ &World::spawn_player, this }
     {
 
     }
@@ -82,7 +83,49 @@ namespace game
         multicast_manager.set_multicast_data(net::MuticastTag::Level_Data, std::move(serialized_level_packet), packet_size);
     }
 
-    void World::tick()
+    void World::spawn_player()
+    {
+        // get new entered players.
+        std::vector<game::Player*> new_players;
+
+        auto spawn_wait_player_ptr = spawn_wait_players.pop();
+        for (auto player_node = spawn_wait_player_ptr.get(); player_node; player_node->next)
+            new_players.push_back(player_node->value);
+
+        // get existing all players in the world.
+        std::vector<game::Player*> old_players;
+        old_players.reserve(connection_env.size_of_max_connections());
+
+        connection_env.select_players([](const game::Player* player)
+            { return player->state() > PlayerState::Spawn_Wait; },
+            old_players);
+
+        // create spawn packet of all players.
+        std::unique_ptr<std::byte[]> spawn_packet_data;
+        net::PacketSpawnPlayer::serialize(old_players, new_players, spawn_packet_data);
+
+        // spawn new player for the existing players. 
+        auto new_player_spawn_packet_data = spawn_packet_data.get() + old_players.size() * net::PacketSpawnPlayer::packet_size;
+
+        for (auto player : old_players) {
+            if (auto desc = connection_env.try_acquire_descriptor(player->connection_key())) {
+                desc->send_raw_data(
+                    net::ThreadType::Any_Thread,
+                    new_player_spawn_packet_data,
+                    new_players.size() * net::PacketSpawnPlayer::packet_size
+                );
+            }
+        }
+
+        // spawn all players for the new players. (use multicast)
+        for (auto player : new_players) {
+            if (auto desc = connection_env.try_acquire_descriptor(player->connection_key())) {
+                
+            }
+        }
+    }
+
+    void World::tick(io::IoCompletionPort& task_scheduler)
     {
         auto transit_player_state = [this](net::Connection::Descriptor& desc, game::Player& player) {
             switch (player.state()) {
@@ -95,14 +138,22 @@ namespace game
             case game::PlayerState::Level_Initialized:
             {
                 net::PacketSetPlayerID packet(player.game_id());
-                if (desc.send_packet(net::ThreadType::Tick_Thread, packet))
-                    player.set_state(PlayerState::Assigned_PlayerID);
+                if (desc.send_packet(net::ThreadType::Tick_Thread, packet)) {
+                    player.set_default_spawn_position(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
+                    player.set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
+
+                    spawn_wait_players.push(&player);
+                    player.set_state(PlayerState::Spawn_Wait);
+                }
             }
             break;
             }
         };
 
         connection_env.for_each_player(transit_player_state);
+
+        if (not spawn_wait_players.empty() && spawn_player_task.busy())
+            task_scheduler.schedule_task(&spawn_player_task);
     }
 
     bool World::load_filesystem_world(std::string_view a_save_dir)
@@ -175,7 +226,7 @@ namespace game
         metadata.set_volume(map_size.x * map_size.y * map_size.z);
 
         metadata.set_spawn_x(map_size.x / 2);
-        metadata.set_spawn_y(map_size.y / 2);
+        metadata.set_spawn_y(map_size.y);
         metadata.set_spawn_z(map_size.z / 2);
         metadata.set_spawn_yaw(0);
         metadata.set_spawn_pitch(0);
