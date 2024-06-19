@@ -214,7 +214,7 @@ namespace io
             do {
                 if (old_tail + int(n) > sizeof(_data))
                     return false;
-            } while (data_tail.compare_exchange_weak(old_tail, old_tail + int(n),
+            } while (not data_tail.compare_exchange_weak(old_tail, old_tail + int(n),
                     std::memory_order_relaxed, std::memory_order_relaxed));
 
             std::memcpy(_data + old_tail, data, n);
