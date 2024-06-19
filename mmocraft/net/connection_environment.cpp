@@ -104,31 +104,14 @@ namespace net
         }
     }
 
-    void ConnectionEnvironment::select_players(unsigned n, std::bitset<1024>* bit_sets[], unsigned max_bit[], bool(*filter_funcs[])(net::ConnectionKey))
+    void ConnectionEnvironment::select_players(bool(*filter)(const game::Player*), std::vector<game::Player*>& found)
     {
-        
-    }
-
-    void ConnectionEnvironment::poll_players(std::vector<std::unique_ptr<game::Player>>& players,
-                                                unsigned filter_count,
-                                                bool(*filters[])(const game::Player*),
-                                                std::vector<unsigned>* matched_index_sets[])
-    {
-        for (unsigned index = 0; index < connection_table.size(); index++) {
-            auto& entry = connection_table[index];
-            if (entry.will_delete)
-                continue;
-
-            // ensure safely accessing player pointers.
-            // Note: even if the player is freed by another thread, we can invoke non-virtual const method. (may return garbage value)
-            auto player = players[index].get();
-            if (!player || player->connection_key().created_at() != entry.created_at)
-                continue;
-
-            for (unsigned i = 0; i < filter_count; i++) {
-                if (filters[i](player))
-                    matched_index_sets[i]->push_back(index);
-            }
+        for (std::size_t i = 0; i < connection_table.size(); i++) {
+            auto& entry = connection_table[i];
+            auto player = entry.connection->descriptor.get_connected_player();
+            if (not entry.will_delete && player && filter(player))
+                found.push_back(player);
         }
+
     }
 }

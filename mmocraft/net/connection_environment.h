@@ -88,12 +88,7 @@ namespace net
 
         void for_each_player(std::function<void(net::Connection::Descriptor&, game::Player&)> const&);
 
-        void select_players(unsigned n, std::bitset<1024>* [], unsigned [], bool(*[])(net::ConnectionKey));
-
-        void poll_players(std::vector<std::unique_ptr<game::Player>>&,
-                            unsigned filter_count,
-                            bool(*[])(const game::Player*),
-                            std::vector<unsigned>* matched_index_sets[]);
+        void select_players(bool(*filter)(const game::Player*), std::vector<game::Player*>&);
 
     private:
         static std::atomic<std::uint32_t> connection_id_counter;
