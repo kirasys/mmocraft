@@ -77,6 +77,7 @@
     <ClInclude Include="net\connection_key.h" />
     <ClInclude Include="io\task.h" />
     <ClInclude Include="net\multicast_manager.h" />
+    <ClInclude Include="util\math.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

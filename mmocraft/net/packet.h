@@ -8,7 +8,9 @@
 
 #include "io/io_event.h"
 #include "logging/error.h"
+#include "game/player.h"
 #include "util/compressor.h"
+#include "util/math.h"
 
 #define DECLARE_PACKET_READ_METHOD(packet_type) \
     static std::byte* parse(std::byte* buf_start, std::byte* buf_end, net::Packet*); \
@@ -23,11 +25,6 @@
     {														 \
         return static_cast<const packet_type*>(packet);		 \
     }
-
-namespace game
-{
-    class Player;
-}
 
 namespace net
 {
@@ -263,5 +260,9 @@ namespace net
         static void write_string(std::byte*&, const PacketFieldType::String&);
 
         static void write_string(std::byte*&, const char*);
+
+        static void write_position(std::byte*&, util::Coordinate3D);
+
+        static void write_orientation(std::byte*&, std::uint8_t yaw, std::uint8_t pitch);
     };
 }

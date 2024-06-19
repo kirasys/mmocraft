@@ -15,7 +15,7 @@ namespace net
     {
         Level_Data,
 
-
+        Spawn_Player,
 
         MuticastTag_Count,
     };

@@ -96,14 +96,14 @@ namespace net
         buf += PacketFieldType::String::size_with_padding;
     }
 
-    void write_position(std::byte*& buf, game::Coordinate3D pos)
+    void PacketStructure::write_position(std::byte*& buf, util::Coordinate3D pos)
     {
         PacketStructure::write_short(buf, pos.x);
         PacketStructure::write_short(buf, pos.y);
         PacketStructure::write_short(buf, pos.z);
     }
 
-    void write_orientation(std::byte*& buf, std::uint8_t yaw, std::uint8_t pitch)
+    void PacketStructure::write_orientation(std::byte*& buf, std::uint8_t yaw, std::uint8_t pitch)
     {
         PacketStructure::write_byte(buf, yaw);
         PacketStructure::write_byte(buf, pitch);
@@ -240,8 +240,8 @@ namespace net
                 PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
                 PacketStructure::write_byte(buf_start, PacketFieldType::Byte(player->game_id()));
                 PacketStructure::write_string(buf_start, player->player_name());
-                write_position(buf_start, player->spawn_position());
-                write_orientation(buf_start, player->spawn_yaw(), player->spawn_pitch());
+                PacketStructure::write_position(buf_start, player->spawn_position());
+                PacketStructure::write_orientation(buf_start, player->spawn_yaw(), player->spawn_pitch());
             }
         };
         write_players(old_players);

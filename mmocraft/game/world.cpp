@@ -89,7 +89,7 @@ namespace game
         std::vector<game::Player*> new_players;
 
         auto spawn_wait_player_ptr = spawn_wait_players.pop();
-        for (auto player_node = spawn_wait_player_ptr.get(); player_node; player_node->next)
+        for (auto player_node = spawn_wait_player_ptr.get(); player_node; player_node = player_node->next)
             new_players.push_back(player_node->value);
 
         // get existing all players in the world.
@@ -118,10 +118,16 @@ namespace game
         }
 
         // spawn all players for the new players. (use multicast)
+        multicast_manager.set_multicast_data(
+            net::MuticastTag::Spawn_Player,
+            std::move(spawn_packet_data),
+            (old_players.size() + new_players.size()) * net::PacketSpawnPlayer::packet_size
+        );
+
         for (auto player : new_players) {
-            if (auto desc = connection_env.try_acquire_descriptor(player->connection_key())) {
-                
-            }
+            auto desc = connection_env.try_acquire_descriptor(player->connection_key());
+            if (desc && multicast_manager.send(net::MuticastTag::Spawn_Player, *desc))
+                player->set_state(game::PlayerState::Spawned);
         }
     }
 
@@ -131,20 +137,25 @@ namespace game
             switch (player.state()) {
             case game::PlayerState::Handshake_Completed:
             {
-                if (multicast_manager.send(net::MuticastTag::Level_Data, desc))
-                    player.set_state(PlayerState::Level_Initialized);
-                break;
-            }
-            case game::PlayerState::Level_Initialized:
-            {
                 net::PacketSetPlayerID packet(player.game_id());
                 if (desc.send_packet(net::ThreadType::Tick_Thread, packet)) {
-                    player.set_default_spawn_position(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
-                    player.set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
-
-                    spawn_wait_players.push(&player);
-                    player.set_state(PlayerState::Spawn_Wait);
+                    player.set_state(PlayerState::PlayerID_Tranferred);
                 }
+            }
+            break;
+            case game::PlayerState::PlayerID_Tranferred:
+            {
+                if (multicast_manager.send(net::MuticastTag::Level_Data, desc))
+                    player.set_state(PlayerState::Level_Initialized);
+            }
+            break;
+            case game::PlayerState::Level_Initialized:
+            {
+                player.set_default_spawn_position(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
+                player.set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
+                player.set_state(PlayerState::Spawn_Wait);
+
+                spawn_wait_players.push(&player);
             }
             break;
             }
@@ -152,7 +163,7 @@ namespace game
 
         connection_env.for_each_player(transit_player_state);
 
-        if (not spawn_wait_players.empty() && spawn_player_task.busy())
+        if (not spawn_wait_players.empty() && spawn_player_task.transit_state(io::Task::Unused, io::Task::Processing))
             task_scheduler.schedule_task(&spawn_player_task);
     }
 
@@ -194,7 +205,7 @@ namespace game
     {
         const auto& world_conf = config::get_world_config();
 
-        auto map_size = Coordinate3D{ short(world_conf.width()), short(world_conf.height()), short(world_conf.length())};
+        auto map_size = util::Coordinate3D{ short(world_conf.width()), short(world_conf.height()), short(world_conf.length())};
         unsigned long map_volume = map_size.x * map_size.y * map_size.z;
         
         // write world files to the disk.
@@ -202,7 +213,7 @@ namespace game
         create_metadata_file(map_size);
     }
 
-    void World::create_block_file(Coordinate3D map_size, unsigned long map_volume) const
+    void World::create_block_file(util::Coordinate3D map_size, unsigned long map_volume) const
     {
         auto blocks_ptr = WorldMapGenerator::generate_flat_world(map_size);
 
@@ -215,7 +226,7 @@ namespace game
     }
 
 
-    void World::create_metadata_file(Coordinate3D map_size) const
+    void World::create_metadata_file(util::Coordinate3D map_size) const
     {
         WorldMetadata metadata;
         metadata.set_format_version(WORLD_METADATA_FORMAT_VERSION);
@@ -236,7 +247,7 @@ namespace game
         util::proto_message_to_json_file(metadata, world_metadata_path);
     }
 
-    std::unique_ptr<BlockID[]> WorldMapGenerator::generate_flat_world(Coordinate3D map_size)
+    std::unique_ptr<BlockID[]> WorldMapGenerator::generate_flat_world(util::Coordinate3D map_size)
     {
         const auto plain_size = map_size.x * map_size.z;
         auto blocks = new BlockID[plain_size * map_size.y];

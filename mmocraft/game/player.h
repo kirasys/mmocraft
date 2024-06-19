@@ -4,6 +4,7 @@
 
 #include "net/connection_key.h"
 #include "util/common_util.h"
+#include "util/math.h"
 
 namespace game
 {
@@ -36,16 +37,13 @@ namespace game
 
         Handshake_Completed,
 
+        PlayerID_Tranferred,
+
         Level_Initialized,
 
         Spawn_Wait,
-    };
 
-    struct Coordinate3D
-    {
-        short x = 0;
-        short y = 0;
-        short z = 0;
+        Spawned,
     };
 
     class Player : util::NonCopyable
@@ -94,9 +92,9 @@ namespace game
             return _username;
         }
 
-        Coordinate3D spawn_position() const
+        util::Coordinate3D spawn_position() const
         {
-            return { short(_spawn_pos.x << 5), short(_spawn_pos.y << 5), short(_spawn_pos.z << 5) };
+            return { short(_spawn_pos.x * 32), short(_spawn_pos.y * 32 + 51), short(_spawn_pos.z * 32) };
         }
 
         auto spawn_yaw() const
@@ -137,7 +135,7 @@ namespace game
         char _username[16 + 1];
         char _password[32 + 1];
 
-        Coordinate3D _spawn_pos = { 0, 0, 0 };
+        util::Coordinate3D _spawn_pos = { 0, 0, 0 };
         std::uint8_t _spawn_yaw = 0;
         std::uint8_t _spawn_pitch = 0;
     };

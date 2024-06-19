@@ -103,6 +103,7 @@
     <ClInclude Include="util\deferred_call.h" />
     <ClInclude Include="util\interval_task.h" />
     <ClInclude Include="util\lockfree_stack.h" />
+    <ClInclude Include="util\math.h" />
     <ClInclude Include="util\noncopyable.h" />
     <ClInclude Include="util\protobuf_util.h" />
     <ClInclude Include="util\string_util.h" />

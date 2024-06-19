@@ -45,9 +45,9 @@ namespace game
         
         void create_new_world() const;
 
-        void create_block_file(Coordinate3D map_size, unsigned long map_volume) const;
+        void create_block_file(util::Coordinate3D map_size, unsigned long map_volume) const;
 
-        void create_metadata_file(Coordinate3D map_size) const;
+        void create_metadata_file(util::Coordinate3D map_size) const;
 
         net::ConnectionEnvironment& connection_env;
         net::MulticastManager multicast_manager;
@@ -73,6 +73,6 @@ namespace game
     class WorldMapGenerator
     {
     public:
-        static std::unique_ptr<BlockID[]> generate_flat_world(Coordinate3D map_size);
+        static std::unique_ptr<BlockID[]> generate_flat_world(util::Coordinate3D map_size);
     };
 }
