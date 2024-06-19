@@ -2,7 +2,6 @@
 
 #include <string.h>
 
-#include "net/packet.h"
 #include "net/connection_key.h"
 #include "util/common_util.h"
 
@@ -31,13 +30,22 @@ namespace game
 
     enum PlayerState
     {
+        Disconnected,
+
         Initialized,
 
         Handshake_Completed,
 
         Level_Initialized,
 
-        Assigned_PlayerID,
+        Spawn_Wait,
+    };
+
+    struct Coordinate3D
+    {
+        short x = 0;
+        short y = 0;
+        short z = 0;
     };
 
     class Player : util::NonCopyable
@@ -81,6 +89,39 @@ namespace game
             return PlayerID(_connection_key.index());
         }
 
+        const char* player_name() const
+        {
+            return _username;
+        }
+
+        Coordinate3D spawn_position() const
+        {
+            return { short(_spawn_pos.x << 5), short(_spawn_pos.y << 5), short(_spawn_pos.z << 5) };
+        }
+
+        auto spawn_yaw() const
+        {
+            return _spawn_yaw;
+        }
+
+        auto spawn_pitch() const
+        {
+            return _spawn_pitch;
+        }
+
+        void set_default_spawn_position(int x, int y, int z)
+        {
+            if (_spawn_pos.x || _spawn_pos.y || _spawn_pos.z == 0)
+                _spawn_pos = { short(x), short(y), short(z) };
+        }
+
+        void set_default_spawn_orientation(unsigned yaw, unsigned pitch)
+        {
+            if (_spawn_yaw || _spawn_pitch == 0) {
+                _spawn_yaw = std::uint8_t(yaw);
+                _spawn_pitch = std::uint8_t(pitch);
+            }
+        }
 
     private:
         PlayerState _state = PlayerState::Initialized;
@@ -93,7 +134,11 @@ namespace game
 
         PlayerType _player_type;
 
-        char _username[net::PacketFieldConstraint::max_username_length + 1];
-        char _password[net::PacketFieldConstraint::max_password_length + 1];
+        char _username[16 + 1];
+        char _password[32 + 1];
+
+        Coordinate3D _spawn_pos = { 0, 0, 0 };
+        std::uint8_t _spawn_yaw = 0;
+        std::uint8_t _spawn_pitch = 0;
     };
 }
