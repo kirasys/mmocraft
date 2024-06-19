@@ -58,7 +58,7 @@ namespace game
         net::MulticastManager multicast_manager;
 
         std::vector<std::unique_ptr<game::Player>> players;
-        util::LockfreeStack<net::ConnectionKey> handshaked_players;
+        util::LockfreeStack<net::ConnectionKey> spawn_wait_players;
 
         WorldMetadata _metadata;
 

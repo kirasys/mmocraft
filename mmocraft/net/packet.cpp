@@ -118,31 +118,26 @@ namespace net
 
     bool PacketHandshake::serialize(io::IoEventData& event_data) const
     {
-        if (size_of_serialized() > event_data.unused_size())
-            return false;
+        std::byte buf[packet_size];
 
-        std::byte* buf_start = event_data.begin_unused();
+        std::byte* buf_start = buf;
         PacketStructure::write_byte(buf_start, id);
         PacketStructure::write_byte(buf_start, protocol_version);
         PacketStructure::write_string(buf_start, server_name);
         PacketStructure::write_string(buf_start, motd);
         PacketStructure::write_byte(buf_start, user_type);
-
-        event_data.commit(buf_start - event_data.begin_unused());
-
-        return true;
+       
+        return  event_data.push(buf, sizeof(buf));
     }
 
     bool PacketLevelInit::serialize(io::IoEventData& event_data) const
     {
-        if (size_of_serialized() > event_data.unused_size())
-            return false;
+        std::byte buf[packet_size];
 
-        std::byte* buf_start = event_data.begin_unused();
+        std::byte* buf_start = buf;
         PacketStructure::write_byte(buf_start, id);
-        event_data.commit(1);
-
-        return true;
+        
+        return event_data.push(buf, sizeof(buf));
     }
 
     PacketLevelDataChunk::PacketLevelDataChunk
@@ -210,29 +205,23 @@ namespace net
 
     bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const
     {
-        if (size_of_serialized() > event_data.unused_size())
-            return false;
+        std::byte buf[packet_size];
 
-        std::byte* buf_start = event_data.begin_unused();
+        std::byte* buf_start = buf;
         PacketStructure::write_byte(buf_start, id);
         PacketStructure::write_string(buf_start, reason);
         
-        event_data.commit(buf_start - event_data.begin_unused());
-
-        return true;
+        return event_data.push(buf, sizeof(buf));
     }
 
     bool PacketSetPlayerID::serialize(io::IoEventData& event_data) const
     {
-        if (size_of_serialized() > event_data.unused_size())
-            return false;
+        std::byte buf[packet_size];
 
-        std::byte* buf_start = event_data.begin_unused();
+        std::byte* buf_start = buf;
         PacketStructure::write_byte(buf_start, id);
         PacketStructure::write_byte(buf_start, player_id);
 
-        event_data.commit(buf_start - event_data.begin_unused());
-
-        return true;
+        return event_data.push(buf, sizeof(buf));
     }
 }

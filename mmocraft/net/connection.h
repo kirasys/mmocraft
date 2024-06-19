@@ -25,10 +25,8 @@ namespace net
 
     enum SenderType
     {
-        CONNECTION_THREAD,
-        DEFERRED_THREAD,
-        TICK_THREAD,
-
+        Tick_Thread,
+        Any_Thread,
         SenderType_Count,
     };
 
@@ -94,13 +92,13 @@ namespace net
 
             bool disconnect(SenderType, error::ResultCode);
 
-            bool send_handshake_packet(const net::PacketHandshake&);
-
             void on_handshake_success(game::Player*);
 
-            bool send_level_init_packet(const net::PacketLevelInit&);
+            bool send_packet(SenderType, const net::PacketHandshake&);
 
-            bool send_set_player_id_packet(const net::PacketSetPlayerID&);
+            bool send_packet(SenderType, const net::PacketLevelInit&);
+
+            bool send_packet(SenderType, const net::PacketSetPlayerID&);
 
             static void flush_send(net::ConnectionEnvironment&);
 
@@ -123,7 +121,6 @@ namespace net
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
 
-            std::mutex deferred_send_lock;
             std::mutex multicast_data_append_lock;
 
             game::Player* _player;
@@ -135,7 +132,7 @@ namespace net
 
         bool is_valid() const
         {
-            return send_event_datas[SenderType_Count - 1] && send_events[SenderType_Count - 1] && io_recv_event;
+            return send_event_lockfree_data && send_events[SenderType_Count - 1] && io_recv_event;
         }
 
         error::ResultCode get_last_error() const
@@ -164,7 +161,8 @@ namespace net
 
         net::PacketHandleServer& packet_handle_server;
 
-        win::ObjectPool<io::IoSendEventData>::Pointer send_event_datas[SenderType_Count];
+        win::ObjectPool<io::IoSendEventData>::Pointer send_event_data;
+        win::ObjectPool<io::IoSendEventLockFreeData>::Pointer send_event_lockfree_data;
         win::ObjectPool<io::IoSendEvent>::Pointer send_events[SenderType_Count];
 
         win::ObjectPool<io::IoRecvEventData>::Pointer io_recv_event_data;

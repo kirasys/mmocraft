@@ -159,14 +159,7 @@ namespace net
             , user_type{ PacketFieldType::Byte(a_user_type) }
         { }
 
-        inline std::size_t size_of_serialized() const
-        {
-            return sizeof(Packet::id) 
-                + sizeof(protocol_version)
-                + server_name.size_with_padding
-                + motd.size_with_padding
-                + sizeof(user_type);
-        }
+        constexpr static std::size_t packet_size = 131;
 
         bool serialize(io::IoEventData&) const;
     };
@@ -177,10 +170,7 @@ namespace net
             : Packet{PacketID::LevelInitialize}
         { }
 
-        inline std::size_t size_of_serialized() const
-        {
-            return 1;
-        }
+        constexpr static std::size_t packet_size = 1;
 
         bool serialize(io::IoEventData&) const;
     };
@@ -222,10 +212,7 @@ namespace net
             , reason{ a_reason.data(), a_reason.size() }
         { }
 
-        inline std::size_t size_of_serialized() const
-        {
-            return sizeof(Packet::id) + reason.size_with_padding;
-        }
+        constexpr static std::size_t packet_size = 65;
 
         bool serialize(io::IoEventData&) const;
     };
@@ -239,10 +226,7 @@ namespace net
             , player_id(PacketFieldType::Byte(a_player_id))
         { }
 
-        inline std::size_t size_of_serialized() const
-        {
-            return 2;
-        }
+        constexpr static std::size_t packet_size = 2;
 
         bool serialize(io::IoEventData&) const;
     };
