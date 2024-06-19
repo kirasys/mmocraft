@@ -29,6 +29,11 @@ namespace io
             return _state == State::Processing;
         }
 
+        void set_state(State state)
+        {
+            _state = state;
+        }
+
         bool transit_state(State old_state, State new_state)
         {
             _state = _state == old_state ? new_state : old_state;
@@ -53,11 +58,16 @@ namespace io
 
         virtual void invoke_handler(ULONG_PTR task_handler_inst) override
         {
-            std::invoke(_handler,
-                _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(task_handler_inst)
-            );
+            try {
+                std::invoke(_handler,
+                    _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(task_handler_inst)
+                );
+            }
+            catch (...) {
+                CONSOLE_LOG(error) << "Unexpected error occured at simple task handler";
+            }
 
-            transit_state(State::Processing, State::Unused);
+            set_state(State::Unused);
         }
 
         bool exists() const
