@@ -24,6 +24,11 @@
         return static_cast<const packet_type*>(packet);		 \
     }
 
+namespace game
+{
+    class Player;
+}
+
 namespace net
 {
     enum PacketID
@@ -151,7 +156,7 @@ namespace net
 
         DECLARE_PACKET_READ_METHOD(PacketHandshake);
 
-        PacketHandshake(const std::string& a_server_name, const std::string& a_motd, UserType a_user_type)
+        PacketHandshake(const std::string& a_server_name, const std::string& a_motd, net::UserType a_user_type)
             : Packet{ PacketID::Handshake }
             , server_name{ a_server_name.data(), a_server_name.size() }
             , motd{ a_motd.data(), a_motd.size() }
@@ -202,6 +207,17 @@ namespace net
         DECLARE_PACKET_READ_METHOD(PacketSetBlock);
     };
 
+    struct PacketSpawnPlayer : Packet
+    {
+        PacketSpawnPlayer() 
+            : Packet{ PacketID::SpawnPlayer }
+        { }
+
+        constexpr static std::size_t packet_size = 74;
+
+        static std::size_t serialize(const std::vector<game::Player*>&, const std::vector<game::Player*>&, std::unique_ptr<std::byte[]>&);
+
+    };
     
     struct PacketDisconnectPlayer : Packet
     {
@@ -245,5 +261,7 @@ namespace net
         static void write_short(std::byte*&, PacketFieldType::Short);
 
         static void write_string(std::byte*&, const PacketFieldType::String&);
+
+        static void write_string(std::byte*&, const char*);
     };
 }

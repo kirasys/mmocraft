@@ -2,6 +2,9 @@
 #include "packet.h"
 
 #include <array>
+#include <cstring>
+
+#include "game/player.h"
 
 #define OVERFLOW_CHECK(buf_start, buf_end, size) \
         if (buf_start + size > buf_end) return nullptr;
@@ -83,6 +86,27 @@ namespace net
         std::memcpy(buf, str.data, str.size);
         std::memset(buf + str.size, ' ', str.size_with_padding - str.size);
         buf += str.size_with_padding;
+    }
+
+    void PacketStructure::write_string(std::byte*& buf, const char* str)
+    {
+        auto size = std::min(std::strlen(str), std::size_t(64));
+        std::memcpy(buf, str, size);
+        std::memset(buf + size, ' ', PacketFieldType::String::size_with_padding - size);
+        buf += PacketFieldType::String::size_with_padding;
+    }
+
+    void write_position(std::byte*& buf, game::Coordinate3D pos)
+    {
+        PacketStructure::write_short(buf, pos.x);
+        PacketStructure::write_short(buf, pos.y);
+        PacketStructure::write_short(buf, pos.z);
+    }
+
+    void write_orientation(std::byte*& buf, std::uint8_t yaw, std::uint8_t pitch)
+    {
+        PacketStructure::write_byte(buf, yaw);
+        PacketStructure::write_byte(buf, pitch);
     }
 
     /* Concrete Packet Static Methods */
@@ -201,6 +225,29 @@ namespace net
             return error::PACKET_INVALID_DATA;
 
         return error::SUCCESS;
+    }
+
+    std::size_t PacketSpawnPlayer::serialize
+        (const std::vector<game::Player*>& old_players, const std::vector<game::Player*>& new_players, std::unique_ptr<std::byte[]>& serialized_data)
+    {
+        auto data_size = (old_players.size() + new_players.size()) * packet_size;
+        serialized_data.reset(new std::byte[data_size]);
+
+        std::byte* buf_start = serialized_data.get();
+
+        auto write_players = [&buf_start](const std::vector<game::Player*>& players) {
+            for (const auto* player : players) {
+                PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
+                PacketStructure::write_byte(buf_start, PacketFieldType::Byte(player->game_id()));
+                PacketStructure::write_string(buf_start, player->player_name());
+                write_position(buf_start, player->spawn_position());
+                write_orientation(buf_start, player->spawn_yaw(), player->spawn_pitch());
+            }
+        };
+        write_players(old_players);
+        write_players(new_players);
+
+        return data_size;
     }
 
     bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const
