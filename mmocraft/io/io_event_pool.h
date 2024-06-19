@@ -21,8 +21,8 @@ namespace io
             , recv_event_data_pool{ max_capacity + 1}
 
             , send_event_pool{ 3 * max_capacity }
-            , send_event_data_pool{ 3 * max_capacity }
-            , send_event_small_data_pool{ max_capacity }
+            , send_event_data_pool{ 2 * max_capacity }
+            , send_event_lockfree_data_pool{ max_capacity }
         { }
 
         auto new_accept_event_data()
@@ -50,9 +50,9 @@ namespace io
             return send_event_data_pool.new_object();
         }
 
-        auto new_send_event_small_data()
+        auto new_send_event_lockfree_data()
         {
-            return send_event_small_data_pool.new_object();
+            return send_event_lockfree_data_pool.new_object();
         }
 
         auto new_send_event(IoEventData* io_data)
@@ -68,7 +68,7 @@ namespace io
 
         win::ObjectPool<IoSendEvent> send_event_pool;
         win::ObjectPool<IoSendEventData> send_event_data_pool;
-        win::ObjectPool<IoSendEventSmallData> send_event_small_data_pool;
+        win::ObjectPool<IoSendEventLockFreeData> send_event_lockfree_data_pool;
     };
 
     using IoEventPool = IoEventObjectPool;

@@ -25,6 +25,7 @@ namespace io
 
     constexpr int RECV_BUFFER_SIZE = 4096;
     constexpr int SEND_BUFFER_SIZE = 1024;
+    constexpr int CONCURRENT_SEND_BUFFER_SIZE = 2048;
     constexpr int SEND_SMALL_BUFFER_SIZE = 256;
 
     class IoEventHandler;
@@ -53,10 +54,6 @@ namespace io
         virtual bool push(std::byte* data, std::size_t n) = 0;
 
         virtual void pop(std::size_t n) = 0;
-
-        // raw buffer manipulation
-
-        virtual void commit(std::size_t n) = 0;
     };
 
     class IoRecvEventData : public IoEventData
@@ -99,11 +96,6 @@ namespace io
         bool push(std::byte*, std::size_t n) override;
 
         void pop(std::size_t n) override;
-
-        void commit(std::size_t n)
-        {
-            _size -= n;
-        }
 
     private:
         std::byte _data[RECV_BUFFER_SIZE] = {};
@@ -170,14 +162,6 @@ namespace io
             assert(data_head <= sizeof(_data));
         }
 
-        void commit(std::size_t n) override
-        {
-            if (data_head == data_tail)
-                data_head = data_tail = 0;
-
-            data_tail += int(n);
-        }
-
     private:
         std::byte _data[N] = {};
         int data_head = 0;
@@ -186,6 +170,73 @@ namespace io
 
     using IoSendEventData = IoSendEventVariableData<SEND_BUFFER_SIZE>;
     using IoSendEventSmallData = IoSendEventVariableData<SEND_SMALL_BUFFER_SIZE>;
+
+    class IoSendEventLockFreeData : public IoEventData
+    {
+    public:
+        // data points to used space.
+
+        std::byte* begin()
+        {
+            return _data + data_head;
+        }
+
+        std::byte* end()
+        {
+            return _data + data_tail.load(std::memory_order_relaxed);
+        }
+
+        std::size_t size() const 
+        {
+            return std::size_t(data_tail.load(std::memory_order_relaxed) - data_head);
+        }
+
+        // buffer points to free space.
+
+        std::byte* begin_unused()
+        {
+            return end();
+        }
+
+        std::byte* end_unused()
+        {
+            return _data + sizeof(_data);
+        }
+
+        std::size_t unused_size() const
+        {
+            return sizeof(_data) - data_tail.load(std::memory_order_relaxed);
+        }
+
+        bool push(std::byte* data, std::size_t n) override
+        {
+            auto old_tail = data_tail.load(std::memory_order_relaxed);
+            do {
+                if (old_tail + int(n) > sizeof(_data))
+                    return false;
+            } while (data_tail.compare_exchange_weak(old_tail, old_tail + int(n),
+                    std::memory_order_relaxed, std::memory_order_relaxed));
+
+            std::memcpy(_data + old_tail, data, n);
+            return true;
+        }
+
+        void pop(std::size_t n) override
+        {
+            data_head += int(n);
+            assert(data_head <= sizeof(_data));
+
+            auto tmp_data_head = data_head;
+            if (data_tail.compare_exchange_strong(tmp_data_head, 0,
+                std::memory_order_release, std::memory_order_relaxed))
+                data_head = 0;
+        }
+
+    private:
+        std::byte _data[CONCURRENT_SEND_BUFFER_SIZE];
+        int data_head;
+        std::atomic<int> data_tail;
+    };
 
     class IoSendEventSharedData : public IoEventData
     {
@@ -245,11 +296,6 @@ namespace io
         void pop(std::size_t) override
         {
             // TODO: handling partial send;
-        }
-
-        void commit(std::size_t n) override
-        {
-            _data_size += unsigned(n);
         }
 
         void update_lifetime()
