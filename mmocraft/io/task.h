@@ -1,7 +1,8 @@
 #pragma once
 
 #include "net/connection_key.h"
-#include "logging/error.h"
+#include "logging/logger.h"
+#include "util/time_util.h"
 
 namespace io
 {
@@ -15,22 +16,26 @@ namespace io
             Failed,
         };
 
-        virtual ~Task() = default;
+        Task(std::size_t interval) : interval_ms{ interval }
+        { }
 
-        State _state = Unused;
+        virtual ~Task() = default;
 
         State status() const
         {
             return _state;
         }
 
-        bool busy() const
+        virtual bool ready() const
         {
-            return _state == State::Processing;
+            return _state == State::Unused && cooldown_at < util::current_monotonic_tick();
         }
 
         void set_state(State state)
         {
+            if (state == State::Processing)
+                cooldown_at = interval_ms + util::current_monotonic_tick();
+
             _state = state;
         }
 
@@ -42,7 +47,10 @@ namespace io
 
         virtual void invoke_handler(ULONG_PTR task_handler_inst) = 0;
 
-        virtual bool exists() const = 0;
+    private:
+        State _state = Unused;
+        std::size_t interval_ms = 0;
+        std::size_t cooldown_at = 0;
     };
     
     template <typename HandlerClass>
@@ -51,8 +59,9 @@ namespace io
     public:
         using handler_type = void (HandlerClass::* const)();
 
-        SimpleTask(handler_type handler, HandlerClass* handler_inst = nullptr)
-            : _handler{ handler }
+        SimpleTask(handler_type handler, HandlerClass* handler_inst, std::size_t interval_ms = 0)
+            : io::Task{ interval_ms }
+            , _handler{ handler }
             , _handler_inst{ handler_inst }
         { }
 
@@ -68,11 +77,6 @@ namespace io
             }
 
             set_state(State::Unused);
-        }
-
-        bool exists() const
-        {
-            return true;
         }
 
     private:

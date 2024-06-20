@@ -23,6 +23,8 @@ namespace game
     constexpr const char* block_data_filename = "blocks.bin";
     constexpr const char* world_metadata_filename = "metadata.json";
 
+    constexpr std::size_t spawn_player_task_interval = 2 * 1000; // 2 seconds.
+
     class World : util::NonCopyable
     {
     public:

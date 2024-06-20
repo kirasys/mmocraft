@@ -42,8 +42,9 @@ namespace net
     public:
         using handler_type = void (HandlerClass::*const)(io::Task*, const DeferredPacket<PacketType>*);
 
-        DeferredPacketTask(handler_type handler, HandlerClass* handler_inst = nullptr)
-            : _handler{ handler }
+        DeferredPacketTask(handler_type handler, HandlerClass* handler_inst, std::size_t interval_ms = 0)
+            : io::Task{ interval_ms }
+            , _handler{ handler }
             , _handler_inst{ handler_inst }
         { }
 
@@ -65,9 +66,9 @@ namespace net
             set_state(io::Task::Unused);
         }
 
-        virtual bool exists() const override
+        virtual bool ready() const override
         {
-            return pending_packet_head.load(std::memory_order_relaxed) != nullptr;
+            return io::Task::ready() && pending_packet_head.load(std::memory_order_relaxed) != nullptr;
         }
 
         void push_packet(net::ConnectionKey key, const PacketType& src_packet)

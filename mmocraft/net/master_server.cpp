@@ -18,7 +18,7 @@ namespace net
         , database_core{ }
         , world{ connection_env }
         
-        , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this }
+        , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this, user_authentication_task_interval }
     {
 
     }
@@ -80,7 +80,7 @@ namespace net
     void MasterServer::flush_deferred_packet()
     {
         for (auto task : deferred_packet_tasks) {
-            if (task->exists() && task->transit_state(io::Task::Unused, io::Task::Processing)) {
+            if (task->ready()) {
                 io_service.schedule_task(task);
             }
         }

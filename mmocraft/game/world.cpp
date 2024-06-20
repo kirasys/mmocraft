@@ -26,7 +26,7 @@ namespace game
         : connection_env{ a_connection_env }
         , multicast_manager{ a_connection_env }
         , players(connection_env.size_of_max_connections())
-        , spawn_player_task{ &World::spawn_player, this }
+        , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
     {
 
     }
@@ -163,7 +163,7 @@ namespace game
 
         connection_env.for_each_player(transit_player_state);
 
-        if (not spawn_wait_players.empty() && spawn_player_task.transit_state(io::Task::Unused, io::Task::Processing))
+        if (not spawn_wait_players.empty() && spawn_player_task.ready())
             task_scheduler.schedule_task(&spawn_player_task);
     }
 

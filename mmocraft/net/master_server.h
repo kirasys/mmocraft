@@ -12,6 +12,8 @@
 
 namespace net
 {
+    static std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
+
     class MasterServer : public net::PacketHandleServer
     {
     public:
