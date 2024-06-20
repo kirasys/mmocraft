@@ -32,7 +32,7 @@ namespace net
     {
         // Client <-> Server
         Handshake = 0,
-        PositionAndOrientation = 8,
+        SetPlayerPosition = 8,
         Message = 0xD,
 
         // Client -> Server
@@ -45,9 +45,9 @@ namespace net
         LevelFinalize = 4,
         SetBlockServer = 6,
         SpawnPlayer = 7,
-        PositionAndOrientationUpdate = 9,
-        PositionUpdate = 0xA,
-        OrientationUpdate = 0xB,
+        UpdatePlayerPosition = 9,
+        UpdatePlayerCoordinate = 0xA,
+        UpdatePlayerOrientation = 0xB,
         DespawnPlayer = 0xC,
         DisconnectPlayer = 0xE,
         UpdateUserType = 0xF,
@@ -202,6 +202,14 @@ namespace net
         PacketFieldType::Byte block_type;
 
         DECLARE_PACKET_READ_METHOD(PacketSetBlock);
+    };
+
+    struct PacketSetPlayerPosition : Packet
+    {
+        PacketFieldType::Byte player_id;
+        game::PlayerPosition  player_pos;
+
+        DECLARE_PACKET_READ_METHOD(PacketSetPlayerPosition);
     };
 
     struct PacketSpawnPlayer : Packet

@@ -38,7 +38,8 @@ namespace
         using namespace net;
         std::array<PacketStaticData, 0x100> arr{};
         arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate };
-        arr[PacketID::SetBlockClient] = { PacketSetBlock::parse, PacketSetBlock::validate };
+        arr[PacketID::SetBlockClient] = { PacketSetBlock::parse, nullptr };
+        arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::parse, nullptr };
         return arr;
     }();
 }
@@ -219,11 +220,6 @@ namespace net
 
     error::ErrorCode PacketSetBlock::validate(const net::Packet* a_packet)
     {
-        auto& packet = *to_derived(a_packet);
-
-        if (packet.mode != 0 && packet.mode != 1)
-            return error::PACKET_INVALID_DATA;
-
         return error::SUCCESS;
     }
 
@@ -248,6 +244,19 @@ namespace net
         write_players(new_players);
 
         return data_size;
+    }
+
+    std::byte* PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    {
+        auto packet = to_derived(out_packet);
+        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->player_id);
+        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->player_pos);
+        return buf_start;
+    }
+
+    error::ErrorCode PacketSetPlayerPosition::validate(const net::Packet* a_packet)
+    {
+        return error::SUCCESS;
     }
 
     bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const
