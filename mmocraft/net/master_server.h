@@ -20,8 +20,10 @@ namespace net
         MasterServer(const config::Configuration_Server& conf = config::get_server_config());
 
         error::ResultCode handle_packet(net::Connection::Descriptor&, Packet*) override;
+        
+        error::ResultCode handle_handshake_packet(net::Connection::Descriptor&, net::PacketHandshake&);
 
-        error::ResultCode handle_handshake_packet(net::Connection::Descriptor&, PacketHandshake&);
+        error::ResultCode handle_player_position_packet(net::Connection::Descriptor&, net::PacketSetPlayerPosition&);
 
         void tick();
 

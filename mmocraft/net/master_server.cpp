@@ -28,15 +28,25 @@ namespace net
         switch (packet->id) {
         case PacketID::Handshake:
             return handle_handshake_packet(conn_descriptor, *static_cast<PacketHandshake*>(packet));
+        case PacketID::SetPlayerPosition:
+            return handle_player_position_packet(conn_descriptor, *static_cast<PacketSetPlayerPosition*>(packet));
         default:
             CONSOLE_LOG(error) << "Unimplemented packet id: " << int(packet->id);
             return error::PACKET_UNIMPLEMENTED_ID;
         }
     }
 
-    error::ResultCode MasterServer::handle_handshake_packet(net::Connection::Descriptor& conn_descriptor, PacketHandshake& packet)
+    error::ResultCode MasterServer::handle_handshake_packet(net::Connection::Descriptor& conn_descriptor, net::PacketHandshake& packet)
     {
         deferred_handshake_packet_task.push_packet(conn_descriptor.connection_key(), packet);
+        return error::PACKET_HANDLE_DEFERRED;
+    }
+
+    error::ResultCode MasterServer::handle_player_position_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetPlayerPosition& packet)
+    {
+        if (auto player = conn_descriptor.get_connected_player()) {
+            player->set_raw_position(packet.player_pos);
+        }
         return error::PACKET_HANDLE_DEFERRED;
     }
 
