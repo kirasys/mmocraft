@@ -6,16 +6,11 @@
 
 #include "game/player.h"
 
-#define OVERFLOW_CHECK(buf_start, buf_end, size) \
-        if (buf_start + size > buf_end) return nullptr;
-
 #define PARSE_SCALAR_FIELD(buf_start, buf_end, out) \
-        OVERFLOW_CHECK(buf_start, buf_end, sizeof(decltype(out))); \
         out = *reinterpret_cast<decltype(out)*>(buf_start); \
         buf_start += sizeof(decltype(out));
 
 #define PARSE_STRING_FIELD(buf_start, buf_end, out) \
-        OVERFLOW_CHECK(buf_start, buf_end, 64) \
         { \
             std::uint16_t padding_size = 0; \
             for (;padding_size < 64 && buf_start[63-padding_size] == std::byte(' '); padding_size++) \
@@ -30,16 +25,17 @@ namespace
 {
     struct PacketStaticData
     {
-        std::byte* (*parse)(std::byte*, std::byte*, net::Packet*) = nullptr;
+        void (*parse)(std::byte*, std::byte*, net::Packet*) = nullptr;
         error::ErrorCode (*validate)(const net::Packet*) = nullptr;
+        std::size_t size = 0;
     };
 
-    constinit const std::array<PacketStaticData, 0x100> packet_metadata_db = [] {
+    constinit const std::array<PacketStaticData, 0x100> protocol_db = [] {
         using namespace net;
         std::array<PacketStaticData, 0x100> arr{};
-        arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate };
-        arr[PacketID::SetBlockClient] = { PacketSetBlock::parse, nullptr };
-        arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::parse, nullptr };
+        arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate, PacketHandshake::packet_size };
+        arr[PacketID::SetBlockClient] = { PacketSetBlock::parse, nullptr, PacketSetBlock::packet_size };
+        arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::parse, nullptr,  PacketSetPlayerPosition::packet_size };
         return arr;
     }();
 }
@@ -55,20 +51,23 @@ namespace net
 
         // parse packet common header.
         auto packet_id = decltype(Packet::id)(*buf_start);
-        auto packet_parser = packet_metadata_db[packet_id].parse;
 
-        out_packet->id = packet_parser ? packet_id : PacketID::INVALID;
-        if (out_packet->id == PacketID::INVALID)
+        if (std::size_t(buf_end - buf_start) < protocol_db[packet_id].size)
+            return { 0, error::PACKET_INSUFFIENT_DATA };
+
+        auto packet_parser = protocol_db[packet_id].parse;
+        if (packet_parser == nullptr)
             return { 0, error::PACKET_INVALID_ID }; // stop parsing invalid packet.
 
         // parse and validate concrete packet structure.
-        if (auto new_buf_start = packet_parser(buf_start + 1, buf_end, out_packet)) {
-            auto packet_validater = packet_metadata_db[packet_id].validate;
-            auto error_code = packet_validater ? packet_validater(out_packet) : error::SUCCESS;
-            return { std::uint32_t(new_buf_start - buf_start), error_code };
-        }
+        error::ErrorCode result = error::SUCCESS;
 
-        return { 0, error::PACKET_INSUFFIENT_DATA }; // insufficient packet data.
+        out_packet->id = packet_id;
+        packet_parser(buf_start + 1, buf_end, out_packet);
+        if (auto packet_validater = protocol_db[packet_id].validate)
+            result = packet_validater(out_packet);
+
+        return { std::uint32_t(protocol_db[packet_id].size), result }; // insufficient packet data.
     }
 
     void PacketStructure::write_byte(std::byte* &buf, PacketFieldType::Byte value)
@@ -112,14 +111,13 @@ namespace net
 
     /* Concrete Packet Static Methods */
 
-    std::byte* PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
         PARSE_SCALAR_FIELD(buf_start, buf_end, packet->protocol_version);
         PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
         PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
         PARSE_SCALAR_FIELD(buf_start, buf_end, packet->unused);
-        return buf_start;
     }
 
     error::ErrorCode PacketHandshake::validate(const net::Packet* a_packet)
@@ -207,7 +205,7 @@ namespace net
         return buf_start - serialized_data.get();
     }
 
-    std::byte* PacketSetBlock::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketSetBlock::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
         PARSE_SCALAR_FIELD(buf_start, buf_end, packet->x);
@@ -215,7 +213,6 @@ namespace net
         PARSE_SCALAR_FIELD(buf_start, buf_end, packet->z);
         PARSE_SCALAR_FIELD(buf_start, buf_end, packet->mode);
         PARSE_SCALAR_FIELD(buf_start, buf_end, packet->block_type);
-        return buf_start;
     }
 
     error::ErrorCode PacketSetBlock::validate(const net::Packet* a_packet)
@@ -246,12 +243,11 @@ namespace net
         return data_size;
     }
 
-    std::byte* PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
         PARSE_SCALAR_FIELD(buf_start, buf_end, packet->player_id);
         PARSE_SCALAR_FIELD(buf_start, buf_end, packet->player_pos);
-        return buf_start;
     }
 
     error::ErrorCode PacketSetPlayerPosition::validate(const net::Packet* a_packet)

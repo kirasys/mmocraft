@@ -13,7 +13,7 @@
 #include "util/math.h"
 
 #define DECLARE_PACKET_READ_METHOD(packet_type) \
-    static std::byte* parse(std::byte* buf_start, std::byte* buf_end, net::Packet*); \
+    static void parse(std::byte* buf_start, std::byte* buf_end, net::Packet*); \
                                                              \
     static error::ErrorCode validate(const net::Packet*);	 \
                                                              \
@@ -151,6 +151,8 @@ namespace net
             PacketFieldType::Byte user_type;
         };
 
+        constexpr static std::size_t packet_size = 131;
+
         DECLARE_PACKET_READ_METHOD(PacketHandshake);
 
         PacketHandshake(const std::string& a_server_name, const std::string& a_motd, net::UserType a_user_type)
@@ -160,8 +162,6 @@ namespace net
             , protocol_version{ 7 }
             , user_type{ PacketFieldType::Byte(a_user_type) }
         { }
-
-        constexpr static std::size_t packet_size = 131;
 
         bool serialize(io::IoEventData&) const;
     };
@@ -201,6 +201,8 @@ namespace net
         PacketFieldType::Byte mode;
         PacketFieldType::Byte block_type;
 
+        static constexpr std::size_t packet_size = 8;
+
         DECLARE_PACKET_READ_METHOD(PacketSetBlock);
     };
 
@@ -208,6 +210,8 @@ namespace net
     {
         PacketFieldType::Byte player_id;
         game::PlayerPosition  player_pos;
+
+        static constexpr std::size_t packet_size = 10;
 
         DECLARE_PACKET_READ_METHOD(PacketSetPlayerPosition);
     };
@@ -228,12 +232,12 @@ namespace net
     {
         PacketFieldType::String reason;
 
+        constexpr static std::size_t packet_size = 65;
+
         PacketDisconnectPlayer(std::string_view a_reason)
             : Packet{ PacketID::DisconnectPlayer }
             , reason{ a_reason.data(), a_reason.size() }
         { }
-
-        constexpr static std::size_t packet_size = 65;
 
         bool serialize(io::IoEventData&) const;
     };
@@ -242,12 +246,12 @@ namespace net
     {
         PacketFieldType::Byte player_id;
 
+        constexpr static std::size_t packet_size = 2;
+
         PacketSetPlayerID(unsigned a_player_id)
             : Packet{ PacketID::SetPlayerID }
             , player_id(PacketFieldType::Byte(a_player_id))
         { }
-
-        constexpr static std::size_t packet_size = 2;
 
         bool serialize(io::IoEventData&) const;
     };
