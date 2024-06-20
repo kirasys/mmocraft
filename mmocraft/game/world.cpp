@@ -151,7 +151,7 @@ namespace game
             break;
             case game::PlayerState::Level_Initialized:
             {
-                player.set_default_spawn_position(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
+                player.set_default_spawn_coordinate(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
                 player.set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
                 player.set_state(PlayerState::Spawn_Wait);
 

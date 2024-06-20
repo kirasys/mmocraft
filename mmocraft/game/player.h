@@ -46,6 +46,41 @@ namespace game
         Spawned,
     };
 
+    union PlayerPosition {
+        std::uint64_t raw = 0;
+        struct {
+            std::int16_t x;
+            std::int16_t y;
+            std::int16_t z;
+            std::uint8_t yaw;
+            std::uint8_t pitch;
+        } view;
+
+        static constexpr std::uint64_t coordinate_mask  = 0x0000FFFFFFFFFFFF;
+        static constexpr std::uint64_t orientation_mask = 0xFFFF000000000000;
+
+        inline std::uint64_t raw_coordinate()
+        {
+            return raw & coordinate_mask;
+        }
+
+        inline std::uint64_t raw_orientation()
+        {
+            return raw & orientation_mask;
+        }
+
+        inline void set_raw_coordinate(int x, int y, int z)
+        {
+            raw = std::uint64_t(x & 0xFFFF) | (std::uint64_t(y & 0xFFFF) << 16) | (std::uint64_t(z & 0xFFFF) << 32)
+                | raw_orientation();
+        }
+
+        inline void set_raw_orientation(unsigned yaw, unsigned pitch)
+        {
+            raw = raw_coordinate() | (std::uint64_t(yaw & 0xFF) << 48) | (std::uint64_t(pitch & 0xFF) << 56);
+        }
+    };
+
     class Player : util::NonCopyable
     {
     public:
@@ -94,31 +129,29 @@ namespace game
 
         util::Coordinate3D spawn_position() const
         {
-            return { short(_spawn_pos.x * 32), short(_spawn_pos.y * 32 + 51), short(_spawn_pos.z * 32) };
+            return { short(_spawn_pos.view.x * 32), short(_spawn_pos.view.y * 32 + 51), short(_spawn_pos.view.z * 32) };
         }
 
         auto spawn_yaw() const
         {
-            return _spawn_yaw;
+            return _spawn_pos.view.yaw;
         }
 
         auto spawn_pitch() const
         {
-            return _spawn_pitch;
+            return _spawn_pos.view.pitch;
         }
 
-        void set_default_spawn_position(int x, int y, int z)
+        void set_default_spawn_coordinate(int x, int y, int z)
         {
-            if (_spawn_pos.x || _spawn_pos.y || _spawn_pos.z == 0)
-                _spawn_pos = { short(x), short(y), short(z) };
+            if (not _spawn_pos.raw_coordinate())
+                _spawn_pos.set_raw_coordinate(x, y, z);
         }
 
         void set_default_spawn_orientation(unsigned yaw, unsigned pitch)
         {
-            if (_spawn_yaw || _spawn_pitch == 0) {
-                _spawn_yaw = std::uint8_t(yaw);
-                _spawn_pitch = std::uint8_t(pitch);
-            }
+            if (not _spawn_pos.raw_orientation())
+                _spawn_pos.set_raw_orientation(yaw, pitch);
         }
 
     private:
@@ -135,8 +168,6 @@ namespace game
         char _username[16 + 1];
         char _password[32 + 1];
 
-        util::Coordinate3D _spawn_pos = { 0, 0, 0 };
-        std::uint8_t _spawn_yaw = 0;
-        std::uint8_t _spawn_pitch = 0;
+        PlayerPosition _spawn_pos;
     };
 }
