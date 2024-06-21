@@ -6,8 +6,8 @@ namespace game
 
 	constexpr BlockID BLOCK_AIR = 0;
 	constexpr BlockID BLOCK_STONE = 1;
-	constexpr BlockID BLOCK_DIRT = 2;
 	constexpr BlockID BLOCK_GRASS = 2;
+	constexpr BlockID BLOCK_DIRT = 3;
 	constexpr BlockID BLOCK_COBBLE = 4;
 	constexpr BlockID BLOCK_WOOD = 5;
 	constexpr BlockID BLOCK_SAPLING = 6;
