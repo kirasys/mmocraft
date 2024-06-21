@@ -25,6 +25,7 @@
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="game\world.cpp" />
+    <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
     <ClCompile Include="net\multicast_manager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -73,6 +74,7 @@
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\world.h" />
     <ClInclude Include="game\player.h" />
+    <ClInclude Include="game\world_generator.h" />
     <ClInclude Include="io\task.h" />
     <ClInclude Include="net\connection_environment.h" />
     <ClInclude Include="net\connection_key.h" />

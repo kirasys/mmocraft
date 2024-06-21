@@ -23,10 +23,11 @@ namespace game
     constexpr const char* block_data_filename = "blocks.bin";
     constexpr const char* world_metadata_filename = "metadata.json";
 
+    constexpr std::size_t block_data_cache_lifetime = 2 * 1000; // 2 seconds
     constexpr std::size_t spawn_player_task_interval = 2 * 1000;    // 2 seconds.
     constexpr std::size_t sync_player_position_task_interval = 100; // 100 milliseconds.
 
-    class World : util::NonCopyable
+    class World final : util::NonCopyable, util::NonMovable
     {
     public:
         World(net::ConnectionEnvironment&);
@@ -47,12 +48,6 @@ namespace game
         void load_metadata();
 
         void load_block_data();
-        
-        void create_new_world() const;
-
-        void create_block_file(util::Coordinate3D map_size, unsigned long map_volume) const;
-
-        void create_metadata_file(util::Coordinate3D map_size) const;
 
         net::ConnectionEnvironment& connection_env;
         net::MulticastManager multicast_manager;
@@ -67,19 +62,12 @@ namespace game
 
         win::FileMapping block_mapping;
 
-        std::size_t last_saved_tick = 0;
+        std::size_t last_save_map_at = 0;
 
         std::filesystem::path save_dir;
         std::filesystem::path block_data_path;
-        std::filesystem::path world_metadata_path;
+        std::filesystem::path metadata_path;
 
-        static constexpr std::size_t block_data_cache_lifetime = 2 * 1000; // 2 seconds
         std::size_t block_data_cache_expired_at = 0;
-    };
-
-    class WorldMapGenerator
-    {
-    public:
-        static std::unique_ptr<BlockID[]> generate_flat_world(util::Coordinate3D map_size);
     };
 }
