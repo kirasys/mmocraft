@@ -44,9 +44,9 @@ namespace net
 
     error::ResultCode MasterServer::handle_player_position_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetPlayerPosition& packet)
     {
-        if (auto player = conn_descriptor.get_connected_player()) {
-            player->set_raw_position(packet.player_pos);
-        }
+        if (auto player = conn_descriptor.get_connected_player())
+            player->set_position(packet.player_pos);
+        
         return error::PACKET_HANDLE_DEFERRED;
     }
 
@@ -82,8 +82,8 @@ namespace net
 
             std::size_t end_tick = util::current_monotonic_tick();
 
-            if (auto diff = end_tick - start_tick; diff < 1000)
-                util::sleep_ms(std::max(1000 - diff, std::size_t(100)));
+            if (auto diff = end_tick - start_tick; diff < 100)
+                util::sleep_ms(std::max(100 - diff, std::size_t(30)));
         }
     }
 
