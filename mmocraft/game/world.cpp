@@ -27,6 +27,7 @@ namespace game
         , multicast_manager{ a_connection_env }
         , players(connection_env.size_of_max_connections())
         , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
+        , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
     {
 
     }
@@ -131,6 +132,79 @@ namespace game
         }
     }
 
+    void World::sync_player_position()
+    {
+        std::vector<game::Player*> world_players;
+        world_players.reserve(connection_env.size_of_max_connections());
+
+        connection_env.select_players([](const game::Player* player)
+            { return player->state() >= PlayerState::Spawned; },
+            world_players);
+
+        std::unique_ptr<std::byte[]> position_packet_data(
+            new std::byte[world_players.size() * net::PacketSetPlayerPosition::packet_size]
+        );
+        auto data_ptr = position_packet_data.get();
+
+        for (auto player : world_players) {
+            auto latest_pos = player->last_position();
+            const auto diff = latest_pos - player->last_synced_position();
+
+            player->start_sync_position(latest_pos);
+
+            // absolute move position
+            if (std::abs(diff.view.x) > 127 || std::abs(diff.view.y) > 127 || std::abs(diff.view.y) > 127) {
+                *data_ptr++ = std::byte(net::PacketID::SetPlayerPosition);
+                *data_ptr++ = std::byte(player->game_id());
+                net::PacketStructure::write_short(data_ptr, latest_pos.view.x);
+                net::PacketStructure::write_short(data_ptr, latest_pos.view.y);
+                net::PacketStructure::write_short(data_ptr, latest_pos.view.z);
+                *data_ptr++ = std::byte(latest_pos.view.yaw);
+                *data_ptr++ = std::byte(latest_pos.view.pitch);
+            }
+            // relative move position
+            else if (diff.raw_coordinate() && diff.raw_orientation()) {
+                *data_ptr++ = std::byte(net::PacketID::UpdatePlayerPosition);
+                *data_ptr++ = std::byte(player->game_id());
+                *data_ptr++ = std::byte(diff.view.x);
+                *data_ptr++ = std::byte(diff.view.y);
+                *data_ptr++ = std::byte(diff.view.z);
+                *data_ptr++ = std::byte(latest_pos.view.yaw);
+                *data_ptr++ = std::byte(latest_pos.view.pitch);
+            }
+            // relative move coordinate
+            else if (diff.raw_coordinate()) {
+                *data_ptr++ = std::byte(net::PacketID::UpdatePlayerCoordinate);
+                *data_ptr++ = std::byte(player->game_id());
+                *data_ptr++ = std::byte(diff.view.x);
+                *data_ptr++ = std::byte(diff.view.y);
+                *data_ptr++ = std::byte(diff.view.z);
+            }
+            // relative move orientation
+            else if (diff.raw_orientation()) {
+                *data_ptr++ = std::byte(net::PacketID::UpdatePlayerOrientation);
+                *data_ptr++ = std::byte(player->game_id());
+                *data_ptr++ = std::byte(latest_pos.view.yaw);
+                *data_ptr++ = std::byte(latest_pos.view.pitch);
+            }
+        }
+
+        if (auto data_size = data_ptr - position_packet_data.get()) {
+            multicast_manager.set_multicast_data(
+                net::MuticastTag::Sync_Player_Position,
+                std::move(position_packet_data),
+                data_size
+            );
+
+            for (auto player : world_players) {
+                auto desc = connection_env.try_acquire_descriptor(player->connection_key());
+                if (desc && multicast_manager.send(net::MuticastTag::Sync_Player_Position, *desc))
+                    player->end_sync_position();
+            }
+
+        }
+    }
+
     void World::tick(io::IoCompletionPort& task_scheduler)
     {
         auto transit_player_state = [this](net::Connection::Descriptor& desc, game::Player& player) {
@@ -165,6 +239,9 @@ namespace game
 
         if (not spawn_wait_players.empty() && spawn_player_task.ready())
             task_scheduler.schedule_task(&spawn_player_task);
+
+        if (sync_player_position_task.ready())
+            task_scheduler.schedule_task(&sync_player_position_task);
     }
 
     bool World::load_filesystem_world(std::string_view a_save_dir)
@@ -205,7 +282,11 @@ namespace game
     {
         const auto& world_conf = config::get_world_config();
 
-        auto map_size = util::Coordinate3D{ short(world_conf.width()), short(world_conf.height()), short(world_conf.length())};
+        auto map_size = util::Coordinate3D{ 
+            util::Coordinate(world_conf.width()),
+            util::Coordinate(world_conf.height()),
+            util::Coordinate(world_conf.length())
+        };
         unsigned long map_volume = map_size.x * map_size.y * map_size.z;
         
         // write world files to the disk.

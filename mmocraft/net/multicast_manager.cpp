@@ -34,7 +34,6 @@ namespace net
         return false;
     }
 
-
     void MulticastManager::gc(MuticastTag tag)
     {
         auto& event_data_queue = event_data_queues[tag];

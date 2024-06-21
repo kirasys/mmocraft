@@ -17,6 +17,8 @@ namespace net
 
         Spawn_Player,
 
+        Sync_Player_Position,
+
         MuticastTag_Count,
     };
 

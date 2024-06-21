@@ -23,7 +23,8 @@ namespace game
     constexpr const char* block_data_filename = "blocks.bin";
     constexpr const char* world_metadata_filename = "metadata.json";
 
-    constexpr std::size_t spawn_player_task_interval = 2 * 1000; // 2 seconds.
+    constexpr std::size_t spawn_player_task_interval = 2 * 1000;    // 2 seconds.
+    constexpr std::size_t sync_player_position_task_interval = 100; // 100 milliseconds.
 
     class World : util::NonCopyable
     {
@@ -35,6 +36,8 @@ namespace game
         void caching_compressed_block_data();
 
         void spawn_player();
+
+        void sync_player_position();
 
         void tick(io::IoCompletionPort&);
 
@@ -56,7 +59,9 @@ namespace game
 
         std::vector<std::unique_ptr<game::Player>> players;
         util::LockfreeStack<game::Player*> spawn_wait_players;
+        
         io::SimpleTask<game::World> spawn_player_task;
+        io::SimpleTask<game::World> sync_player_position_task;
 
         WorldMetadata _metadata;
 
