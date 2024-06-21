@@ -30,9 +30,9 @@ namespace config {
 
         // world default values
         auto& world_conf = get_world_config();
-        world_conf.set_width(1024);
+        world_conf.set_width(256);
         world_conf.set_height(256);
-        world_conf.set_length(1024);
+        world_conf.set_length(256);
         world_conf.set_save_dir("world\\");
 
         // log default values
