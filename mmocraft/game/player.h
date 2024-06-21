@@ -194,6 +194,16 @@ namespace game
             return _last_synced_pos;
         }
 
+        std::size_t last_ping_time() const
+        {
+            return _last_ping_time;
+        }
+
+        void update_ping_time()
+        {
+            _last_ping_time = util::current_monotonic_tick();
+        }
+
     private:
         PlayerState _state = PlayerState::Initialized;
 
@@ -212,5 +222,7 @@ namespace game
         PlayerPosition _last_synced_pos;
         PlayerPosition _last_synced_pos_tmp;
         PlayerPosition _spawn_pos;
+
+        std::size_t _last_ping_time = 0;
     };
 }

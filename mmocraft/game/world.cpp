@@ -233,6 +233,14 @@ namespace game
                 spawn_wait_players.push(&player);
             }
             break;
+            case game::PlayerState::Spawned:
+            {
+                if (player.last_ping_time() + ping_interval < util::current_monotonic_tick()) {
+                    desc.send_ping(net::ThreadType::Tick_Thread);
+                    player.update_ping_time();
+                }
+            }
+            break;
             }
         };
 

@@ -272,6 +272,12 @@ namespace net
         return io_send_events[sender_type]->data->push(data, data_size);
     }
 
+    bool Connection::Descriptor::send_ping(ThreadType sender_type) const
+    {
+        auto packet = std::byte(net::PacketID::Ping);
+        return io_send_events[sender_type]->data->push(&packet, 1);
+    }
+
     bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketHandshake& packet) const
     {
         return packet.serialize(*io_send_events[sender_type]->data);

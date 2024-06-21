@@ -95,6 +95,8 @@ namespace net
 
             bool send_raw_data(ThreadType, const std::byte*, std::size_t) const;
 
+            bool send_ping(ThreadType sender_type) const;
+
             bool send_packet(ThreadType, const net::PacketHandshake&) const;
 
             bool send_packet(ThreadType, const net::PacketLevelInit&) const;
