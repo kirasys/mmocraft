@@ -6,8 +6,12 @@
 
 #include "game/player.h"
 
-#define PARSE_SCALAR_FIELD(buf_start, buf_end, out) \
+#define PARSE_BYTE_FIELD(buf_start, buf_end, out) \
         out = *reinterpret_cast<decltype(out)*>(buf_start); \
+        buf_start += sizeof(decltype(out));
+
+#define PARSE_SHORT_FIELD(buf_start, buf_end, out) \
+        out = _byteswap_ushort(*reinterpret_cast<decltype(out)*>(buf_start)); \
         buf_start += sizeof(decltype(out));
 
 #define PARSE_STRING_FIELD(buf_start, buf_end, out) \
@@ -81,6 +85,12 @@ namespace net
         buf += sizeof(value);
     }
 
+    void PacketStructure::write_uint64(std::byte*& buf, std::uint64_t value)
+    {
+        *reinterpret_cast<decltype(value)*>(buf) = _byteswap_uint64(value);
+        buf += sizeof(value);
+    }
+
     void PacketStructure::write_string(std::byte* &buf, const PacketFieldType::String& str)
     {
         std::memcpy(buf, str.data, str.size);
@@ -114,10 +124,10 @@ namespace net
     void PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->protocol_version);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->protocol_version);
         PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
         PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->unused);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->unused);
     }
 
     error::ErrorCode PacketHandshake::validate(const net::Packet* a_packet)
@@ -208,11 +218,11 @@ namespace net
     void PacketSetBlock::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->x);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->y);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->z);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->mode);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->block_type);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->x);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->y);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->z);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->mode);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->block_type);
     }
 
     error::ErrorCode PacketSetBlock::validate(const net::Packet* a_packet)
@@ -231,7 +241,7 @@ namespace net
         auto write_players = [&buf_start](const std::vector<game::Player*>& players) {
             for (const auto* player : players) {
                 PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
-                PacketStructure::write_byte(buf_start, PacketFieldType::Byte(player->game_id()));
+                PacketStructure::write_byte(buf_start, player->game_id());
                 PacketStructure::write_string(buf_start, player->player_name());
                 PacketStructure::write_position(buf_start, player->spawn_position());
                 PacketStructure::write_orientation(buf_start, player->spawn_yaw(), player->spawn_pitch());
@@ -246,8 +256,12 @@ namespace net
     void PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->player_id);
-        PARSE_SCALAR_FIELD(buf_start, buf_end, packet->player_pos);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_id);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.x);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.y);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.z);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.yaw);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.pitch);
     }
 
     error::ErrorCode PacketSetPlayerPosition::validate(const net::Packet* a_packet)

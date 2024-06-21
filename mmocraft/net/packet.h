@@ -269,6 +269,8 @@ namespace net
 
         static void write_short(std::byte*&, PacketFieldType::Short);
 
+        static void write_uint64(std::byte*& buf, std::uint64_t value);
+
         static void write_string(std::byte*&, const PacketFieldType::String&);
 
         static void write_string(std::byte*&, const char*);
