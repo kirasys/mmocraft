@@ -4,11 +4,13 @@
 
 namespace util
 {
+    using Coordinate = short;
+
     struct Coordinate3D
     {
-        short x = 0;
-        short y = 0;
-        short z = 0;
+        Coordinate x = 0;
+        Coordinate y = 0;
+        Coordinate z = 0;
     };
 
     struct Orientation
