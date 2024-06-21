@@ -74,18 +74,18 @@ namespace net
         return { std::uint32_t(protocol_db[packet_id].size), result }; // insufficient packet data.
     }
 
-    void PacketStructure::write_byte(std::byte* &buf, PacketFieldType::Byte value)
+    inline void PacketStructure::write_byte(std::byte* &buf, PacketFieldType::Byte value)
     {
         *buf++ = std::byte(value);
     }
 
-    void PacketStructure::write_short(std::byte* &buf, PacketFieldType::Short value)
+    inline void PacketStructure::write_short(std::byte* &buf, PacketFieldType::Short value)
     {
         *reinterpret_cast<decltype(value)*>(buf) = _byteswap_ushort(value);
         buf += sizeof(value);
     }
 
-    void PacketStructure::write_uint64(std::byte*& buf, std::uint64_t value)
+    inline void PacketStructure::write_uint64(std::byte*& buf, std::uint64_t value)
     {
         *reinterpret_cast<decltype(value)*>(buf) = _byteswap_uint64(value);
         buf += sizeof(value);
@@ -121,18 +121,9 @@ namespace net
 
     /* Concrete Packet Static Methods */
 
-    void PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
-    {
-        auto packet = to_derived(out_packet);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->protocol_version);
-        PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
-        PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->unused);
-    }
-
     error::ErrorCode PacketHandshake::validate(const net::Packet* a_packet)
     {
-        auto &packet = *to_derived(a_packet);
+        auto& packet = *to_derived(a_packet);
 
         if (packet.protocol_version != 7)
             return error::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION;
@@ -147,6 +138,47 @@ namespace net
             return error::PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH;
 
         return error::SUCCESS;
+    }
+
+    error::ErrorCode PacketSetBlock::validate(const net::Packet* a_packet)
+    {
+        return error::SUCCESS;
+    }
+
+
+    error::ErrorCode PacketSetPlayerPosition::validate(const net::Packet* a_packet)
+    {
+        return error::SUCCESS;
+    }
+
+    void PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    {
+        auto packet = to_derived(out_packet);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->protocol_version);
+        PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
+        PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->unused);
+    }
+
+    void PacketSetBlock::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    {
+        auto packet = to_derived(out_packet);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->x);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->y);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->z);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->mode);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->block_type);
+    }
+
+    void PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    {
+        auto packet = to_derived(out_packet);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_id);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.x);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.y);
+        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.z);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.yaw);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.pitch);
     }
 
     bool PacketHandshake::serialize(io::IoEventData& event_data) const
@@ -173,15 +205,6 @@ namespace net
         return event_data.push(buf, sizeof(buf));
     }
 
-    PacketLevelDataChunk::PacketLevelDataChunk
-        (char* block_data, unsigned block_data_size, PacketFieldType::Short width, PacketFieldType::Short height, PacketFieldType::Short length)
-        : Packet{ PacketID::LevelDataChunk }
-        , compressor{ block_data, block_data_size }
-        , x{ width }, y{ height }, z{ length }
-    {
-        max_chunk_count = (compressor.deflate_bound() - 1) / chunk_size + 1;
-    }
-
     std::size_t PacketLevelDataChunk::serialize(std::unique_ptr<std::byte[]>& serialized_data)
     {
         auto data_capacity = max_chunk_count * (chunk_size + 4) + 7; // LevelData + LevelFinalize 
@@ -195,12 +218,12 @@ namespace net
 
             // write chunk length.
             PacketStructure::write_short(buf_start, PacketFieldType::Short(chunk_size - remain_bytes));
-            
+
             // write chunk data (already written)
             buf_start += chunk_size;
 
             // write percent complete
-            PacketStructure::write_byte(buf_start, 0); 
+            PacketStructure::write_byte(buf_start, 0);
         }
 
         // add null padding
@@ -213,21 +236,6 @@ namespace net
         PacketStructure::write_short(buf_start, z);
 
         return buf_start - serialized_data.get();
-    }
-
-    void PacketSetBlock::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
-    {
-        auto packet = to_derived(out_packet);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->x);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->y);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->z);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->mode);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->block_type);
-    }
-
-    error::ErrorCode PacketSetBlock::validate(const net::Packet* a_packet)
-    {
-        return error::SUCCESS;
     }
 
     std::size_t PacketSpawnPlayer::serialize
@@ -246,27 +254,11 @@ namespace net
                 PacketStructure::write_position(buf_start, player->spawn_position());
                 PacketStructure::write_orientation(buf_start, player->spawn_yaw(), player->spawn_pitch());
             }
-        };
+            };
         write_players(old_players);
         write_players(new_players);
 
         return data_size;
-    }
-
-    void PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
-    {
-        auto packet = to_derived(out_packet);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_id);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.x);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.y);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.z);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.yaw);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.pitch);
-    }
-
-    error::ErrorCode PacketSetPlayerPosition::validate(const net::Packet* a_packet)
-    {
-        return error::SUCCESS;
     }
 
     bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const
@@ -276,7 +268,7 @@ namespace net
         std::byte* buf_start = buf;
         PacketStructure::write_byte(buf_start, id);
         PacketStructure::write_string(buf_start, reason);
-        
+
         return event_data.push(buf, sizeof(buf));
     }
 
@@ -289,5 +281,14 @@ namespace net
         PacketStructure::write_byte(buf_start, player_id);
 
         return event_data.push(buf, sizeof(buf));
+    }
+
+    PacketLevelDataChunk::PacketLevelDataChunk
+        (char* block_data, unsigned block_data_size, PacketFieldType::Short width, PacketFieldType::Short height, PacketFieldType::Short length)
+        : Packet{ PacketID::LevelDataChunk }
+        , compressor{ block_data, block_data_size }
+        , x{ width }, y{ height }, z{ length }
+    {
+        max_chunk_count = (compressor.deflate_bound() - 1) / chunk_size + 1;
     }
 }
