@@ -28,7 +28,7 @@ namespace util
         return dest;
     }
 
-    Compressor::Compressor(char* block_data, unsigned block_data_size)
+    Compressor::Compressor(std::byte* block_data, unsigned block_data_size)
     {
         zstm.zalloc = Z_NULL;
         zstm.zfree = Z_NULL;

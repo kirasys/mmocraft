@@ -34,7 +34,7 @@ namespace win
 
         auto data()
         {
-            return static_cast<char*>(_mapping_address);
+            return static_cast<std::byte*>(_mapping_address);
         }
 
     private:

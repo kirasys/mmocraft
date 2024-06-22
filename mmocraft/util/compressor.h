@@ -11,7 +11,7 @@ namespace util
     class Compressor
     {
     public:
-        Compressor(char* data, unsigned data_size);
+        Compressor(std::byte* data, unsigned data_size);
 
         std::size_t deflate_bound() const
         {
