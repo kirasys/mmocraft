@@ -197,6 +197,8 @@ namespace net
         wbuf[0].len = ULONG(event->data->size());
 
         if (wbuf[0].len) {
+            std::lock_guard<std::mutex> lock(send_event_lock);
+
             // should assign flag first to avoid data race.
             event->is_processing = true;
             if (not client_socket.send(&event->overlapped, wbuf))
@@ -211,7 +213,7 @@ namespace net
         wbuf[0].len = ULONG(event_data->size());
 
         if (wbuf[0].len) {
-            std::lock_guard<std::mutex> lock(multicast_send_lock);
+            std::lock_guard<std::mutex> lock(send_event_lock);
 
             auto unused_event = std::find_if(io_multicast_send_events.begin(), io_multicast_send_events.end(),
                 [](auto& event) {

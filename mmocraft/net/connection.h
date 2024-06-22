@@ -118,7 +118,8 @@ namespace net
 
             static constexpr unsigned num_of_multicast_event = 8;
             std::vector<io::IoSendEvent> io_multicast_send_events;
-            std::mutex multicast_send_lock;
+
+            std::mutex send_event_lock;
 
             bool online = false;
             std::size_t last_offline_tick = 0;
