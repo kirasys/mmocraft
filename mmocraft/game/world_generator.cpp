@@ -75,7 +75,7 @@ namespace game
 
         auto num_of_dirt_block = plain_size * (map_size.y / 2);
         std::memset(blocks, BLOCK_DIRT, num_of_dirt_block);
-        std::memset(blocks + num_of_dirt_block, BLOCK_WOOD, plain_size);
+        std::memset(blocks + num_of_dirt_block, BLOCK_GRASS, plain_size);
         std::memset(blocks, BLOCK_BEDROCK, plain_size);
 
         return std::unique_ptr<BlockID[]>(blocks);
