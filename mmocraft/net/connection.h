@@ -119,12 +119,13 @@ namespace net
             static constexpr unsigned num_of_multicast_event = 8;
             std::vector<io::IoSendEvent> io_multicast_send_events;
 
+            // it is used to prevent data interleaving problem when multiple threads sending together.
+            // Todo: performance benchmark versus lockfree stack version.
             std::mutex send_event_lock;
 
             bool online = false;
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
-
 
             game::Player* _player;
         };
