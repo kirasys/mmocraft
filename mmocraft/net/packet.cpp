@@ -107,7 +107,7 @@ namespace net
         buf += PacketFieldType::String::size_with_padding;
     }
 
-    void PacketStructure::write_position(std::byte*& buf, util::Coordinate3D pos)
+    void PacketStructure::write_coordinate(std::byte*& buf, util::Coordinate3D pos)
     {
         PacketStructure::write_short(buf, pos.x);
         PacketStructure::write_short(buf, pos.y);
@@ -261,17 +261,22 @@ namespace net
 
         std::byte* buf_start = serialized_data.get();
 
-        auto write_players = [&buf_start](const std::vector<game::Player*>& players) {
-            for (const auto* player : players) {
-                PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
-                PacketStructure::write_byte(buf_start, player->game_id());
-                PacketStructure::write_string(buf_start, player->player_name());
-                PacketStructure::write_position(buf_start, player->spawn_position());
-                PacketStructure::write_orientation(buf_start, player->spawn_yaw(), player->spawn_pitch());
-            }
-            };
-        write_players(old_players);
-        write_players(new_players);
+        for (const auto* player : old_players) {
+            PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
+            PacketStructure::write_byte(buf_start, player->game_id());
+            PacketStructure::write_string(buf_start, player->player_name());
+            auto last_player_pos = player->last_position();
+            PacketStructure::write_coordinate(buf_start, last_player_pos.coordinate());
+            PacketStructure::write_orientation(buf_start, last_player_pos.yaw(), last_player_pos.pitch());
+        }
+
+        for (const auto* player : new_players) {
+            PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
+            PacketStructure::write_byte(buf_start, player->game_id());
+            PacketStructure::write_string(buf_start, player->player_name());
+            PacketStructure::write_coordinate(buf_start, player->spawn_position());
+            PacketStructure::write_orientation(buf_start, player->spawn_yaw(), player->spawn_pitch());
+        }
 
         return data_size;
     }

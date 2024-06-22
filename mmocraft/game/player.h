@@ -64,9 +64,24 @@ namespace game
             return raw & coordinate_mask;
         }
 
+        inline util::Coordinate3D coordinate() const
+        {
+            return { view.x, view.y, view.z };
+        }
+
         inline std::uint64_t raw_orientation() const
         {
             return raw & orientation_mask;
+        }
+
+        inline std::uint8_t yaw() const
+        {
+            return view.yaw;
+        }
+
+        inline std::uint8_t pitch() const
+        {
+            return view.pitch;
         }
 
         inline void set_raw_coordinate(int x, int y, int z)

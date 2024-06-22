@@ -293,7 +293,7 @@ namespace net
 
         static void write_string(std::byte*&, const char*);
 
-        static void write_position(std::byte*&, util::Coordinate3D);
+        static void write_coordinate(std::byte*&, util::Coordinate3D);
 
         static void write_orientation(std::byte*&, std::uint8_t yaw, std::uint8_t pitch);
     };
