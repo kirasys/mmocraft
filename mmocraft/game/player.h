@@ -37,7 +37,7 @@ namespace game
 
         Handshake_Completed,
 
-        PlayerID_Tranferred,
+        Level_Wait,
 
         Level_Initialized,
 

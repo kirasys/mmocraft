@@ -34,6 +34,7 @@
     <ClCompile Include="win\file_mapping.cpp" />
     <ClCompile Include="net\multicast_manager.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
+    <ClCompile Include="game\block_history.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -80,6 +81,7 @@
     <ClInclude Include="net\multicast_manager.h" />
     <ClInclude Include="util\math.h" />
     <ClInclude Include="game\world_generator.h" />
+    <ClInclude Include="game\block_history.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

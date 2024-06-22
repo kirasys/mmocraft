@@ -23,6 +23,7 @@
     <ClCompile Include="database\database_core.cpp" />
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
+    <ClCompile Include="game\block_history.cpp" />
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
@@ -71,6 +72,7 @@
     <ClInclude Include="database\query.h" />
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="game\block.h" />
+    <ClInclude Include="game\block_history.h" />
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\world.h" />
     <ClInclude Include="game\player.h" />

@@ -6,6 +6,7 @@
 
 #include "game/block.h"
 #include "game/player.h"
+#include "game/block_history.h"
 #include "proto/world_metadata.pb.h"
 #include "net/connection_key.h"
 #include "net/multicast_manager.h"
@@ -23,10 +24,13 @@ namespace game
     constexpr const char* block_data_filename = "blocks.bin";
     constexpr const char* world_metadata_filename = "metadata.json";
 
-    constexpr std::size_t block_data_cache_lifetime = 2 * 1000; // 2 seconds
-    constexpr std::size_t spawn_player_task_interval = 2 * 1000;    // 2 seconds.
-    constexpr std::size_t sync_player_position_task_interval = 100; // 100 milliseconds.
-    constexpr std::size_t ping_interval = 5 * 1000; // 5 seconds.
+    constexpr std::size_t level_data_submission_interval     = 3 * 1000; // 3 seconds
+    constexpr std::size_t spawn_player_task_interval         = 2 * 1000; // 2 seconds.
+    constexpr std::size_t sync_block_data_task_interval      = 200;      // 200 milliseconds.
+    constexpr std::size_t sync_player_position_task_interval = 100;      // 100 milliseconds.
+    constexpr std::size_t ping_interval                      = 5 * 1000; // 5 seconds.
+
+    constexpr std::size_t max_block_history_size = 1024;
 
     class World final : util::NonCopyable, util::NonMovable
     {
@@ -37,15 +41,23 @@ namespace game
 
         void caching_compressed_block_data();
 
+        void process_level_wait_player();
+
         void spawn_player();
 
+        void sync_block_data();
+
         void sync_player_position();
+
+        bool try_change_block(util::Coordinate3D, BlockID);
 
         void tick(io::IoCompletionPort&);
 
         bool load_filesystem_world(std::string_view);
 
     private:
+        void commit_block_changes(game::BlockHistory& block_history);
+
         void load_metadata();
 
         void load_block_data();
@@ -54,9 +66,25 @@ namespace game
         net::MulticastManager multicast_manager;
 
         std::vector<std::unique_ptr<game::Player>> players;
+        util::LockfreeStack<game::Player*> level_wait_players;
         util::LockfreeStack<game::Player*> spawn_wait_players;
         
+        game::BlockHistory& get_inbound_block_history()
+        {
+            return block_histories[inbound_block_history_index.load(std::memory_order_relaxed)];
+        }
+
+        game::BlockHistory& get_outbound_block_history()
+        {
+            return block_histories[outbound_block_history_index];
+        }
+
+        std::atomic<unsigned> inbound_block_history_index = 0;
+        unsigned outbound_block_history_index = 1;
+        game::BlockHistory block_histories[2];
+
         io::SimpleTask<game::World> spawn_player_task;
+        io::SimpleTask<game::World> sync_block_task;
         io::SimpleTask<game::World> sync_player_position_task;
 
         WorldMetadata _metadata;
@@ -64,11 +92,10 @@ namespace game
         win::FileMapping block_mapping;
 
         std::size_t last_save_map_at = 0;
+        std::size_t last_level_data_submission_at = 0;
 
         std::filesystem::path save_dir;
         std::filesystem::path block_data_path;
         std::filesystem::path metadata_path;
-
-        std::size_t block_data_cache_expired_at = 0;
     };
 }

@@ -4,6 +4,7 @@
 #include <array>
 #include <cstring>
 
+#include "game/block.h"
 #include "game/player.h"
 
 #define PARSE_BYTE_FIELD(buf_start, buf_end, out) \
@@ -38,7 +39,7 @@ namespace
         using namespace net;
         std::array<PacketStaticData, 0x100> arr{};
         arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate, PacketHandshake::packet_size };
-        arr[PacketID::SetBlockClient] = { PacketSetBlock::parse, nullptr, PacketSetBlock::packet_size };
+        arr[PacketID::SetBlockClient] = { PacketSetBlockClient::parse, nullptr, PacketSetBlockClient::packet_size };
         arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::parse, nullptr,  PacketSetPlayerPosition::packet_size };
         return arr;
     }();
@@ -140,7 +141,7 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ErrorCode PacketSetBlock::validate(const net::Packet* a_packet)
+    error::ErrorCode PacketSetBlockClient::validate(const net::Packet* a_packet)
     {
         return error::SUCCESS;
     }
@@ -160,14 +161,14 @@ namespace net
         PARSE_BYTE_FIELD(buf_start, buf_end, packet->unused);
     }
 
-    void PacketSetBlock::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketSetBlockClient::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
         PARSE_SHORT_FIELD(buf_start, buf_end, packet->x);
         PARSE_SHORT_FIELD(buf_start, buf_end, packet->y);
         PARSE_SHORT_FIELD(buf_start, buf_end, packet->z);
         PARSE_BYTE_FIELD(buf_start, buf_end, packet->mode);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->block_type);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->block_id);
     }
 
     void PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
@@ -238,6 +239,20 @@ namespace net
         return buf_start - serialized_data.get();
     }
 
+    bool PacketSetBlockServer::serialize(io::IoEventData& event_data) const
+    {
+        std::byte buf[packet_size];
+
+        std::byte* buf_start = buf;
+        PacketStructure::write_byte(buf_start, packet_id);
+        PacketStructure::write_short(buf_start, block_pos.x);
+        PacketStructure::write_short(buf_start, block_pos.y);
+        PacketStructure::write_short(buf_start, block_pos.z);
+        PacketStructure::write_byte(buf_start, block_id);
+
+        return event_data.push(buf, sizeof(buf));
+    }
+
     std::size_t PacketSpawnPlayer::serialize
         (const std::vector<game::Player*>& old_players, const std::vector<game::Player*>& new_players, std::unique_ptr<std::byte[]>& serialized_data)
     {
@@ -284,7 +299,7 @@ namespace net
     }
 
     PacketLevelDataChunk::PacketLevelDataChunk
-        (char* block_data, unsigned block_data_size, PacketFieldType::Short width, PacketFieldType::Short height, PacketFieldType::Short length)
+        (std::byte* block_data, unsigned block_data_size, PacketFieldType::Short width, PacketFieldType::Short height, PacketFieldType::Short length)
         : Packet{ PacketID::LevelDataChunk }
         , compressor{ block_data, block_data_size }
         , x{ width }, y{ height }, z{ length }

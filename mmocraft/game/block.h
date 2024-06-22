@@ -54,4 +54,10 @@ namespace game
 	constexpr BlockID BLOCK_BOOKSHELF = 47;
 	constexpr BlockID BLOCK_MOSSY_ROCKS = 48;
 	constexpr BlockID BLOCK_OBSIDIAN = 49;
+
+	enum BlockMode
+	{
+		UNSET = 0,
+		SET = 1,
+	};
 }

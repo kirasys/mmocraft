@@ -28,6 +28,8 @@ namespace net
         switch (packet->id) {
         case PacketID::Handshake:
             return handle_handshake_packet(conn_descriptor, *static_cast<PacketHandshake*>(packet));
+        case PacketID::SetBlockClient:
+            return handle_set_block_packet(conn_descriptor, *static_cast<PacketSetBlockClient*>(packet));
         case PacketID::SetPlayerPosition:
             return handle_player_position_packet(conn_descriptor, *static_cast<PacketSetPlayerPosition*>(packet));
         default:
@@ -40,6 +42,22 @@ namespace net
     {
         deferred_handshake_packet_task.push_packet(conn_descriptor.connection_key(), packet);
         return error::PACKET_HANDLE_DEFERRED;
+    }
+
+    error::ResultCode MasterServer::handle_set_block_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetBlockClient& packet)
+    {
+        auto block_id = packet.mode == game::BlockMode::SET ? packet.block_id : game::BLOCK_AIR;
+        if (not world.try_change_block({ packet.x, packet.y, packet.z }, block_id))
+            goto REVERT_BLOCK;
+
+        return error::SUCCESS;
+
+    REVERT_BLOCK:
+        block_id = packet.mode == game::BlockMode::SET ? game::BLOCK_AIR : packet.block_id;
+        net::PacketSetBlockServer revert_block_packet({ packet.x, packet.y, packet.z }, block_id);
+        conn_descriptor.send_packet(net::ThreadType::Any_Thread, revert_block_packet); 
+
+        return error::SUCCESS;
     }
 
     error::ResultCode MasterServer::handle_player_position_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetPlayerPosition& packet)

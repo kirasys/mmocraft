@@ -23,6 +23,8 @@ namespace net
         
         error::ResultCode handle_handshake_packet(net::Connection::Descriptor&, net::PacketHandshake&);
 
+        error::ResultCode handle_set_block_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetBlockClient& packet);
+
         error::ResultCode handle_player_position_packet(net::Connection::Descriptor&, net::PacketSetPlayerPosition&);
 
         void tick();

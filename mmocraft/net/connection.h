@@ -103,6 +103,8 @@ namespace net
 
             bool send_packet(ThreadType, const net::PacketSetPlayerID&) const;
 
+            bool send_packet(ThreadType, const net::PacketSetBlockServer&) const;
+
             static void flush_send(net::ConnectionEnvironment&);
 
             static void flush_receive(net::ConnectionEnvironment&);

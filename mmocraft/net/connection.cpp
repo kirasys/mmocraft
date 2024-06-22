@@ -295,6 +295,11 @@ namespace net
         return packet.serialize(*io_send_events[sender_type]->data);
     }
 
+    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketSetBlockServer& packet) const
+    {
+        return packet.serialize(*io_send_events[sender_type]->data);
+    }
+
     void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection::Descriptor& desc) {

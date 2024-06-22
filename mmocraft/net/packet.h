@@ -185,7 +185,7 @@ namespace net
         PacketFieldType::Short y;
         PacketFieldType::Short z;
 
-        PacketLevelDataChunk(char* block_data, unsigned block_data_size, PacketFieldType::Short, PacketFieldType::Short, PacketFieldType::Short);
+        PacketLevelDataChunk(std::byte* block_data, unsigned block_data_size, PacketFieldType::Short, PacketFieldType::Short, PacketFieldType::Short);
 
         std::size_t serialize(std::unique_ptr<std::byte[]>&);
         
@@ -193,17 +193,35 @@ namespace net
         util::Compressor compressor;
     };
 
-    struct PacketSetBlock : Packet
+    struct PacketSetBlockClient : Packet
     {
         PacketFieldType::Short x;
         PacketFieldType::Short y;
         PacketFieldType::Short z;
         PacketFieldType::Byte mode;
-        PacketFieldType::Byte block_type;
+        PacketFieldType::Byte block_id;
 
+        static constexpr PacketID packet_id = PacketID::SetBlockClient;
+        static constexpr std::size_t packet_size = 9;
+
+        DECLARE_PACKET_READ_METHOD(PacketSetBlockClient);
+    };
+
+    struct PacketSetBlockServer : Packet
+    {
+        util::Coordinate3D block_pos;
+        PacketFieldType::Byte block_id;
+
+        static constexpr PacketID packet_id = PacketID::SetBlockServer;
         static constexpr std::size_t packet_size = 8;
 
-        DECLARE_PACKET_READ_METHOD(PacketSetBlock);
+        PacketSetBlockServer(util::Coordinate3D pos, PacketFieldType::Byte a_block_id)
+            : Packet{ packet_id }
+            , block_pos{ pos }
+            , block_id{ a_block_id }
+        { }
+
+        bool serialize(io::IoEventData&) const;
     };
 
     struct PacketSetPlayerPosition : Packet

@@ -17,6 +17,8 @@ namespace net
 
         Spawn_Player,
 
+        Sync_Block_Data,
+
         Sync_Player_Position,
 
         MuticastTag_Count,

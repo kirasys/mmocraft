@@ -28,9 +28,11 @@ namespace game
         , multicast_manager{ a_connection_env }
         , players(connection_env.size_of_max_connections())
         , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
+        , sync_block_task{ &World::sync_block_data, this, sync_block_data_task_interval }
         , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
     {
-
+        for (auto& block_history : block_histories)
+            block_history.initialize(max_block_history_size);
     }
 
     game::Player* World::add_player(net::ConnectionKey connection_key, 
@@ -57,20 +59,15 @@ namespace game
             );
 
             players[connection_key.index()].reset(player);
-
-            // prepare compressed block data for new player.
-            caching_compressed_block_data();
         }
 
         return player;
     }
 
-    void World::caching_compressed_block_data()
+    void World::process_level_wait_player()
     {
-        if (block_data_cache_expired_at > util::current_monotonic_tick())
+        if (last_level_data_submission_at + level_data_submission_interval > util::current_monotonic_tick())
             return;
-
-        block_data_cache_expired_at = block_data_cache_lifetime + util::current_monotonic_tick();
 
         // compress and serialize block datas.
         net::PacketLevelDataChunk level_packet(block_mapping.data(), _metadata.volume(),
@@ -83,6 +80,16 @@ namespace game
         auto packet_size = level_packet.serialize(serialized_level_packet);
 
         multicast_manager.set_multicast_data(net::MuticastTag::Level_Data, std::move(serialized_level_packet), packet_size);
+
+        auto level_wait_player_ptr = level_wait_players.pop();
+        for (auto player_node = level_wait_player_ptr.get(); player_node; player_node = player_node->next) {
+            auto player = player_node->value;
+            auto desc = connection_env.try_acquire_descriptor(player->connection_key());
+            if (desc && multicast_manager.send(net::MuticastTag::Level_Data, *desc))
+                player->set_state(game::PlayerState::Level_Initialized);
+        }
+
+        last_level_data_submission_at = util::current_monotonic_tick();
     }
 
     void World::spawn_player()
@@ -133,6 +140,63 @@ namespace game
         }
     }
 
+    void World::commit_block_changes(game::BlockHistory& block_history)
+    {
+        if (auto history_size = block_history.size()) {
+            auto block_array = block_mapping.data();
+
+            for (std::size_t index = 0; index < history_size; index++) {
+                auto& record = block_history.get_record(index);
+                std::size_t block_map_index = _byteswap_ushort(record.x)
+                    + _metadata.width() * _byteswap_ushort(record.z)
+                    + _metadata.width() * _metadata.length() * _byteswap_ushort(record.y);
+
+                if (block_map_index < _metadata.volume())
+                    block_array[block_map_index] = record.block_id;
+            }
+
+            block_history.reset();
+        }
+    }
+
+    void World::sync_block_data()
+    {
+        auto& block_history = get_outbound_block_history();
+
+        // send block changes to players.
+        
+        std::unique_ptr<std::byte[]> block_history_data;
+
+        if (std::size_t data_size = block_history.fetch_serialized_data(block_history_data)) {
+            multicast_manager.set_multicast_data(
+                net::MuticastTag::Sync_Block_Data,
+                std::move(block_history_data),
+                data_size
+            );
+
+            std::vector<game::Player*> world_players;
+            world_players.reserve(connection_env.size_of_max_connections());
+
+            connection_env.select_players([](const game::Player* player)
+                { return player->state() >= PlayerState::Spawned; },
+                world_players);
+
+            for (auto player : world_players) {
+                auto desc = connection_env.try_acquire_descriptor(player->connection_key());
+                if (desc && not multicast_manager.send(net::MuticastTag::Sync_Block_Data, *desc)) {
+                    // todo: send error message
+                }
+            }
+
+            // apply changes to the global block data table.
+            commit_block_changes(block_history);
+        }
+        
+        // submit level data to handshaked players.
+        if (!level_wait_players.empty())
+            process_level_wait_player();
+    }
+
     void World::sync_player_position()
     {
         std::vector<game::Player*> world_players;
@@ -154,7 +218,7 @@ namespace game
             player->start_sync_position(latest_pos);
 
             // absolute move position
-            if (std::abs(diff.view.x) > 127 || std::abs(diff.view.y) > 127 || std::abs(diff.view.y) > 127) {
+            if (std::abs(diff.view.x) > 32 || std::abs(diff.view.y) > 32 || std::abs(diff.view.y) > 32) {
                 *data_ptr++ = std::byte(net::PacketID::SetPlayerPosition);
                 *data_ptr++ = std::byte(player->game_id());
                 net::PacketStructure::write_short(data_ptr, latest_pos.view.x);
@@ -202,8 +266,13 @@ namespace game
                 if (desc && multicast_manager.send(net::MuticastTag::Sync_Player_Position, *desc))
                     player->end_sync_position();
             }
-
         }
+    }
+
+    bool World::try_change_block(util::Coordinate3D pos, BlockID block_id)
+    {
+        auto& block_history = get_inbound_block_history();
+        return block_history.add_record(pos, block_id);
     }
 
     void World::tick(io::IoCompletionPort& task_scheduler)
@@ -212,16 +281,11 @@ namespace game
             switch (player.state()) {
             case game::PlayerState::Handshake_Completed:
             {
-                net::PacketSetPlayerID packet(player.game_id());
-                if (desc.send_packet(net::ThreadType::Tick_Thread, packet)) {
-                    player.set_state(PlayerState::PlayerID_Tranferred);
+                net::PacketSetPlayerID set_player_id_packet(player.game_id());
+                if (desc.send_packet(net::ThreadType::Tick_Thread, set_player_id_packet)) {
+                    level_wait_players.push(&player);
+                    player.set_state(PlayerState::Level_Wait);
                 }
-            }
-            break;
-            case game::PlayerState::PlayerID_Tranferred:
-            {
-                if (multicast_manager.send(net::MuticastTag::Level_Data, desc))
-                    player.set_state(PlayerState::Level_Initialized);
             }
             break;
             case game::PlayerState::Level_Initialized:
@@ -248,6 +312,12 @@ namespace game
 
         if (not spawn_wait_players.empty() && spawn_player_task.ready())
             task_scheduler.schedule_task(&spawn_player_task);
+
+        if (sync_block_task.ready() && (get_inbound_block_history().size() || not level_wait_players.empty())) {
+            // To ensure inbound history data is completely written, switch block history first.
+            outbound_block_history_index = inbound_block_history_index.exchange(outbound_block_history_index, std::memory_order_relaxed);
+            task_scheduler.schedule_task(&sync_block_task);
+        }
 
         if (sync_player_position_task.ready())
             task_scheduler.schedule_task(&sync_player_position_task);
