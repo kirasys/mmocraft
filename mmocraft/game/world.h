@@ -25,6 +25,7 @@ namespace game
 
     constexpr std::size_t level_data_submission_interval     = 3 * 1000; // 3 seconds
     constexpr std::size_t spawn_player_task_interval         = 2 * 1000; // 2 seconds.
+    constexpr std::size_t despawn_player_task_interval       = 2 * 1000; // 2 seconds.
     constexpr std::size_t sync_block_data_task_interval      = 200;      // 200 milliseconds.
     constexpr std::size_t sync_player_position_task_interval = 100;      // 100 milliseconds.
     constexpr std::size_t ping_interval                      = 5 * 1000; // 5 seconds.
@@ -43,6 +44,8 @@ namespace game
         void process_level_wait_player();
 
         void spawn_player();
+
+        void despawn_player();
 
         void sync_block_data();
 
@@ -65,8 +68,15 @@ namespace game
         net::MulticastManager multicast_manager;
 
         std::vector<std::unique_ptr<game::Player>> players;
+
         std::vector<game::Player*> _level_wait_players;
+        std::vector<game::Player*> _level_wait_player_queue;
+
         std::vector<game::Player*> _spawn_wait_players;
+        std::vector<game::Player*> _spawn_wait_player_queue;
+
+        std::vector<game::PlayerID> _despawn_wait_players;
+        std::vector<game::PlayerID> _despawn_wait_player_queue;
         
         game::BlockHistory& get_inbound_block_history()
         {
@@ -83,6 +93,7 @@ namespace game
         game::BlockHistory block_histories[2];
 
         io::SimpleTask<game::World> spawn_player_task;
+        io::SimpleTask<game::World> despawn_player_task;
         io::SimpleTask<game::World> sync_block_task;
         io::SimpleTask<game::World> sync_player_position_task;
 

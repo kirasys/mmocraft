@@ -28,6 +28,7 @@ namespace game
         , multicast_manager{ a_connection_env }
         , players(connection_env.size_of_max_connections())
         , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
+        , despawn_player_task{ &World::despawn_player, this, despawn_player_task_interval }
         , sync_block_task{ &World::sync_block_data, this, sync_block_data_task_interval }
         , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
     {
@@ -98,14 +99,14 @@ namespace game
         old_players.reserve(connection_env.size_of_max_connections());
 
         connection_env.select_players([](const game::Player* player)
-            { return player->state() > PlayerState::Spawn_Wait; },
+            { return player->state() >= PlayerState::Spawned; },
             old_players);
 
         // create spawn packet of all players.
         std::unique_ptr<std::byte[]> spawn_packet_data;
-        net::PacketSpawnPlayer::serialize(old_players, _spawn_wait_players, spawn_packet_data);
+        auto data_size = net::PacketSpawnPlayer::serialize(old_players, _spawn_wait_players, spawn_packet_data);
 
-        // spawn new player for the existing players. 
+        // spawn new player to the existing players. 
         auto new_player_spawn_packet_data = spawn_packet_data.get() + old_players.size() * net::PacketSpawnPlayer::packet_size;
 
         for (auto player : old_players) {
@@ -118,11 +119,11 @@ namespace game
             }
         }
 
-        // spawn all players for the new players. (use multicast)
+        // spawn all players to the new players. (use multicast)
         multicast_manager.set_multicast_data(
             net::MuticastTag::Spawn_Player,
             std::move(spawn_packet_data),
-            (old_players.size() + _spawn_wait_players.size()) * net::PacketSpawnPlayer::packet_size
+            data_size
         );
 
         for (auto player : _spawn_wait_players) {
@@ -132,6 +133,35 @@ namespace game
         }
 
         _spawn_wait_players.clear();
+    }
+
+    void World::despawn_player()
+    {
+        // create despawn packets
+        std::unique_ptr<std::byte[]> despawn_packet_data;
+        auto data_size = net::PacketDespawnPlayer::serialize(_despawn_wait_players, despawn_packet_data);
+
+        multicast_manager.set_multicast_data(
+            net::MuticastTag::Despawn_Player,
+            std::move(despawn_packet_data),
+            data_size
+        );
+
+        // get existing all players in the world.
+        std::vector<game::Player*> world_players;
+        world_players.reserve(connection_env.size_of_max_connections());
+
+        connection_env.select_players([](const game::Player* player)
+            { return player->state() >= PlayerState::Spawned; },
+            world_players);
+
+        for (auto player : world_players) {
+            if (auto desc = connection_env.try_acquire_descriptor(player->connection_key())) {
+                multicast_manager.send(net::MuticastTag::Despawn_Player, *desc);
+            }
+        }
+
+        _despawn_wait_players.clear();
     }
 
     void World::commit_block_changes(game::BlockHistory& block_history)
@@ -271,53 +301,57 @@ namespace game
 
     void World::tick(io::IoCompletionPort& task_scheduler)
     {
-        std::vector<game::Player*> level_wait_players;
-        std::vector<game::Player*> spawn_wait_players;
-
-        for (net::ConnectionID conn_id = 0; conn_id < connection_env.size_of_max_connections(); conn_id++) {
-            auto conn_descripor = connection_env.try_acquire_descriptor(conn_id);
-            game::Player* player = conn_descripor ? conn_descripor->get_connected_player() : nullptr;
-
-            if (player == nullptr)
-                continue;
-
-            switch (player->state()) {
+        auto transit_player_state = [this](net::Connection::Descriptor& desc, game::Player& player) {
+            switch (player.state()) {
             case game::PlayerState::Handshake_Completed:
             {
-                net::PacketSetPlayerID set_player_id_packet(player->game_id());
-                if (conn_descripor->send_packet(net::ThreadType::Tick_Thread, set_player_id_packet)) {
-                    level_wait_players.push_back(player);
-                    player->set_state(PlayerState::Level_Wait);
+                net::PacketSetPlayerID set_player_id_packet(player.game_id());
+                if (desc.send_packet(net::ThreadType::Tick_Thread, set_player_id_packet)) {
+                    _level_wait_player_queue.push_back(&player);
+                    player.set_state(PlayerState::Level_Wait);
                 }
             }
             break;
             case game::PlayerState::Level_Initialized:
             {
-                player->set_default_spawn_coordinate(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
-                player->set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
-                player->set_state(PlayerState::Spawn_Wait);
+                player.set_default_spawn_coordinate(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
+                player.set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
+                player.set_state(PlayerState::Spawn_Wait);
 
-                spawn_wait_players.push_back(player);
+                _spawn_wait_player_queue.push_back(&player);
             }
             break;
             case game::PlayerState::Spawned:
             {
-                if (player->last_ping_time() + ping_interval < util::current_monotonic_tick()) {
-                    conn_descripor->send_ping(net::ThreadType::Tick_Thread);
-                    player->update_ping_time();
+                if (player.last_ping_time() + ping_interval < util::current_monotonic_tick()) {
+                    desc.send_ping(net::ThreadType::Tick_Thread);
+                    player.update_ping_time();
                 }
             }
             break;
+            case game::PlayerState::Disconnected:
+            {
+                _despawn_wait_player_queue.push_back(player.game_id());
+                desc.set_offline();
             }
-        }
+            break;
+            }
+        };
 
-        if (not spawn_wait_players.empty() && spawn_player_task.ready()) {
-            _spawn_wait_players.swap(spawn_wait_players);
+        connection_env.for_each_player(transit_player_state);
+
+        if (not _spawn_wait_player_queue.empty() && spawn_player_task.ready()) {
+            _spawn_wait_player_queue.swap(_spawn_wait_players);
             task_scheduler.schedule_task(&spawn_player_task);
         }
 
-        if (sync_block_task.ready() && (get_inbound_block_history().size() || not level_wait_players.empty())) {
-            _level_wait_players.swap(level_wait_players);
+        if (not _despawn_wait_player_queue.empty() && despawn_player_task.ready()) {
+            _despawn_wait_player_queue.swap(_despawn_wait_players);
+            task_scheduler.schedule_task(&despawn_player_task);
+        }
+
+        if (sync_block_task.ready() && (get_inbound_block_history().size() || not _level_wait_player_queue.empty())) {
+            _level_wait_player_queue.swap(_level_wait_players);
             // To ensure inbound history data is completely written, switch block history first.
             outbound_block_history_index = inbound_block_history_index.exchange(outbound_block_history_index, std::memory_order_relaxed);
             task_scheduler.schedule_task(&sync_block_task);
