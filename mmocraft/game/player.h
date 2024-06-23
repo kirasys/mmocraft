@@ -189,14 +189,14 @@ namespace game
                 _spawn_pos.set_raw_orientation(yaw, pitch);
         }
 
-        void start_sync_position(PlayerPosition syncing_pos)
+        void update_last_transferred_position(PlayerPosition pos)
         {
-            _last_synced_pos_tmp = syncing_pos;
+            _last_transferred_pos_tmp = pos;
         }
 
-        void end_sync_position()
+        void commit_last_transferrd_position()
         {
-            _last_synced_pos = _last_synced_pos_tmp;
+            _last_transferred_pos = _last_transferred_pos_tmp;
         }
 
         PlayerPosition last_position() const
@@ -204,9 +204,9 @@ namespace game
             return _latest_pos;
         }
 
-        PlayerPosition last_synced_position() const
+        PlayerPosition last_transferred_position() const
         {
-            return _last_synced_pos;
+            return _last_transferred_pos;
         }
 
         std::size_t last_ping_time() const
@@ -234,8 +234,8 @@ namespace game
         char _password[32 + 1];
 
         PlayerPosition _latest_pos;
-        PlayerPosition _last_synced_pos;
-        PlayerPosition _last_synced_pos_tmp;
+        PlayerPosition _last_transferred_pos;
+        PlayerPosition _last_transferred_pos_tmp;
         PlayerPosition _spawn_pos;
 
         std::size_t _last_ping_time = 0;

@@ -217,12 +217,15 @@ namespace game
         }
         
         // submit level data to handshaked players.
+        // Note: level data task can't be seperated from block data task to achieve block data synchronization.
+        //       the client dose not allow to send block datas before level initialization completed.
         if (not _level_wait_players.empty())
             process_level_wait_player();
     }
 
     void World::sync_player_position()
     {
+        // get existing all players in the world.
         std::vector<game::Player*> world_players;
         world_players.reserve(connection_env.size_of_max_connections());
 
@@ -230,55 +233,10 @@ namespace game
             { return player->state() >= PlayerState::Spawned; },
             world_players);
 
-        std::unique_ptr<std::byte[]> position_packet_data(
-            new std::byte[world_players.size() * net::PacketSetPlayerPosition::packet_size]
-        );
-        auto data_ptr = position_packet_data.get();
 
-        for (auto player : world_players) {
-            auto latest_pos = player->last_position();
-            const auto diff = latest_pos - player->last_synced_position();
-
-            player->start_sync_position(latest_pos);
-
-            // absolute move position
-            if (std::abs(diff.view.x) > 32 || std::abs(diff.view.y) > 32 || std::abs(diff.view.y) > 32) {
-                *data_ptr++ = std::byte(net::PacketID::SetPlayerPosition);
-                *data_ptr++ = std::byte(player->game_id());
-                net::PacketStructure::write_short(data_ptr, latest_pos.view.x);
-                net::PacketStructure::write_short(data_ptr, latest_pos.view.y);
-                net::PacketStructure::write_short(data_ptr, latest_pos.view.z);
-                *data_ptr++ = std::byte(latest_pos.view.yaw);
-                *data_ptr++ = std::byte(latest_pos.view.pitch);
-            }
-            // relative move position
-            else if (diff.raw_coordinate() && diff.raw_orientation()) {
-                *data_ptr++ = std::byte(net::PacketID::UpdatePlayerPosition);
-                *data_ptr++ = std::byte(player->game_id());
-                *data_ptr++ = std::byte(diff.view.x);
-                *data_ptr++ = std::byte(diff.view.y);
-                *data_ptr++ = std::byte(diff.view.z);
-                *data_ptr++ = std::byte(latest_pos.view.yaw);
-                *data_ptr++ = std::byte(latest_pos.view.pitch);
-            }
-            // relative move coordinate
-            else if (diff.raw_coordinate()) {
-                *data_ptr++ = std::byte(net::PacketID::UpdatePlayerCoordinate);
-                *data_ptr++ = std::byte(player->game_id());
-                *data_ptr++ = std::byte(diff.view.x);
-                *data_ptr++ = std::byte(diff.view.y);
-                *data_ptr++ = std::byte(diff.view.z);
-            }
-            // relative move orientation
-            else if (diff.raw_orientation()) {
-                *data_ptr++ = std::byte(net::PacketID::UpdatePlayerOrientation);
-                *data_ptr++ = std::byte(player->game_id());
-                *data_ptr++ = std::byte(latest_pos.view.yaw);
-                *data_ptr++ = std::byte(latest_pos.view.pitch);
-            }
-        }
-
-        if (auto data_size = data_ptr - position_packet_data.get()) {
+        // create set player position packets.
+        std::unique_ptr<std::byte[]> position_packet_data;
+        if (auto data_size = net::PacketSetPlayerPosition::serialize(world_players, position_packet_data)) {
             multicast_manager.set_multicast_data(
                 net::MuticastTag::Sync_Player_Position,
                 std::move(position_packet_data),
@@ -288,7 +246,7 @@ namespace game
             for (auto player : world_players) {
                 auto desc = connection_env.try_acquire_descriptor(player->connection_key());
                 if (desc && multicast_manager.send(net::MuticastTag::Sync_Player_Position, *desc))
-                    player->end_sync_position();
+                    player->commit_last_transferrd_position();
             }
         }
     }

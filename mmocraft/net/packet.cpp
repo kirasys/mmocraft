@@ -253,6 +253,61 @@ namespace net
         return event_data.push(buf, sizeof(buf));
     }
 
+    std::size_t PacketSetPlayerPosition::serialize(const std::vector<game::Player*>& players, std::unique_ptr<std::byte[]>& serialized_data)
+    {
+        auto max_data_size = players.size() * packet_size;
+        serialized_data.reset(new std::byte[max_data_size]);
+
+        std::byte* buf_start = serialized_data.get();
+
+        for (auto player : players) {
+            auto latest_pos = player->last_position();
+            const auto diff = latest_pos - player->last_transferred_position();
+
+            // Todo: it seem to be confusing to update player's state at serialization.
+            //       move some other place.
+            player->update_last_transferred_position(latest_pos);
+
+            // absolute move position
+            if (std::abs(diff.view.x) > 32 || std::abs(diff.view.y) > 32 || std::abs(diff.view.y) > 32) {
+                *buf_start++ = std::byte(net::PacketID::SetPlayerPosition);
+                *buf_start++ = std::byte(player->game_id());
+                net::PacketStructure::write_short(buf_start, latest_pos.view.x);
+                net::PacketStructure::write_short(buf_start, latest_pos.view.y);
+                net::PacketStructure::write_short(buf_start, latest_pos.view.z);
+                *buf_start++ = std::byte(latest_pos.view.yaw);
+                *buf_start++ = std::byte(latest_pos.view.pitch);
+            }
+            // relative move position
+            else if (diff.raw_coordinate() && diff.raw_orientation()) {
+                *buf_start++ = std::byte(net::PacketID::UpdatePlayerPosition);
+                *buf_start++ = std::byte(player->game_id());
+                *buf_start++ = std::byte(diff.view.x);
+                *buf_start++ = std::byte(diff.view.y);
+                *buf_start++ = std::byte(diff.view.z);
+                *buf_start++ = std::byte(latest_pos.view.yaw);
+                *buf_start++ = std::byte(latest_pos.view.pitch);
+            }
+            // relative move coordinate
+            else if (diff.raw_coordinate()) {
+                *buf_start++ = std::byte(net::PacketID::UpdatePlayerCoordinate);
+                *buf_start++ = std::byte(player->game_id());
+                *buf_start++ = std::byte(diff.view.x);
+                *buf_start++ = std::byte(diff.view.y);
+                *buf_start++ = std::byte(diff.view.z);
+            }
+            // relative move orientation
+            else if (diff.raw_orientation()) {
+                *buf_start++ = std::byte(net::PacketID::UpdatePlayerOrientation);
+                *buf_start++ = std::byte(player->game_id());
+                *buf_start++ = std::byte(latest_pos.view.yaw);
+                *buf_start++ = std::byte(latest_pos.view.pitch);
+            }
+        }
+
+        return buf_start - serialized_data.get();
+    }
+
     std::size_t PacketSpawnPlayer::serialize
         (const std::vector<game::Player*>& old_players, const std::vector<game::Player*>& new_players, std::unique_ptr<std::byte[]>& serialized_data)
     {

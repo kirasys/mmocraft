@@ -232,6 +232,8 @@ namespace net
         static constexpr std::size_t packet_size = 10;
 
         DECLARE_PACKET_READ_METHOD(PacketSetPlayerPosition);
+
+        static std::size_t serialize(const std::vector<game::Player*>&, std::unique_ptr<std::byte[]>&);
     };
 
     struct PacketSpawnPlayer : Packet
