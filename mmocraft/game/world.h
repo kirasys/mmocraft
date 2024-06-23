@@ -39,7 +39,7 @@ namespace game
 
         game::Player* add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username, const char* password);
 
-        void caching_compressed_block_data();
+        void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
 
         void process_level_wait_player();
 

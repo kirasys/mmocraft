@@ -50,6 +50,8 @@ namespace
         arr[ErrorCode::PACKET_HANDLE_SUCCESS]  = "PACKET_HANDLE_SUCCESS";
         arr[ErrorCode::PACKET_HANDLE_DEFERRED] = "PACKET_HANDLE_DEFERRED";
 
+        arr[ErrorCode::PACKET_CHAT_MESSAGE_HANDLE_ERROR] = "Couldn't handle chat message. Please try reconnect.";
+
         // Packet result
         arr[ErrorCode::PACKET_RESULT_SUCCESS_LOGIN] = "PACKET_RESULT_SUCCESS_LOGIN";
         arr[ErrorCode::PACKET_RESULT_FAIL_LOGIN] = "Incorrect username or password";

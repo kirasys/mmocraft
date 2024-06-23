@@ -23,6 +23,8 @@ namespace net
 
         Sync_Player_Position,
 
+        Chat_Message,
+
         MuticastTag_Count,
     };
 

@@ -12,7 +12,8 @@
 
 namespace net
 {
-    static std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
+    static constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
+    static constexpr std::size_t chat_message_task_interval = 1 * 1000; // 1 seconds.
 
     class MasterServer : public net::PacketHandleServer
     {
@@ -27,6 +28,8 @@ namespace net
 
         error::ResultCode handle_player_position_packet(net::Connection::Descriptor&, net::PacketSetPlayerPosition&);
 
+        error::ResultCode handle_chat_message_packet(net::Connection::Descriptor&, net::PacketChatMessage&);
+
         void tick();
 
         void serve_forever();
@@ -35,7 +38,9 @@ namespace net
          *  Deferred packet handler methods.
          */
 
-        void handle_deferred_handshake_packet(io::Task*, const DeferredPacket<PacketHandshake>*);
+        void handle_deferred_handshake_packet(io::Task*, const DeferredPacket<net::PacketHandshake>*);
+
+        void handle_deferred_chat_message_packet(io::Task*, const DeferredPacket<net::PacketChatMessage>*);
 
     private:
 
@@ -51,9 +56,12 @@ namespace net
 
         game::World world;
 
-        DeferredPacketTask<PacketHandshake, MasterServer> deferred_handshake_packet_task;
-        io::Task *deferred_packet_tasks[1] = {
-            &deferred_handshake_packet_task
+        DeferredPacketTask<net::PacketHandshake, MasterServer> deferred_handshake_packet_task;
+        DeferredPacketTask<net::PacketChatMessage, MasterServer> deferred_chat_message_packet_task;
+
+        io::Task *deferred_packet_tasks[2] = {
+            &deferred_handshake_packet_task,
+            &deferred_chat_message_packet_task
         };
     };
 }

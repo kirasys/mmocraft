@@ -36,6 +36,41 @@ namespace net
         char password[net::PacketFieldConstraint::max_password_length + 1];
     };
 
+    template <>
+    struct DeferredPacket<PacketChatMessage>
+    {
+        DeferredPacket<PacketChatMessage>(net::ConnectionKey key, const PacketChatMessage& src_packet)
+            : connection_key{ key }
+            , player_id{ src_packet.player_id }
+            , message_length{ src_packet.message.size }
+        {
+            std::memcpy(message, src_packet.message.data, std::min(message_length, sizeof(message)));
+        }
+
+        static std::size_t serialize(std::vector<const DeferredPacket<PacketChatMessage>*>& packets, std::unique_ptr<std::byte[]>& serialized_data)
+        {
+            auto data_size = packets.size() * net::PacketChatMessage::packet_size;
+            serialized_data.reset(new std::byte[data_size]);
+
+            auto buf_start = serialized_data.get();
+
+            for (auto packet : packets) {
+                PacketStructure::write_byte(buf_start, net::PacketChatMessage::packet_id);
+                PacketStructure::write_byte(buf_start, packet->player_id);
+                PacketStructure::write_string(buf_start, packet->message, packet->message_length);
+            }
+
+            return data_size;
+        }
+
+        DeferredPacket<PacketChatMessage>* next = nullptr;
+        net::ConnectionKey connection_key;
+        
+        game::PlayerID player_id;
+        std::byte message[net::PacketFieldConstraint::max_string_length];
+        std::size_t message_length;
+    };
+
     template <typename PacketType, typename HandlerClass>
     class DeferredPacketTask: public io::Task
     {

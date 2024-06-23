@@ -41,6 +41,7 @@ namespace
         arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate, PacketHandshake::packet_size };
         arr[PacketID::SetBlockClient] = { PacketSetBlockClient::parse, nullptr, PacketSetBlockClient::packet_size };
         arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::parse, nullptr,  PacketSetPlayerPosition::packet_size };
+        arr[PacketID::ChatMessage] = { PacketChatMessage::parse, nullptr, PacketChatMessage::packet_size };
         return arr;
     }();
 }
@@ -107,6 +108,13 @@ namespace net
         buf += PacketFieldType::String::size_with_padding;
     }
 
+    void PacketStructure::write_string(std::byte*& buf, const std::byte* data, std::size_t data_size)
+    {
+        std::memcpy(buf, data, data_size);
+        std::memset(buf + data_size, ' ', PacketFieldType::String::size_with_padding - data_size);
+        buf += PacketFieldType::String::size_with_padding;
+    }
+
     void PacketStructure::write_coordinate(std::byte*& buf, util::Coordinate3D pos)
     {
         PacketStructure::write_short(buf, pos.x);
@@ -152,6 +160,11 @@ namespace net
         return error::SUCCESS;
     }
 
+    error::ErrorCode PacketChatMessage::validate(const net::Packet* a_packet)
+    {
+        return error::SUCCESS;
+    }
+
     void PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
@@ -180,6 +193,13 @@ namespace net
         PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.z);
         PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.yaw);
         PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.pitch);
+    }
+
+    void PacketChatMessage::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    {
+        auto packet = to_derived(out_packet);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_id);
+        PARSE_STRING_FIELD(buf_start, buf_end, packet->message);
     }
 
     bool PacketHandshake::serialize(io::IoEventData& event_data) const

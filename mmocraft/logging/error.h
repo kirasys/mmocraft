@@ -52,6 +52,8 @@ namespace error
         PACKET_HANDLE_SUCCESS,
         PACKET_HANDLE_DEFERRED,
 
+        PACKET_CHAT_MESSAGE_HANDLE_ERROR,
+
         // Deferred packet result
         PACKET_RESULT_SUCCESS_LOGIN,
         PACKET_RESULT_FAIL_LOGIN,

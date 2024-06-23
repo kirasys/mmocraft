@@ -10,8 +10,8 @@
 
 #include "util/common_util.h"
 
-#define ENABLE_FILE_LOGGING false
-#define ENALBE_CONSOLE_LOGGING false
+#define ENABLE_FILE_LOGGING true
+#define ENALBE_CONSOLE_LOGGING true
 
 #define LOG(level) if (ENABLE_FILE_LOGGING) logging::##level()
 #define CONSOLE_LOG(level) if (ENALBE_CONSOLE_LOGGING) logging::console_##level()

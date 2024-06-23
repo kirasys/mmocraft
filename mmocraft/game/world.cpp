@@ -65,6 +65,28 @@ namespace game
         return player;
     }
 
+    void World::multicast_to_world_player(net::MuticastTag tag, std::unique_ptr<std::byte[]>&& multicast_data, std::size_t data_size)
+    {
+        multicast_manager.set_multicast_data(
+            tag,
+            std::move(multicast_data),
+            data_size
+        );
+
+        std::vector<game::Player*> world_players;
+        world_players.reserve(connection_env.size_of_max_connections());
+
+        connection_env.select_players([](const game::Player* player)
+            { return player->state() >= PlayerState::Spawned; },
+            world_players);
+
+        for (auto player : world_players) {
+            if (auto desc = connection_env.try_acquire_descriptor(player->connection_key())) {
+                multicast_manager.send(tag, *desc);
+            }
+        }
+    }
+
     void World::process_level_wait_player()
     {
         if (last_level_data_submission_at + level_data_submission_interval > util::current_monotonic_tick())
@@ -198,14 +220,14 @@ namespace game
                 data_size
             );
 
-            std::vector<game::Player*> world_players;
-            world_players.reserve(connection_env.size_of_max_connections());
+            std::vector<game::Player*> level_completed_players;
+            level_completed_players.reserve(connection_env.size_of_max_connections());
 
             connection_env.select_players([](const game::Player* player)
                 { return player->state() >= PlayerState::Level_Initialized; },
-                world_players);
+                level_completed_players);
 
-            for (auto player : world_players) {
+            for (auto player : level_completed_players) {
                 auto desc = connection_env.try_acquire_descriptor(player->connection_key());
                 if (desc && not multicast_manager.send(net::MuticastTag::Sync_Block_Data, *desc)) {
                     // todo: send error message

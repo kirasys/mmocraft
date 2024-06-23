@@ -19,6 +19,7 @@ namespace net
         , world{ connection_env }
         
         , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this, user_authentication_task_interval }
+        , deferred_chat_message_packet_task{ &MasterServer::handle_deferred_chat_message_packet, this, chat_message_task_interval }
     {
 
     }
@@ -32,6 +33,8 @@ namespace net
             return handle_set_block_packet(conn_descriptor, *static_cast<PacketSetBlockClient*>(packet));
         case PacketID::SetPlayerPosition:
             return handle_player_position_packet(conn_descriptor, *static_cast<PacketSetPlayerPosition*>(packet));
+        case PacketID::ChatMessage:
+            return handle_chat_message_packet(conn_descriptor, *static_cast<PacketChatMessage*>(packet));
         default:
             CONSOLE_LOG(error) << "Unimplemented packet id: " << int(packet->id);
             return error::PACKET_UNIMPLEMENTED_ID;
@@ -66,6 +69,16 @@ namespace net
             player->set_position(packet.player_pos);
         
         return error::PACKET_HANDLE_DEFERRED;
+    }
+
+    error::ResultCode MasterServer::handle_chat_message_packet(net::Connection::Descriptor& conn_descriptor, net::PacketChatMessage& packet)
+    {
+        if (auto player = conn_descriptor.get_connected_player()) {
+            packet.player_id = player->game_id(); // client always sends 0xff(SELF ID).
+            deferred_chat_message_packet_task.push_packet(conn_descriptor.connection_key(), packet);
+            return error::PACKET_HANDLE_DEFERRED;
+        }
+        return error::PACKET_CHAT_MESSAGE_HANDLE_ERROR;
     }
 
     void MasterServer::tick()
@@ -118,7 +131,7 @@ namespace net
      *  Deferred packet handler methods.
      */
 
-    void MasterServer::handle_deferred_handshake_packet(io::Task* task, const DeferredPacket<PacketHandshake>* packet_head)
+    void MasterServer::handle_deferred_handshake_packet(io::Task* task, const DeferredPacket<net::PacketHandshake>* packet_head)
     {
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
@@ -156,6 +169,18 @@ namespace net
 
                 desc->on_handshake_success(player);
             }
+        }
+    }
+
+    void MasterServer::handle_deferred_chat_message_packet(io::Task* task, const DeferredPacket<net::PacketChatMessage>* packet_head)
+    {
+        std::vector<const DeferredPacket<net::PacketChatMessage>*> packets;
+        for (auto packet = packet_head; packet; packet = packet->next)
+            packets.push_back(packet);
+
+        std::unique_ptr<std::byte[]> packet_data;
+        if (auto data_size = DeferredPacket<net::PacketChatMessage>::serialize(packets, packet_data)) {
+            world.multicast_to_world_player(net::MuticastTag::Chat_Message, std::move(packet_data), data_size);
         }
     }
 }

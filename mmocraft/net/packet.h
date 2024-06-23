@@ -33,7 +33,7 @@ namespace net
         // Client <-> Server
         Handshake = 0,
         SetPlayerPosition = 8,
-        Message = 0xD,
+        ChatMessage = 0xD,
 
         // Client -> Server
         SetBlockClient = 5,
@@ -117,14 +117,15 @@ namespace net
         {
             const char *data = nullptr;
             std::size_t size = 0;
-            static constexpr unsigned size_with_padding = 64;
+            static constexpr std::size_t size_with_padding = 64;
         };
     };
 
     namespace PacketFieldConstraint
     {
-        static constexpr unsigned max_username_length = 16;
-        static constexpr unsigned max_password_length = 32;
+        static constexpr std::size_t max_username_length = 16;
+        static constexpr std::size_t max_password_length = 32;
+        static constexpr std::size_t max_string_length = 64;
     }
 
     struct Packet
@@ -256,6 +257,17 @@ namespace net
         static std::size_t serialize(const std::vector<game::PlayerID>&, std::unique_ptr<std::byte[]>&);
     };
     
+    struct PacketChatMessage : Packet
+    {
+        PacketFieldType::Byte player_id;
+        PacketFieldType::String message;
+
+        static constexpr PacketID packet_id = PacketID::ChatMessage;
+        static constexpr std::size_t packet_size = 66;
+
+        DECLARE_PACKET_READ_METHOD(PacketChatMessage);
+    };
+
     struct PacketDisconnectPlayer : Packet
     {
         PacketFieldType::String reason;
@@ -302,6 +314,8 @@ namespace net
         static void write_string(std::byte*&, const PacketFieldType::String&);
 
         static void write_string(std::byte*&, const char*);
+
+        static void write_string(std::byte*& buf, const std::byte* data, std::size_t data_size);
 
         static void write_coordinate(std::byte*&, util::Coordinate3D);
 
