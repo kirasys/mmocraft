@@ -17,7 +17,7 @@ namespace net
         
     }
 
-    unsigned ConnectionEnvironment::get_unused_slot()
+    ConnectionID ConnectionEnvironment::get_unused_connection_id()
     {
         // find first unused slot.
         auto unused_slot = std::find_if(connection_table.begin(), connection_table.end(),

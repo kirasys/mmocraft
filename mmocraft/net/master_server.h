@@ -41,8 +41,6 @@ namespace net
 
         void flush_deferred_packet();
 
-        void schedule_world_task();
-
         net::ConnectionEnvironment connection_env;
 
         io::IoCompletionPort io_service;

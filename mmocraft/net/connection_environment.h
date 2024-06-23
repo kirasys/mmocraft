@@ -38,7 +38,12 @@ namespace net
             return connection_table[index].connection;
         }
 
-        std::uint32_t is_expired(ConnectionKey key) const
+        bool is_expired(ConnectionID connection_id) const
+        {
+            return connection_table[connection_id].will_delete;
+        }
+
+        bool is_expired(ConnectionKey key) const
         {
             return connection_table[key.index()].will_delete 
                 || key.created_at() != connection_table[key.index()].created_at;
@@ -53,18 +58,23 @@ namespace net
         {
             return is_expired(key) ? nullptr : &connection_table[key.index()].connection->descriptor;
         }
+
+        net::Connection::Descriptor* try_acquire_descriptor(ConnectionID connection_id) const
+        {
+            return is_expired(connection_id) ? nullptr : &connection_table[connection_id].connection->descriptor;
+        }
         
-        unsigned size_of_connections() const
+        std::size_t size_of_connections() const
         {
             return num_of_connections.load();
         }
 
-        unsigned size_of_max_connections() const
+        std::size_t size_of_max_connections() const
         {
             return num_of_max_connections;
         }
 
-        unsigned get_unused_slot();
+        ConnectionID get_unused_connection_id();
 
         // Invoked after connection constructor finished.
         // Register new created conneciton to the table and owns connection resource.

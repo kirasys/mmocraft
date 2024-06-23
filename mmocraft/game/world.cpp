@@ -277,38 +277,42 @@ namespace game
 
     void World::tick(io::IoCompletionPort& task_scheduler)
     {
-        auto transit_player_state = [this](net::Connection::Descriptor& desc, game::Player& player) {
-            switch (player.state()) {
+        for (net::ConnectionID conn_id = 0; conn_id < connection_env.size_of_max_connections(); conn_id++) {
+            auto conn_descripor = connection_env.try_acquire_descriptor(conn_id);
+            game::Player* player = conn_descripor ? conn_descripor->get_connected_player() : nullptr;
+
+            if (player == nullptr)
+                continue;
+
+            switch (player->state()) {
             case game::PlayerState::Handshake_Completed:
             {
-                net::PacketSetPlayerID set_player_id_packet(player.game_id());
-                if (desc.send_packet(net::ThreadType::Tick_Thread, set_player_id_packet)) {
-                    level_wait_players.push(&player);
-                    player.set_state(PlayerState::Level_Wait);
+                net::PacketSetPlayerID set_player_id_packet(player->game_id());
+                if (conn_descripor->send_packet(net::ThreadType::Tick_Thread, set_player_id_packet)) {
+                    level_wait_players.push(player);
+                    player->set_state(PlayerState::Level_Wait);
                 }
             }
             break;
             case game::PlayerState::Level_Initialized:
             {
-                player.set_default_spawn_coordinate(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
-                player.set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
-                player.set_state(PlayerState::Spawn_Wait);
+                player->set_default_spawn_coordinate(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z());
+                player->set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
+                player->set_state(PlayerState::Spawn_Wait);
 
-                spawn_wait_players.push(&player);
+                spawn_wait_players.push(player);
             }
             break;
             case game::PlayerState::Spawned:
             {
-                if (player.last_ping_time() + ping_interval < util::current_monotonic_tick()) {
-                    desc.send_ping(net::ThreadType::Tick_Thread);
-                    player.update_ping_time();
+                if (player->last_ping_time() + ping_interval < util::current_monotonic_tick()) {
+                    conn_descripor->send_ping(net::ThreadType::Tick_Thread);
+                    player->update_ping_time();
                 }
             }
             break;
             }
-        };
-
-        connection_env.for_each_player(transit_player_state);
+        }
 
         if (not spawn_wait_players.empty() && spawn_player_task.ready())
             task_scheduler.schedule_task(&spawn_player_task);

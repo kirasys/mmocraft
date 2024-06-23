@@ -7,6 +7,8 @@ namespace net
 {
     class ConnectionEnvironment;
 
+    using ConnectionID = unsigned;
+
     // ConnectionKey class is used when need to safely access the connection.
     class ConnectionKey
     {
@@ -14,10 +16,10 @@ namespace net
         ConnectionKey() : key{ 0 }
         { }
 
-        ConnectionKey(unsigned index, std::size_t created_at) : key{ index | (created_at << 32) }
+        ConnectionKey(ConnectionID index, std::size_t created_at) : key{ index | (created_at << 32) }
         { }
 
-        inline unsigned index() const
+        inline ConnectionID index() const
         {
             return key & 0xFFFFFFFF;
         }

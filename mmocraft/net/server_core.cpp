@@ -36,7 +36,7 @@ namespace net
 
     net::ConnectionKey ServerCore::new_connection(win::UniqueSocket &&client_sock)
     {
-        auto connection_key = ConnectionKey(connection_env.get_unused_slot(), util::current_monotonic_tick32());
+        auto connection_key = ConnectionKey(connection_env.get_unused_connection_id(), util::current_monotonic_tick32());
 
         auto connection_ptr = connection_pool.new_object(
             packet_handle_server,
