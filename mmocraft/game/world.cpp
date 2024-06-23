@@ -178,7 +178,7 @@ namespace game
             world_players.reserve(connection_env.size_of_max_connections());
 
             connection_env.select_players([](const game::Player* player)
-                { return player->state() >= PlayerState::Spawned; },
+                { return player->state() >= PlayerState::Level_Initialized; },
                 world_players);
 
             for (auto player : world_players) {
