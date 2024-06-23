@@ -245,6 +245,14 @@ namespace net
         static std::size_t serialize(const std::vector<game::Player*>&, const std::vector<game::Player*>&, std::unique_ptr<std::byte[]>&);
 
     };
+
+    struct PacketDespawnPlayer : Packet
+    {
+        static constexpr PacketID packet_id = PacketID::DespawnPlayer;
+        static constexpr std::size_t packet_size = 2;
+
+        static std::size_t serialize(const std::vector<game::PlayerID>&, std::unique_ptr<std::byte[]>&);
+    };
     
     struct PacketDisconnectPlayer : Packet
     {

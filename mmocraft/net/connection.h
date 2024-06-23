@@ -70,6 +70,8 @@ namespace net
 
             void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
+            void disconnect();
+
             bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;
 
             bool is_safe_delete(std::size_t current_tick = util::current_monotonic_tick()) const;

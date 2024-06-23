@@ -71,7 +71,7 @@ namespace net
                 }
 
                 if (desc.is_expired())
-                    desc.set_offline();
+                    desc.disconnect();
                 
                 return false;
             }

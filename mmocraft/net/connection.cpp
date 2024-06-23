@@ -76,7 +76,7 @@ namespace net
     
     void Connection::on_error()
     {
-        descriptor.set_offline();
+        descriptor.disconnect();
     }
 
     /// recv event handler
@@ -151,6 +151,18 @@ namespace net
         online = false;
         last_offline_tick = current_tick;
         connection_env.on_connection_offline(_connection_key);
+    }
+
+    void Connection::Descriptor::disconnect()
+    {
+        // player manager(aka. world) has some extra works for disconnecting players.
+        // in this case, return without setting offline the connection.
+        if (_player && _player->state() >= game::PlayerState::Spawned) {
+            _player->set_state(game::PlayerState::Disconnected);
+            return;
+        }
+
+        set_offline();
     }
 
     bool Connection::Descriptor::is_expired(std::size_t current_tick) const
@@ -263,7 +275,7 @@ namespace net
         net::PacketDisconnectPlayer disconnect_packet{ reason };
         bool result = disconnect_packet.serialize(*io_send_events[sender_type]->data);
 
-        set_offline();
+        disconnect();
         emit_send_event(io_send_events[sender_type]); // TODO: resolve interleaving problem.
 
         return result;

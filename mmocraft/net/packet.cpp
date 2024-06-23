@@ -281,6 +281,21 @@ namespace net
         return data_size;
     }
 
+    std::size_t PacketDespawnPlayer::serialize(const std::vector<game::PlayerID>& player_ids , std::unique_ptr<std::byte[]>& serialized_data)
+    {
+        auto data_size = player_ids.size() * packet_size;
+        serialized_data.reset(new std::byte[data_size]);
+
+        std::byte* buf_start = serialized_data.get();
+
+        for (auto player_id : player_ids) {
+            PacketStructure::write_byte(buf_start, packet_id);
+            PacketStructure::write_byte(buf_start, player_id);
+        }
+
+        return data_size;
+    }
+
     bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const
     {
         std::byte buf[packet_size];
