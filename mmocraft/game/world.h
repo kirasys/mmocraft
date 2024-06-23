@@ -12,7 +12,6 @@
 #include "net/multicast_manager.h"
 #include "win/file_mapping.h"
 #include "util/common_util.h"
-#include "util/lockfree_stack.h"
 
 namespace net
 {
@@ -66,8 +65,8 @@ namespace game
         net::MulticastManager multicast_manager;
 
         std::vector<std::unique_ptr<game::Player>> players;
-        util::LockfreeStack<game::Player*> level_wait_players;
-        util::LockfreeStack<game::Player*> spawn_wait_players;
+        std::vector<game::Player*> _level_wait_players;
+        std::vector<game::Player*> _spawn_wait_players;
         
         game::BlockHistory& get_inbound_block_history()
         {
