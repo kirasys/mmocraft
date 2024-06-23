@@ -89,7 +89,7 @@ namespace net
             return;
         }
 
-        descriptor.disconnect(ThreadType::Any_Thread, last_error_code.to_string());
+        descriptor.send_disconnect_message(ThreadType::Any_Thread, last_error_code.to_string());
         event->is_processing = false;
     }
 
@@ -236,22 +236,6 @@ namespace net
         return true;
     }
 
-    bool Connection::Descriptor::disconnect(ThreadType sender_type, std::string_view reason)
-    {
-        net::PacketDisconnectPlayer disconnect_packet{ reason };
-        bool result = disconnect_packet.serialize(*io_send_events[sender_type]->data);
-    
-        set_offline();
-        emit_send_event(io_send_events[sender_type]); // TODO: resolve interleaving problem.
-
-        return result;
-    }
-
-    bool Connection::Descriptor::disconnect(ThreadType sender_type, error::ResultCode result)
-    {
-        return disconnect(sender_type, result.to_string());
-    }
-
     void Connection::Descriptor::on_handshake_success(game::Player* player)
     {
         const auto& server_conf = config::get_server_config();
@@ -272,6 +256,22 @@ namespace net
     bool Connection::Descriptor::send_raw_data(ThreadType sender_type, const std::byte* data, std::size_t data_size) const
     {
         return io_send_events[sender_type]->data->push(data, data_size);
+    }
+
+    bool Connection::Descriptor::send_disconnect_message(ThreadType sender_type, std::string_view reason)
+    {
+        net::PacketDisconnectPlayer disconnect_packet{ reason };
+        bool result = disconnect_packet.serialize(*io_send_events[sender_type]->data);
+
+        set_offline();
+        emit_send_event(io_send_events[sender_type]); // TODO: resolve interleaving problem.
+
+        return result;
+    }
+
+    bool Connection::Descriptor::send_disconnect_message(ThreadType sender_type, error::ResultCode result)
+    {
+        return send_disconnect_message(sender_type, result.to_string());
     }
 
     bool Connection::Descriptor::send_ping(ThreadType sender_type) const

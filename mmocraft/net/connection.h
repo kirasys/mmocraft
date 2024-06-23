@@ -87,13 +87,13 @@ namespace net
 
             bool emit_multicast_send_event(io::IoSendEventSharedData*);
 
-            bool disconnect(ThreadType, std::string_view);
-
-            bool disconnect(ThreadType, error::ResultCode);
-
             void on_handshake_success(game::Player*);
 
             bool send_raw_data(ThreadType, const std::byte*, std::size_t) const;
+
+            bool send_disconnect_message(ThreadType, std::string_view);
+
+            bool send_disconnect_message(ThreadType, error::ResultCode);
 
             bool send_ping(ThreadType sender_type) const;
 

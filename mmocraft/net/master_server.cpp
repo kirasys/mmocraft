@@ -138,7 +138,7 @@ namespace net
 
             if (auto desc = connection_env.try_acquire_descriptor(packet->connection_key)) {
                 if (player_type == game::PlayerType::INVALID) {
-                    desc->disconnect(net::ThreadType::Any_Thread, error::PACKET_RESULT_FAIL_LOGIN);
+                    desc->send_disconnect_message(net::ThreadType::Any_Thread, error::PACKET_RESULT_FAIL_LOGIN);
                     continue;
                 }
 
@@ -150,7 +150,7 @@ namespace net
                         packet->password);
 
                 if (player == nullptr) {
-                    desc->disconnect(net::ThreadType::Any_Thread, error::PACKET_RESULT_ALREADY_LOGIN);
+                    desc->send_disconnect_message(net::ThreadType::Any_Thread, error::PACKET_RESULT_ALREADY_LOGIN);
                     continue;
                 }
 
