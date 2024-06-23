@@ -129,7 +129,7 @@ namespace net
             std::size_t last_offline_tick = 0;
             std::size_t last_interaction_tick = 0;
 
-            game::Player* _player;
+            game::Player* _player = nullptr;
         };
 
         Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::IoService& , io::IoEventPool&);
