@@ -11,16 +11,16 @@
 namespace net
 {
     ServerCore::ServerCore
-        (PacketHandleServer& a_packet_handle_server, ConnectionEnvironment& a_connection_env, io::IoService& a_io_service, const config::Configuration_Server& server_conf)
+        (net::PacketHandleServer& a_packet_handle_server, net::ConnectionEnvironment& a_connection_env, io::IoService& a_io_service)
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }
         , _listen_sock{ net::SocketProtocol::TCPv4 }
         , io_service{ a_io_service }
-        , io_event_pool{ server_conf.max_player() }
+        , io_event_pool{ connection_env.size_of_max_connections() }
         , io_accept_event_data { io_event_pool.new_accept_event_data() }
         , io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
-        , connection_pool{ server_conf.max_player() }
+        , connection_pool{ connection_env.size_of_max_connections() }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
 

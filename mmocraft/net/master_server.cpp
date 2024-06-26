@@ -11,10 +11,10 @@
 
 namespace net
 {
-    MasterServer::MasterServer(const config::Configuration_Server& server_conf)
-        : connection_env{ server_conf.max_player() }
-        , io_service { io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS }
-        , server_core{ *this, connection_env, io_service, server_conf }
+    MasterServer::MasterServer(net::ConnectionEnvironment& a_connection_env, io::IoCompletionPort& a_io_service)
+        : connection_env{ a_connection_env }
+        , io_service { a_io_service }
+        , server_core{ *this, connection_env, io_service }
         , database_core{ }
         , world{ connection_env }
         

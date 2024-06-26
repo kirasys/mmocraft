@@ -18,7 +18,7 @@ namespace net
     class MasterServer : public net::PacketHandleServer
     {
     public:
-        MasterServer(const config::Configuration_Server& conf = config::get_server_config());
+        MasterServer(net::ConnectionEnvironment&, io::IoCompletionPort&);
 
         error::ResultCode handle_packet(net::Connection::Descriptor&, Packet*) override;
         
@@ -46,9 +46,9 @@ namespace net
 
         void flush_deferred_packet();
 
-        net::ConnectionEnvironment connection_env;
+        net::ConnectionEnvironment& connection_env;
 
-        io::IoCompletionPort io_service;
+        io::IoCompletionPort& io_service;
 
         net::ServerCore server_core;
 
