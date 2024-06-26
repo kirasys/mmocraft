@@ -33,13 +33,10 @@ namespace io
     class IoCompletionPort : public IoService, private win::WinBaseObject<win::Handle>
     {
     public:
-        IoCompletionPort() noexcept
-            : _handle{ }
-        { }
+
+        IoCompletionPort(int num_of_concurrent_threads = DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
         ~IoCompletionPort() = default;
-
-        IoCompletionPort(int num_of_concurrent_threads);
         
         // copy controllers
         IoCompletionPort(IoCompletionPort& iocp) = default;
