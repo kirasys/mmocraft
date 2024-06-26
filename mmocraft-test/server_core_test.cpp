@@ -20,12 +20,13 @@ protected:
     net::PacketHandleServerStub handle_server_stub;
     io::IoAcceptEventData io_accept_data;
     io::IoAcceptEvent io_accept_event{ &io_accept_data };
+    io::IoCompletionPort io_service;
 
     net::ConnectionEnvironment connection_env{ max_player_count };
 };
 
 TEST_F(ServerCoreTest, Connection_Creation_Success) { 
-    net::ServerCore SUT_server{ handle_server_stub, connection_env };
+    net::ServerCore SUT_server{ handle_server_stub, connection_env, io_service };
     bool is_success_create_max_player = true;
 
     // server core will create new connection.
@@ -40,7 +41,7 @@ TEST_F(ServerCoreTest, Connection_Creation_Success) {
 }
 
 TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
-    net::ServerCore SUT_server{ handle_server_stub, connection_env };
+    net::ServerCore SUT_server{ handle_server_stub, connection_env, io_service };
 
     // try to create more than maximum.
     for (unsigned i = 0; i < max_player_count + 1; i++) {
@@ -55,7 +56,7 @@ TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
 }
 
 TEST_F(ServerCoreTest, Check_Connection_Timeout) {;
-    net::ServerCore SUT_server{ handle_server_stub, connection_env };
+    net::ServerCore SUT_server{ handle_server_stub, connection_env, io_service };
 
     // server core will create new connection.
     for (unsigned i = 0; i < max_player_count; i++) {
