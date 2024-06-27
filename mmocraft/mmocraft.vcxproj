@@ -238,8 +238,9 @@
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
-      <Message>테스트 빌드용 정적 라이브러리 생성</Message>
+lib /NOLOGO /OUT:"$(TargetPath).test.lib" "$(ProjectDir)$(IntDir)*.obj"
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
+      <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -267,8 +268,9 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(Pr
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
-      <Message>테스트 빌드용 정적 라이브러리 생성</Message>
+lib /NOLOGO /OUT:"$(TargetPath).test.lib" "$(ProjectDir)$(IntDir)*.obj"
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
+      <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -293,8 +295,9 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(Pr
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
-      <Message>테스트 빌드용 정적 라이브러리 생성</Message>
+lib /NOLOGO /OUT:"$(TargetPath).test.lib" "$(ProjectDir)$(IntDir)*.obj"
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
+      <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -323,8 +326,9 @@ lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(Pr
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
-      <Message>테스트 빌드용 정적 라이브러리 생성</Message>
+lib /NOLOGO /OUT:"$(TargetPath).test.lib" "$(ProjectDir)$(IntDir)*.obj"
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
+      <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
