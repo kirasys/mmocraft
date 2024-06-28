@@ -57,7 +57,7 @@ namespace io
             if (error_code == ERROR_ABANDONED_WAIT_0)
                 return;
 
-            if (error_code != ERROR_SUCCESS || overlapped == nullptr) {
+            if (error_code != ERROR_SUCCESS && overlapped == nullptr) {
                 LOG(error) << "GetQueuedCompletionStatus() failed with " << error_code;
                 continue;
             }
@@ -72,7 +72,7 @@ namespace io
                     auto io_event = CONTAINING_RECORD(overlapped, io::IoEvent, overlapped);
                     auto event_handler = reinterpret_cast<IoEventHandler*>(completion_key);
 
-                    io_event->invoke_handler(*event_handler, transferred_bytes_or_signal);
+                    io_event->invoke_handler(*event_handler, transferred_bytes_or_signal, error_code);
                 }	
             }
             catch (error::ErrorCode error_code) {

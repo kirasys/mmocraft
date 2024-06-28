@@ -127,7 +127,7 @@ TEST_F(ConnectionTest, Handle_Recv_Event_Correctly)
     for (int i = 0; i < 3; i++)
         std::memcpy(recv_buffer_start + i * sizeof(set_block_packet), set_block_packet, sizeof(set_block_packet));
 
-    io_recv_event.invoke_handler(*SUT_connection, sizeof(set_block_packet) * 3);
+    io_recv_event.invoke_handler(*SUT_connection, sizeof(set_block_packet) * 3, ERROR_SUCCESS);
 
     EXPECT_TRUE(SUT_connection->get_last_error().is_success())
         << "Unexpected error:" << SUT_connection->get_last_error().to_string();
@@ -154,7 +154,7 @@ TEST_F(ConnectionTest, Handle_Recv_Event_Partial_Packet_Correctly)
     auto recv_buffer_start = io_recv_data.begin();
     std::memcpy(recv_buffer_start, set_block_partial_packet, sizeof(set_block_partial_packet));
 
-    io_recv_event.invoke_handler(*SUT_connection, sizeof(set_block_partial_packet));
+    io_recv_event.invoke_handler(*SUT_connection, sizeof(set_block_partial_packet), ERROR_SUCCESS);
 
     // expect going to receive nonetheless insuffient packet data error.
     EXPECT_EQ(mock_socket.get_recv_times(), 2);

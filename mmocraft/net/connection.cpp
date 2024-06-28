@@ -335,7 +335,8 @@ namespace net
                     // Note: receive event may stop only for one reason: insuffient buffer space.
                     //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
                     conn.descriptor.io_recv_event->invoke_handler(conn,
-                        conn.descriptor.io_recv_event->data->size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
+                        conn.descriptor.io_recv_event->data->size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL,
+                        ERROR_SUCCESS);
                 }
             }
         };

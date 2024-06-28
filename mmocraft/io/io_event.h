@@ -338,7 +338,7 @@ namespace io
             data = a_data;
         }
 
-        virtual void invoke_handler(IoEventHandler&, DWORD transferred_bytes) = 0;
+        virtual void invoke_handler(IoEventHandler&, DWORD transferred_bytes, DWORD error_code) = 0;
     };
 
     struct IoAcceptEvent : IoEvent
@@ -347,21 +347,21 @@ namespace io
 
         using IoEvent::IoEvent;
 
-        void invoke_handler(IoEventHandler&, DWORD) override;
+        void invoke_handler(IoEventHandler&, DWORD, DWORD) override;
     };
 
     struct IoRecvEvent : IoEvent
     {
         using IoEvent::IoEvent;
 
-        void invoke_handler(IoEventHandler&, DWORD) override;
+        void invoke_handler(IoEventHandler&, DWORD, DWORD) override;
     };
 
     struct IoSendEvent : IoEvent
     {
         using IoEvent::IoEvent;
 
-        void invoke_handler(IoEventHandler&, DWORD) override;
+        void invoke_handler(IoEventHandler&, DWORD, DWORD) override;
     };
     
     class IoEventHandler
