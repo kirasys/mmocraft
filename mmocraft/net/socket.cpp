@@ -12,6 +12,10 @@
 namespace
 {
     bool is_socket_system_initialized = false;
+
+    LPFN_ACCEPTEX AcceptEx_fn;
+
+    LPFN_CONNECTEX ConnectEx_fn;
 }
 
 net::Socket::Socket() noexcept
@@ -44,6 +48,40 @@ void net::Socket::initialize_system()
             ::WSACleanup();
         });
 
+        win::UniqueSocket sock{ create_windows_socket(SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED) };
+
+        {
+            GUID guid = WSAID_ACCEPTEX;
+            DWORD bytes = 0;
+
+            auto res = ::WSAIoctl(
+                sock.get(),
+                SIO_GET_EXTENSION_FUNCTION_POINTER,
+                &guid,
+                sizeof(guid),
+                &AcceptEx_fn,
+                sizeof(AcceptEx_fn),
+                &bytes, NULL, NULL);
+
+            CONSOLE_LOG_IF(fatal, res == SOCKET_ERROR) << "Fail to get pointer of AcceptEx: " << res;
+        }
+
+        {
+            GUID guid = WSAID_CONNECTEX;
+            DWORD bytes = 0;
+
+            auto res = ::WSAIoctl(
+                sock.get(),
+                SIO_GET_EXTENSION_FUNCTION_POINTER,
+                &guid,
+                sizeof(guid),
+                &ConnectEx_fn,
+                sizeof(ConnectEx_fn),
+                &bytes, NULL, NULL);
+
+            CONSOLE_LOG_IF(fatal, res == SOCKET_ERROR) << "Fail to get pointer of ConnectEx: " << res;
+        }
+
         is_socket_system_initialized = true;
     }
 }
@@ -69,29 +107,12 @@ bool net::Socket::listen(int backlog) {
 
 error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event)
 {
-    if (event.fnAcceptEx == nullptr) {
-        GUID acceptex_guid = WSAID_ACCEPTEX;
-        DWORD bytes = 0;
-
-        if (::WSAIoctl(
-            _handle,
-            SIO_GET_EXTENSION_FUNCTION_POINTER,
-            &acceptex_guid,
-            sizeof(acceptex_guid),
-            &event.fnAcceptEx,
-            sizeof(event.fnAcceptEx),
-            &bytes, NULL, NULL) == SOCKET_ERROR)
-        {
-            return error::SOCKET_ACCEPTEX_LOAD;
-        }
-    }
-
     event.accepted_socket = create_windows_socket(SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
     if (event.accepted_socket == INVALID_SOCKET)
         return error::SOCKET_CREATE;
 
     DWORD bytes_received;
-    BOOL success = event.fnAcceptEx(
+    BOOL success = AcceptEx_fn(
         _handle, event.accepted_socket,
         LPVOID(event.data->begin()),
         0, // does not recevice packet data.

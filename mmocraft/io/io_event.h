@@ -343,7 +343,6 @@ namespace io
 
     struct IoAcceptEvent : IoEvent
     {
-        LPFN_ACCEPTEX fnAcceptEx;
         win::Socket accepted_socket;
 
         using IoEvent::IoEvent;
