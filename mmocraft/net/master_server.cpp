@@ -24,30 +24,40 @@ namespace net
 
     }
 
-    error::ResultCode MasterServer::handle_packet(net::Connection::Descriptor& conn_descriptor, Packet* packet)
+    error::ResultCode MasterServer::handle_packet(net::Connection& conn, Packet* packet)
     {
         switch (packet->id) {
         case PacketID::Handshake:
-            return handle_handshake_packet(conn_descriptor, *static_cast<PacketHandshake*>(packet));
+            return handle_handshake_packet(conn, *static_cast<PacketHandshake*>(packet));
+        case PacketID::Ping:
+            return handle_ping_packet(conn, *static_cast<PacketPing*>(packet));
         case PacketID::SetBlockClient:
-            return handle_set_block_packet(conn_descriptor, *static_cast<PacketSetBlockClient*>(packet));
+            return handle_set_block_packet(conn, *static_cast<PacketSetBlockClient*>(packet));
         case PacketID::SetPlayerPosition:
-            return handle_player_position_packet(conn_descriptor, *static_cast<PacketSetPlayerPosition*>(packet));
+            return handle_player_position_packet(conn, *static_cast<PacketSetPlayerPosition*>(packet));
         case PacketID::ChatMessage:
-            return handle_chat_message_packet(conn_descriptor, *static_cast<PacketChatMessage*>(packet));
+            return handle_chat_message_packet(conn, *static_cast<PacketChatMessage*>(packet));
         default:
             CONSOLE_LOG(error) << "Unimplemented packet id: " << int(packet->id);
             return error::PACKET_UNIMPLEMENTED_ID;
         }
     }
 
-    error::ResultCode MasterServer::handle_handshake_packet(net::Connection::Descriptor& conn_descriptor, net::PacketHandshake& packet)
+    error::ResultCode MasterServer::handle_handshake_packet(net::Connection& conn, net::PacketHandshake& packet)
     {
-        deferred_handshake_packet_task.push_packet(conn_descriptor.connection_key(), packet);
+        deferred_handshake_packet_task.push_packet(conn.connection_key(), packet);
         return error::PACKET_HANDLE_DEFERRED;
     }
 
-    error::ResultCode MasterServer::handle_set_block_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetBlockClient& packet)
+    error::ResultCode MasterServer::handle_ping_packet(net::Connection& conn, net::PacketPing& packet)
+    {
+        // send pong.
+        if (auto connection_io = conn.io())
+            connection_io->send_ping(net::Any_Thread);
+        return error::SUCCESS;
+    }
+
+    error::ResultCode MasterServer::handle_set_block_packet(net::Connection& conn, net::PacketSetBlockClient& packet)
     {
         auto block_id = packet.mode == game::BlockMode::SET ? packet.block_id : game::BLOCK_AIR;
         if (not world.try_change_block({ packet.x, packet.y, packet.z }, block_id))
@@ -58,24 +68,26 @@ namespace net
     REVERT_BLOCK:
         block_id = packet.mode == game::BlockMode::SET ? game::BLOCK_AIR : packet.block_id;
         net::PacketSetBlockServer revert_block_packet({ packet.x, packet.y, packet.z }, block_id);
-        conn_descriptor.send_packet(net::ThreadType::Any_Thread, revert_block_packet); 
+
+        if (auto connection_io = conn.io())
+            connection_io->send_packet(net::ThreadType::Any_Thread, revert_block_packet);
 
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_player_position_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetPlayerPosition& packet)
+    error::ResultCode MasterServer::handle_player_position_packet(net::Connection& conn, net::PacketSetPlayerPosition& packet)
     {
-        if (auto player = conn_descriptor.get_connected_player())
+        if (auto player = conn.get_connected_player())
             player->set_position(packet.player_pos);
         
-        return error::PACKET_HANDLE_DEFERRED;
+        return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_chat_message_packet(net::Connection::Descriptor& conn_descriptor, net::PacketChatMessage& packet)
+    error::ResultCode MasterServer::handle_chat_message_packet(net::Connection& conn, net::PacketChatMessage& packet)
     {
-        if (auto player = conn_descriptor.get_connected_player()) {
+        if (auto player = conn.get_connected_player()) {
             packet.player_id = player->game_id(); // client always sends 0xff(SELF ID).
-            deferred_chat_message_packet_task.push_packet(conn_descriptor.connection_key(), packet);
+            deferred_chat_message_packet_task.push_packet(conn.connection_key(), packet);
             return error::PACKET_HANDLE_DEFERRED;
         }
         return error::PACKET_CHAT_MESSAGE_HANDLE_ERROR;
@@ -83,8 +95,8 @@ namespace net
 
     void MasterServer::tick()
     {
-        Connection::Descriptor::flush_send(connection_env);
-        Connection::Descriptor::flush_receive(connection_env);
+        ConnectionIO::flush_send(connection_env);
+        ConnectionIO::flush_receive(connection_env);
 
         flush_deferred_packet();
     }
@@ -146,28 +158,28 @@ namespace net
                 player_type = std::strcmp(packet->username, "admin")
                     ? game::PlayerType::AUTHENTICATED_USER : game::PlayerType::ADMIN;
             }
-            
+
             // return handshake result to clients.
 
-            if (auto desc = connection_env.try_acquire_descriptor(packet->connection_key)) {
+            if (auto conn = connection_env.try_acquire_connection(packet->connection_key)) {
                 if (player_type == game::PlayerType::INVALID) {
-                    desc->send_disconnect_message(net::ThreadType::Any_Thread, error::PACKET_RESULT_FAIL_LOGIN);
+                    conn->disconnect_with_message(net::ThreadType::Any_Thread, error::PACKET_RESULT_FAIL_LOGIN);
                     continue;
                 }
 
                 auto player = world.add_player(
-                        packet->connection_key,
-                        player_search.get_player_identity(),
-                        player_type,
-                        packet->username,
-                        packet->password);
+                    packet->connection_key,
+                    player_search.get_player_identity(),
+                    player_type,
+                    packet->username,
+                    packet->password);
 
                 if (player == nullptr) {
-                    desc->send_disconnect_message(net::ThreadType::Any_Thread, error::PACKET_RESULT_ALREADY_LOGIN);
+                    conn->disconnect_with_message(net::ThreadType::Any_Thread, error::PACKET_RESULT_ALREADY_LOGIN);
                     continue;
                 }
 
-                desc->on_handshake_success(player);
+                conn->on_handshake_success(player);
             }
         }
     }

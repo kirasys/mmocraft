@@ -167,6 +167,13 @@ namespace net
         bool serialize(io::IoEventData&) const;
     };
 
+    struct PacketPing : Packet
+    {
+        constexpr static std::size_t packet_size = 1;
+
+        DECLARE_PACKET_READ_METHOD(PacketHandshake);
+    };
+
     struct PacketLevelInit : Packet
     {
         PacketLevelInit()

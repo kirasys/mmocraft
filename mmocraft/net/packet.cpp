@@ -39,6 +39,7 @@ namespace
         using namespace net;
         std::array<PacketStaticData, 0x100> arr{};
         arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate, PacketHandshake::packet_size };
+        arr[PacketID::Ping] = { PacketPing::parse, nullptr, PacketPing::packet_size};
         arr[PacketID::SetBlockClient] = { PacketSetBlockClient::parse, nullptr, PacketSetBlockClient::packet_size };
         arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::parse, nullptr,  PacketSetPlayerPosition::packet_size };
         arr[PacketID::ChatMessage] = { PacketChatMessage::parse, nullptr, PacketChatMessage::packet_size };
@@ -172,6 +173,11 @@ namespace net
         PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
         PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
         PARSE_BYTE_FIELD(buf_start, buf_end, packet->unused);
+    }
+
+    void PacketPing::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    {
+        return;
     }
 
     void PacketSetBlockClient::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)

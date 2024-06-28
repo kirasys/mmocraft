@@ -5,16 +5,21 @@
 
 namespace io
 {
-    void IoAcceptEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes)
+    void IoAcceptEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes, DWORD error_code)
     {
+        if (error_code != ERROR_SUCCESS) {
+            event_handler.on_error();
+            return;
+        }
+
         event_handler.handle_io_event(this);
         event_handler.on_complete(this);
     }
 
-    void IoRecvEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal)
+    void IoRecvEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal, DWORD error_code)
     {
         // pre-processing
-        if (transferred_bytes_or_signal == EOF_SIGNAL) { // EOF
+        if (transferred_bytes_or_signal == EOF_SIGNAL || error_code != ERROR_SUCCESS) { // EOF
             event_handler.on_error();
             return;
         }
@@ -45,15 +50,15 @@ namespace io
             std::memmove(_data, _data + n, _size); // move remaining data ahead.
     }
 
-    void IoSendEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal)
+    void IoSendEvent::invoke_handler(IoEventHandler& event_handler, DWORD transferred_bytes_or_signal, DWORD error_code)
     {
         // pre-processing
-        data->pop(transferred_bytes_or_signal);
-
-        if (transferred_bytes_or_signal == EOF_SIGNAL) { // EOF
+        if (transferred_bytes_or_signal == EOF_SIGNAL || error_code != ERROR_SUCCESS) { // EOF
             event_handler.on_error();
             return;
         }
+
+        data->pop(transferred_bytes_or_signal);
 
         event_handler.on_complete(this);
     }

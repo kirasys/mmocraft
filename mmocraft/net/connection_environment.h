@@ -22,7 +22,7 @@ namespace net
         bool will_delete = true;
 
         net::Connection* connection = nullptr;
-        win::ObjectPool<net::Connection>::Pointer connection_life;
+        std::unique_ptr<net::Connection> connection_life;
 
         std::uint32_t created_at = INVALID_TICK;
     };
@@ -54,14 +54,9 @@ namespace net
             return is_expired(key) ? nullptr : connection_table[key.index()].connection;
         }
 
-        net::Connection::Descriptor* try_acquire_descriptor(ConnectionKey key) const
+        net::Connection* try_acquire_connection(ConnectionID connection_id) const
         {
-            return is_expired(key) ? nullptr : &connection_table[key.index()].connection->descriptor;
-        }
-
-        net::Connection::Descriptor* try_acquire_descriptor(ConnectionID connection_id) const
-        {
-            return is_expired(connection_id) ? nullptr : &connection_table[connection_id].connection->descriptor;
+            return is_expired(connection_id) ? nullptr : connection_table[connection_id].connection;
         }
         
         std::size_t size_of_connections() const
@@ -79,7 +74,7 @@ namespace net
         // Invoked after connection constructor finished.
         // Register new created conneciton to the table and owns connection resource.
         // * the accept I/O thread invokes this method.
-        void on_connection_create(ConnectionKey, win::ObjectPool<net::Connection>::Pointer&&);
+        void on_connection_create(ConnectionKey, std::unique_ptr<net::Connection>&&);
 
         // Invoked at the connection destructor.
         // * the accept I/O thread invokes this method.
@@ -94,9 +89,7 @@ namespace net
 
         void for_each_connection(void (*func) (net::Connection&));
 
-        void for_each_descriptor(std::function<void(net::Connection::Descriptor&)> const&);
-
-        void for_each_player(std::function<void(net::Connection::Descriptor&, game::Player&)> const&);
+        void for_each_player(std::function<void(net::Connection&, game::Player&)> const&);
 
         void select_players(bool(*filter)(const game::Player*), std::vector<game::Player*>&);
 

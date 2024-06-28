@@ -41,7 +41,7 @@ namespace net
 
         void reset_multicast_data(MuticastTag);
 
-        bool send(MuticastTag, net::Connection::Descriptor&);
+        bool send(MuticastTag, net::Connection*);
 
         void gc(MuticastTag);
 

@@ -53,6 +53,8 @@ namespace net
 
         error::ErrorCode accept(io::IoAcceptEvent&);
 
+        bool connect(std::string_view, int, WSAOVERLAPPED*);
+
         bool send(WSAOVERLAPPED*, WSABUF*);
 
         bool recv(WSAOVERLAPPED*, WSABUF*);

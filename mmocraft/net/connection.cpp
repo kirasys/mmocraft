@@ -16,33 +16,75 @@ namespace net
                                 net::ConnectionKey a_connection_key,
                                 net::ConnectionEnvironment& a_connection_env,
                                 win::UniqueSocket&& sock,
-                                io::IoService& io_service,
-                                io::IoEventPool &io_event_pool)
+                                io::IoService& io_service)
         : packet_handle_server{ a_packet_handle_server }
-
-        , send_event_data{ io_event_pool.new_send_event_data() }
-        , send_event_lockfree_data{ io_event_pool.new_send_event_lockfree_data() }
-
-        , send_events{
-            io_event_pool.new_send_event(send_event_data.get()),
-            io_event_pool.new_send_event(send_event_lockfree_data.get()),
-        }
-
-        , io_recv_event_data{ io_event_pool.new_recv_event_data() }
-        , io_recv_event{ io_event_pool.new_recv_event(io_recv_event_data.get()) }
-
-        , descriptor{ 
-            this,
-            a_connection_key,
-            a_connection_env, 
-            std::move(sock), 
-            io_service,
-            io_recv_event.get(), 
-            send_events
-        }
+        , _connection_key{ a_connection_key }
+        , connection_env{ a_connection_env }
+        , online{ true }
     {
+        io_service.register_event_source(sock.get(), this);
+
+        connection_io.reset(new ConnectionIO(std::move(sock)));
+
         if (not is_valid())
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
+
+        update_last_interaction_time();
+    }
+
+    Connection::~Connection()
+    {
+        connection_env.on_connection_delete(_connection_key);
+    }
+
+    void Connection::set_offline(std::size_t current_tick)
+    {
+        online = false;
+        last_offline_tick = current_tick;
+        connection_env.on_connection_offline(_connection_key);
+    }
+
+    bool Connection::is_expired(std::size_t current_tick) const
+    {
+        return current_tick >= last_interaction_tick + REQUIRED_MILLISECONDS_FOR_EXPIRE;
+    }
+
+    bool Connection::is_safe_delete(std::size_t current_tick) const
+    {
+        return not online
+            && current_tick >= last_offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
+    }
+
+    bool Connection::try_interact_with_client()
+    {
+        if (online) {
+            update_last_interaction_time();
+            return true;
+        }
+        return false;
+    }
+
+    void Connection::disconnect()
+    {
+        // player manager(aka. world) has some extra works for disconnecting players.
+        // in this case, return without setting offline the connection.
+        if (_player && _player->state() >= game::PlayerState::Spawned) {
+            _player->set_state(game::PlayerState::Disconnected);
+            return;
+        }
+
+        set_offline();
+    }
+
+    void Connection::disconnect_with_message(ThreadType thread_type, std::string_view message)
+    {
+        connection_io->send_disconnect_message(thread_type, message);
+        disconnect();
+    }
+
+    void Connection::disconnect_with_message(ThreadType thread_type, error::ResultCode result)
+    {
+        disconnect_with_message(thread_type, result.to_string());
     }
 
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
@@ -57,7 +99,7 @@ namespace net
                 break;
             }
 
-            auto handle_result = packet_handle_server.handle_packet(descriptor, packet_ptr);
+            auto handle_result = packet_handle_server.handle_packet(*this, packet_ptr);
             if (not handle_result.is_packet_handle_success()) {
                 last_error_code = handle_result;
                 break;
@@ -70,13 +112,30 @@ namespace net
         return data_cur - data_begin; // num of total parsed bytes.
     }
 
+    void Connection::on_handshake_success(game::Player* player)
+    {
+        const auto& server_conf = config::get_server_config();
+
+        net::PacketHandshake handshake_packet{
+            server_conf.server_name(), server_conf.motd(),
+            player->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
+        };
+        net::PacketLevelInit level_init_packet;
+
+        connection_io->send_packet(ThreadType::Any_Thread, handshake_packet);
+        connection_io->send_packet(ThreadType::Any_Thread, level_init_packet);
+
+        _player = player;
+        _player->set_state(game::PlayerState::Handshake_Completed);
+    }
+
     /**
      *  Event Handler Interface
      */
     
     void Connection::on_error()
     {
-        descriptor.disconnect();
+        disconnect();
     }
 
     /// recv event handler
@@ -85,17 +144,17 @@ namespace net
     {
         if (last_error_code.is_packet_handle_success()) {
             last_error_code.reset();
-            descriptor.emit_receive_event(event);
+            connection_io->emit_receive_event(event);
             return;
         }
 
-        descriptor.send_disconnect_message(ThreadType::Any_Thread, last_error_code.to_string());
+        disconnect_with_message(ThreadType::Any_Thread, last_error_code.to_string());
         event->is_processing = false;
     }
 
     std::size_t Connection::handle_io_event(io::IoRecvEvent* event)
     {
-        if (not descriptor.try_interact_with_client()) // timeout case: connection will be deleted soon.
+        if (not try_interact_with_client()) // timeout case: connection will be deleted soon.
             return 0; 
 
         return process_packets(event->data->begin(), event->data->end());
@@ -113,81 +172,22 @@ namespace net
      *  Connection descriptor interface
      */
 
-    Connection::Descriptor::Descriptor(net::Connection* a_connection,
-        net::ConnectionKey a_connection_key,
-        net::ConnectionEnvironment& a_connection_env,
-        win::UniqueSocket&& a_sock,
-        io::IoService& a_io_service,
-        io::IoRecvEvent* a_io_recv_event,
-        win::ObjectPool<io::IoSendEvent>::Pointer send_events[])
-        : _connection_key{ a_connection_key }
-        , connection_env{ a_connection_env }
-        , client_socket{ std::move(a_sock) }
-        , io_recv_event{ a_io_recv_event }
-        , io_send_events{ 
-            send_events[ThreadType::Tick_Thread].get(),
-            send_events[ThreadType::Any_Thread].get(),
-        }
-        , online{ true }
+    ConnectionIO::ConnectionIO(win::UniqueSocket&& a_sock)
+        : client_socket{ std::move(a_sock) }
+        , io_multicast_send_events(num_of_multicast_event)
     {
-        update_last_interaction_time();
-
-        // pre-assign fixed length multicast events.
-        for (unsigned i = 0; i < num_of_multicast_event; i++)
-            io_multicast_send_events.emplace_back(nullptr);
-
         // start to service client socket events.
-        a_io_service.register_event_source(client_socket.get_handle(), a_connection);
-        emit_receive_event(io_recv_event);
+        emit_receive_event(&io_recv_event);
     }
 
-    Connection::Descriptor::~Descriptor()
+    ConnectionIO::~ConnectionIO()
     {
-        connection_env.on_connection_delete(_connection_key);
+
     }
 
-    void Connection::Descriptor::set_offline(std::size_t current_tick)
+    void ConnectionIO::emit_receive_event(io::IoRecvEvent* event)
     {
-        online = false;
-        last_offline_tick = current_tick;
-        connection_env.on_connection_offline(_connection_key);
-    }
-
-    void Connection::Descriptor::disconnect()
-    {
-        // player manager(aka. world) has some extra works for disconnecting players.
-        // in this case, return without setting offline the connection.
-        if (_player && _player->state() >= game::PlayerState::Spawned) {
-            _player->set_state(game::PlayerState::Disconnected);
-            return;
-        }
-
-        set_offline();
-    }
-
-    bool Connection::Descriptor::is_expired(std::size_t current_tick) const
-    {
-        return current_tick >= last_interaction_tick + REQUIRED_MILLISECONDS_FOR_EXPIRE;
-    }
-
-    bool Connection::Descriptor::is_safe_delete(std::size_t current_tick) const
-    {
-        return not online
-            && current_tick >= last_offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
-    }
-
-    bool Connection::Descriptor::try_interact_with_client()
-    {
-        if (online) {
-            update_last_interaction_time();
-            return true;
-        }
-        return false;
-    }
-
-    void Connection::Descriptor::emit_receive_event(io::IoRecvEvent* event)
-    {
-        if (not online || event->data->unused_size() < PacketStructure::max_size_of_packet_struct()) {
+        if (event->data->unused_size() < PacketStructure::max_size_of_packet_struct()) {
             event->is_processing = false;
             return;
         }
@@ -202,7 +202,7 @@ namespace net
             event->is_processing = false;
     }
 
-    void Connection::Descriptor::emit_send_event(io::IoSendEvent* event)
+    void ConnectionIO::emit_send_event(io::IoSendEvent* event)
     {
         WSABUF wbuf[1] = {};
         wbuf[0].buf = reinterpret_cast<char*>(event->data->begin());
@@ -218,7 +218,7 @@ namespace net
         }
     }
 
-    bool Connection::Descriptor::emit_multicast_send_event(io::IoSendEventSharedData* event_data)
+    bool ConnectionIO::emit_multicast_send_event(io::IoSendEventSharedData* event_data)
     {
         WSABUF wbuf[1] = {};
         wbuf[0].buf = reinterpret_cast<char*>(event_data->begin());
@@ -248,95 +248,74 @@ namespace net
         return true;
     }
 
-    void Connection::Descriptor::on_handshake_success(game::Player* player)
+    bool ConnectionIO::send_raw_data(ThreadType sender_type, const std::byte* data, std::size_t data_size) const
     {
-        const auto& server_conf = config::get_server_config();
-
-        net::PacketHandshake handshake_packet{
-            server_conf.server_name(), server_conf.motd(),
-            player->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
-        };
-        net::PacketLevelInit level_init_packet;
-
-        send_packet(ThreadType::Any_Thread, handshake_packet);
-        send_packet(ThreadType::Any_Thread, level_init_packet);
-
-        _player = player;
-        _player->set_state(game::PlayerState::Handshake_Completed);
+        return io_send_events[sender_type].data->push(data, data_size);
     }
 
-    bool Connection::Descriptor::send_raw_data(ThreadType sender_type, const std::byte* data, std::size_t data_size) const
-    {
-        return io_send_events[sender_type]->data->push(data, data_size);
-    }
-
-    bool Connection::Descriptor::send_disconnect_message(ThreadType sender_type, std::string_view reason)
+    bool ConnectionIO::send_disconnect_message(ThreadType sender_type, std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        bool result = disconnect_packet.serialize(*io_send_events[sender_type]->data);
+        bool result = disconnect_packet.serialize(*io_send_events[sender_type].data);
 
-        disconnect();
-        emit_send_event(io_send_events[sender_type]); // TODO: resolve interleaving problem.
+        emit_send_event(&io_send_events[sender_type]);
 
         return result;
     }
 
-    bool Connection::Descriptor::send_disconnect_message(ThreadType sender_type, error::ResultCode result)
-    {
-        return send_disconnect_message(sender_type, result.to_string());
-    }
-
-    bool Connection::Descriptor::send_ping(ThreadType sender_type) const
+    bool ConnectionIO::send_ping(ThreadType sender_type) const
     {
         auto packet = std::byte(net::PacketID::Ping);
-        return io_send_events[sender_type]->data->push(&packet, 1);
+        return io_send_events[sender_type].data->push(&packet, net::PacketPing::packet_size);
     }
 
-    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketHandshake& packet) const
+    bool ConnectionIO::send_packet(ThreadType sender_type, const net::PacketHandshake& packet) const
     {
-        return packet.serialize(*io_send_events[sender_type]->data);
+        return packet.serialize(*io_send_events[sender_type].data);
     }
 
-    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketLevelInit& packet) const
+    bool ConnectionIO::send_packet(ThreadType sender_type, const net::PacketLevelInit& packet) const
     {
-        return packet.serialize(*io_send_events[sender_type]->data);
+        return packet.serialize(*io_send_events[sender_type].data);
     }
 
-    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketSetPlayerID& packet) const
+    bool ConnectionIO::send_packet(ThreadType sender_type, const net::PacketSetPlayerID& packet) const
     {
-        return packet.serialize(*io_send_events[sender_type]->data);
+        return packet.serialize(*io_send_events[sender_type].data);
     }
 
-    bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketSetBlockServer& packet) const
+    bool ConnectionIO::send_packet(ThreadType sender_type, const net::PacketSetBlockServer& packet) const
     {
-        return packet.serialize(*io_send_events[sender_type]->data);
+        return packet.serialize(*io_send_events[sender_type].data);
     }
 
-    void Connection::Descriptor::flush_send(net::ConnectionEnvironment& connection_env)
+    void ConnectionIO::flush_send(net::ConnectionEnvironment& connection_env)
     {
-        auto flush_message = [](Connection::Descriptor& desc) {
+        auto flush_message = [](Connection& conn) {
             // flush immedidate and deferred messages.
-            for (auto event : desc.io_send_events) {
-                if (not event->is_processing)
-                    desc.emit_send_event(event);
+            auto connection_io = conn.connection_io.get();
+
+            for (auto& event : connection_io->io_send_events) {
+                if (not event.is_processing)
+                    connection_io->emit_send_event(&event);
             }
         };
 
-        connection_env.for_each_descriptor(flush_message);
+        connection_env.for_each_connection(flush_message);
     }
 
-    void Connection::Descriptor::flush_receive(net::ConnectionEnvironment& connection_env)
+    void ConnectionIO::flush_receive(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection& conn) {
-            for (auto event : conn.descriptor.io_send_events) {
-                if (not conn.descriptor.io_recv_event->is_processing) {
-                    conn.descriptor.io_recv_event->is_processing = true;
+            auto connection_io = conn.connection_io.get();
+            if (not connection_io->io_recv_event.is_processing) {
+                connection_io->io_recv_event.is_processing = true;
 
-                    // Note: receive event may stop only for one reason: insuffient buffer space.
-                    //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
-                    conn.descriptor.io_recv_event->invoke_handler(conn,
-                        conn.descriptor.io_recv_event->data->size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL);
-                }
+                // Note: receive event may stop only for one reason: insuffient buffer space.
+                //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
+                connection_io->io_recv_event.invoke_handler(conn,
+                    connection_io->io_recv_event.data->size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL,
+                    ERROR_SUCCESS);
             }
         };
 

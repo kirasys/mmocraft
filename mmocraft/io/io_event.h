@@ -224,7 +224,7 @@ namespace io
         void pop(std::size_t n) override
         {
             data_head += int(n);
-            assert(data_head <= sizeof(_data));
+            assert(data_head <= data_tail);
 
             auto tmp_data_head = data_head;
             if (data_tail.compare_exchange_strong(tmp_data_head, 0,
@@ -234,8 +234,8 @@ namespace io
 
     private:
         std::byte _data[CONCURRENT_SEND_BUFFER_SIZE];
-        int data_head;
-        std::atomic<int> data_tail;
+        int data_head = 0;
+        std::atomic<int> data_tail{ 0 };
     };
 
     class IoSendEventSharedData : public IoEventData
@@ -310,14 +310,14 @@ namespace io
 
     private:
         std::unique_ptr<std::byte[]> _data;
-        unsigned _data_size;
-        unsigned _data_capacity;
+        unsigned _data_size = 0;
+        unsigned _data_capacity = 0;
 
         static constexpr std::size_t max_data_lifetime = 5 * 1000; // 5 seconds.
-        std::size_t lifetime_end_at;
+        std::size_t lifetime_end_at = 0;
     };
 
-    struct IoEvent
+    struct IoEvent : util::NonCopyable
     {
         WSAOVERLAPPED overlapped = {};
 
@@ -325,9 +325,9 @@ namespace io
 
         // NOTE: separate buffer space for better locality.
         //       the allocator(may be pool) responsible for release.
-        IoEventData* data;
+        IoEventData* data = nullptr;
 
-        IoEvent(IoEventData* a_data)
+        IoEvent(IoEventData* a_data = nullptr)
             : data{ a_data }
         { }
 
@@ -338,31 +338,30 @@ namespace io
             data = a_data;
         }
 
-        virtual void invoke_handler(IoEventHandler&, DWORD transferred_bytes) = 0;
+        virtual void invoke_handler(IoEventHandler&, DWORD transferred_bytes, DWORD error_code) = 0;
     };
 
     struct IoAcceptEvent : IoEvent
     {
-        LPFN_ACCEPTEX fnAcceptEx;
         win::Socket accepted_socket;
 
         using IoEvent::IoEvent;
 
-        void invoke_handler(IoEventHandler&, DWORD) override;
+        void invoke_handler(IoEventHandler&, DWORD, DWORD) override;
     };
 
     struct IoRecvEvent : IoEvent
     {
         using IoEvent::IoEvent;
 
-        void invoke_handler(IoEventHandler&, DWORD) override;
+        void invoke_handler(IoEventHandler&, DWORD, DWORD) override;
     };
 
     struct IoSendEvent : IoEvent
     {
         using IoEvent::IoEvent;
 
-        void invoke_handler(IoEventHandler&, DWORD) override;
+        void invoke_handler(IoEventHandler&, DWORD, DWORD) override;
     };
     
     class IoEventHandler
