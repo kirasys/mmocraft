@@ -153,13 +153,9 @@ namespace game
             return _username;
         }
 
-        util::Coordinate3D spawn_position() const
+        PlayerPosition spawn_position() const
         {
-            return { 
-                util::Coordinate(_spawn_pos.view.x * 32), 
-                util::Coordinate(_spawn_pos.view.y * 32 + 51),
-                util::Coordinate(_spawn_pos.view.z * 32)
-            };
+            return _spawn_pos;
         }
 
         auto spawn_yaw() const
@@ -180,7 +176,7 @@ namespace game
         void set_default_spawn_coordinate(int x, int y, int z)
         {
             if (not _spawn_pos.raw_coordinate())
-                _spawn_pos.set_raw_coordinate(x, y, z);
+                _spawn_pos.set_raw_coordinate(x * 32, y * 32 + 51, z * 32);
         }
 
         void set_default_spawn_orientation(unsigned yaw, unsigned pitch)

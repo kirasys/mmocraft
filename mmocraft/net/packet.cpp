@@ -336,22 +336,20 @@ namespace net
 
         std::byte* buf_start = serialized_data.get();
 
-        for (const auto* player : old_players) {
-            PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
-            PacketStructure::write_byte(buf_start, player->game_id());
-            PacketStructure::write_string(buf_start, player->player_name());
-            auto last_player_pos = player->last_position();
-            PacketStructure::write_coordinate(buf_start, last_player_pos.coordinate());
-            PacketStructure::write_orientation(buf_start, last_player_pos.yaw(), last_player_pos.pitch());
-        }
+        auto serialize_position_packet = [&buf_start](const std::vector<game::Player*>& players) {
+            for (const auto* player : players) {
+                PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
+                PacketStructure::write_byte(buf_start, player->game_id());
+                PacketStructure::write_string(buf_start, player->player_name());
+                
+                game::PlayerPosition last_player_pos = player->last_position().raw ? player->last_position() : player->spawn_position();
+                PacketStructure::write_coordinate(buf_start, last_player_pos.coordinate());
+                PacketStructure::write_orientation(buf_start, last_player_pos.yaw(), last_player_pos.pitch());
+            }
+        };
 
-        for (const auto* player : new_players) {
-            PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
-            PacketStructure::write_byte(buf_start, player->game_id());
-            PacketStructure::write_string(buf_start, player->player_name());
-            PacketStructure::write_coordinate(buf_start, player->spawn_position());
-            PacketStructure::write_orientation(buf_start, player->spawn_yaw(), player->spawn_pitch());
-        }
+        serialize_position_packet(old_players);
+        serialize_position_packet(new_players);
 
         return data_size;
     }
