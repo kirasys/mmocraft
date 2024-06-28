@@ -125,6 +125,26 @@ error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event)
         error::SOCKET_ACCEPTEX : error::SUCCESS;
 }
 
+bool net::Socket::connect(std::string_view ip, int port, WSAOVERLAPPED* overlapped)
+{
+    sockaddr_in sock_addr;
+    sock_addr.sin_family = get_address_family();
+    sock_addr.sin_port = ::htons(port);
+    ::inet_pton(get_address_family(), ip.data(), &sock_addr.sin_addr);
+
+    BOOL success = ConnectEx_fn(
+        _handle,
+        reinterpret_cast<SOCKADDR*>(&sock_addr),
+        sizeof(sock_addr),
+        nullptr,
+        0,
+        nullptr,
+        overlapped
+    );
+
+    return not success && (ERROR_IO_PENDING != ::WSAGetLastError()) ? false : true;
+}
+
 bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
 {
     DWORD flags = 0;
