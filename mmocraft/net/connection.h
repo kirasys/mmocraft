@@ -39,7 +39,9 @@ namespace net
 
         ConnectionIO(win::UniqueSocket&&);
 
-        void emit_receive_event(io::IoRecvEvent*);
+        void emit_receive_event();
+
+        void emit_receive_event(io::IoRecvEvent* event);
 
         void emit_send_event(io::IoSendEvent*);
 

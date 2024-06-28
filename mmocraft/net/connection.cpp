@@ -29,6 +29,9 @@ namespace net
         if (not is_valid())
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
 
+        // start to service client socket events.
+        connection_io->emit_receive_event();
+
         update_last_interaction_time();
     }
 
@@ -176,13 +179,17 @@ namespace net
         : client_socket{ std::move(a_sock) }
         , io_multicast_send_events(num_of_multicast_event)
     {
-        // start to service client socket events.
-        emit_receive_event(&io_recv_event);
+
     }
 
     ConnectionIO::~ConnectionIO()
     {
 
+    }
+
+    void ConnectionIO::emit_receive_event()
+    {
+        emit_receive_event(&io_recv_event);
     }
 
     void ConnectionIO::emit_receive_event(io::IoRecvEvent* event)
