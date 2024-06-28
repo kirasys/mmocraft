@@ -78,16 +78,11 @@ namespace net
 
     void ServerCore::on_complete(io::IoAcceptEvent* event)
     {
-        if (not last_error_code.is_success()) {
-            LOG(error) << last_error_code;
-            _state = ServerCore::State::Stopped;
-            return;
-        }
+        LOG_IF(error, not last_error_code.is_success()) 
+            << "Fail to accpet new connection: " << last_error_code;
 
         if (auto error_code = _listen_sock.accept(*event)) {
-            LOG(error) << "fail to request accept with " << error_code;
-            last_error_code = error::SOCKET_ACCEPTEX;
-            _state = ServerCore::State::Stopped;
+            LOG(error) << "Fail to request accept: " << error_code;
         }
     }
 
