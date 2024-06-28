@@ -67,13 +67,13 @@ TEST_F(ServerCoreTest, Check_Connection_Timeout) {;
     auto expired_connection = connection_env.get_connection(0);
 
     // trigger connection timeout.
-    expired_connection->descriptor.update_last_interaction_time(1);
-    auto before_cleanup_online_status = expired_connection->descriptor.is_online();
+    expired_connection->update_last_interaction_time(1);
+    auto before_cleanup_online_status = expired_connection->is_online();
     connection_env.cleanup_expired_connection();
-    auto after_cleanup_online_status = expired_connection->descriptor.is_online();
+    auto after_cleanup_online_status = expired_connection->is_online();
 
     // trigger connection deletion.
-    expired_connection->descriptor.set_offline(1);
+    expired_connection->set_offline(1);
     connection_env.cleanup_expired_connection();       // coonection will be deleted
     
     EXPECT_TRUE(before_cleanup_online_status);

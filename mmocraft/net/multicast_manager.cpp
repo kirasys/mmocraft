@@ -25,11 +25,11 @@ namespace net
         active_event_datas[tag] = nullptr;
     }
 
-    bool MulticastManager::send(MuticastTag tag, net::Connection::Descriptor& connection_descriptor)
+    bool MulticastManager::send(MuticastTag tag, net::Connection* conn)
     {
         if (auto event_data = active_event_datas[tag]) {
             event_data->update_lifetime();
-            return connection_descriptor.emit_multicast_send_event(event_data);
+            return conn && conn->io() ? conn->io()->emit_multicast_send_event(event_data) : false;
         }
         return false;
     }

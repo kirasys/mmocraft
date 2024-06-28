@@ -44,7 +44,7 @@ TEST_F(MasterServerTest, Handle_Handshake_Correctly)
     auto handshake_packet = net::PacketHandshake{ "servername", "motd", net::UserType::NORMAL };
 
     auto handle_result = SUT_server.handle_handshake_packet(
-        *connection_env.try_acquire_descriptor(connection_key),
+        *connection_env.try_acquire_connection(connection_key),
         handshake_packet);
 
     EXPECT_TRUE(handle_result.is_packet_handle_success());
@@ -73,8 +73,8 @@ TEST_F(MasterServerTest, Handle_Deferred_Handshake_With_Duplicate_Login)
     SUT_server.handle_deferred_handshake_packet(&dummy_task, &defer_handshake_packet);
 
     // Assert
-    ASSERT_TRUE(connection_env.try_acquire_descriptor(connection_key)->get_connected_player() != nullptr);
-    auto player = connection_env.try_acquire_descriptor(connection_key)->get_connected_player();
+    ASSERT_TRUE(connection_env.try_acquire_connection(connection_key)->get_connected_player() != nullptr);
+    auto player = connection_env.try_acquire_connection(connection_key)->get_connected_player();
     EXPECT_EQ(player->state(), game::PlayerState::Handshake_Completed);
-    EXPECT_TRUE(connection_env.try_acquire_descriptor(connection_key_second) == nullptr); // offlined
+    EXPECT_TRUE(connection_env.try_acquire_connection(connection_key_second) == nullptr); // offlined
 }

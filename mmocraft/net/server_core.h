@@ -69,10 +69,7 @@ namespace net
 
         io::IoService& io_service;
 
-        io::IoEventPool io_event_pool;
-        win::ObjectPool<io::IoAcceptEventData>::Pointer io_accept_event_data;
-        win::ObjectPool<io::IoAcceptEvent>::Pointer io_accept_event;
-
-        win::ObjectPool<net::Connection> connection_pool;
+        io::IoAcceptEventData io_accept_event_data;
+        io::IoAcceptEvent io_accept_event{ &io_accept_event_data };
     };
 }

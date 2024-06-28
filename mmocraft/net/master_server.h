@@ -20,17 +20,17 @@ namespace net
     public:
         MasterServer(net::ConnectionEnvironment&, io::IoCompletionPort&);
 
-        error::ResultCode handle_packet(net::Connection::Descriptor&, Packet*) override;
+        error::ResultCode handle_packet(net::Connection&, Packet*) override;
         
-        error::ResultCode handle_handshake_packet(net::Connection::Descriptor&, net::PacketHandshake&);
+        error::ResultCode handle_handshake_packet(net::Connection&, net::PacketHandshake&);
 
-        error::ResultCode handle_ping_packet(net::Connection::Descriptor&, net::PacketPing&);
+        error::ResultCode handle_ping_packet(net::Connection&, net::PacketPing&);
 
-        error::ResultCode handle_set_block_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetBlockClient& packet);
+        error::ResultCode handle_set_block_packet(net::Connection& conn_descriptor, net::PacketSetBlockClient& packet);
 
-        error::ResultCode handle_player_position_packet(net::Connection::Descriptor&, net::PacketSetPlayerPosition&);
+        error::ResultCode handle_player_position_packet(net::Connection&, net::PacketSetPlayerPosition&);
 
-        error::ResultCode handle_chat_message_packet(net::Connection::Descriptor&, net::PacketChatMessage&);
+        error::ResultCode handle_chat_message_packet(net::Connection&, net::PacketChatMessage&);
 
         void tick();
 

@@ -31,6 +31,61 @@ namespace net
         ThreadType_Count,
     };
 
+    struct ConnectionIO : util::NonCopyable, util::NonMovable
+    {
+        ConnectionIO() = default;
+
+        ~ConnectionIO();
+
+        ConnectionIO(win::UniqueSocket&&);
+
+        void emit_receive_event(io::IoRecvEvent*);
+
+        void emit_send_event(io::IoSendEvent*);
+
+        bool emit_multicast_send_event(io::IoSendEventSharedData*);
+
+        bool send_raw_data(ThreadType, const std::byte*, std::size_t) const;
+
+        bool send_disconnect_message(ThreadType, std::string_view);
+
+        bool send_disconnect_message(ThreadType, error::ResultCode);
+
+        bool send_ping(ThreadType sender_type) const;
+
+        bool send_packet(ThreadType, const net::PacketHandshake&) const;
+
+        bool send_packet(ThreadType, const net::PacketLevelInit&) const;
+
+        bool send_packet(ThreadType, const net::PacketSetPlayerID&) const;
+
+        bool send_packet(ThreadType, const net::PacketSetBlockServer&) const;
+
+        static void flush_send(net::ConnectionEnvironment&);
+
+        static void flush_receive(net::ConnectionEnvironment&);
+
+    private:
+        net::Socket client_socket;
+
+        io::IoRecvEventData io_recv_data;
+        io::IoSendEventData io_send_data;
+        io::IoSendEventLockFreeData io_send_lockfree_data;
+
+        io::IoRecvEvent io_recv_event{ &io_recv_data };
+        io::IoSendEvent io_send_events[ThreadType_Count] = {
+            &io_send_data,
+            &io_send_lockfree_data
+        };
+
+        static constexpr unsigned num_of_multicast_event = 8;
+        std::vector<io::IoSendEvent> io_multicast_send_events;
+
+        // it is used to prevent data interleaving problem when multiple threads sending together.
+        // Todo: performance benchmark versus lockfree stack version.
+        std::mutex send_event_lock;
+    };
+
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
     {
         // The minecrft beta server will disconnect a client,
@@ -39,108 +94,18 @@ namespace net
         static constexpr unsigned REQUIRED_MILLISECONDS_FOR_SECURE_DELETION = 5 * 1000;
 
     public:
-        struct Descriptor : util::NonCopyable, util::NonMovable
-        {
-            Descriptor() = default;
+        Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::IoService&);
 
-            ~Descriptor();
-
-            Descriptor(net::Connection*,
-                net::ConnectionKey, 
-                net::ConnectionEnvironment&,
-                win::UniqueSocket&&,
-                io::IoService&,
-                io::IoRecvEvent*,
-                win::ObjectPool<io::IoSendEvent>::Pointer[]);
-
-            inline bool is_online() const
-            {
-                return online;
-            }
-
-            ConnectionKey connection_key() const
-            {
-                return _connection_key;
-            }
-
-            game::Player* get_connected_player()
-            {
-                return _player;
-            }
-
-            void set_offline(std::size_t current_tick = util::current_monotonic_tick());
-
-            void disconnect();
-
-            bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;
-
-            bool is_safe_delete(std::size_t current_tick = util::current_monotonic_tick()) const;
-
-            bool try_interact_with_client();
-
-            void update_last_interaction_time(std::size_t current_tick = util::current_monotonic_tick())
-            {
-                last_interaction_tick = current_tick;
-            }
-
-            void emit_receive_event(io::IoRecvEvent*);
-
-            void emit_send_event(io::IoSendEvent*);
-
-            bool emit_multicast_send_event(io::IoSendEventSharedData*);
-
-            void on_handshake_success(game::Player*);
-
-            bool send_raw_data(ThreadType, const std::byte*, std::size_t) const;
-
-            bool send_disconnect_message(ThreadType, std::string_view);
-
-            bool send_disconnect_message(ThreadType, error::ResultCode);
-
-            bool send_ping(ThreadType sender_type) const;
-
-            bool send_packet(ThreadType, const net::PacketHandshake&) const;
-
-            bool send_packet(ThreadType, const net::PacketLevelInit&) const;
-
-            bool send_packet(ThreadType, const net::PacketSetPlayerID&) const;
-
-            bool send_packet(ThreadType, const net::PacketSetBlockServer&) const;
-
-            static void flush_send(net::ConnectionEnvironment&);
-
-            static void flush_receive(net::ConnectionEnvironment&);
-
-        private:
-            net::ConnectionKey _connection_key;
-            net::ConnectionEnvironment& connection_env;
-
-            net::Socket client_socket;
-
-            io::IoRecvEvent* io_recv_event = {};
-            io::IoSendEvent* io_send_events[ThreadType_Count] = {};
-
-            static constexpr unsigned num_of_multicast_event = 8;
-            std::vector<io::IoSendEvent> io_multicast_send_events;
-
-            // it is used to prevent data interleaving problem when multiple threads sending together.
-            // Todo: performance benchmark versus lockfree stack version.
-            std::mutex send_event_lock;
-
-            bool online = false;
-            std::size_t last_offline_tick = 0;
-            std::size_t last_interaction_tick = 0;
-
-            game::Player* _player = nullptr;
-        };
-
-        Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::IoService& , io::IoEventPool&);
-
-        ~Connection() = default;
+        ~Connection();
 
         bool is_valid() const
         {
-            return send_event_lockfree_data && send_events[ThreadType_Count - 1] && io_recv_event;
+            return connection_io.get() != nullptr;
+        }
+
+        inline bool is_online() const
+        {
+            return online;
         }
 
         error::ResultCode get_last_error() const
@@ -148,7 +113,43 @@ namespace net
             return last_error_code;
         }
 
+        ConnectionKey connection_key() const
+        {
+            return _connection_key;
+        }
+
+        ConnectionIO* io()
+        {
+            return online ? connection_io.get() : nullptr; 
+        }
+
+        game::Player* get_connected_player()
+        {
+            return _player;
+        }
+
+        void set_offline(std::size_t current_tick = util::current_monotonic_tick());
+
+        bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;
+
+        bool is_safe_delete(std::size_t current_tick = util::current_monotonic_tick()) const;
+
+        bool try_interact_with_client();
+
+        void update_last_interaction_time(std::size_t current_tick = util::current_monotonic_tick())
+        {
+            last_interaction_tick = current_tick;
+        }
+
+        void disconnect();
+
+        void disconnect_with_message(ThreadType, std::string_view);
+
+        void disconnect_with_message(ThreadType, error::ResultCode);
+
         std::size_t process_packets(std::byte*, std::byte*);
+
+        void on_handshake_success(game::Player*);
 
         /**
          *  Event Handler Interface
@@ -162,33 +163,33 @@ namespace net
 
         virtual void on_complete(io::IoSendEvent*) override;
 
-        //virtual std::optional<std::size_t> handle_io_event(io::IoSendEvent*) override;
-
     private:
         error::ResultCode last_error_code;
 
         net::PacketHandleServer& packet_handle_server;
 
-        win::ObjectPool<io::IoSendEventData>::Pointer send_event_data;
-        win::ObjectPool<io::IoSendEventLockFreeData>::Pointer send_event_lockfree_data;
-        win::ObjectPool<io::IoSendEvent>::Pointer send_events[ThreadType_Count];
+        net::ConnectionKey _connection_key;
+        net::ConnectionEnvironment& connection_env;
 
-        win::ObjectPool<io::IoRecvEventData>::Pointer io_recv_event_data;
-        win::ObjectPool<io::IoRecvEvent>::Pointer io_recv_event;
+        bool online = false;
+        std::size_t last_offline_tick = 0;
+        std::size_t last_interaction_tick = 0;
+
+        game::Player* _player = nullptr;
 
      public:
-        Descriptor descriptor;
+        std::unique_ptr<ConnectionIO> connection_io;
     };
 
     class PacketHandleServer
     {
     public:
-        virtual error::ResultCode handle_packet(Connection::Descriptor&, net::Packet*) = 0;
+        virtual error::ResultCode handle_packet(net::Connection&, net::Packet*) = 0;
     };
 
     class PacketHandleServerStub : public PacketHandleServer
     {
-        error::ResultCode handle_packet(Connection::Descriptor&, net::Packet*) override
+        error::ResultCode handle_packet(net::Connection&, net::Packet*) override
         {
             return error::SUCCESS;
         }

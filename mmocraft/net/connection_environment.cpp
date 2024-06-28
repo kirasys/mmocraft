@@ -30,7 +30,7 @@ namespace net
         return unsigned(unused_slot - connection_table.begin());
     }
 
-    void ConnectionEnvironment::on_connection_create(ConnectionKey key, win::ObjectPool<net::Connection>::Pointer&& a_connection_ptr)
+    void ConnectionEnvironment::on_connection_create(ConnectionKey key, std::unique_ptr<net::Connection>&& a_connection_ptr)
     {
         ++num_of_connections;
 
@@ -63,15 +63,15 @@ namespace net
             [](auto& entry) {
                 if (not entry.used) return false;
 
-                auto& desc = entry.connection->descriptor;
+                auto conn = entry.connection;
 
-                if (desc.is_safe_delete()) {
+                if (conn->is_safe_delete()) {
                     entry.connection_life.reset();
                     return true;
                 }
 
-                if (desc.is_expired())
-                    desc.disconnect();
+                if (conn->is_expired())
+                    conn->disconnect();
                 
                 return false;
             }
@@ -88,19 +88,11 @@ namespace net
         }
     }
 
-    void ConnectionEnvironment::for_each_descriptor(std::function<void(net::Connection::Descriptor&)> const& func)
+    void ConnectionEnvironment::for_each_player(std::function<void(net::Connection&, game::Player&)> const& func)
     {
         for (auto& entry : connection_table) {
-            if (not entry.will_delete)
-                func(entry.connection->descriptor);
-        }
-    }
-
-    void ConnectionEnvironment::for_each_player(std::function<void(net::Connection::Descriptor&, game::Player&)> const& func)
-    {
-        for (auto& entry : connection_table) {
-            if (not entry.will_delete && entry.connection->descriptor.get_connected_player())
-                func(entry.connection->descriptor, *entry.connection->descriptor.get_connected_player());
+            if (not entry.will_delete && entry.connection->get_connected_player())
+                func(*entry.connection, *entry.connection->get_connected_player());
         }
     }
 
@@ -111,7 +103,7 @@ namespace net
             if (entry.will_delete)
                 continue;
 
-            auto player = entry.connection->descriptor.get_connected_player();
+            auto player = entry.connection->get_connected_player();
             if (player && filter(player))
                 found.push_back(player);
         }

@@ -17,10 +17,6 @@ namespace net
         , connection_env_task{ &connection_env }
         , _listen_sock{ net::SocketProtocol::TCPv4 }
         , io_service{ a_io_service }
-        , io_event_pool{ connection_env.size_of_max_connections() }
-        , io_accept_event_data { io_event_pool.new_accept_event_data() }
-        , io_accept_event { io_event_pool.new_accept_event(io_accept_event_data.get()) }
-        , connection_pool{ connection_env.size_of_max_connections() }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
 
@@ -38,14 +34,13 @@ namespace net
     {
         auto connection_key = ConnectionKey(connection_env.get_unused_connection_id(), util::current_monotonic_tick32());
 
-        auto connection_ptr = connection_pool.new_object(
+        std::unique_ptr<net::Connection> connection_ptr(new net::Connection(
             packet_handle_server,
             connection_key,
             connection_env,
             std::move(client_sock),
-            io_service,
-            io_event_pool
-        );
+            io_service
+        ));
 
         connection_env.on_connection_create(connection_key, std::move(connection_ptr));
         return connection_key;
@@ -58,7 +53,7 @@ namespace net
 
         _listen_sock.bind(server_conf.ip(), server_conf.port());
         _listen_sock.listen();
-        _listen_sock.accept(*io_accept_event.get());
+        _listen_sock.accept(io_accept_event);
         std::cout << "Listening to " << server_conf.ip() << ':' << server_conf.port() << "...\n";
 
         for (unsigned i = 0; i < system_conf.num_of_processors() * 2; i++)

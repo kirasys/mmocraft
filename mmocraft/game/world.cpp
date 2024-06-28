@@ -81,8 +81,8 @@ namespace game
             world_players);
 
         for (auto player : world_players) {
-            if (auto desc = connection_env.try_acquire_descriptor(player->connection_key())) {
-                multicast_manager.send(tag, *desc);
+            if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
+                multicast_manager.send(tag, conn);
             }
         }
     }
@@ -105,8 +105,8 @@ namespace game
         multicast_manager.set_multicast_data(net::MuticastTag::Level_Data, std::move(serialized_level_packet), packet_size);
 
         for (auto player : _level_wait_players) {
-            auto desc = connection_env.try_acquire_descriptor(player->connection_key());
-            if (desc && multicast_manager.send(net::MuticastTag::Level_Data, *desc))
+            auto conn = connection_env.try_acquire_connection(player->connection_key());
+            if (multicast_manager.send(net::MuticastTag::Level_Data, conn))
                 player->set_state(game::PlayerState::Level_Initialized);
         }
         _level_wait_players.clear();
@@ -132,12 +132,12 @@ namespace game
         auto new_player_spawn_packet_data = spawn_packet_data.get() + old_players.size() * net::PacketSpawnPlayer::packet_size;
 
         for (auto player : old_players) {
-            if (auto desc = connection_env.try_acquire_descriptor(player->connection_key())) {
-                desc->send_raw_data(
+            if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
+                conn->io() ? conn->io()->send_raw_data(
                     net::ThreadType::Any_Thread,
                     new_player_spawn_packet_data,
                     _spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size
-                );
+                ) : false;
             }
         }
 
@@ -149,8 +149,8 @@ namespace game
         );
 
         for (auto player : _spawn_wait_players) {
-            auto desc = connection_env.try_acquire_descriptor(player->connection_key());
-            if (desc && multicast_manager.send(net::MuticastTag::Spawn_Player, *desc))
+            auto conn = connection_env.try_acquire_connection(player->connection_key());
+            if (multicast_manager.send(net::MuticastTag::Spawn_Player, conn))
                 player->set_state(game::PlayerState::Spawned);
         }
 
@@ -178,8 +178,8 @@ namespace game
             world_players);
 
         for (auto player : world_players) {
-            if (auto desc = connection_env.try_acquire_descriptor(player->connection_key())) {
-                multicast_manager.send(net::MuticastTag::Despawn_Player, *desc);
+            if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
+                multicast_manager.send(net::MuticastTag::Despawn_Player, conn);
             }
         }
 
@@ -228,8 +228,8 @@ namespace game
                 level_completed_players);
 
             for (auto player : level_completed_players) {
-                auto desc = connection_env.try_acquire_descriptor(player->connection_key());
-                if (desc && not multicast_manager.send(net::MuticastTag::Sync_Block_Data, *desc)) {
+                auto conn = connection_env.try_acquire_connection(player->connection_key());
+                if (not multicast_manager.send(net::MuticastTag::Sync_Block_Data, conn)) {
                     // todo: send error message
                 }
             }
@@ -266,8 +266,8 @@ namespace game
             );
 
             for (auto player : world_players) {
-                auto desc = connection_env.try_acquire_descriptor(player->connection_key());
-                if (desc && multicast_manager.send(net::MuticastTag::Sync_Player_Position, *desc))
+                auto conn = connection_env.try_acquire_connection(player->connection_key());
+                if (multicast_manager.send(net::MuticastTag::Sync_Player_Position, conn))
                     player->commit_last_transferrd_position();
             }
         }
@@ -281,12 +281,12 @@ namespace game
 
     void World::tick(io::IoCompletionPort& task_scheduler)
     {
-        auto transit_player_state = [this](net::Connection::Descriptor& desc, game::Player& player) {
+        auto transit_player_state = [this](net::Connection& conn, game::Player& player) {
             switch (player.state()) {
             case game::PlayerState::Handshake_Completed:
             {
                 net::PacketSetPlayerID set_player_id_packet(player.game_id());
-                if (desc.send_packet(net::ThreadType::Tick_Thread, set_player_id_packet)) {
+                if (conn.io()->send_packet(net::ThreadType::Tick_Thread, set_player_id_packet)) {
                     _level_wait_player_queue.push_back(&player);
                     player.set_state(PlayerState::Level_Wait);
                 }
@@ -304,7 +304,7 @@ namespace game
             case game::PlayerState::Spawned:
             {
                 if (player.last_ping_time() + ping_interval < util::current_monotonic_tick()) {
-                    desc.send_ping(net::ThreadType::Tick_Thread);
+                    conn.io()->send_ping(net::ThreadType::Tick_Thread);
                     player.update_ping_time();
                 }
             }
@@ -312,7 +312,7 @@ namespace game
             case game::PlayerState::Disconnected:
             {
                 _despawn_wait_player_queue.push_back(player.game_id());
-                desc.set_offline();
+                conn.set_offline();
             }
             break;
             }
