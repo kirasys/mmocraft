@@ -29,6 +29,8 @@ namespace net
         switch (packet->id) {
         case PacketID::Handshake:
             return handle_handshake_packet(conn_descriptor, *static_cast<PacketHandshake*>(packet));
+        case PacketID::Ping:
+            return handle_ping_packet(conn_descriptor, *static_cast<PacketPing*>(packet));
         case PacketID::SetBlockClient:
             return handle_set_block_packet(conn_descriptor, *static_cast<PacketSetBlockClient*>(packet));
         case PacketID::SetPlayerPosition:
@@ -45,6 +47,13 @@ namespace net
     {
         deferred_handshake_packet_task.push_packet(conn_descriptor.connection_key(), packet);
         return error::PACKET_HANDLE_DEFERRED;
+    }
+
+    error::ResultCode MasterServer::handle_ping_packet(net::Connection::Descriptor& conn_descriptor, net::PacketPing& packet)
+    {
+        // send pong.
+        conn_descriptor.send_ping(net::Any_Thread);
+        return error::SUCCESS;
     }
 
     error::ResultCode MasterServer::handle_set_block_packet(net::Connection::Descriptor& conn_descriptor, net::PacketSetBlockClient& packet)
@@ -68,7 +77,7 @@ namespace net
         if (auto player = conn_descriptor.get_connected_player())
             player->set_position(packet.player_pos);
         
-        return error::PACKET_HANDLE_DEFERRED;
+        return error::SUCCESS;
     }
 
     error::ResultCode MasterServer::handle_chat_message_packet(net::Connection::Descriptor& conn_descriptor, net::PacketChatMessage& packet)

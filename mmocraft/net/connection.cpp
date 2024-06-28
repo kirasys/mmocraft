@@ -289,7 +289,7 @@ namespace net
     bool Connection::Descriptor::send_ping(ThreadType sender_type) const
     {
         auto packet = std::byte(net::PacketID::Ping);
-        return io_send_events[sender_type]->data->push(&packet, 1);
+        return io_send_events[sender_type]->data->push(&packet, net::PacketPing::packet_size);
     }
 
     bool Connection::Descriptor::send_packet(ThreadType sender_type, const net::PacketHandshake& packet) const
