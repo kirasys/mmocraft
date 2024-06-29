@@ -132,12 +132,12 @@ namespace game
         auto new_player_spawn_packet_data = spawn_packet_data.get() + old_players.size() * net::PacketSpawnPlayer::packet_size;
 
         for (auto player : old_players) {
-            if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
-                conn->io() ? conn->io()->send_raw_data(
+            if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
+                connection_io->send_raw_data(
                     net::ThreadType::Any_Thread,
                     new_player_spawn_packet_data,
                     _spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size
-                ) : false;
+                );
             }
         }
 

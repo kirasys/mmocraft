@@ -21,15 +21,13 @@ namespace net
         , _connection_key{ a_connection_key }
         , connection_env{ a_connection_env }
         , online{ true }
+        , connection_io { new ConnectionIO(std::move(sock)) }
     {
-        io_service.register_event_source(sock.get(), this);
-
-        connection_io.reset(new ConnectionIO(std::move(sock)));
-
         if (not is_valid())
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
 
         // start to service client socket events.
+        connection_io->register_event_handler(io_service, this);
         connection_io->emit_receive_event();
 
         update_last_interaction_time();
@@ -187,6 +185,11 @@ namespace net
 
     }
 
+    void ConnectionIO::register_event_handler(io::IoService& io_service, io::IoEventHandler* event_handler)
+    {
+        io_service.register_event_source(client_socket.get_handle(), event_handler);
+    }
+
     void ConnectionIO::emit_receive_event()
     {
         emit_receive_event(&io_recv_event);
@@ -300,7 +303,7 @@ namespace net
     {
         auto flush_message = [](Connection& conn) {
             // flush immedidate and deferred messages.
-            auto connection_io = conn.connection_io.get();
+            auto connection_io = conn.io();
 
             for (auto& event : connection_io->io_send_events) {
                 if (not event.is_processing)
@@ -314,7 +317,8 @@ namespace net
     void ConnectionIO::flush_receive(net::ConnectionEnvironment& connection_env)
     {
         auto flush_message = [](Connection& conn) {
-            auto connection_io = conn.connection_io.get();
+            auto connection_io = conn.io();
+
             if (not connection_io->io_recv_event.is_processing) {
                 connection_io->io_recv_event.is_processing = true;
 

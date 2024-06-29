@@ -39,6 +39,8 @@ namespace net
 
         ConnectionIO(win::UniqueSocket&&);
 
+        void register_event_handler(io::IoService&, io::IoEventHandler* event_handler);
+
         void emit_receive_event();
 
         void emit_receive_event(io::IoRecvEvent* event);
@@ -179,7 +181,6 @@ namespace net
 
         game::Player* _player = nullptr;
 
-     public:
         std::unique_ptr<ConnectionIO> connection_io;
     };
 
