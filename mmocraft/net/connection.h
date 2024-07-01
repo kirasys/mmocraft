@@ -24,13 +24,6 @@ namespace net
 
     class ConnectionEnvironment;
 
-    enum ThreadType
-    {
-        Tick_Thread,
-        Any_Thread,
-        ThreadType_Count,
-    };
-
     struct ConnectionIO : util::NonCopyable, util::NonMovable
     {
         ConnectionIO() = default;
@@ -47,27 +40,27 @@ namespace net
 
         void emit_receive_event(io::IoRecvEvent* event);
 
-        void emit_send_event(io::IoSendEvent*);
+        void emit_send_event();
 
-        void emit_send_event(ThreadType);
+        void emit_send_event(io::IoSendEvent*);
 
         bool emit_multicast_send_event(io::IoSendEventSharedData*);
 
-        bool send_raw_data(ThreadType, const std::byte*, std::size_t) const;
+        bool send_raw_data(const std::byte*, std::size_t) const;
 
-        bool send_disconnect_message(ThreadType, std::string_view);
+        bool send_disconnect_message(std::string_view);
 
-        bool send_disconnect_message(ThreadType, error::ResultCode);
+        bool send_disconnect_message(error::ResultCode);
 
-        bool send_ping(ThreadType sender_type) const;
+        bool send_ping() const;
 
-        bool send_packet(ThreadType, const net::PacketHandshake&) const;
+        bool send_packet(const net::PacketHandshake&) const;
 
-        bool send_packet(ThreadType, const net::PacketLevelInit&) const;
+        bool send_packet(const net::PacketLevelInit&) const;
 
-        bool send_packet(ThreadType, const net::PacketSetPlayerID&) const;
+        bool send_packet(const net::PacketSetPlayerID&) const;
 
-        bool send_packet(ThreadType, const net::PacketSetBlockServer&) const;
+        bool send_packet(const net::PacketSetBlockServer&) const;
 
         static void flush_send(net::ConnectionEnvironment&);
 
@@ -77,14 +70,10 @@ namespace net
         net::Socket client_socket;
 
         io::IoRecvEventData io_recv_data;
-        io::IoSendEventData io_send_data;
-        io::IoSendEventLockFreeData io_send_lockfree_data;
+        io::IoSendEventLockFreeData io_send_data;
 
         io::IoRecvEvent io_recv_event{ &io_recv_data };
-        io::IoSendEvent io_send_events[ThreadType_Count] = {
-            &io_send_data,
-            &io_send_lockfree_data
-        };
+        io::IoSendEvent io_send_event{ &io_send_data };
 
         static constexpr unsigned num_of_multicast_event = 8;
         std::vector<io::IoSendEvent> io_multicast_send_events;
@@ -151,9 +140,9 @@ namespace net
 
         void disconnect();
 
-        void disconnect_with_message(ThreadType, std::string_view);
+        void disconnect_with_message(std::string_view);
 
-        void disconnect_with_message(ThreadType, error::ResultCode);
+        void disconnect_with_message(error::ResultCode);
 
         std::size_t process_packets(std::byte*, std::byte*);
 

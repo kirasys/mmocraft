@@ -53,7 +53,7 @@ namespace net
     {
         // send pong.
         if (auto connection_io = conn.io())
-            connection_io->send_ping(net::Any_Thread);
+            connection_io->send_ping();
         return error::SUCCESS;
     }
 
@@ -70,7 +70,7 @@ namespace net
         net::PacketSetBlockServer revert_block_packet({ packet.x, packet.y, packet.z }, block_id);
 
         if (auto connection_io = conn.io())
-            connection_io->send_packet(net::ThreadType::Any_Thread, revert_block_packet);
+            connection_io->send_packet(revert_block_packet);
 
         return error::SUCCESS;
     }
@@ -163,7 +163,7 @@ namespace net
 
             if (auto conn = connection_env.try_acquire_connection(packet->connection_key)) {
                 if (player_type == game::PlayerType::INVALID) {
-                    conn->disconnect_with_message(net::ThreadType::Any_Thread, error::PACKET_RESULT_FAIL_LOGIN);
+                    conn->disconnect_with_message(error::PACKET_RESULT_FAIL_LOGIN);
                     continue;
                 }
 
@@ -175,7 +175,7 @@ namespace net
                     packet->password);
 
                 if (player == nullptr) {
-                    conn->disconnect_with_message(net::ThreadType::Any_Thread, error::PACKET_RESULT_ALREADY_LOGIN);
+                    conn->disconnect_with_message(error::PACKET_RESULT_ALREADY_LOGIN);
                     continue;
                 }
 

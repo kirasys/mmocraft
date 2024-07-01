@@ -134,7 +134,6 @@ namespace game
         for (auto player : old_players) {
             if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
                 connection_io->send_raw_data(
-                    net::ThreadType::Any_Thread,
                     new_player_spawn_packet_data,
                     _spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size
                 );
@@ -286,7 +285,7 @@ namespace game
             case game::PlayerState::Handshake_Completed:
             {
                 net::PacketSetPlayerID set_player_id_packet(player.game_id());
-                if (conn.io()->send_packet(net::ThreadType::Tick_Thread, set_player_id_packet)) {
+                if (conn.io()->send_packet(set_player_id_packet)) {
                     _level_wait_player_queue.push_back(&player);
                     player.set_state(PlayerState::Level_Wait);
                 }
@@ -304,7 +303,7 @@ namespace game
             case game::PlayerState::Spawned:
             {
                 if (player.last_ping_time() + ping_interval < util::current_monotonic_tick()) {
-                    conn.io()->send_ping(net::ThreadType::Tick_Thread);
+                    conn.io()->send_ping();
                     player.update_ping_time();
                 }
             }

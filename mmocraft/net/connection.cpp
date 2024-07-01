@@ -77,15 +77,15 @@ namespace net
         set_offline();
     }
 
-    void Connection::disconnect_with_message(ThreadType thread_type, std::string_view message)
+    void Connection::disconnect_with_message(std::string_view message)
     {
-        connection_io->send_disconnect_message(thread_type, message);
+        connection_io->send_disconnect_message(message);
         disconnect();
     }
 
-    void Connection::disconnect_with_message(ThreadType thread_type, error::ResultCode result)
+    void Connection::disconnect_with_message(error::ResultCode result)
     {
-        disconnect_with_message(thread_type, result.to_string());
+        disconnect_with_message(result.to_string());
     }
 
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
@@ -123,8 +123,8 @@ namespace net
         };
         net::PacketLevelInit level_init_packet;
 
-        connection_io->send_packet(ThreadType::Any_Thread, handshake_packet);
-        connection_io->send_packet(ThreadType::Any_Thread, level_init_packet);
+        connection_io->send_packet(handshake_packet);
+        connection_io->send_packet(level_init_packet);
 
         _player = player;
         _player->set_state(game::PlayerState::Handshake_Completed);
@@ -149,7 +149,7 @@ namespace net
             return;
         }
 
-        disconnect_with_message(ThreadType::Any_Thread, last_error_code.to_string());
+        disconnect_with_message(last_error_code.to_string());
         event->is_processing = false;
     }
 
@@ -233,9 +233,9 @@ namespace net
         }
     }
 
-    void ConnectionIO::emit_send_event(net::ThreadType thread_type)
+    void ConnectionIO::emit_send_event()
     {
-        emit_send_event(&io_send_events[thread_type]);
+        emit_send_event(&io_send_event);
     }
 
     bool ConnectionIO::emit_multicast_send_event(io::IoSendEventSharedData* event_data)
@@ -268,45 +268,45 @@ namespace net
         return true;
     }
 
-    bool ConnectionIO::send_raw_data(ThreadType sender_type, const std::byte* data, std::size_t data_size) const
+    bool ConnectionIO::send_raw_data(const std::byte* data, std::size_t data_size) const
     {
-        return io_send_events[sender_type].data->push(data, data_size);
+        return io_send_event.data->push(data, data_size);
     }
 
-    bool ConnectionIO::send_disconnect_message(ThreadType sender_type, std::string_view reason)
+    bool ConnectionIO::send_disconnect_message(std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        bool result = disconnect_packet.serialize(*io_send_events[sender_type].data);
+        bool result = disconnect_packet.serialize(*io_send_event.data);
 
-        emit_send_event(&io_send_events[sender_type]);
+        emit_send_event(&io_send_event);
 
         return result;
     }
 
-    bool ConnectionIO::send_ping(ThreadType sender_type) const
+    bool ConnectionIO::send_ping() const
     {
         auto packet = std::byte(net::PacketID::Ping);
-        return io_send_events[sender_type].data->push(&packet, net::PacketPing::packet_size);
+        return io_send_event.data->push(&packet, net::PacketPing::packet_size);
     }
 
-    bool ConnectionIO::send_packet(ThreadType sender_type, const net::PacketHandshake& packet) const
+    bool ConnectionIO::send_packet(const net::PacketHandshake& packet) const
     {
-        return packet.serialize(*io_send_events[sender_type].data);
+        return packet.serialize(*io_send_event.data);
     }
 
-    bool ConnectionIO::send_packet(ThreadType sender_type, const net::PacketLevelInit& packet) const
+    bool ConnectionIO::send_packet(const net::PacketLevelInit& packet) const
     {
-        return packet.serialize(*io_send_events[sender_type].data);
+        return packet.serialize(*io_send_event.data);
     }
 
-    bool ConnectionIO::send_packet(ThreadType sender_type, const net::PacketSetPlayerID& packet) const
+    bool ConnectionIO::send_packet(const net::PacketSetPlayerID& packet) const
     {
-        return packet.serialize(*io_send_events[sender_type].data);
+        return packet.serialize(*io_send_event.data);
     }
 
-    bool ConnectionIO::send_packet(ThreadType sender_type, const net::PacketSetBlockServer& packet) const
+    bool ConnectionIO::send_packet(const net::PacketSetBlockServer& packet) const
     {
-        return packet.serialize(*io_send_events[sender_type].data);
+        return packet.serialize(*io_send_event.data);
     }
 
     void ConnectionIO::flush_send(net::ConnectionEnvironment& connection_env)
@@ -315,9 +315,8 @@ namespace net
             // flush immedidate and deferred messages.
             auto connection_io = conn.io();
 
-            for (auto& event : connection_io->io_send_events) {
-                if (not event.is_processing)
-                    connection_io->emit_send_event(&event);
+            if (not connection_io->io_send_event.is_processing) {
+                connection_io->emit_send_event(&connection_io->io_send_event);
             }
         };
 
