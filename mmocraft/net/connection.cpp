@@ -190,6 +190,11 @@ namespace net
         io_service.register_event_source(client_socket.get_handle(), event_handler);
     }
 
+    bool ConnectionIO::emit_connect_event(io::IoAcceptEvent* event, std::string_view ip, int port)
+    {
+        return client_socket.connect(ip, port, &event->overlapped);
+    }
+
     void ConnectionIO::emit_receive_event()
     {
         emit_receive_event(&io_recv_event);
@@ -226,6 +231,11 @@ namespace net
             if (not client_socket.send(&event->overlapped, wbuf))
                 event->is_processing = false;
         }
+    }
+
+    void ConnectionIO::emit_send_event(net::ThreadType thread_type)
+    {
+        emit_send_event(&io_send_events[thread_type]);
     }
 
     bool ConnectionIO::emit_multicast_send_event(io::IoSendEventSharedData* event_data)

@@ -41,11 +41,15 @@ namespace net
 
         void register_event_handler(io::IoService&, io::IoEventHandler* event_handler);
 
+        bool emit_connect_event(io::IoAcceptEvent*, std::string_view ip, int port);
+
         void emit_receive_event();
 
         void emit_receive_event(io::IoRecvEvent* event);
 
         void emit_send_event(io::IoSendEvent*);
+
+        void emit_send_event(ThreadType);
 
         bool emit_multicast_send_event(io::IoSendEventSharedData*);
 
@@ -174,14 +178,13 @@ namespace net
 
         net::ConnectionKey _connection_key;
         net::ConnectionEnvironment& connection_env;
+        std::unique_ptr<ConnectionIO> connection_io;
 
         bool online = false;
         std::size_t last_offline_tick = 0;
         std::size_t last_interaction_tick = 0;
 
         game::Player* _player = nullptr;
-
-        std::unique_ptr<ConnectionIO> connection_io;
     };
 
     class PacketHandleServer
