@@ -52,8 +52,7 @@ namespace net
     error::ResultCode MasterServer::handle_ping_packet(net::Connection& conn, net::PacketPing& packet)
     {
         // send pong.
-        if (auto connection_io = conn.io())
-            connection_io->send_ping();
+        conn.io()->send_ping();
         return error::SUCCESS;
     }
 
@@ -69,8 +68,7 @@ namespace net
         block_id = packet.mode == game::BlockMode::SET ? game::BLOCK_AIR : packet.block_id;
         net::PacketSetBlockServer revert_block_packet({ packet.x, packet.y, packet.z }, block_id);
 
-        if (auto connection_io = conn.io())
-            connection_io->send_packet(revert_block_packet);
+        conn.io()->send_packet(revert_block_packet);
 
         return error::SUCCESS;
     }
