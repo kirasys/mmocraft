@@ -190,6 +190,11 @@ namespace net
         io_service.register_event_source(client_socket.get_handle(), event_handler);
     }
 
+    void ConnectionIO::close()
+    {
+        client_socket.close();
+    }
+
     bool ConnectionIO::emit_connect_event(io::IoAcceptEvent* event, std::string_view ip, int port)
     {
         return client_socket.connect(ip, port, &event->overlapped);
@@ -304,6 +309,11 @@ namespace net
         return packet.serialize(*io_send_event.data);
     }
 
+    bool ConnectionIO::send_packet(const net::PacketSetBlockClient& packet) const
+    {
+        return packet.serialize(*io_send_event.data);
+    }
+
     bool ConnectionIO::send_packet(const net::PacketSetBlockServer& packet) const
     {
         return packet.serialize(*io_send_event.data);
@@ -315,7 +325,7 @@ namespace net
             // flush immedidate and deferred messages.
             auto connection_io = conn.io();
 
-            if (not connection_io->io_send_event.is_processing) {
+            if (not connection_io->is_send_io_busy()) {
                 connection_io->emit_send_event(&connection_io->io_send_event);
             }
         };
@@ -328,7 +338,7 @@ namespace net
         auto flush_message = [](Connection& conn) {
             auto connection_io = conn.io();
 
-            if (not connection_io->io_recv_event.is_processing) {
+            if (not connection_io->is_receive_io_busy()) {
                 connection_io->io_recv_event.is_processing = true;
 
                 // Note: receive event may stop only for one reason: insuffient buffer space.

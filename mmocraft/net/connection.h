@@ -34,6 +34,18 @@ namespace net
 
         void register_event_handler(io::IoService&, io::IoEventHandler* event_handler);
 
+        bool is_receive_io_busy() const
+        {
+            return io_recv_event.is_processing;
+        }
+
+        bool is_send_io_busy() const
+        {
+            return io_send_event.is_processing;
+        }
+
+        void close();
+
         bool emit_connect_event(io::IoAcceptEvent*, std::string_view ip, int port);
 
         void emit_receive_event();
@@ -59,6 +71,8 @@ namespace net
         bool send_packet(const net::PacketLevelInit&) const;
 
         bool send_packet(const net::PacketSetPlayerID&) const;
+
+        bool send_packet(const net::PacketSetBlockClient&) const;
 
         bool send_packet(const net::PacketSetBlockServer&) const;
 
@@ -117,7 +131,7 @@ namespace net
 
         ConnectionIO* io()
         {
-            return online ? connection_io.get() : nullptr; 
+            return connection_io.get(); 
         }
 
         game::Player* get_connected_player()
