@@ -185,6 +185,14 @@ namespace game
         _despawn_wait_players.clear();
     }
 
+    std::size_t World::coordinate_to_block_map_index(int x, int y, int z)
+    {
+        return WorldGenerator::block_file_header_size
+                + _byteswap_ushort(x)
+                + _metadata.width() * _byteswap_ushort(z)
+                + _metadata.width() * _metadata.length() * _byteswap_ushort(y);
+    }
+
     void World::commit_block_changes(game::BlockHistory& block_history)
     {
         if (auto history_size = block_history.size()) {
@@ -192,9 +200,7 @@ namespace game
 
             for (std::size_t index = 0; index < history_size; index++) {
                 auto& record = block_history.get_record(index);
-                std::size_t block_map_index = _byteswap_ushort(record.x)
-                    + _metadata.width() * _byteswap_ushort(record.z)
-                    + _metadata.width() * _metadata.length() * _byteswap_ushort(record.y);
+                std::size_t block_map_index = coordinate_to_block_map_index(record.x, record.y, record.z);
 
                 if (block_map_index < _metadata.volume())
                     block_array[block_map_index] = record.block_id;

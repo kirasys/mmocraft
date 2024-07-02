@@ -40,7 +40,7 @@ namespace game
         std::ofstream block_file(block_data_path);
         // block data header (map volume)
         map_volume = ::htonl(u_long(map_volume));
-        block_file.write(reinterpret_cast<char*>(&map_volume), 4);
+        block_file.write(reinterpret_cast<char*>(&map_volume), block_file_header_size);
         // raw block data
         block_file.write(blocks_ptr.get(), map_size.x * map_size.y * map_size.z);
     }

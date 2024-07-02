@@ -64,6 +64,8 @@ namespace game
 
         void load_block_data();
 
+        std::size_t coordinate_to_block_map_index(int x, int y, int z);
+
         net::ConnectionEnvironment& connection_env;
         net::MulticastManager multicast_manager;
 
