@@ -30,7 +30,7 @@ namespace game
     constexpr std::size_t sync_player_position_task_interval = 100;      // 100 milliseconds.
     constexpr std::size_t ping_interval                      = 5 * 1000; // 5 seconds.
 
-    constexpr std::size_t max_block_history_size = 1024;
+    constexpr std::size_t max_block_history_size = 1024 * 8;
 
     class World final : util::NonCopyable, util::NonMovable
     {
