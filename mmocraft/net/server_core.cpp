@@ -53,13 +53,20 @@ namespace net
 
         _listen_sock.bind(server_conf.ip(), server_conf.port());
         _listen_sock.listen();
-        _listen_sock.accept(io_accept_event);
+        start_accept();
         std::cout << "Listening to " << server_conf.ip() << ':' << server_conf.port() << "...\n";
 
         for (unsigned i = 0; i < system_conf.num_of_processors() * 2; i++)
             io_service.spawn_event_loop_thread().detach();
+    }
 
+    void ServerCore::start_accept()
+    {
         _state = ServerCore::State::Running;
+
+        if (auto error_code = _listen_sock.accept(io_accept_event)) {
+            LOG(error) << "Fail to request accept: " << error_code;
+        }
     }
 
     /** 
@@ -76,9 +83,7 @@ namespace net
         LOG_IF(error, not last_error_code.is_success()) 
             << "Fail to accpet new connection: " << last_error_code;
 
-        if (auto error_code = _listen_sock.accept(*event)) {
-            LOG(error) << "Fail to request accept: " << error_code;
-        }
+        start_accept();
     }
 
     std::size_t ServerCore::handle_io_event(io::IoAcceptEvent* event)

@@ -97,6 +97,9 @@ namespace net
         ConnectionIO::flush_receive(connection_env);
 
         flush_deferred_packet();
+
+        if (server_core.is_stopped())
+            server_core.start_accept();
     }
 
     void MasterServer::serve_forever()

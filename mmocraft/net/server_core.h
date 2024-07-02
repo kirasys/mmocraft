@@ -32,9 +32,9 @@ namespace net
 
         ServerCore(net::PacketHandleServer&, net::ConnectionEnvironment&, io::IoService&);
 
-        ServerCore::State status() const
+        bool is_stopped() const
         {
-            return _state;
+            return _state == State::Stopped;
         }
 
         error::ResultCode get_last_error() const
@@ -45,6 +45,8 @@ namespace net
         void start_network_io_service();
 
         net::ConnectionKey new_connection(win::UniqueSocket &&client_sock = win::UniqueSocket());
+
+        void start_accept();
 
         /**
          *  Event handler interface 
