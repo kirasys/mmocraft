@@ -265,6 +265,21 @@ namespace net
         return buf_start - serialized_data.get();
     }
 
+    bool PacketSetBlockClient::serialize(io::IoEventData& event_data) const
+    {
+        std::byte buf[packet_size];
+
+        std::byte* buf_start = buf;
+        PacketStructure::write_byte(buf_start, packet_id);
+        PacketStructure::write_short(buf_start, x);
+        PacketStructure::write_short(buf_start, y);
+        PacketStructure::write_short(buf_start, z);
+        PacketStructure::write_byte(buf_start, mode);
+        PacketStructure::write_byte(buf_start, block_id);
+
+        return event_data.push(buf, sizeof(buf));
+    }
+
     bool PacketSetBlockServer::serialize(io::IoEventData& event_data) const
     {
         std::byte buf[packet_size];

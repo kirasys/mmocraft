@@ -156,7 +156,7 @@ namespace net
 
         DECLARE_PACKET_READ_METHOD(PacketHandshake);
 
-        PacketHandshake(const std::string& a_server_name, const std::string& a_motd, net::UserType a_user_type)
+        PacketHandshake(std::string_view a_server_name, std::string_view a_motd, net::UserType a_user_type)
             : Packet{ PacketID::Handshake }
             , server_name{ a_server_name.data(), a_server_name.size() }
             , motd{ a_motd.data(), a_motd.size() }
@@ -187,7 +187,9 @@ namespace net
 
     struct PacketLevelDataChunk : Packet
     {
-        static constexpr unsigned chunk_size = 1024;
+        constexpr static unsigned chunk_size = 1024;
+        constexpr static std::size_t packet_size = 1028;
+
         std::size_t max_chunk_count = 0;
         PacketFieldType::Short x;
         PacketFieldType::Short y;
@@ -211,6 +213,15 @@ namespace net
 
         static constexpr PacketID packet_id = PacketID::SetBlockClient;
         static constexpr std::size_t packet_size = 9;
+
+        PacketSetBlockClient(util::Coordinate3D pos, PacketFieldType::Byte a_mode, PacketFieldType::Byte a_block_id)
+            : Packet{ packet_id }
+            , x{ pos.x }, y{ pos.y }, z{ pos.z }
+            , mode{ a_mode }
+            , block_id{ a_block_id }
+        { }
+
+        bool serialize(io::IoEventData&) const;
 
         DECLARE_PACKET_READ_METHOD(PacketSetBlockClient);
     };
