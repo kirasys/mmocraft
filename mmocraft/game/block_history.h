@@ -44,7 +44,7 @@ namespace game
         BlockHistoryRecord& get_record(std::size_t index)
         {
             return *reinterpret_cast<BlockHistoryRecord*>(
-                &_history_data.load(std::memory_order_relaxed)[index * history_data_unit_size]
+                &_data.load(std::memory_order_relaxed)[index * history_data_unit_size]
             );
         }
 
@@ -58,6 +58,6 @@ namespace game
         std::atomic<std::size_t> _size{ 0 };
        
         bool data_ownership_moved = false;
-        std::atomic<std::byte*> _history_data{ nullptr };
+        std::atomic<std::byte*> _data{ nullptr };
     };
 }

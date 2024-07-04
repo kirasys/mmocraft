@@ -9,13 +9,13 @@ namespace game
 {
     BlockHistory::~BlockHistory()
     {
-        if (auto data_ptr = _history_data.load(std::memory_order_relaxed))
+        if (auto data_ptr = _data.load(std::memory_order_relaxed))
             delete[] data_ptr;
     }
 
     void BlockHistory::initialize(std::size_t max_size)
     {
-        if (not _history_data) {
+        if (not _data) {
             _max_size = max_size;
             reset();
         }
@@ -23,18 +23,18 @@ namespace game
 
     void BlockHistory::reset()
     {
-        if (not data_ownership_moved && _history_data) {
-            delete[] _history_data.load(std::memory_order_relaxed);
+        if (not data_ownership_moved && _data) {
+            delete[] _data.load(std::memory_order_relaxed);
         }
-
         data_ownership_moved = false;
-        _history_data.store(new std::byte[_max_size * history_data_unit_size], std::memory_order_relaxed);
+
+        _data.store(new std::byte[_max_size * history_data_unit_size], std::memory_order_relaxed);
         _size.store(0, std::memory_order_release);
     }
 
     bool BlockHistory::add_record(util::Coordinate3D pos, game::BlockID block_id)
     {
-        if (auto history_data_ptr = _history_data.load(std::memory_order_relaxed)) {
+        if (auto history_data_ptr = _data.load(std::memory_order_relaxed)) {
             auto index = _size.fetch_add(1, std::memory_order_relaxed);
             if (index >= _max_size) {
                 _size.fetch_sub(1, std::memory_order_relaxed);
@@ -60,7 +60,7 @@ namespace game
     {
         if (size()) {
             data_ownership_moved = true;
-            history_data.reset(_history_data.load(std::memory_order_relaxed));
+            history_data.reset(_data.load(std::memory_order_relaxed));
         }
         return size() * history_data_unit_size;
     }
