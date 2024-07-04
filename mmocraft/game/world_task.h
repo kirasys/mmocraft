@@ -11,13 +11,12 @@ namespace game
 {
     class World;
 
-    template <typename DataType>
-    class WorldTask : public io::Task
+    class WorldPlayerTask : public io::Task
     {
     public:
-        using handler_type = void (game::World::* const)(const std::vector<DataType>&);
+        using handler_type = void (game::World::* const)(const std::vector<game::Player*>&);
 
-        WorldTask(handler_type handler, game::World* world, std::size_t interval_ms = 0)
+        WorldPlayerTask(handler_type handler, game::World* world, std::size_t interval_ms = 0)
             : io::Task{ interval_ms }
             , _handler{ handler }
             , _world{ world }
@@ -34,7 +33,7 @@ namespace game
             _task_data_queue.swap(_task_datas);
         }
 
-        void push(DataType task_data)
+        void push(game::Player* task_data)
         {
             _task_data_queue.push_back(task_data);
         }
@@ -56,8 +55,8 @@ namespace game
         handler_type _handler;
         game::World* _world = nullptr;
 
-        std::vector<DataType> _task_datas;
-        std::vector<DataType> _task_data_queue;
+        std::vector<game::Player*> _task_datas;
+        std::vector<game::Player*> _task_data_queue;
     };
 
     class BlockSyncTask : public io::Task

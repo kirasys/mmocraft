@@ -150,7 +150,7 @@ namespace game
         }
     }
 
-    void World::despawn_player(const std::vector<game::PlayerID>& despawn_wait_players)
+    void World::despawn_player(const std::vector<game::Player*>& despawn_wait_players)
     {
         // create despawn packets
         std::unique_ptr<std::byte[]> despawn_packet_data;
@@ -173,6 +173,13 @@ namespace game
         for (auto player : world_players) {
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
                 multicast_manager.send(net::MuticastTag::Despawn_Player, conn);
+            }
+        }
+
+        // disconnecting despawned players.
+        for (auto player : despawn_wait_players) {
+            if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
+                conn->set_offline();
             }
         }
     }
@@ -300,8 +307,7 @@ namespace game
             break;
             case game::PlayerState::Disconnected:
             {
-                despawn_player_task.push(player.game_id());
-                conn.set_offline();
+                despawn_player_task.push(&player);
             }
             break;
             }

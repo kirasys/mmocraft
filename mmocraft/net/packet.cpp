@@ -375,16 +375,16 @@ namespace net
         return data_size;
     }
 
-    std::size_t PacketDespawnPlayer::serialize(const std::vector<game::PlayerID>& player_ids , std::unique_ptr<std::byte[]>& serialized_data)
+    std::size_t PacketDespawnPlayer::serialize(const std::vector<game::Player*>& players , std::unique_ptr<std::byte[]>& serialized_data)
     {
-        auto data_size = player_ids.size() * packet_size;
+        auto data_size = players.size() * packet_size;
         serialized_data.reset(new std::byte[data_size]);
 
         std::byte* buf_start = serialized_data.get();
 
-        for (auto player_id : player_ids) {
+        for (auto player : players) {
             PacketStructure::write_byte(buf_start, packet_id);
-            PacketStructure::write_byte(buf_start, player_id);
+            PacketStructure::write_byte(buf_start, player->game_id());
         }
 
         return data_size;

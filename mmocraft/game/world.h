@@ -44,7 +44,7 @@ namespace game
 
         void spawn_player(const std::vector<game::Player*>&);
 
-        void despawn_player(const std::vector<game::PlayerID>&);
+        void despawn_player(const std::vector<game::Player*>&);
 
         void sync_block(const std::vector<game::Player*>&, game::BlockHistory<>&);
 
@@ -70,8 +70,8 @@ namespace game
 
         std::vector<std::unique_ptr<game::Player>> players;
 
-        game::WorldTask<game::Player*> spawn_player_task;
-        game::WorldTask<game::PlayerID> despawn_player_task;
+        game::WorldPlayerTask spawn_player_task;
+        game::WorldPlayerTask despawn_player_task;
         game::BlockSyncTask sync_block_task;
         io::SimpleTask<game::World> sync_player_position_task;
 
