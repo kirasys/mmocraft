@@ -69,6 +69,11 @@ error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event) {
     return error::SUCCESS;
 }
 
+bool net::Socket::connect(std::string_view ip, int port, WSAOVERLAPPED* overlapped)
+{
+    return error::SUCCESS;
+}
+
 bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf) {
     if (mock) mock->send(wsa_buf[0].buf, wsa_buf[0].len);
     return true;
