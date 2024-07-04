@@ -41,11 +41,13 @@ namespace io
     {
         // data was already appended by I/O.
         _size += n;
+        assert(_size <= RECV_BUFFER_SIZE);
         return true;
     }
 
     void IoRecvEventData::pop(std::size_t n)
     {
+        assert(_size >= n);
         if (_size -= n)
             std::memmove(_data, _data + n, _size); // move remaining data ahead.
     }
