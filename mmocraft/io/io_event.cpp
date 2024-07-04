@@ -25,7 +25,7 @@ namespace io
         }
 
         if (transferred_bytes_or_signal != RETRY_SIGNAL)
-            data->push(nullptr, transferred_bytes_or_signal); // data was already appended by I/O. just update size only.
+            data->push(nullptr, transferred_bytes_or_signal); // pass nullptr because data was already appended by I/O. just update size only.
 
         // deliver events to the owner.
         auto processed_bytes = event_handler.handle_io_event(this);
@@ -37,9 +37,11 @@ namespace io
         event_handler.on_complete(this);
     }
 
-    bool IoRecvEventData::push(const std::byte*, std::size_t n)
+    bool IoRecvEventData::push(const std::byte* data, std::size_t n)
     {
-        // data was already appended by I/O.
+        if (data)
+            std::memcpy(begin(), data, n);
+
         _size += n;
         assert(_size <= RECV_BUFFER_SIZE);
         return true;
