@@ -32,8 +32,7 @@ namespace game
         , sync_block_task{ &World::sync_block_data, this, sync_block_data_task_interval }
         , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
     {
-        for (auto& block_history : block_histories)
-            block_history.initialize(max_block_history_size);
+
     }
 
     game::Player* World::add_player(net::ConnectionKey connection_key, 
@@ -193,7 +192,7 @@ namespace game
                 + _metadata.width() * _metadata.length() * _byteswap_ushort(y);
     }
 
-    void World::commit_block_changes(game::BlockHistory& block_history)
+    void World::commit_block_changes(game::BlockHistory<>& block_history)
     {
         if (auto history_size = block_history.size()) {
             auto block_array = block_mapping.data();

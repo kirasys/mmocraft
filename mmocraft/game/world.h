@@ -30,8 +30,6 @@ namespace game
     constexpr std::size_t sync_player_position_task_interval = 100;      // 100 milliseconds.
     constexpr std::size_t ping_interval                      = 5 * 1000; // 5 seconds.
 
-    constexpr std::size_t max_block_history_size = 1024 * 8;
-
     class World final : util::NonCopyable, util::NonMovable
     {
     public:
@@ -58,7 +56,7 @@ namespace game
         bool load_filesystem_world(std::string_view);
 
     private:
-        void commit_block_changes(game::BlockHistory& block_history);
+        void commit_block_changes(game::BlockHistory<>& block_history);
 
         void load_metadata();
 
@@ -80,19 +78,19 @@ namespace game
         std::vector<game::PlayerID> _despawn_wait_players;
         std::vector<game::PlayerID> _despawn_wait_player_queue;
         
-        game::BlockHistory& get_inbound_block_history()
+        game::BlockHistory<>& get_inbound_block_history()
         {
             return block_histories[inbound_block_history_index.load(std::memory_order_relaxed)];
         }
 
-        game::BlockHistory& get_outbound_block_history()
+        game::BlockHistory<>& get_outbound_block_history()
         {
             return block_histories[outbound_block_history_index];
         }
 
         std::atomic<unsigned> inbound_block_history_index = 0;
         unsigned outbound_block_history_index = 1;
-        game::BlockHistory block_histories[2];
+        game::BlockHistory<> block_histories[2];
 
         io::SimpleTask<game::World> spawn_player_task;
         io::SimpleTask<game::World> despawn_player_task;
