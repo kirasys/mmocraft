@@ -130,6 +130,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="block_history_test.cpp" />
     <ClCompile Include="connection_test.cpp" />
     <ClCompile Include="io_event_test.cpp" />
     <ClCompile Include="master_server_test.cpp" />
