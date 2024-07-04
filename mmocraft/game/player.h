@@ -223,7 +223,6 @@ namespace game
         PlayerType _player_type;
 
         char _username[16 + 1];
-        char _password[32 + 1];
 
         PlayerPosition _latest_pos;
         PlayerPosition _last_transferred_pos;
