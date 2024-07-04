@@ -18,10 +18,6 @@ namespace game
         // destory all information after disconnecting.
         GUEST,
 
-        // Users logged in with password but is not registered. 
-        // they can register by entering command.
-        NEW_USER,
-
         // Users logged in successfully.
         AUTHENTICATED_USER,
 
@@ -110,7 +106,7 @@ namespace game
     class Player : util::NonCopyable
     {
     public:
-        Player(net::ConnectionKey, unsigned identity, PlayerType, const char* username, const char* password);
+        Player(net::ConnectionKey, unsigned identity, PlayerType, const char* username);
 
         PlayerState state() const
         {

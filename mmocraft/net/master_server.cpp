@@ -153,7 +153,7 @@ namespace net
             auto player_type = game::PlayerType::INVALID;
 
             if (not player_search.search(packet->username)) {
-                player_type = std::strlen(packet->password) ? game::PlayerType::NEW_USER : game::PlayerType::GUEST;
+                player_type = game::PlayerType::GUEST;
             }
             else if (player_login.authenticate(packet->username, packet->password)) {
                 player_type = std::strcmp(packet->username, "admin")
@@ -172,8 +172,7 @@ namespace net
                     packet->connection_key,
                     player_search.get_player_identity(),
                     player_type,
-                    packet->username,
-                    packet->password);
+                    packet->username);
 
                 if (player == nullptr) {
                     conn->disconnect_with_message(error::PACKET_RESULT_ALREADY_LOGIN);

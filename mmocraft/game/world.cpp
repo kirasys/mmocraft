@@ -38,8 +38,7 @@ namespace game
     game::Player* World::add_player(net::ConnectionKey connection_key, 
                             unsigned player_identity,
                             game::PlayerType player_type,
-                            const char* username,
-                            const char* password)
+                            const char* username)
     {
         bool is_already_logged_in = std::any_of(players.begin(), players.end(),
             [player_identity](std::unique_ptr<game::Player>& player) {
@@ -54,8 +53,7 @@ namespace game
                 connection_key,
                 player_identity,
                 player_type,
-                username,
-                password
+                username
             );
 
             players[connection_key.index()].reset(player);

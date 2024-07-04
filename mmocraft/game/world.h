@@ -35,7 +35,7 @@ namespace game
     public:
         World(net::ConnectionEnvironment&);
 
-        game::Player* add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username, const char* password);
+        game::Player* add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username);
 
         void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
 
