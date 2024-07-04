@@ -21,11 +21,7 @@ namespace game
         CONSOLE_LOG_IF(fatal, world_conf.width() < 10 || world_conf.height() < 10 || world_conf.length() < 10)
             << "world map size must greater than 10x10x10.";
 
-        auto map_size = util::Coordinate3D{
-            util::Coordinate(world_conf.width()),
-            util::Coordinate(world_conf.height()),
-            util::Coordinate(world_conf.length())
-        };
+        auto map_size = util::Coordinate3D{ world_conf.width(), world_conf.height(), world_conf.length()};
         std::size_t map_volume = map_size.x * map_size.y * map_size.z;
 
         // write world files to the disk.

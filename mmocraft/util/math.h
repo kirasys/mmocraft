@@ -11,6 +11,10 @@ namespace util
         Coordinate x = 0;
         Coordinate y = 0;
         Coordinate z = 0;
+
+        Coordinate3D(int a_x, int a_y, int a_z)
+            : x{ Coordinate(a_x) }, y{ Coordinate(a_y) }, z{ Coordinate(a_z) }
+        { }
     };
 
     struct Orientation
