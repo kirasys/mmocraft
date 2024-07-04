@@ -75,6 +75,13 @@ namespace game
         game::BlockSyncTask sync_block_task;
         io::SimpleTask<game::World> sync_player_position_task;
 
+        io::Task* world_tasks[4] = {
+            &spawn_player_task,
+            &despawn_player_task,
+            &sync_block_task,
+            &sync_player_position_task,
+        };
+
         WorldMetadata _metadata;
 
         win::FileMapping block_mapping;

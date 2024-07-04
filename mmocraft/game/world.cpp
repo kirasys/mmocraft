@@ -309,20 +309,11 @@ namespace game
 
         connection_env.for_each_player(transit_player_state);
 
-        if (spawn_player_task.ready()) {
-            task_scheduler.schedule_task(&spawn_player_task);
+        for (auto world_task : world_tasks) {
+            if (world_task->ready()) {
+                task_scheduler.schedule_task(world_task);
+            }
         }
-
-        if (despawn_player_task.ready()) {
-            task_scheduler.schedule_task(&despawn_player_task);
-        }
-
-        if (sync_block_task.ready()) {
-            task_scheduler.schedule_task(&sync_block_task);
-        }
-
-        if (sync_player_position_task.ready())
-            task_scheduler.schedule_task(&sync_player_position_task);
     }
 
     bool World::load_filesystem_world(std::string_view a_save_dir)
