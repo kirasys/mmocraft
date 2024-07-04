@@ -45,6 +45,11 @@ namespace io
             return _state == new_state;
         }
 
+        virtual void before_scheduling()
+        {
+            set_state(State::Processing);
+        }
+
         virtual void invoke_handler(ULONG_PTR task_handler_inst) = 0;
 
     private:

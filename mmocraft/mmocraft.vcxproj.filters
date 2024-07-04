@@ -81,6 +81,7 @@
     <ClInclude Include="util\math.h" />
     <ClInclude Include="game\world_generator.h" />
     <ClInclude Include="game\block_history.h" />
+    <ClInclude Include="game\world_task.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

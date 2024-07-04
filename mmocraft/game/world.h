@@ -7,6 +7,7 @@
 #include "game/block.h"
 #include "game/player.h"
 #include "game/block_history.h"
+#include "game/world_task.h"
 #include "proto/world_metadata.pb.h"
 #include "net/connection_key.h"
 #include "net/multicast_manager.h"
@@ -39,13 +40,13 @@ namespace game
 
         void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
 
-        void process_level_wait_player();
+        void process_level_wait_player(const std::vector<game::Player*>&);
 
-        void spawn_player();
+        void spawn_player(const std::vector<game::Player*>&);
 
-        void despawn_player();
+        void despawn_player(const std::vector<game::PlayerID>&);
 
-        void sync_block_data();
+        void sync_block_data(const std::vector<game::Player*>&, game::BlockHistory<>&);
 
         void sync_player_position();
 
@@ -69,32 +70,9 @@ namespace game
 
         std::vector<std::unique_ptr<game::Player>> players;
 
-        std::vector<game::Player*> _level_wait_players;
-        std::vector<game::Player*> _level_wait_player_queue;
-
-        std::vector<game::Player*> _spawn_wait_players;
-        std::vector<game::Player*> _spawn_wait_player_queue;
-
-        std::vector<game::PlayerID> _despawn_wait_players;
-        std::vector<game::PlayerID> _despawn_wait_player_queue;
-        
-        game::BlockHistory<>& get_inbound_block_history()
-        {
-            return block_histories[inbound_block_history_index.load(std::memory_order_relaxed)];
-        }
-
-        game::BlockHistory<>& get_outbound_block_history()
-        {
-            return block_histories[outbound_block_history_index];
-        }
-
-        std::atomic<unsigned> inbound_block_history_index = 0;
-        unsigned outbound_block_history_index = 1;
-        game::BlockHistory<> block_histories[2];
-
-        io::SimpleTask<game::World> spawn_player_task;
-        io::SimpleTask<game::World> despawn_player_task;
-        io::SimpleTask<game::World> sync_block_task;
+        game::WorldTask<game::Player*> spawn_player_task;
+        game::WorldTask<game::PlayerID> despawn_player_task;
+        game::BlockSyncTask sync_block_task;
         io::SimpleTask<game::World> sync_player_position_task;
 
         WorldMetadata _metadata;

@@ -23,7 +23,7 @@ namespace io
 
     bool IoCompletionPort::schedule_task(io::Task* task, void* task_handler_inst)
     {
-        task->set_state(io::Task::Processing);
+        task->before_scheduling();
 
         return ::PostQueuedCompletionStatus(_handle, 
             DWORD(io::IO_TASK_SIGNAL),

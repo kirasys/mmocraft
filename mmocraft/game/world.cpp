@@ -84,7 +84,7 @@ namespace game
         }
     }
 
-    void World::process_level_wait_player()
+    void World::process_level_wait_player(const std::vector<game::Player*>& level_wait_players)
     {
         if (last_level_data_submission_at + level_data_submission_interval > util::current_monotonic_tick())
             return;
@@ -101,17 +101,16 @@ namespace game
 
         multicast_manager.set_multicast_data(net::MuticastTag::Level_Data, std::move(serialized_level_packet), packet_size);
 
-        for (auto player : _level_wait_players) {
+        for (auto player : level_wait_players) {
             auto conn = connection_env.try_acquire_connection(player->connection_key());
             if (multicast_manager.send(net::MuticastTag::Level_Data, conn))
                 player->set_state(game::PlayerState::Level_Initialized);
         }
-        _level_wait_players.clear();
 
         last_level_data_submission_at = util::current_monotonic_tick();
     }
 
-    void World::spawn_player()
+    void World::spawn_player(const std::vector<game::Player*>& spawn_wait_players)
     {
         // get existing all players in the world.
         std::vector<game::Player*> old_players;
@@ -123,7 +122,7 @@ namespace game
 
         // create spawn packet of all players.
         std::unique_ptr<std::byte[]> spawn_packet_data;
-        auto data_size = net::PacketSpawnPlayer::serialize(old_players, _spawn_wait_players, spawn_packet_data);
+        auto data_size = net::PacketSpawnPlayer::serialize(old_players, spawn_wait_players, spawn_packet_data);
 
         // spawn new player to the existing players. 
         auto new_player_spawn_packet_data = spawn_packet_data.get() + old_players.size() * net::PacketSpawnPlayer::packet_size;
@@ -132,7 +131,7 @@ namespace game
             if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
                 connection_io->send_raw_data(
                     new_player_spawn_packet_data,
-                    _spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size
+                    spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size
                 );
             }
         }
@@ -144,20 +143,18 @@ namespace game
             data_size
         );
 
-        for (auto player : _spawn_wait_players) {
+        for (auto player : spawn_wait_players) {
             auto conn = connection_env.try_acquire_connection(player->connection_key());
             if (multicast_manager.send(net::MuticastTag::Spawn_Player, conn))
                 player->set_state(game::PlayerState::Spawned);
         }
-
-        _spawn_wait_players.clear();
     }
 
-    void World::despawn_player()
+    void World::despawn_player(const std::vector<game::PlayerID>& despawn_wait_players)
     {
         // create despawn packets
         std::unique_ptr<std::byte[]> despawn_packet_data;
-        auto data_size = net::PacketDespawnPlayer::serialize(_despawn_wait_players, despawn_packet_data);
+        auto data_size = net::PacketDespawnPlayer::serialize(despawn_wait_players, despawn_packet_data);
 
         multicast_manager.set_multicast_data(
             net::MuticastTag::Despawn_Player,
@@ -178,8 +175,6 @@ namespace game
                 multicast_manager.send(net::MuticastTag::Despawn_Player, conn);
             }
         }
-
-        _despawn_wait_players.clear();
     }
 
     std::size_t World::coordinate_to_block_map_index(int x, int y, int z)
@@ -204,10 +199,8 @@ namespace game
         }
     }
 
-    void World::sync_block_data()
+    void World::sync_block_data(const std::vector<game::Player*>& level_wait_players, game::BlockHistory<>& block_history)
     {
-        auto& block_history = get_outbound_block_history();
-
         // serialize and fetch block histories.
         std::unique_ptr<std::byte[]> block_history_data;
         if (std::size_t data_size = block_history.fetch_serialized_data(block_history_data)) {
@@ -238,8 +231,8 @@ namespace game
         // submit level data to handshaked players.
         // Note: level data task can't be seperated from block data task to achieve block data synchronization.
         //       the client dose not allow to send block datas before level initialization completed.
-        if (not _level_wait_players.empty())
-            process_level_wait_player();
+        if (not level_wait_players.empty())
+            process_level_wait_player(level_wait_players);
     }
 
     void World::sync_player_position()
@@ -272,8 +265,7 @@ namespace game
 
     bool World::try_change_block(util::Coordinate3D pos, BlockID block_id)
     {
-        auto& block_history = get_inbound_block_history();
-        return block_history.add_record(pos, block_id);
+        return sync_block_task.push(pos, block_id);
     }
 
     void World::tick(io::IoCompletionPort& task_scheduler)
@@ -284,7 +276,7 @@ namespace game
             {
                 net::PacketSetPlayerID set_player_id_packet(player.game_id());
                 if (conn.io()->send_packet(set_player_id_packet)) {
-                    _level_wait_player_queue.push_back(&player);
+                    sync_block_task.push(&player);
                     player.set_state(PlayerState::Level_Wait);
                 }
             }
@@ -295,7 +287,7 @@ namespace game
                 player.set_default_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch());
                 player.set_state(PlayerState::Spawn_Wait);
 
-                _spawn_wait_player_queue.push_back(&player);
+                spawn_player_task.push(&player);
             }
             break;
             case game::PlayerState::Spawned:
@@ -308,7 +300,7 @@ namespace game
             break;
             case game::PlayerState::Disconnected:
             {
-                _despawn_wait_player_queue.push_back(player.game_id());
+                despawn_player_task.push(player.game_id());
                 conn.set_offline();
             }
             break;
@@ -317,20 +309,15 @@ namespace game
 
         connection_env.for_each_player(transit_player_state);
 
-        if (not _spawn_wait_player_queue.empty() && spawn_player_task.ready()) {
-            _spawn_wait_player_queue.swap(_spawn_wait_players);
+        if (spawn_player_task.ready()) {
             task_scheduler.schedule_task(&spawn_player_task);
         }
 
-        if (not _despawn_wait_player_queue.empty() && despawn_player_task.ready()) {
-            _despawn_wait_player_queue.swap(_despawn_wait_players);
+        if (despawn_player_task.ready()) {
             task_scheduler.schedule_task(&despawn_player_task);
         }
 
-        if (sync_block_task.ready() && (get_inbound_block_history().size() || not _level_wait_player_queue.empty())) {
-            _level_wait_player_queue.swap(_level_wait_players);
-            // To ensure inbound history data is completely written, switch block history first.
-            outbound_block_history_index = inbound_block_history_index.exchange(outbound_block_history_index, std::memory_order_relaxed);
+        if (sync_block_task.ready()) {
             task_scheduler.schedule_task(&sync_block_task);
         }
 
