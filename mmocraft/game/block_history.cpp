@@ -41,14 +41,14 @@ namespace game
                 return false;
             }
 
-            auto record = reinterpret_cast<BlockHistoryRecord*>(&history_data_ptr[index * history_data_unit_size]);
+            auto& record = get_record(history_data_ptr, index);
 
             // Note: store coordinates as bin-endian in order to optimize serialization operation.
-            record->packet_id = std::byte(net::PacketID::SetBlockServer);
-            record->x = _byteswap_ushort(pos.x);
-            record->y = _byteswap_ushort(pos.y);
-            record->z = _byteswap_ushort(pos.z);
-            record->block_id = std::byte(block_id);
+            record.packet_id = std::byte(net::PacketID::SetBlockServer);
+            record.x = _byteswap_ushort(pos.x);
+            record.y = _byteswap_ushort(pos.y);
+            record.z = _byteswap_ushort(pos.z);
+            record.block_id = std::byte(block_id);
 
             return true;
         }

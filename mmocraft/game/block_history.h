@@ -41,6 +41,13 @@ namespace game
 
         void reset();
 
+        BlockHistoryRecord& get_record(std::byte* data, std::size_t index)
+        {
+            return *reinterpret_cast<BlockHistoryRecord*>(
+                &data[index * history_data_unit_size]
+            );
+        }
+
         BlockHistoryRecord& get_record(std::size_t index)
         {
             return *reinterpret_cast<BlockHistoryRecord*>(
