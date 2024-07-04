@@ -28,9 +28,9 @@ namespace game
     template <std::size_t MAX_HISTORY_SIZE = max_block_history_size>
     class BlockHistory
     {
+    public:
         static constexpr std::size_t history_data_unit_size = 8;
 
-    public:
         BlockHistory()
         {
             static_assert(sizeof(BlockHistoryRecord) == history_data_unit_size);
@@ -48,22 +48,28 @@ namespace game
             return std::min(MAX_HISTORY_SIZE, _size.load(std::memory_order_relaxed));
         }
 
-        void reset()
+        void reset(bool delete_data = true)
         {
-            if (not data_ownership_moved && _data) {
+            if (delete_data && _data) {
                 delete[] _data.load(std::memory_order_relaxed);
             }
-            data_ownership_moved = false;
 
             _data.store(new std::byte[MAX_HISTORY_SIZE * history_data_unit_size], std::memory_order_relaxed);
             _size.store(0, std::memory_order_release);
         }
 
-        BlockHistoryRecord& get_record(std::byte* data, std::size_t index)
+        static BlockHistoryRecord& get_record(std::byte* data, std::size_t index)
         {
             return *reinterpret_cast<BlockHistoryRecord*>(
                 &data[index * history_data_unit_size]
             );
+        }
+
+        static const BlockHistoryRecord& get_record(const std::byte* data, std::size_t index)
+        {
+            return *reinterpret_cast<const BlockHistoryRecord*>(
+                &data[index * history_data_unit_size]
+                );
         }
 
         BlockHistoryRecord& get_record(std::size_t index)
@@ -99,18 +105,17 @@ namespace game
 
         std::size_t fetch_serialized_data(std::unique_ptr<std::byte[]>& history_data)
         {
-            if (size()) {
-                data_ownership_moved = true;
+            if (auto history_size = size()) {
                 history_data.reset(_data.load(std::memory_order_relaxed));
+                reset(false);
+                return history_size * history_data_unit_size;
             }
-            return size() * history_data_unit_size;
+            return 0;
         }
 
 
     private:
         std::atomic<std::size_t> _size{ 0 };
-       
-        bool data_ownership_moved = false;
         std::atomic<std::byte*> _data{ nullptr };
     };
 }

@@ -192,20 +192,17 @@ namespace game
                 + _metadata.width() * _metadata.length() * _byteswap_ushort(y);
     }
 
-    void World::commit_block_changes(game::BlockHistory<>& block_history)
+    void World::commit_block_changes(const std::byte* block_history_data, std::size_t data_size)
     {
-        if (auto history_size = block_history.size()) {
-            auto block_array = block_mapping.data();
+        auto history_size = data_size / game::BlockHistory<>::history_data_unit_size;
+        auto block_array = block_mapping.data();
+        
+        for (std::size_t index = 0; index < history_size; index++) {
+            auto& record = game::BlockHistory<>::get_record(block_history_data, index);
+            std::size_t block_map_index = coordinate_to_block_map_index(record.x, record.y, record.z);
 
-            for (std::size_t index = 0; index < history_size; index++) {
-                auto& record = block_history.get_record(index);
-                std::size_t block_map_index = coordinate_to_block_map_index(record.x, record.y, record.z);
-
-                if (block_map_index < _metadata.volume())
-                    block_array[block_map_index] = record.block_id;
-            }
-
-            block_history.reset();
+            if (block_map_index < _metadata.volume())
+                block_array[block_map_index] = record.block_id;
         }
     }
 
@@ -213,11 +210,12 @@ namespace game
     {
         auto& block_history = get_outbound_block_history();
 
-        // send block changes to players.
-        
+        // serialize and fetch block histories.
         std::unique_ptr<std::byte[]> block_history_data;
-
         if (std::size_t data_size = block_history.fetch_serialized_data(block_history_data)) {
+            commit_block_changes(block_history_data.get(), data_size);
+
+            // send block changes to players.
             multicast_manager.set_multicast_data(
                 net::MuticastTag::Sync_Block_Data,
                 std::move(block_history_data),
@@ -237,9 +235,6 @@ namespace game
                     // todo: send error message
                 }
             }
-
-            // apply changes to the global block data table.
-            commit_block_changes(block_history);
         }
         
         // submit level data to handshaked players.

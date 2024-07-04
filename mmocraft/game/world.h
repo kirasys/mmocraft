@@ -56,7 +56,7 @@ namespace game
         bool load_filesystem_world(std::string_view);
 
     private:
-        void commit_block_changes(game::BlockHistory<>& block_history);
+        void commit_block_changes(const std::byte* block_history_data, std::size_t);
 
         void load_metadata();
 
