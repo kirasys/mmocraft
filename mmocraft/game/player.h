@@ -27,7 +27,9 @@ namespace game
 
     enum PlayerState
     {
-        Disconnected,
+        Disconnect_Completed,
+
+        Disconnect_Wait,
 
         Initialized,
 

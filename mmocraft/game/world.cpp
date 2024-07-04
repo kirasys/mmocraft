@@ -305,9 +305,10 @@ namespace game
                 }
             }
             break;
-            case game::PlayerState::Disconnected:
+            case game::PlayerState::Disconnect_Wait:
             {
                 despawn_player_task.push(&player);
+                player.set_state(PlayerState::Disconnect_Completed);
             }
             break;
             }
