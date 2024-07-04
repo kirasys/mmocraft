@@ -46,7 +46,7 @@ namespace game
 
         void despawn_player(const std::vector<game::PlayerID>&);
 
-        void sync_block_data(const std::vector<game::Player*>&, game::BlockHistory<>&);
+        void sync_block(const std::vector<game::Player*>&, game::BlockHistory<>&);
 
         void sync_player_position();
 

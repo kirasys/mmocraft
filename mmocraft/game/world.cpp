@@ -29,7 +29,7 @@ namespace game
         , players(connection_env.size_of_max_connections())
         , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
         , despawn_player_task{ &World::despawn_player, this, despawn_player_task_interval }
-        , sync_block_task{ &World::sync_block_data, this, sync_block_data_task_interval }
+        , sync_block_task{ &World::sync_block, this, sync_block_data_task_interval }
         , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
     {
 
@@ -199,7 +199,7 @@ namespace game
         }
     }
 
-    void World::sync_block_data(const std::vector<game::Player*>& level_wait_players, game::BlockHistory<>& block_history)
+    void World::sync_block(const std::vector<game::Player*>& level_wait_players, game::BlockHistory<>& block_history)
     {
         // serialize and fetch block histories.
         std::unique_ptr<std::byte[]> block_history_data;
