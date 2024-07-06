@@ -51,4 +51,25 @@ namespace database
 
         return false;
     }
+
+    PlayerUpdateSQL::PlayerUpdateSQL(SQLHDBC a_connection_handle)
+        : SQLStatement{ a_connection_handle }
+    {
+        this->prepare(sql_update_player_by_id);
+
+        // bind input parameters.
+        this->inbound_uint64_parameter(1, latest_pos.raw);
+        this->inbound_uint64_parameter(2, spawn_pos.raw);
+        this->inbound_int32_parameter(3, player_id);
+    }
+
+    bool PlayerUpdateSQL::update(const game::Player& player)
+    {
+        // set input parameters.
+        latest_pos = player.last_position();
+        spawn_pos = player.spawn_position();
+        player_id = player.identity();
+
+        return this->execute();
+    }
 }

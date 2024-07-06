@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+
+#include "database/database_core.h"
 #include "game/block.h"
 #include "game/player.h"
 #include "game/block_history.h"
@@ -34,7 +36,7 @@ namespace game
     class World final : util::NonCopyable, util::NonMovable
     {
     public:
-        World(net::ConnectionEnvironment&);
+        World(net::ConnectionEnvironment&, database::DatabaseCore&);
 
         game::Player* add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username);
 
@@ -43,6 +45,8 @@ namespace game
         void process_level_wait_player(const std::vector<game::Player*>&);
 
         void spawn_player(const std::vector<game::Player*>&);
+
+        void disconnect_player(const std::vector<game::Player*>&);
 
         void despawn_player(const std::vector<game::Player*>&);
 
@@ -66,18 +70,20 @@ namespace game
         std::size_t coordinate_to_block_map_index(int x, int y, int z);
 
         net::ConnectionEnvironment& connection_env;
+        database::DatabaseCore& database_core;
+
         net::MulticastManager multicast_manager;
 
         std::vector<std::unique_ptr<game::Player>> players;
 
         game::WorldPlayerTask spawn_player_task;
-        game::WorldPlayerTask despawn_player_task;
+        game::WorldPlayerTask disconnect_player_task;
         game::BlockSyncTask sync_block_task;
         io::SimpleTask<game::World> sync_player_position_task;
 
         io::Task* world_tasks[4] = {
             &spawn_player_task,
-            &despawn_player_task,
+            &disconnect_player_task,
             &sync_block_task,
             &sync_player_position_task,
         };

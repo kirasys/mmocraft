@@ -103,6 +103,12 @@ namespace game
             diff.view.pitch = view.pitch - rhs.view.pitch;
             return diff;
         }
+
+        PlayerPosition& operator=(const PlayerPosition& rhs)
+        {
+            raw = rhs.raw;
+            return *this;
+        }
     };
 
     class Player : util::NonCopyable

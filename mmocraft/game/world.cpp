@@ -6,7 +6,7 @@
 #include <cstring>
 #include <iostream>
 
-
+#include "database/query.h"
 #include "net/packet.h"
 #include "net/connection.h"
 #include "net/connection_environment.h"
@@ -23,12 +23,13 @@ namespace fs = std::filesystem;
 
 namespace game
 {
-    World::World(net::ConnectionEnvironment& a_connection_env)
+    World::World(net::ConnectionEnvironment& a_connection_env, database::DatabaseCore& db_core)
         : connection_env{ a_connection_env }
+        , database_core{ db_core }
         , multicast_manager{ a_connection_env }
         , players(connection_env.size_of_max_connections())
         , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
-        , despawn_player_task{ &World::despawn_player, this, despawn_player_task_interval }
+        , disconnect_player_task{ &World::disconnect_player, this, despawn_player_task_interval }
         , sync_block_task{ &World::sync_block, this, sync_block_data_task_interval }
         , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
     {
@@ -175,9 +176,19 @@ namespace game
                 multicast_manager.send(net::MuticastTag::Despawn_Player, conn);
             }
         }
+    }
 
-        // disconnecting despawned players.
-        for (auto player : despawn_wait_players) {
+    void World::disconnect_player(const std::vector<game::Player*>& disconnect_wait_players)
+    {
+        despawn_player(disconnect_wait_players);
+
+        // Update player game data then set offline.
+        database::PlayerUpdateSQL player_update_sql{ database_core.get_connection_handle() };
+
+        for (auto player : disconnect_wait_players) {
+            if (not player_update_sql.update(*player))
+                CONSOLE_LOG(error) << "Fail to update player data.";
+
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
                 conn->set_offline();
             }
@@ -307,7 +318,7 @@ namespace game
             break;
             case game::PlayerState::Disconnect_Wait:
             {
-                despawn_player_task.push(&player);
+                disconnect_player_task.push(&player);
                 player.set_state(PlayerState::Disconnect_Completed);
             }
             break;

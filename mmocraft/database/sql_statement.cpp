@@ -66,12 +66,63 @@ namespace database
         return true;
     }
 
-    bool SQLStatement::inbound_integer_parameter(SQLUSMALLINT parameter_number, SQLINTEGER& value)
+    bool SQLStatement::inbound_int32_parameter(SQLUSMALLINT parameter_number, SQLINTEGER& value)
     {
         auto ret = ::SQLBindParameter(statement_handle,
             parameter_number,
             SQL_PARAM_INPUT,
             SQL_C_SLONG, SQL_INTEGER,
+            /*ColumnSize=*/ 0,
+            /*DecimalDigits=*/ 0,
+            /*ParameterValuePtr=*/ &value,
+            /*BufferLength=*/ 0,
+            /*StrLen_or_IndPtr=*/ NULL);
+
+        CHECK_DB_STRONG_SUCCESS(ret);
+
+        return true;
+    }
+
+    bool SQLStatement::inbound_int64_parameter(SQLUSMALLINT parameter_number, SQLBIGINT& value)
+    {
+        auto ret = ::SQLBindParameter(statement_handle,
+            parameter_number,
+            SQL_PARAM_INPUT,
+            SQL_C_SBIGINT, SQL_BIGINT,
+            /*ColumnSize=*/ 0,
+            /*DecimalDigits=*/ 0,
+            /*ParameterValuePtr=*/ &value,
+            /*BufferLength=*/ 0,
+            /*StrLen_or_IndPtr=*/ NULL);
+
+        CHECK_DB_STRONG_SUCCESS(ret);
+
+        return true;
+    }
+
+    bool SQLStatement::inbound_uint32_parameter(SQLUSMALLINT parameter_number, SQLUINTEGER& value)
+    {
+        auto ret = ::SQLBindParameter(statement_handle,
+            parameter_number,
+            SQL_PARAM_INPUT,
+            SQL_C_ULONG, SQL_INTEGER,
+            /*ColumnSize=*/ 0,
+            /*DecimalDigits=*/ 0,
+            /*ParameterValuePtr=*/ &value,
+            /*BufferLength=*/ 0,
+            /*StrLen_or_IndPtr=*/ NULL);
+
+        CHECK_DB_STRONG_SUCCESS(ret);
+
+        return true;
+    }
+
+    bool SQLStatement::inbound_uint64_parameter(SQLUSMALLINT parameter_number, SQLUBIGINT& value)
+    {
+        auto ret = ::SQLBindParameter(statement_handle,
+            parameter_number,
+            SQL_PARAM_INPUT,
+            SQL_C_UBIGINT, SQL_BIGINT,
             /*ColumnSize=*/ 0,
             /*DecimalDigits=*/ 0,
             /*ParameterValuePtr=*/ &value,

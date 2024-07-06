@@ -34,7 +34,13 @@ namespace database
 
         void close();
 
-        bool inbound_integer_parameter(SQLUSMALLINT parameter_number, SQLINTEGER&);
+        bool inbound_int32_parameter(SQLUSMALLINT parameter_number, SQLINTEGER&);
+
+        bool inbound_int64_parameter(SQLUSMALLINT parameter_number, SQLBIGINT&);
+
+        bool inbound_uint32_parameter(SQLUSMALLINT parameter_number, SQLUINTEGER&);
+
+        bool inbound_uint64_parameter(SQLUSMALLINT parameter_number, SQLUBIGINT&);
 
         bool inbound_chars_parameter(SQLUSMALLINT parameter_number, const char*, SQLLEN, SQLLEN&);
 

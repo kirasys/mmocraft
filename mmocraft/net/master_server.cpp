@@ -16,7 +16,7 @@ namespace net
         , io_service { a_io_service }
         , server_core{ *this, connection_env, io_service }
         , database_core{ }
-        , world{ connection_env }
+        , world{ connection_env, database_core }
         
         , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this, user_authentication_task_interval }
         , deferred_chat_message_packet_task{ &MasterServer::handle_deferred_chat_message_packet, this, chat_message_task_interval }
@@ -148,6 +148,11 @@ namespace net
     {
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
+
+        if (not player_login.is_valid() || not player_search.is_valid()) {
+            CONSOLE_LOG(error) << "Fail to allocate sql statement handles.";
+            return;
+        }
 
         for (auto packet = packet_head; packet; packet = packet->next) {
             auto player_type = game::PlayerType::INVALID;
