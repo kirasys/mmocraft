@@ -7,7 +7,7 @@ namespace database
 {
     constexpr const char* sql_select_player_by_username_and_password = "SELECT COUNT(*) FROM player WHERE username = ? AND password = dbo.GetPasswordHash(?)";
     constexpr const char* sql_select_player_by_username = "SELECT id FROM player WHERE username = ?";
-    constexpr const char* sql_update_player_by_id = "UPDATE player SET latest_position = ?, spawn_position = ? WHERE id = ?";
+    constexpr const char* sql_update_player_game_data = "UPDATE player_game_data SET latest_position = ?, spawn_position = ? WHERE player_id = ?";
 
     class PlayerLoginSQL : public SQLStatement
     {

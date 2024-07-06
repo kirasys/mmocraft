@@ -55,7 +55,7 @@ namespace database
     PlayerUpdateSQL::PlayerUpdateSQL(SQLHDBC a_connection_handle)
         : SQLStatement{ a_connection_handle }
     {
-        this->prepare(sql_update_player_by_id);
+        this->prepare(sql_update_player_game_data);
 
         // bind input parameters.
         this->inbound_uint64_parameter(1, latest_pos.raw);
