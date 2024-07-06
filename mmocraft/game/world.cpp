@@ -41,9 +41,9 @@ namespace game
                             game::PlayerType player_type,
                             const char* username)
     {
-        bool is_already_logged_in = std::any_of(players.begin(), players.end(),
+        bool is_already_logged_in = player_type == game::PlayerType::AUTHENTICATED_USER && std::any_of(players.begin(), players.end(),
             [player_identity](std::unique_ptr<game::Player>& player) {
-                return player_identity && player && player->identity() == player_identity;
+                return player && player->identity() == player_identity;
             }
         );
 
