@@ -25,7 +25,7 @@ namespace net
         connection_env_task.schedule(
             util::TaskTag::CLEAN_CONNECTION,
             &ConnectionEnvironment::cleanup_expired_connection,
-            util::MilliSecond(1000));
+            util::MilliSecond(2000));
 
         _state = ServerCore::State::Initialized;
     }
