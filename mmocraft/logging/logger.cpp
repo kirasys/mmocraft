@@ -114,7 +114,8 @@ namespace logging
 
     void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code)
     {
-        std::cout << "error_code: " << error_code << '\n';
+        CONSOLE_LOG(error) << "SQL error_code: " << error_code;
+
         if (error_code == SQL_SUCCESS_WITH_INFO || error_code == SQL_ERROR) {
             SQLINTEGER native_error_code;
             WCHAR error_message[1024];

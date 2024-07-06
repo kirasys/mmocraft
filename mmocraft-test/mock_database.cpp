@@ -62,7 +62,7 @@ namespace database
         return true;
     }
 
-    bool SQLStatement::inbound_integer_parameter(SQLUSMALLINT parameter_number, SQLINTEGER& value)
+    bool SQLStatement::inbound_int32_parameter(SQLUSMALLINT parameter_number, SQLINTEGER& value)
     {
         return true;
     }
