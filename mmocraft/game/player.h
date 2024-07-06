@@ -177,6 +177,11 @@ namespace game
             _latest_pos.raw = pos.raw;
         }
 
+        void set_spawn_position(PlayerPosition pos)
+        {
+            _spawn_pos.raw = pos.raw;
+        }
+
         void set_default_spawn_coordinate(int x, int y, int z)
         {
             if (not _spawn_pos.raw_coordinate())

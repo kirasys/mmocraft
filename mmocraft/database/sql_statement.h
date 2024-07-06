@@ -46,9 +46,13 @@ namespace database
 
         bool inbound_null_terminated_string_parameter(SQLUSMALLINT parameter_number, const char*, SQLLEN);
 
-        bool outbound_integer_column(SQLUSMALLINT column_number, SQLINTEGER&);
+        bool outbound_int32_column(SQLUSMALLINT column_number, SQLINTEGER&);
 
-        bool outbound_unsigned_integer_column(SQLUSMALLINT column_number, SQLUINTEGER&);
+        bool outbound_int64_column(SQLUSMALLINT column_number, SQLBIGINT&);
+
+        bool outbound_uint32_column(SQLUSMALLINT column_number, SQLUINTEGER&);
+
+        bool outbound_uint64_column(SQLUSMALLINT column_number, SQLUBIGINT&);
 
         bool prepare(std::string_view query);
 

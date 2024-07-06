@@ -148,6 +148,7 @@ namespace net
     {
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
         database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
+        database::PlayerDataLoadSQL player_data_load{ database_core.get_connection_handle() };
 
         if (not player_login.is_valid() || not player_search.is_valid()) {
             CONSOLE_LOG(error) << "Fail to allocate sql statement handles.";
@@ -183,6 +184,9 @@ namespace net
                     conn->disconnect_with_message(error::PACKET_RESULT_ALREADY_LOGIN);
                     continue;
                 }
+
+                if (player_type >= game::PlayerType::AUTHENTICATED_USER)
+                    player_data_load.load(*player);
 
                 conn->on_handshake_success(player);
             }

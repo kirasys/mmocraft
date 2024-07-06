@@ -168,16 +168,30 @@ namespace database
         return true;
     }
 
-    bool SQLStatement::outbound_integer_column(SQLUSMALLINT column_number, SQLINTEGER& value)
+    bool SQLStatement::outbound_int32_column(SQLUSMALLINT column_number, SQLINTEGER& value)
     {
         auto ret = ::SQLBindCol(statement_handle, column_number, SQL_C_SLONG, &value, 0, NULL);
         CHECK_DB_STRONG_SUCCESS(ret);
         return true;
     }
 
-    bool SQLStatement::outbound_unsigned_integer_column(SQLUSMALLINT column_number, SQLUINTEGER& value)
+    bool SQLStatement::outbound_int64_column(SQLUSMALLINT column_number, SQLBIGINT& value)
+    {
+        auto ret = ::SQLBindCol(statement_handle, column_number, SQL_C_SBIGINT, &value, 0, NULL);
+        CHECK_DB_STRONG_SUCCESS(ret);
+        return true;
+    }
+
+    bool SQLStatement::outbound_uint32_column(SQLUSMALLINT column_number, SQLUINTEGER& value)
     {
         auto ret = ::SQLBindCol(statement_handle, column_number, SQL_C_ULONG, &value, 0, NULL);
+        CHECK_DB_STRONG_SUCCESS(ret);
+        return true;
+    }
+
+    bool SQLStatement::outbound_uint64_column(SQLUSMALLINT column_number, SQLUBIGINT& value)
+    {
+        auto ret = ::SQLBindCol(statement_handle, column_number, SQL_C_UBIGINT, &value, 0, NULL);
         CHECK_DB_STRONG_SUCCESS(ret);
         return true;
     }
