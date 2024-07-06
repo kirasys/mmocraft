@@ -1,0 +1,26 @@
+{
+ "server": {
+  "ip": "127.0.0.1",
+  "port": 12345,
+  "max_player": 1000,
+  "server_name": "Massive Minecraft Classic Server",
+  "motd": "welcome to mmocraft server."
+ },
+ "world": {
+  "width": 256,
+  "height": 256,
+  "length": 256,
+  "save_dir": "world\\"
+ },
+ "database": {
+  "driver_name": "ODBC Driver 17 for SQL Server",
+  "server_address": "",
+  "database_name": "mmocraft",
+  "userid": "mmocraft_login",
+  "password": "12341234"
+ },
+ "log": {
+  "log_file_path": "server.log"
+ }
+}
+
