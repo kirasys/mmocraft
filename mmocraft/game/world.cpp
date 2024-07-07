@@ -186,7 +186,7 @@ namespace game
         database::PlayerUpdateSQL player_update_sql{ database_core.get_connection_handle() };
 
         for (auto player : disconnect_wait_players) {
-            if (not player_update_sql.update(*player))
+            if (player->player_type() >= PlayerType::AUTHENTICATED_USER && not player_update_sql.update(*player))
                 CONSOLE_LOG(error) << "Fail to update player data.";
 
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
