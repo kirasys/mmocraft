@@ -6,6 +6,7 @@
 #include <cassert>
 #include <string_view>
 
+#include "net/packet_id.h"
 #include "io/io_event.h"
 #include "logging/error.h"
 #include "game/player.h"
@@ -26,79 +27,32 @@
         return static_cast<const packet_type*>(packet);		 \
     }
 
+// TODO: turn to inline function.
+#define PARSE_BYTE_FIELD(buf_start, buf_end, out) \
+        out = *reinterpret_cast<decltype(out)*>(buf_start); \
+        buf_start += sizeof(decltype(out));
+
+#define PARSE_SHORT_FIELD(buf_start, buf_end, out) \
+        out = _byteswap_ushort(*reinterpret_cast<decltype(out)*>(buf_start)); \
+        buf_start += sizeof(decltype(out));
+
+#define PARSE_INT_FIELD(buf_start, buf_end, out) \
+        out = _byteswap_ulong(*reinterpret_cast<decltype(out)*>(buf_start)); \
+        buf_start += sizeof(decltype(out));
+
+#define PARSE_STRING_FIELD(buf_start, buf_end, out) \
+        { \
+            std::uint16_t padding_size = 0; \
+            for (;padding_size < 64 && buf_start[63-padding_size] == std::byte(' '); padding_size++) \
+                buf_start[63-padding_size] = std::byte(0); \
+            (out).size = 64 - padding_size; \
+        } \
+        (out).data = reinterpret_cast<const char*>(buf_start); \
+        buf_start += 64; \
+        *(buf_start - 1) = std::byte(0); \
+
 namespace net
 {
-    enum PacketID
-    {
-        // Client <-> Server
-        Handshake = 0,
-        SetPlayerPosition = 8,
-        ChatMessage = 0xD,
-
-        // Client -> Server
-        SetBlockClient = 5,
-
-        // Server -> Client
-        Ping = 1,
-        LevelInitialize = 2,
-        LevelDataChunk = 3,
-        LevelFinalize = 4,
-        SetBlockServer = 6,
-        SpawnPlayer = 7,
-        UpdatePlayerPosition = 9,
-        UpdatePlayerCoordinate = 0xA,
-        UpdatePlayerOrientation = 0xB,
-        DespawnPlayer = 0xC,
-        DisconnectPlayer = 0xE,
-        UpdateUserType = 0xF,
-
-        // CPE
-        ExtInfo = 0x10,
-        ExtEntry = 0x11,
-        ClickDistance = 0x12,
-        CustomBlocks = 0x13,
-        HeldBlock = 0x14,
-        TextHotKey = 0x15,
-        ExtAddPlayerName = 0x16,
-        ExtAddEntity2 = 0x21,
-        ExtRemovePlayerName = 0x18,
-        EvnSetColor = 0x19,
-        MakeSelection = 0x1A,
-        RemoveSelection = 0x1B,
-        BlockPermissions = 0x1C,
-        ChangeModel = 0x1D,
-        EnvSetWeatherType = 0x1F,
-        HackControl = 0x20,
-        PlayerClicked = 0x22,
-        DefineBlock = 0x23,
-        RemoveBlockDefinition = 0x24,
-        DefineBlockExt = 0x25,
-        BulkBlockUpdate = 0x26,
-        SetTextColor = 0x27,
-        SetMapEnvUrl = 0x28,
-        SetMapEnvProperty = 0x29,
-        SetEntityProperty = 0x2A,
-        TwoWayPing = 0x2B,
-        SetInventoryOrder = 0x2C,
-        SetHotbar = 0x2D,
-        SetSpawnpoint = 0x2E,
-        VelocityControl = 0x2F,
-        DefineEffect = 0x30,
-        SpawnEffect = 0x31,
-        DefineModel = 0x32,
-        DefineModelPart = 0x33,
-        UndefineModel = 0x34,
-        ExtEntityTeleport = 0x36,
-
-        /* Custom Protocol */
-        SetPlayerID = 0x37,
-
-        INVALID = 0xFF,
-        
-        // Indicate size of the enum class.
-        SIZE,
-    };
-
     enum UserType
     {
         NORMAL = 0,
@@ -112,6 +66,7 @@ namespace net
         using FByte = std::int8_t;
         using Short = std::int16_t;
         using FShort = std::uint16_t;
+        using Int = std::int32_t;
 
         struct String
         {
@@ -148,16 +103,17 @@ namespace net
             PacketFieldType::String motd;
         };
         union {
-            PacketFieldType::Byte unused;
+            PacketFieldType::Byte cpe_magic;
             PacketFieldType::Byte user_type;
         };
 
+        static constexpr PacketID packet_id = PacketID::Handshake;
         constexpr static std::size_t packet_size = 131;
 
         DECLARE_PACKET_READ_METHOD(PacketHandshake);
 
         PacketHandshake(std::string_view a_server_name, std::string_view a_motd, net::UserType a_user_type)
-            : Packet{ PacketID::Handshake }
+            : Packet{ packet_id }
             , server_name{ a_server_name.data(), a_server_name.size() }
             , motd{ a_motd.data(), a_motd.size() }
             , protocol_version{ 7 }
@@ -257,11 +213,12 @@ namespace net
 
     struct PacketSpawnPlayer : Packet
     {
-        PacketSpawnPlayer() 
-            : Packet{ PacketID::SpawnPlayer }
-        { }
+        static constexpr PacketID packet_id = PacketID::SpawnPlayer;
+        static constexpr std::size_t packet_size = 74;
 
-        constexpr static std::size_t packet_size = 74;
+        PacketSpawnPlayer()
+            : Packet{ packet_id }
+        { }
 
         static std::size_t serialize(const std::vector<game::Player*>&, const std::vector<game::Player*>&, std::unique_ptr<std::byte[]>&);
 
@@ -290,10 +247,11 @@ namespace net
     {
         PacketFieldType::String reason;
 
+        static constexpr PacketID packet_id = PacketID::DisconnectPlayer;
         constexpr static std::size_t packet_size = 65;
 
         PacketDisconnectPlayer(std::string_view a_reason)
-            : Packet{ PacketID::DisconnectPlayer }
+            : Packet{ packet_id }
             , reason{ a_reason.data(), a_reason.size() }
         { }
 
@@ -323,13 +281,32 @@ namespace net
 
         static auto parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*) -> std::pair<std::uint32_t, error::ResultCode>;
 
-        static void write_byte(std::byte*&, PacketFieldType::Byte);
+        static inline void write_byte(std::byte*& buf, PacketFieldType::Byte value)
+        {
+            *buf++ = std::byte(value);
+        }
 
-        static void write_short(std::byte*&, PacketFieldType::Short);
+        static inline void write_short(std::byte*& buf, PacketFieldType::Short value)
+        {
+            *reinterpret_cast<decltype(value)*>(buf) = _byteswap_ushort(value);
+            buf += sizeof(value);
+        }
 
-        static void write_uint64(std::byte*& buf, std::uint64_t value);
+        static inline void write_int(std::byte*& buf, PacketFieldType::Int value)
+        {
+            *reinterpret_cast<decltype(value)*>(buf) = _byteswap_ulong(value);
+            buf += sizeof(value);
+        }
+
+        static inline void write_uint64(std::byte*& buf, std::uint64_t value)
+        {
+            *reinterpret_cast<decltype(value)*>(buf) = _byteswap_uint64(value);
+            buf += sizeof(value);
+        }
 
         static void write_string(std::byte*&, const PacketFieldType::String&);
+
+        static void write_string(std::byte*& buf, std::string_view str);
 
         static void write_string(std::byte*&, const char*);
 

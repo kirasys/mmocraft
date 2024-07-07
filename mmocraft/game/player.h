@@ -1,7 +1,9 @@
 #pragma once
 
+#include <bitset>
 #include <string.h>
 
+#include "net/packet_id.h"
 #include "net/connection_key.h"
 #include "util/common_util.h"
 #include "util/math.h"
@@ -224,10 +226,33 @@ namespace game
             _last_ping_time = util::current_monotonic_tick();
         }
 
+        void set_extension_count(unsigned count)
+        {
+            pending_extension_count = count;
+        }
+
+        auto decrease_pending_extension_count()
+        {
+            return --pending_extension_count;
+        }
+
+        void register_extension(net::PacketID ext)
+        {
+            supported_extensions.set(ext);
+        }
+
+        bool is_supported_extension(net::PacketID ext)
+        {
+            return supported_extensions.test(ext);
+        }
+
     private:
         PlayerState _state = PlayerState::Initialized;
 
         net::ConnectionKey _connection_key;
+        
+        unsigned pending_extension_count = 0;
+        std::bitset<64> supported_extensions;
 
         // it's used to verify that no same (identity) users already logged in.
         // same as player row number of the database's table (so always greater than 0)

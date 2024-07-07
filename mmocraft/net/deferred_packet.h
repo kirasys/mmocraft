@@ -25,6 +25,7 @@ namespace net
     {
         DeferredPacket<PacketHandshake>(net::ConnectionKey key, const PacketHandshake& src_packet)
             : connection_key{ key }
+            , cpe_support{ src_packet.cpe_magic == 0x42 }
         {
             ::strcpy_s(username, src_packet.username.data);
             ::strcpy_s(password, src_packet.password.data);
@@ -34,6 +35,7 @@ namespace net
         net::ConnectionKey connection_key;
         char username[net::PacketFieldConstraint::max_username_length + 1];
         char password[net::PacketFieldConstraint::max_password_length + 1];
+        bool cpe_support;
     };
 
     template <>

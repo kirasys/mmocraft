@@ -12,7 +12,7 @@
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "net/socket.h"
-#include "net/packet.h"
+#include "net/packet_extension.h"
 #include "net/connection_key.h"
 #include "win/smart_handle.h"
 #include "util/common_util.h"
@@ -66,15 +66,11 @@ namespace net
 
         bool send_ping() const;
 
-        bool send_packet(const net::PacketHandshake&) const;
-
-        bool send_packet(const net::PacketLevelInit&) const;
-
-        bool send_packet(const net::PacketSetPlayerID&) const;
-
-        bool send_packet(const net::PacketSetBlockClient&) const;
-
-        bool send_packet(const net::PacketSetBlockServer&) const;
+        template <typename PacketType>
+        bool send_packet(const PacketType& packet) const
+        {
+            return packet.serialize(*io_send_event.data);
+        }
 
         static void flush_send(net::ConnectionEnvironment&);
 
@@ -160,7 +156,14 @@ namespace net
 
         std::size_t process_packets(std::byte*, std::byte*);
 
-        void on_handshake_success(game::Player*);
+        void associate_player(game::Player* player)
+        {
+            _player = player;
+        }
+
+        void on_handshake_success();
+
+        void send_supported_cpe_list();
 
         /**
          *  Event Handler Interface

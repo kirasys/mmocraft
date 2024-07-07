@@ -37,6 +37,10 @@ namespace net
             return handle_player_position_packet(conn, *static_cast<PacketSetPlayerPosition*>(packet));
         case PacketID::ChatMessage:
             return handle_chat_message_packet(conn, *static_cast<PacketChatMessage*>(packet));
+        case PacketID::ExtInfo:
+            return handle_ext_info_packet(conn, *static_cast<PacketExtInfo*>(packet));
+        case PacketID::ExtEntry:
+            return handle_ext_entry_packet(conn, *static_cast<PacketExtEntry*>(packet));
         default:
             CONSOLE_LOG(error) << "Unimplemented packet id: " << int(packet->id);
             return error::PACKET_UNIMPLEMENTED_ID;
@@ -89,6 +93,29 @@ namespace net
             return error::PACKET_HANDLE_DEFERRED;
         }
         return error::PACKET_CHAT_MESSAGE_HANDLE_ERROR;
+    }
+
+    error::ResultCode MasterServer::handle_ext_info_packet(net::Connection& conn, net::PacketExtInfo& packet)
+    {
+        if (auto player = conn.get_connected_player()) {
+            player->set_extension_count(packet.extension_count);
+        }
+
+        return error::SUCCESS;
+    }
+
+    error::ResultCode MasterServer::handle_ext_entry_packet(net::Connection& conn, net::PacketExtEntry& packet)
+    {
+        if (auto player = conn.get_connected_player()) {
+            std::string_view cpe_name = { packet.extenstion_name.data, packet.extenstion_name.size };
+            if (net::is_cpe_support(cpe_name, packet.version))
+                player->register_extension(net::cpe_index_of(cpe_name));
+
+            if (player->decrease_pending_extension_count() == 0)
+                conn.on_handshake_success();
+        }
+
+        return error::SUCCESS;
     }
 
     void MasterServer::tick()
@@ -185,10 +212,15 @@ namespace net
                     continue;
                 }
 
+                conn->associate_player(player);
+
                 if (player_type >= game::PlayerType::AUTHENTICATED_USER)
                     player_data_load.load(*player);
 
-                conn->on_handshake_success(player);
+                if (packet->cpe_support)
+                    conn->send_supported_cpe_list();
+                else
+                    conn->on_handshake_success();
             }
         }
     }

@@ -4,27 +4,9 @@
 #include <array>
 #include <cstring>
 
+#include "net/packet_extension.h"
 #include "game/block.h"
 #include "game/player.h"
-
-#define PARSE_BYTE_FIELD(buf_start, buf_end, out) \
-        out = *reinterpret_cast<decltype(out)*>(buf_start); \
-        buf_start += sizeof(decltype(out));
-
-#define PARSE_SHORT_FIELD(buf_start, buf_end, out) \
-        out = _byteswap_ushort(*reinterpret_cast<decltype(out)*>(buf_start)); \
-        buf_start += sizeof(decltype(out));
-
-#define PARSE_STRING_FIELD(buf_start, buf_end, out) \
-        { \
-            std::uint16_t padding_size = 0; \
-            for (;padding_size < 64 && buf_start[63-padding_size] == std::byte(' '); padding_size++) \
-                buf_start[63-padding_size] = std::byte(0); \
-            (out).size = 64 - padding_size; \
-        } \
-        (out).data = reinterpret_cast<const char*>(buf_start); \
-        buf_start += 64; \
-        *(buf_start - 1) = std::byte(0); \
 
 namespace
 {
@@ -43,6 +25,8 @@ namespace
         arr[PacketID::SetBlockClient] = { PacketSetBlockClient::parse, nullptr, PacketSetBlockClient::packet_size };
         arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::parse, nullptr,  PacketSetPlayerPosition::packet_size };
         arr[PacketID::ChatMessage] = { PacketChatMessage::parse, nullptr, PacketChatMessage::packet_size };
+        arr[PacketID::ExtInfo] = { PacketExtInfo::parse, nullptr, PacketExtInfo::packet_size };
+        arr[PacketID::ExtEntry] = { PacketExtEntry::parse, nullptr, PacketExtEntry::packet_size };
         return arr;
     }();
 }
@@ -77,23 +61,6 @@ namespace net
         return { std::uint32_t(protocol_db[packet_id].size), result }; // insufficient packet data.
     }
 
-    inline void PacketStructure::write_byte(std::byte* &buf, PacketFieldType::Byte value)
-    {
-        *buf++ = std::byte(value);
-    }
-
-    inline void PacketStructure::write_short(std::byte* &buf, PacketFieldType::Short value)
-    {
-        *reinterpret_cast<decltype(value)*>(buf) = _byteswap_ushort(value);
-        buf += sizeof(value);
-    }
-
-    inline void PacketStructure::write_uint64(std::byte*& buf, std::uint64_t value)
-    {
-        *reinterpret_cast<decltype(value)*>(buf) = _byteswap_uint64(value);
-        buf += sizeof(value);
-    }
-
     void PacketStructure::write_string(std::byte* &buf, const PacketFieldType::String& str)
     {
         std::memcpy(buf, str.data, str.size);
@@ -106,6 +73,13 @@ namespace net
         auto size = std::min(std::strlen(str), std::size_t(64));
         std::memcpy(buf, str, size);
         std::memset(buf + size, ' ', PacketFieldType::String::size_with_padding - size);
+        buf += PacketFieldType::String::size_with_padding;
+    }
+
+    void PacketStructure::write_string(std::byte*& buf, std::string_view str)
+    {
+        std::memcpy(buf, str.data(), str.size());
+        std::memset(buf + str.size(), ' ', PacketFieldType::String::size_with_padding - str.size());
         buf += PacketFieldType::String::size_with_padding;
     }
 
@@ -172,7 +146,7 @@ namespace net
         PARSE_BYTE_FIELD(buf_start, buf_end, packet->protocol_version);
         PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
         PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->unused);
+        PARSE_BYTE_FIELD(buf_start, buf_end, packet->cpe_magic);
     }
 
     void PacketPing::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)

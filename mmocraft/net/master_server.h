@@ -8,7 +8,7 @@
 #include "net/connection_environment.h"
 #include "net/deferred_packet.h"
 #include "net/server_core.h"
-#include "net/packet.h"
+#include "net/packet_extension.h"
 
 namespace net
 {
@@ -31,6 +31,10 @@ namespace net
         error::ResultCode handle_player_position_packet(net::Connection&, net::PacketSetPlayerPosition&);
 
         error::ResultCode handle_chat_message_packet(net::Connection&, net::PacketChatMessage&);
+
+        error::ResultCode handle_ext_info_packet(net::Connection&, net::PacketExtInfo&);
+
+        error::ResultCode handle_ext_entry_packet(net::Connection&, net::PacketExtEntry&);
 
         void tick();
 
