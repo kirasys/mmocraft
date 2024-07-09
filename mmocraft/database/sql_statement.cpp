@@ -66,6 +66,23 @@ namespace database
         return true;
     }
 
+    bool SQLStatement::inbound_bool_parameter(SQLUSMALLINT parameter_number, SQLCHAR& value)
+    {
+        auto ret = ::SQLBindParameter(statement_handle,
+            parameter_number,
+            SQL_PARAM_INPUT,
+            SQL_C_BIT, SQL_BIT,
+            /*ColumnSize=*/ 0,
+            /*DecimalDigits=*/ 0,
+            /*ParameterValuePtr=*/ &value,
+            /*BufferLength=*/ 0,
+            /*StrLen_or_IndPtr=*/ NULL);
+
+        CHECK_DB_STRONG_SUCCESS(ret);
+
+        return true;
+    }
+
     bool SQLStatement::inbound_int32_parameter(SQLUSMALLINT parameter_number, SQLINTEGER& value)
     {
         auto ret = ::SQLBindParameter(statement_handle,
@@ -165,6 +182,13 @@ namespace database
 
         CHECK_DB_STRONG_SUCCESS(ret);
 
+        return true;
+    }
+
+    bool SQLStatement::outbound_bool_column(SQLUSMALLINT column_number, SQLCHAR& value)
+    {
+        auto ret = ::SQLBindCol(statement_handle, column_number, SQL_C_BIT, &value, 0, NULL);
+        CHECK_DB_STRONG_SUCCESS(ret);
         return true;
     }
 

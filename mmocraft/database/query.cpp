@@ -37,7 +37,8 @@ namespace database
         this->inbound_null_terminated_string_parameter(1, _username, sizeof(_username));
 
         // bind output parameters.
-        this->outbound_uint32_column(1, player_index);
+        this->outbound_uint32_column(1, _player_index);
+        this->outbound_bool_column(2, _is_admin);
     }
 
     bool PlayerSearchSQL::search(const char* a_username)
@@ -96,9 +97,10 @@ namespace database
     bool PlayerUpdateSQL::update(const game::Player& player)
     {
         // set input parameters.
+        player_id = player.identity();
+
         latest_pos = player.last_position();
         spawn_pos = player.spawn_position();
-        player_id = player.identity();
 
         return this->execute();
     }

@@ -200,8 +200,8 @@ namespace net
                 player_type = game::PlayerType::GUEST;
             }
             else if (player_login.authenticate(packet->username, packet->password)) {
-                player_type = std::strcmp(packet->username, "admin")
-                    ? game::PlayerType::AUTHENTICATED_USER : game::PlayerType::ADMIN;
+                player_type = player_search.is_admin()
+                    ? game::PlayerType::ADMIN : game::PlayerType::AUTHENTICATED_USER;
             }
 
             // return handshake result to clients.
@@ -214,7 +214,7 @@ namespace net
 
                 auto player = world.add_player(
                     packet->connection_key,
-                    player_search.get_player_identity(),
+                    player_search.player_identity(),
                     player_type,
                     packet->username);
 

@@ -6,7 +6,7 @@
 namespace database
 {
     constexpr const char* sql_select_player_by_username_and_password = "SELECT COUNT(*) FROM player WHERE username = ? AND password = dbo.GetPasswordHash(?)";
-    constexpr const char* sql_select_player_by_username = "SELECT id FROM player WHERE username = ?";
+    constexpr const char* sql_select_player_by_username = "SELECT id, is_admin FROM player WHERE username = ?";
     constexpr const char* sql_select_player_game_data = "SELECT latest_position, spawn_position FROM player_game_data WHERE player_id = ?";
     constexpr const char* sql_update_player_game_data = "UPDATE player_game_data SET latest_position = ?, spawn_position = ? WHERE player_id = ?";
 
@@ -29,15 +29,21 @@ namespace database
 
         bool search(const char* username);
 
-        inline SQLUINTEGER get_player_identity() const
+        inline SQLUINTEGER player_identity() const
         {
-            return player_index;
+            return _player_index;
+        }
+
+        inline bool is_admin() const
+        {
+            return _is_admin == 1;
         }
 
     private:
         char _username[net::PacketFieldConstraint::max_username_length + 1];
 
-        SQLUINTEGER player_index = 0;
+        SQLUINTEGER _player_index = 0;
+        SQLCHAR _is_admin;
     };
 
     class PlayerDataLoadSQL : public SQLStatement
