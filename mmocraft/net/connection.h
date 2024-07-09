@@ -62,8 +62,6 @@ namespace net
 
         bool send_disconnect_message(std::string_view);
 
-        bool send_disconnect_message(error::ResultCode);
-
         bool send_ping() const;
 
         template <typename PacketType>
