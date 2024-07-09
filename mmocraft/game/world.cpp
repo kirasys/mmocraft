@@ -33,7 +33,7 @@ namespace game
         , sync_block_task{ &World::sync_block, this, sync_block_data_task_interval }
         , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
     {
-
+        player_lookup_table.reserve(connection_env.size_of_max_connections());
     }
 
     void World::broadcast_to_world_player(std::string_view message)
