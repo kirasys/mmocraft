@@ -28,7 +28,6 @@ namespace game
         : connection_env{ a_connection_env }
         , database_core{ db_core }
         , multicast_manager{ a_connection_env }
-        , players(connection_env.size_of_max_connections())
         , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
         , disconnect_player_task{ &World::disconnect_player, this, despawn_player_task_interval }
         , sync_block_task{ &World::sync_block, this, sync_block_data_task_interval }
@@ -365,7 +364,7 @@ namespace game
 
     game::Player* World::try_acquire_player(const char* username)
     {
-        std::shared_lock lock(player_table_mutex);
+        std::shared_lock lock(player_lookup_table_mutex);
         if (player_lookup_table.find(username) == player_lookup_table.end())
             return nullptr;
           

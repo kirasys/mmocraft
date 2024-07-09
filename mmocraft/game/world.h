@@ -68,19 +68,19 @@ namespace game
 
         bool is_already_exist_player(const char* username)
         {
-            std::shared_lock lock(player_table_mutex);
+            std::shared_lock lock(player_lookup_table_mutex);
             return player_lookup_table.find(username) != player_lookup_table.end();
         }
 
         void register_player(const char* username, net::ConnectionKey connection_key)
         {
-            std::unique_lock lock(player_table_mutex);
+            std::unique_lock lock(player_lookup_table_mutex);
             player_lookup_table[username] = connection_key;
         }
 
         void unregister_player(const char* username)
         {
-            std::unique_lock lock(player_table_mutex);
+            std::unique_lock lock(player_lookup_table_mutex);
             player_lookup_table.erase(username);
         }
 
@@ -98,8 +98,7 @@ namespace game
 
         net::MulticastManager multicast_manager;
 
-        std::vector<std::unique_ptr<game::Player>> players;
-        std::shared_mutex player_table_mutex;
+        std::shared_mutex player_lookup_table_mutex;
         std::unordered_map<std::string, net::ConnectionKey> player_lookup_table;
 
         game::WorldPlayerTask spawn_player_task;
