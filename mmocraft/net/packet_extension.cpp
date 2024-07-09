@@ -14,7 +14,7 @@ namespace
     };
 
     const std::unordered_map<std::string_view, CpeInfo> supported_cpe_map = {
-        {"MessageTypes", {net::PacketID::ChatMessage, 1}}
+        {"MessageTypes", {net::PacketID::ExtMessage, 1}}
     };
 }
 
@@ -71,5 +71,17 @@ namespace net
         }
         
         return true; // TODO: handle insuffient send buffer.
+    }
+
+    bool PacketExtMessage::serialize(io::IoEventData& event_data) const
+    {
+        std::byte buf[packet_size];
+
+        std::byte* buf_start = buf;
+        PacketStructure::write_byte(buf_start, packet_id);
+        PacketStructure::write_byte(buf_start, PacketFieldType::Byte(msg_type));
+        PacketStructure::write_string(buf_start, message);
+
+        return event_data.push(buf, sizeof(buf));
     }
 }

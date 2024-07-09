@@ -41,4 +41,33 @@ namespace net
 
         DECLARE_PACKET_READ_METHOD(PacketExtEntry);
     };
+
+    enum MessageType
+    {
+        Chat = 0,
+        Status1 = 1,
+        Status2 = 2,
+        Status3 = 3,
+        BottomRight1 = 11,
+        BottomRight2 = 12,
+        BottomRight3 = 13,
+        Announcement = 100,
+    };
+
+    struct PacketExtMessage : Packet
+    {
+        MessageType msg_type;
+        PacketFieldType::String message;
+
+        static constexpr PacketID packet_id = PacketID::ExtMessage;
+        static constexpr std::size_t packet_size = 66;
+
+        PacketExtMessage(MessageType type, std::string_view msg)
+            : Packet{ packet_id }
+            , msg_type{ type }
+            , message{ msg.data(), msg.size() }
+        { }
+
+        bool serialize(io::IoEventData&) const;
+    };
 }

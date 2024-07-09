@@ -7,6 +7,8 @@
 
 namespace game
 {
+    class World;
+
     class PlayerCommand
     {
     public:
@@ -14,7 +16,7 @@ namespace game
             : _player{ *player }
         { }
 
-        void execute(std::string_view);
+        void execute(game::World&, std::string_view);
 
         void set_response(const char*);
 
@@ -27,6 +29,8 @@ namespace game
         std::vector<std::string_view> get_lexical_tokens(std::string_view);
 
         void execute_set_spawn(const std::vector<std::string_view>&);
+
+        void execute_announcement(game::World&, const std::vector<std::string_view>&);
 
         game::Player& _player;
         char _response[64] = { 0 };

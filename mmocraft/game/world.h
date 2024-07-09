@@ -42,6 +42,8 @@ namespace game
 
         void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
 
+        void broadcast_to_world_player(std::string_view message);
+
         void process_level_wait_player(const std::vector<game::Player*>&);
 
         void spawn_player(const std::vector<game::Player*>&);

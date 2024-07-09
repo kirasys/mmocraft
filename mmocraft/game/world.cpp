@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "database/query.h"
-#include "net/packet.h"
+#include "net/packet_extension.h"
 #include "net/connection.h"
 #include "net/connection_environment.h"
 #include "game/world_generator.h"
@@ -61,6 +61,24 @@ namespace game
         }
 
         return player;
+    }
+
+    void World::broadcast_to_world_player(std::string_view message)
+    {
+        std::vector<game::Player*> world_players;
+        world_players.reserve(connection_env.size_of_max_connections());
+
+        connection_env.select_players([](const game::Player* player)
+            { return player->state() >= PlayerState::Spawned; },
+            world_players);
+
+        net::PacketExtMessage message_packet(net::MessageType::Announcement, message);
+
+        for (auto player : world_players) {
+            if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
+                conn->io()->send_packet(message_packet);
+            }
+        }
     }
 
     void World::multicast_to_world_player(net::MuticastTag tag, std::unique_ptr<std::byte[]>&& multicast_data, std::size_t data_size)

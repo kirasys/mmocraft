@@ -93,7 +93,7 @@ namespace net
 
             if (packet.message.data[0] == '/') { // if command message
                 game::PlayerCommand command(player);
-                command.execute({ packet.message.data, packet.message.size });
+                command.execute(world, { packet.message.data, packet.message.size });
 
                 net::PacketChatMessage msg_packet(command.get_response());
                 conn.io()->send_packet(msg_packet);

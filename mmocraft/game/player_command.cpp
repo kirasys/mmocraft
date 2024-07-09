@@ -5,6 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "game/world.h"
 #include "logging/logger.h"
 
 #define ERROR_COLOR "&c"
@@ -12,7 +13,7 @@
 
 namespace game
 {
-    void PlayerCommand::execute(std::string_view command)
+    void PlayerCommand::execute(game::World& world, std::string_view command)
     {
         try {
             auto tokens = get_lexical_tokens(command);
@@ -22,6 +23,8 @@ namespace game
             auto program = tokens[0];
             if (program == "/set_spawn")
                 execute_set_spawn(tokens);
+            else if (program == "/announcement")
+                execute_announcement(world, tokens);
             else
                 set_response(ERROR_COLOR "Unsupported command");
         }
@@ -43,6 +46,21 @@ namespace game
         _player.set_spawn_coordinate(x, y, z);
 
         set_response(SUCCESS_COLOR "Spawn point saved.");
+    }
+
+    void PlayerCommand::execute_announcement(game::World& world, const std::vector<std::string_view>& tokens)
+    {
+        if (tokens.size() != 2) {
+            set_response(ERROR_COLOR "Usage: /announcement MESSAGE");
+            return;
+        }
+
+        if (_player.player_type() != game::PlayerType::ADMIN) {
+            set_response(ERROR_COLOR "Permission denied");
+            return;
+        }
+
+        world.broadcast_to_world_player(tokens[1]);
     }
 
     std::vector<std::string_view> PlayerCommand::get_lexical_tokens(std::string_view command)
