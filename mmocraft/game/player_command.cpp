@@ -60,7 +60,7 @@ namespace game
             return;
         }
 
-        world.broadcast_to_world_player(tokens[1]);
+        world.broadcast_to_world_player(net::MessageType::Announcement, tokens[1]);
     }
 
     std::vector<std::string_view> PlayerCommand::get_lexical_tokens(std::string_view command)

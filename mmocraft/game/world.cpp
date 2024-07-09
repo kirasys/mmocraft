@@ -36,7 +36,7 @@ namespace game
         player_lookup_table.reserve(connection_env.size_of_max_connections());
     }
 
-    void World::broadcast_to_world_player(std::string_view message)
+    void World::broadcast_to_world_player(net::MessageType message_type, std::string_view message)
     {
         std::vector<game::Player*> world_players;
         world_players.reserve(connection_env.size_of_max_connections());
@@ -45,7 +45,7 @@ namespace game
             { return player->state() >= PlayerState::Spawned; },
             world_players);
 
-        net::PacketExtMessage message_packet(net::MessageType::Announcement, message);
+        net::PacketExtMessage message_packet(message_type, message);
 
         for (auto player : world_players) {
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
