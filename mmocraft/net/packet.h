@@ -27,30 +27,6 @@
         return static_cast<const packet_type*>(packet);		 \
     }
 
-// TODO: turn to inline function.
-#define PARSE_BYTE_FIELD(buf_start, buf_end, out) \
-        out = *reinterpret_cast<decltype(out)*>(buf_start); \
-        buf_start += sizeof(decltype(out));
-
-#define PARSE_SHORT_FIELD(buf_start, buf_end, out) \
-        out = _byteswap_ushort(*reinterpret_cast<decltype(out)*>(buf_start)); \
-        buf_start += sizeof(decltype(out));
-
-#define PARSE_INT_FIELD(buf_start, buf_end, out) \
-        out = _byteswap_ulong(*reinterpret_cast<decltype(out)*>(buf_start)); \
-        buf_start += sizeof(decltype(out));
-
-#define PARSE_STRING_FIELD(buf_start, buf_end, out) \
-        { \
-            std::uint16_t padding_size = 0; \
-            for (;padding_size < 64 && buf_start[63-padding_size] == std::byte(' '); padding_size++) \
-                buf_start[63-padding_size] = std::byte(0); \
-            (out).size = 64 - padding_size; \
-        } \
-        (out).data = reinterpret_cast<const char*>(buf_start); \
-        buf_start += 64; \
-        *(buf_start - 1) = std::byte(0); \
-
 namespace net
 {
     enum UserType
@@ -289,6 +265,36 @@ namespace net
         }
 
         static auto parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*) -> std::pair<std::uint32_t, error::ResultCode>;
+
+        static inline void read_scalar(std::byte*& buf, PacketFieldType::Byte &value)
+        {
+            value = *reinterpret_cast<PacketFieldType::Byte*>(buf++);
+        }
+
+        static inline void read_scalar(std::byte*& buf, PacketFieldType::Short& value)
+        {
+            value = _byteswap_ushort(*reinterpret_cast<PacketFieldType::Short*>(buf));
+            buf += sizeof(PacketFieldType::Short);
+        }
+
+        static inline void read_scalar(std::byte*& buf, PacketFieldType::Int& value)
+        {
+            value = _byteswap_ulong(*reinterpret_cast<PacketFieldType::Int*>(buf));
+            buf += sizeof(PacketFieldType::Int);
+        }
+
+        static void read_string(std::byte*& buf, PacketFieldType::String& value)
+        {
+            {
+                std::uint16_t padding_size = 0;
+                for (; padding_size < 64 && buf[63 - padding_size] == std::byte(' '); padding_size++)
+                    buf[63 - padding_size] = std::byte(0);
+                value.size = 64 - padding_size;
+            }
+            value.data = reinterpret_cast<const char*>(buf);
+            buf += 64;
+            * (buf - 1) = std::byte(0);
+        }
 
         static inline void write_byte(std::byte*& buf, PacketFieldType::Byte value)
         {

@@ -146,10 +146,10 @@ namespace net
     void PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->protocol_version);
-        PARSE_STRING_FIELD(buf_start, buf_end, packet->username);
-        PARSE_STRING_FIELD(buf_start, buf_end, packet->password);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->cpe_magic);
+        PacketStructure::read_scalar(buf_start, packet->protocol_version);
+        PacketStructure::read_string(buf_start, packet->username);
+        PacketStructure::read_string(buf_start, packet->password);
+        PacketStructure::read_scalar(buf_start, packet->cpe_magic);
     }
 
     void PacketPing::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
@@ -160,29 +160,29 @@ namespace net
     void PacketSetBlockClient::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->x);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->y);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->z);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->mode);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->block_id);
+        PacketStructure::read_scalar(buf_start, packet->x);
+        PacketStructure::read_scalar(buf_start, packet->y);
+        PacketStructure::read_scalar(buf_start, packet->z);
+        PacketStructure::read_scalar(buf_start, packet->mode);
+        PacketStructure::read_scalar(buf_start, packet->block_id);
     }
 
     void PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_id);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.x);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.y);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->player_pos.view.z);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.yaw);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_pos.view.pitch);
+        PacketStructure::read_scalar(buf_start, packet->player_id);
+        PacketStructure::read_scalar(buf_start, packet->player_pos.view.x);
+        PacketStructure::read_scalar(buf_start, packet->player_pos.view.y);
+        PacketStructure::read_scalar(buf_start, packet->player_pos.view.z);
+        PacketStructure::read_scalar(buf_start, packet->player_pos.view.yaw);
+        PacketStructure::read_scalar(buf_start, packet->player_pos.view.pitch);
     }
 
     void PacketChatMessage::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_BYTE_FIELD(buf_start, buf_end, packet->player_id);
-        PARSE_STRING_FIELD(buf_start, buf_end, packet->message);
+        PacketStructure::read_scalar(buf_start, packet->player_id);
+        PacketStructure::read_string(buf_start, packet->message);
     }
 
     bool PacketHandshake::serialize(io::IoEventData& event_data) const

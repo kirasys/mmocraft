@@ -34,15 +34,15 @@ namespace net
     void PacketExtInfo::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_STRING_FIELD(buf_start, buf_end, packet->app_name);
-        PARSE_SHORT_FIELD(buf_start, buf_end, packet->extension_count);
+        PacketStructure::read_string(buf_start, packet->app_name);
+        PacketStructure::read_scalar(buf_start, packet->extension_count);
     }
 
     void PacketExtEntry::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
     {
         auto packet = to_derived(out_packet);
-        PARSE_STRING_FIELD(buf_start, buf_end, packet->extenstion_name);
-        PARSE_INT_FIELD(buf_start, buf_end, packet->version);
+        PacketStructure::read_string(buf_start, packet->extenstion_name);
+        PacketStructure::read_scalar(buf_start, packet->version);
     }
 
     bool PacketExtInfo::serialize(io::IoEventData& event_data) const
