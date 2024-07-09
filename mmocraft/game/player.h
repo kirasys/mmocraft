@@ -184,15 +184,15 @@ namespace game
             _spawn_pos.raw = pos.raw;
         }
 
-        void set_default_spawn_coordinate(int x, int y, int z)
+        void set_spawn_coordinate(int x, int y, int z, bool force = true)
         {
-            if (not _spawn_pos.raw_coordinate())
+            if (force || not _spawn_pos.raw_coordinate())
                 _spawn_pos.set_raw_coordinate(x * 32, y * 32 + 51, z * 32);
         }
 
-        void set_default_spawn_orientation(unsigned yaw, unsigned pitch)
+        void set_spawn_orientation(unsigned yaw, unsigned pitch, bool force = true)
         {
-            if (not _spawn_pos.raw_orientation())
+            if (force || not _spawn_pos.raw_orientation())
                 _spawn_pos.set_raw_orientation(yaw, pitch);
         }
 

@@ -35,6 +35,7 @@
     <ClCompile Include="net\multicast_manager.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\packet_extension.cpp" />
+    <ClCompile Include="game\player_command.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -85,6 +86,7 @@
     <ClInclude Include="game\world_task.h" />
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\packet_extension.h" />
+    <ClInclude Include="game\player_command.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

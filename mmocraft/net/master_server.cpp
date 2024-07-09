@@ -8,6 +8,7 @@
 #include "proto/config.pb.h"
 #include "logging/error.h"
 #include "database/query.h"
+#include "game/player_command.h"
 
 namespace net
 {
@@ -89,10 +90,20 @@ namespace net
     {
         if (auto player = conn.get_connected_player()) {
             packet.player_id = player->game_id(); // client always sends 0xff(SELF ID).
-            deferred_chat_message_packet_task.push_packet(conn.connection_key(), packet);
-            return error::PACKET_HANDLE_DEFERRED;
+
+            if (packet.message.data[0] == '/') { // if command message
+                game::PlayerCommand command(player);
+                command.execute({ packet.message.data, packet.message.size });
+
+                net::PacketChatMessage msg_packet(command.get_response());
+                conn.io()->send_packet(msg_packet);
+;            }
+            else {
+                deferred_chat_message_packet_task.push_packet(conn.connection_key(), packet);
+                return error::PACKET_HANDLE_DEFERRED;
+            }
         }
-        return error::PACKET_CHAT_MESSAGE_HANDLE_ERROR;
+        return error::SUCCESS;
     }
 
     error::ResultCode MasterServer::handle_ext_info_packet(net::Connection& conn, net::PacketExtInfo& packet)

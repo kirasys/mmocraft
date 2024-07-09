@@ -24,6 +24,7 @@
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
+    <ClCompile Include="game\player_command.cpp" />
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
@@ -74,6 +75,7 @@
     <ClInclude Include="game\block.h" />
     <ClInclude Include="game\block_history.h" />
     <ClInclude Include="game\entity.h" />
+    <ClInclude Include="game\player_command.h" />
     <ClInclude Include="game\world.h" />
     <ClInclude Include="game\player.h" />
     <ClInclude Include="game\world_generator.h" />

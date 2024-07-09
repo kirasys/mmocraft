@@ -63,14 +63,15 @@ namespace net
 
     void PacketStructure::write_string(std::byte* &buf, const PacketFieldType::String& str)
     {
-        std::memcpy(buf, str.data, str.size);
-        std::memset(buf + str.size, ' ', str.size_with_padding - str.size);
+        auto size = std::min(str.size, PacketFieldConstraint::max_string_length);
+        std::memcpy(buf, str.data, size);
+        std::memset(buf + size, ' ', str.size_with_padding - size);
         buf += str.size_with_padding;
     }
 
     void PacketStructure::write_string(std::byte*& buf, const char* str)
     {
-        auto size = std::min(std::strlen(str), std::size_t(64));
+        auto size = std::min(std::strlen(str), PacketFieldConstraint::max_string_length);
         std::memcpy(buf, str, size);
         std::memset(buf + size, ' ', PacketFieldType::String::size_with_padding - size);
         buf += PacketFieldType::String::size_with_padding;
@@ -78,15 +79,17 @@ namespace net
 
     void PacketStructure::write_string(std::byte*& buf, std::string_view str)
     {
-        std::memcpy(buf, str.data(), str.size());
-        std::memset(buf + str.size(), ' ', PacketFieldType::String::size_with_padding - str.size());
+        auto size = std::min(str.size(), PacketFieldConstraint::max_string_length);
+        std::memcpy(buf, str.data(), size);
+        std::memset(buf + size, ' ', PacketFieldType::String::size_with_padding - size);
         buf += PacketFieldType::String::size_with_padding;
     }
 
     void PacketStructure::write_string(std::byte*& buf, const std::byte* data, std::size_t data_size)
     {
-        std::memcpy(buf, data, data_size);
-        std::memset(buf + data_size, ' ', PacketFieldType::String::size_with_padding - data_size);
+        auto size = std::min(data_size, PacketFieldConstraint::max_string_length);
+        std::memcpy(buf, data, size);
+        std::memset(buf + size, ' ', PacketFieldType::String::size_with_padding - size);
         buf += PacketFieldType::String::size_with_padding;
     }
 
@@ -362,6 +365,18 @@ namespace net
         }
 
         return data_size;
+    }
+
+    bool PacketChatMessage::serialize(io::IoEventData& event_data) const
+    {
+        std::byte buf[packet_size];
+
+        std::byte* buf_start = buf;
+        PacketStructure::write_byte(buf_start, packet_id);
+        PacketStructure::write_byte(buf_start, player_id);
+        PacketStructure::write_string(buf_start, message);
+
+        return event_data.push(buf, sizeof(buf));
     }
 
     bool PacketDisconnectPlayer::serialize(io::IoEventData& event_data) const

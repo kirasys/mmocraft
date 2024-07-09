@@ -241,6 +241,15 @@ namespace net
         static constexpr std::size_t packet_size = 66;
 
         DECLARE_PACKET_READ_METHOD(PacketChatMessage);
+
+        PacketChatMessage() = default;
+        PacketChatMessage(std::string_view msg)
+            : Packet { packet_id }
+            , player_id{ 0xFF }
+            , message{ msg.data(), msg.size() }
+        { }
+
+        bool serialize(io::IoEventData&) const;
     };
 
     struct PacketDisconnectPlayer : Packet
