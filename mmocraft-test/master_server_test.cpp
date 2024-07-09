@@ -73,8 +73,8 @@ TEST_F(MasterServerTest, Handle_Deferred_Handshake_With_Duplicate_Login)
     SUT_server.handle_deferred_handshake_packet(&dummy_task, &defer_handshake_packet);
 
     // Assert
-    ASSERT_TRUE(connection_env.try_acquire_connection(connection_key)->get_connected_player() != nullptr);
-    auto player = connection_env.try_acquire_connection(connection_key)->get_connected_player();
+    ASSERT_TRUE(connection_env.try_acquire_connection(connection_key)->associated_player() != nullptr);
+    auto player = connection_env.try_acquire_connection(connection_key)->associated_player();
     EXPECT_EQ(player->state(), game::PlayerState::Handshake_Completed);
     EXPECT_TRUE(connection_env.try_acquire_connection(connection_key_second) == nullptr); // offlined
 }
