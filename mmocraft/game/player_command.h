@@ -30,6 +30,8 @@ namespace game
 
         void execute_set_spawn(const std::vector<std::string_view>&);
 
+        void execute_direct_message(game::World&, const std::vector<std::string_view>&);
+
         void execute_announcement(game::World&, const std::vector<std::string_view>&);
 
         game::Player& _player;

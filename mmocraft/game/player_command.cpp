@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <string.h>
 #include <stdexcept>
 
 #include "game/world.h"
@@ -10,6 +11,7 @@
 
 #define ERROR_COLOR "&c"
 #define SUCCESS_COLOR "&2"
+#define BLUE_COLOR "&9"
 
 namespace game
 {
@@ -23,6 +25,8 @@ namespace game
             auto program = tokens[0];
             if (program == "/set_spawn")
                 execute_set_spawn(tokens);
+            else if (program == "/dm")
+                execute_direct_message(world, tokens);
             else if (program == "/announcement")
                 execute_announcement(world, tokens);
             else
@@ -46,6 +50,27 @@ namespace game
         _player.set_spawn_coordinate(x, y, z);
 
         set_response(SUCCESS_COLOR "Spawn point saved.");
+    }
+
+    void PlayerCommand::execute_direct_message(game::World& world, const std::vector<std::string_view>& tokens)
+    {
+        if (tokens.size() != 3) {
+            set_response(ERROR_COLOR "Usage: /dm TO MESSAGE");
+            return;
+        }
+
+        char from_message[64];
+        std::snprintf(from_message, sizeof(from_message), BLUE_COLOR "[from %.*s] %.*s",
+            static_cast<int>(tokens[1].size()), tokens[1].data(),
+            static_cast<int>(tokens[2].size()), tokens[2].data());
+
+        char to_message[64];
+        std::snprintf(to_message, sizeof(to_message), BLUE_COLOR "[to %.*s] %.*s",
+            static_cast<int>(tokens[1].size()), tokens[1].data(),
+            static_cast<int>(tokens[2].size()), tokens[2].data());
+
+        world.unicast_to_world_player(_player.username(), net::MessageType::Chat, to_message);
+        world.unicast_to_world_player(tokens[1], net::MessageType::Chat, from_message);
     }
 
     void PlayerCommand::execute_announcement(game::World& world, const std::vector<std::string_view>& tokens)

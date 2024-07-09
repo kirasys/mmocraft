@@ -42,9 +42,31 @@ namespace game
     public:
         World(net::ConnectionEnvironment&, database::DatabaseCore&);
         
-        void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
+        bool is_already_exist_player(const char* username)
+        {
+            std::shared_lock lock(player_lookup_table_mutex);
+            return player_lookup_table.find(username) != player_lookup_table.end();
+        }
+
+        void register_player(const char* username, net::ConnectionKey connection_key)
+        {
+            std::unique_lock lock(player_lookup_table_mutex);
+            player_lookup_table[username] = connection_key;
+        }
+
+        void unregister_player(const char* username)
+        {
+            std::unique_lock lock(player_lookup_table_mutex);
+            player_lookup_table.erase(username);
+        }
+
+        net::Connection* try_acquire_player_connection(std::string_view username);
+
+        void unicast_to_world_player(std::string_view username, net::MessageType, std::string_view message);
 
         void broadcast_to_world_player(net::MessageType, std::string_view message);
+
+        void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
 
         void process_level_wait_player(const std::vector<game::Player*>&);
 
@@ -63,26 +85,6 @@ namespace game
         void tick(io::IoCompletionPort&);
 
         bool load_filesystem_world(std::string_view);
-
-        game::Player* try_acquire_player(const char* username);
-
-        bool is_already_exist_player(const char* username)
-        {
-            std::shared_lock lock(player_lookup_table_mutex);
-            return player_lookup_table.find(username) != player_lookup_table.end();
-        }
-
-        void register_player(const char* username, net::ConnectionKey connection_key)
-        {
-            std::unique_lock lock(player_lookup_table_mutex);
-            player_lookup_table[username] = connection_key;
-        }
-
-        void unregister_player(const char* username)
-        {
-            std::unique_lock lock(player_lookup_table_mutex);
-            player_lookup_table.erase(username);
-        }
 
     private:
         void commit_block_changes(const std::byte* block_history_data, std::size_t);
