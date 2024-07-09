@@ -68,6 +68,9 @@ namespace database
 
     bool PlayerDataLoadSQL::load(game::Player& player)
     {
+        if (player.player_type() < game::PlayerType::AUTHENTICATED_USER)
+            return true;
+
         player_id = player.identity();
 
         if (this->execute()) {
@@ -96,6 +99,9 @@ namespace database
 
     bool PlayerUpdateSQL::update(const game::Player& player)
     {
+        if (player.player_type() < game::PlayerType::AUTHENTICATED_USER)
+            return true;
+
         // set input parameters.
         player_id = player.identity();
 
