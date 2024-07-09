@@ -283,18 +283,7 @@ namespace net
             buf += sizeof(PacketFieldType::Int);
         }
 
-        static void read_string(std::byte*& buf, PacketFieldType::String& value)
-        {
-            {
-                std::uint16_t padding_size = 0;
-                for (; padding_size < 64 && buf[63 - padding_size] == std::byte(' '); padding_size++)
-                    buf[63 - padding_size] = std::byte(0);
-                value.size = 64 - padding_size;
-            }
-            value.data = reinterpret_cast<const char*>(buf);
-            buf += 64;
-            * (buf - 1) = std::byte(0);
-        }
+        static void read_string(std::byte*& buf, PacketFieldType::String& value);
 
         static inline void write_byte(std::byte*& buf, PacketFieldType::Byte value)
         {
