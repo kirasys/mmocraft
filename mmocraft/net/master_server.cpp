@@ -80,7 +80,7 @@ namespace net
 
     error::ResultCode MasterServer::handle_player_position_packet(net::Connection& conn, net::PacketSetPlayerPosition& packet)
     {
-        if (auto player = conn.get_connected_player())
+        if (auto player = conn.associated_player())
             player->set_position(packet.player_pos);
         
         return error::SUCCESS;
@@ -88,7 +88,7 @@ namespace net
 
     error::ResultCode MasterServer::handle_chat_message_packet(net::Connection& conn, net::PacketChatMessage& packet)
     {
-        if (auto player = conn.get_connected_player()) {
+        if (auto player = conn.associated_player()) {
             packet.player_id = player->game_id(); // client always sends 0xff(SELF ID).
 
             if (packet.message.data[0] == '/') { // if command message
@@ -108,7 +108,7 @@ namespace net
 
     error::ResultCode MasterServer::handle_ext_info_packet(net::Connection& conn, net::PacketExtInfo& packet)
     {
-        if (auto player = conn.get_connected_player()) {
+        if (auto player = conn.associated_player()) {
             player->set_extension_count(packet.extension_count);
         }
 
@@ -117,7 +117,7 @@ namespace net
 
     error::ResultCode MasterServer::handle_ext_entry_packet(net::Connection& conn, net::PacketExtEntry& packet)
     {
-        if (auto player = conn.get_connected_player()) {
+        if (auto player = conn.associated_player()) {
             std::string_view cpe_name = { packet.extenstion_name.data, packet.extenstion_name.size };
             if (net::is_cpe_support(cpe_name, packet.version))
                 player->register_extension(net::cpe_index_of(cpe_name));
@@ -212,21 +212,23 @@ namespace net
                     continue;
                 }
 
-                auto player = world.add_player(
-                    packet->connection_key,
-                    player_search.player_identity(),
-                    player_type,
-                    packet->username);
-
-                if (player == nullptr) {
+                if (world.is_already_exist_player(packet->username)) {
                     conn->disconnect_with_message(error::PACKET_RESULT_ALREADY_LOGIN);
                     continue;
                 }
 
-                conn->associate_player(player);
+                // Associate player with connection and load game data from database.
+                conn->associate_player(std::make_unique<game::Player>(
+                        packet->connection_key,
+                        player_search.player_identity(),
+                        player_type,
+                        packet->username
+                ));
 
-                if (player_type >= game::PlayerType::AUTHENTICATED_USER)
-                    player_data_load.load(*player);
+                player_data_load.load(*conn->associated_player());
+
+                // Register to world player table.
+                world.register_player(packet->username, packet->connection_key);
 
                 if (packet->cpe_support)
                     conn->send_supported_cpe_list();

@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "database/database_core.h"
 #include "database/query.h"
 #include "net/packet_extension.h"
 #include "net/connection.h"
@@ -34,33 +35,6 @@ namespace game
         , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
     {
 
-    }
-
-    game::Player* World::add_player(net::ConnectionKey connection_key, 
-                            unsigned player_identity,
-                            game::PlayerType player_type,
-                            const char* username)
-    {
-        bool is_already_logged_in = player_type == game::PlayerType::AUTHENTICATED_USER && std::any_of(players.begin(), players.end(),
-            [player_identity](std::unique_ptr<game::Player>& player) {
-                return player && player->identity() == player_identity;
-            }
-        );
-
-        game::Player* player = nullptr;
-
-        if (not is_already_logged_in) {
-            player = new game::Player(
-                connection_key,
-                player_identity,
-                player_type,
-                username
-            );
-
-            players[connection_key.index()].reset(player);
-        }
-
-        return player;
     }
 
     void World::broadcast_to_world_player(std::string_view message)
@@ -204,8 +178,10 @@ namespace game
         database::PlayerUpdateSQL player_update_sql{ database_core.get_connection_handle() };
 
         for (auto player : disconnect_wait_players) {
-            if (player->player_type() >= PlayerType::AUTHENTICATED_USER && not player_update_sql.update(*player))
+            if (not player_update_sql.update(*player))
                 CONSOLE_LOG(error) << "Fail to update player data.";
+
+            unregister_player(player->username());
 
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
                 conn->set_offline();
@@ -385,5 +361,17 @@ namespace game
             CONSOLE_LOG(error) << "Unalbe to mapping block map";
             return;
         }
+    }
+
+    game::Player* World::try_acquire_player(const char* username)
+    {
+        std::shared_lock lock(player_table_mutex);
+        if (player_lookup_table.find(username) == player_lookup_table.end())
+            return nullptr;
+          
+        if (auto conn = connection_env.try_acquire_connection(player_lookup_table.at(username)))
+            return conn->associated_player();
+
+        return nullptr;
     }
 }

@@ -3,9 +3,8 @@
 #include <filesystem>
 #include <memory>
 #include <vector>
+#include <shared_mutex>
 
-
-#include "database/database_core.h"
 #include "game/block.h"
 #include "game/player.h"
 #include "game/block_history.h"
@@ -15,6 +14,11 @@
 #include "net/multicast_manager.h"
 #include "win/file_mapping.h"
 #include "util/common_util.h"
+
+namespace database
+{
+    class DatabaseCore;
+}
 
 namespace net
 {
@@ -37,9 +41,7 @@ namespace game
     {
     public:
         World(net::ConnectionEnvironment&, database::DatabaseCore&);
-
-        game::Player* add_player(net::ConnectionKey, unsigned player_identity, game::PlayerType, const char* username);
-
+        
         void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
 
         void broadcast_to_world_player(std::string_view message);
@@ -62,6 +64,26 @@ namespace game
 
         bool load_filesystem_world(std::string_view);
 
+        game::Player* try_acquire_player(const char* username);
+
+        bool is_already_exist_player(const char* username)
+        {
+            std::shared_lock lock(player_table_mutex);
+            return player_lookup_table.find(username) != player_lookup_table.end();
+        }
+
+        void register_player(const char* username, net::ConnectionKey connection_key)
+        {
+            std::unique_lock lock(player_table_mutex);
+            player_lookup_table[username] = connection_key;
+        }
+
+        void unregister_player(const char* username)
+        {
+            std::unique_lock lock(player_table_mutex);
+            player_lookup_table.erase(username);
+        }
+
     private:
         void commit_block_changes(const std::byte* block_history_data, std::size_t);
 
@@ -77,6 +99,8 @@ namespace game
         net::MulticastManager multicast_manager;
 
         std::vector<std::unique_ptr<game::Player>> players;
+        std::shared_mutex player_table_mutex;
+        std::unordered_map<std::string, net::ConnectionKey> player_lookup_table;
 
         game::WorldPlayerTask spawn_player_task;
         game::WorldPlayerTask disconnect_player_task;

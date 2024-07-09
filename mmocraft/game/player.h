@@ -149,6 +149,11 @@ namespace game
             return _player_type;
         }
 
+        const char* username() const
+        {
+            return _username;
+        }
+
         PlayerID game_id() const
         {
             return PlayerID(_connection_key.index());

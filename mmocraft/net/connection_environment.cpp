@@ -91,8 +91,8 @@ namespace net
     void ConnectionEnvironment::for_each_player(std::function<void(net::Connection&, game::Player&)> const& func)
     {
         for (auto& entry : connection_table) {
-            if (not entry.will_delete && entry.connection->get_connected_player())
-                func(*entry.connection, *entry.connection->get_connected_player());
+            if (not entry.will_delete && entry.connection->associated_player())
+                func(*entry.connection, *entry.connection->associated_player());
         }
     }
 
@@ -103,7 +103,7 @@ namespace net
             if (entry.will_delete)
                 continue;
 
-            auto player = entry.connection->get_connected_player();
+            auto player = entry.connection->associated_player();
             if (player && filter(player))
                 found.push_back(player);
         }

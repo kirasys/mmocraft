@@ -128,9 +128,9 @@ namespace net
             return connection_io.get(); 
         }
 
-        game::Player* get_connected_player()
+        game::Player* associated_player()
         {
-            return _player;
+            return _player.get();
         }
 
         void set_offline(std::size_t current_tick = util::current_monotonic_tick());
@@ -154,9 +154,9 @@ namespace net
 
         std::size_t process_packets(std::byte*, std::byte*);
 
-        void associate_player(game::Player* player)
+        void associate_player(std::unique_ptr<game::Player> player)
         {
-            _player = player;
+            _player = std::move(player);
         }
 
         void on_handshake_success();
@@ -188,7 +188,7 @@ namespace net
         std::size_t last_offline_tick = 0;
         std::size_t last_interaction_tick = 0;
 
-        game::Player* _player = nullptr;
+        std::unique_ptr<game::Player> _player;
     };
 
     class PacketHandleServer
