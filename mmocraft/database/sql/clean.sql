@@ -1,4 +1,4 @@
-:r variables.sql
+:r parameters.sql
 
 USE master;
 GO
