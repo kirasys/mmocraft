@@ -21,3 +21,7 @@ GO
 -- Drop user-defined functions
 DROP FUNCTION IF EXISTS dbo.GetPasswordHash
 GO
+
+-- Drop user-defined procedures
+DROP PROCEDURE IF EXISTS dbo.PlayerLogin
+GO
