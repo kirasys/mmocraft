@@ -1,4 +1,4 @@
-:r variables.sql
+:r parameters.sql
 
 :r routines\create_database.sql
 :r routines\create_login_and_user.sql

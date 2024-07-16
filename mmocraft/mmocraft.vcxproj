@@ -139,7 +139,7 @@
     <None Include="database\sql\routines\create_login_and_user.sql" />
     <None Include="database\sql\routines\create_procedures.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
-    <None Include="database\sql\variables.sql" />
+    <None Include="database\sql\parameters.sql" />
     <CustomBuild Include="proto\config.proto">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
