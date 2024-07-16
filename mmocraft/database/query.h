@@ -66,6 +66,7 @@ namespace database
         SQLUINTEGER _player_index = 0;
         SQLCHAR _is_admin;
     };
+
     class PlayerUpdateSQL : public SQLStatement
     {
     public:
