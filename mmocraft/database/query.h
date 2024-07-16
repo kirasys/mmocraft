@@ -7,8 +7,9 @@ namespace database
 {
     constexpr const char* sql_select_player_by_username_and_password = "SELECT COUNT(*) FROM player WHERE username = ? AND password = dbo.GetPasswordHash(?)";
     constexpr const char* sql_select_player_by_username = "SELECT id, is_admin FROM player WHERE username = ?";
-    constexpr const char* sql_select_player_game_data = "SELECT latest_position, spawn_position FROM player_game_data WHERE player_id = ?";
-    constexpr const char* sql_update_player_game_data = "UPDATE player_game_data SET latest_position = ?, spawn_position = ? WHERE player_id = ?";
+    constexpr const char* sql_login_procedure = "{ call dbo.PlayerLogin(?, ?, ?, ?, ?) }";
+    
+    constexpr std::size_t player_gamedata_column_size = 64;
 
     class PlayerLoginSQL : public SQLStatement
     {
@@ -17,9 +18,29 @@ namespace database
 
         bool authenticate(const char* username, const char* password);
 
+        inline SQLUINTEGER player_identity() const
+        {
+            return _player_identity;
+        }
+
+        inline game::PlayerType player_type() const
+        {
+            return game::PlayerType(_player_type);
+        }
+
+        inline const std::byte* player_gamedata() const
+        {
+            return _gamedata;
+        }
+
     private:
         char _username[net::PacketFieldConstraint::max_username_length + 1];
         char _password[net::PacketFieldConstraint::max_password_length + 1];
+
+        SQLUINTEGER _player_identity = 0;
+        SQLUINTEGER _player_type = 0;
+        std::byte _gamedata[player_gamedata_column_size];
+        SQLLEN _gamedata_size = player_gamedata_column_size;
     };
 
     class PlayerSearchSQL : public SQLStatement
@@ -46,6 +67,9 @@ namespace database
         SQLCHAR _is_admin;
     };
 
+    constexpr const char* sql_select_player_game_data = "SELECT latest_position, spawn_position FROM player_game_data WHERE player_id = ?";
+    constexpr const char* sql_update_player_game_data = "UPDATE player_game_data SET gamedata = ? WHERE player_id = ?";
+
     class PlayerDataLoadSQL : public SQLStatement
     {
     public:
@@ -68,7 +92,7 @@ namespace database
 
     private:
         SQLINTEGER player_id;
-        game::PlayerPosition latest_pos;
-        game::PlayerPosition spawn_pos;
+        std::byte _player_gamedata[player_gamedata_column_size];
+        SQLLEN _player_gamedata_size = player_gamedata_column_size;
     };
 }

@@ -46,8 +46,14 @@ namespace database
 
         bool inbound_chars_parameter(SQLUSMALLINT parameter_number, const char*, SQLLEN, SQLLEN&);
 
+        bool inbound_bytes_parameter(SQLUSMALLINT parameter_number, const std::byte*, SQLLEN, SQLLEN&);
+
         bool inbound_null_terminated_string_parameter(SQLUSMALLINT parameter_number, const char*, SQLLEN);
 
+        bool outbound_uint32_parameter(SQLUSMALLINT parameter_number, SQLUINTEGER&);
+
+        bool outbound_bytes_parameter(SQLUSMALLINT column_number, std::byte* buf, SQLLEN column_size, SQLLEN& buf_size);
+        
         bool outbound_bool_column(SQLUSMALLINT column_number, SQLCHAR&);
 
         bool outbound_int32_column(SQLUSMALLINT column_number, SQLINTEGER&);
@@ -62,7 +68,11 @@ namespace database
 
         bool execute();
 
+        bool execute_direct(const char* query);
+
         bool fetch();
+
+        bool more_results();
 
         bool close_cursor();
 

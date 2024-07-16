@@ -13,9 +13,15 @@ CREATE TABLE player_game_data (
     CONSTRAINT FK_PlayerID FOREIGN KEY (player_id) REFERENCES player (id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-    latest_position BIGINT DEFAULT 0,
-    spawn_position BIGINT DEFAULT 0,
-    level TINYINT DEFAULT 1,
+
+    /*
+    Gamedata:
+        latest_position BIGINT,
+        spawn_position BIGINT,
+        level INT,
+        exp INT
+    */
+    gamedata BINARY(64)
 );
 
 INSERT INTO player (username, password, is_admin) VALUES (
@@ -25,3 +31,5 @@ INSERT INTO player (username, password, is_admin) VALUES (
 );
 
 INSERT INTO player_game_data (player_id) VALUES (1);
+
+GO

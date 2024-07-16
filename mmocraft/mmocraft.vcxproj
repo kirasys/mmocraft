@@ -39,6 +39,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="proto\player_gamedata.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="proto\world_metadata.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -92,6 +98,7 @@
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="proto\config.pb.h" />
+    <ClInclude Include="proto\player_gamedata.pb.h" />
     <ClInclude Include="proto\world_metadata.pb.h" />
     <ClInclude Include="system_initializer.h" />
     <ClInclude Include="io\io_event.h" />
@@ -130,6 +137,7 @@
     <None Include="database\sql\routines\create_database.sql" />
     <None Include="database\sql\routines\create_functions.sql" />
     <None Include="database\sql\routines\create_login_and_user.sql" />
+    <None Include="database\sql\routines\create_procedures.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="database\sql\variables.sql" />
     <CustomBuild Include="proto\config.proto">
@@ -153,6 +161,17 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="proto\player_gamedata.proto">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
     </CustomBuild>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -228,18 +247,20 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\mongo-cxx-driver\include\mongocxx\v_noabi;C:\mongo-cxx-driver\include\bsoncxx\v_noabi;C:\mongo-c-driver\include\libmongoc-1.0;C:\mongo-c-driver\include\libbson-1.0;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>C:\mongo-c-driver\lib\bson-1.0.lib;C:\mongo-c-driver\lib\mongoc-1.0.lib;C:\mongo-cxx-driver\lib\*.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -256,12 +277,13 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\mongo-cxx-driver\include\mongocxx\v_noabi;C:\mongo-cxx-driver\include\bsoncxx\v_noabi;C:\mongo-c-driver\include\libmongoc-1.0;C:\mongo-c-driver\include\libbson-1.0;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -270,6 +292,7 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>C:\mongo-c-driver\lib\bson-1.0.lib;C:\mongo-c-driver\lib\mongoc-1.0.lib;C:\mongo-cxx-driver\lib\*.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -285,16 +308,17 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\mongo-cxx-driver\include\mongocxx\v_noabi;C:\mongo-cxx-driver\include\bsoncxx\v_noabi;C:\mongo-c-driver\include\libmongoc-1.0;C:\mongo-c-driver\include\libbson-1.0;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\mongo-c-driver\lib\bson-1.0.lib;C:\mongo-c-driver\lib\mongoc-1.0.lib;C:\mongo-cxx-driver\lib\*.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>
       </AdditionalOptions>
     </Link>
@@ -313,19 +337,20 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\mongo-cxx-driver\include\mongocxx\v_noabi;C:\mongo-cxx-driver\include\bsoncxx\v_noabi;C:\mongo-c-driver\include\libmongoc-1.0;C:\mongo-c-driver\include\libbson-1.0;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\mongo-c-driver\lib\bson-1.0.lib;C:\mongo-c-driver\lib\mongoc-1.0.lib;C:\mongo-cxx-driver\lib\*.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>
       </AdditionalOptions>
     </Link>

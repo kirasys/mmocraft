@@ -8,6 +8,8 @@
 #include "util/common_util.h"
 #include "util/math.h"
 
+#include "proto/player_gamedata.pb.h"
+
 namespace game
 {
     using PlayerID = std::uint8_t;
@@ -59,7 +61,16 @@ namespace game
         static constexpr std::uint64_t coordinate_mask  = 0x0000FFFFFFFFFFFF;
         static constexpr std::uint64_t orientation_mask = 0xFFFF000000000000;
 
+        inline PlayerPosition(std::uint64_t a_raw = 0)
+            : raw{a_raw}
+        { }
+
         inline std::uint64_t raw_coordinate() const
+        {
+            return raw & coordinate_mask;
+        }
+
+        inline static std::uint64_t raw_coordinate(std::uint64_t raw)
         {
             return raw & coordinate_mask;
         }
@@ -70,6 +81,11 @@ namespace game
         }
 
         inline std::uint64_t raw_orientation() const
+        {
+            return raw & orientation_mask;
+        }
+
+        inline static std::uint64_t raw_orientation(std::uint64_t raw)
         {
             return raw & orientation_mask;
         }
@@ -166,39 +182,47 @@ namespace game
 
         PlayerPosition spawn_position() const
         {
-            return _spawn_pos;
+            return _gamedata.spawn_pos();
         }
 
         auto spawn_yaw() const
         {
-            return _spawn_pos.view.yaw;
+            PlayerPosition pos(_gamedata.spawn_pos());
+            return pos.view.yaw;
         }
 
         auto spawn_pitch() const
         {
-            return _spawn_pos.view.pitch;
+            PlayerPosition pos(_gamedata.spawn_pos());
+            return pos.view.pitch;
         }
 
         void set_position(PlayerPosition pos)
         {
-            _latest_pos.raw = pos.raw;
+            _gamedata.set_latest_pos(pos.raw);
         }
 
         void set_spawn_position(PlayerPosition pos)
         {
-            _spawn_pos.raw = pos.raw;
+            _gamedata.set_spawn_pos(pos.raw);
         }
 
         void set_spawn_coordinate(int x, int y, int z, bool force = true)
         {
-            if (force || not _spawn_pos.raw_coordinate())
-                _spawn_pos.set_raw_coordinate(x * 32, y * 32 + 51, z * 32);
+            PlayerPosition pos(_gamedata.spawn_pos());
+            if (force || not pos.raw_coordinate()) {
+                pos.set_raw_coordinate(x * 32, y * 32 + 51, z * 32);
+                _gamedata.set_spawn_pos(pos.raw);
+            }
         }
 
         void set_spawn_orientation(unsigned yaw, unsigned pitch, bool force = true)
         {
-            if (force || not _spawn_pos.raw_orientation())
-                _spawn_pos.set_raw_orientation(yaw, pitch);
+            PlayerPosition pos(_gamedata.spawn_pos());
+            if (force || not pos.raw_orientation()) {
+                pos.set_raw_orientation(yaw, pitch);
+                _gamedata.set_spawn_pos(pos.raw);
+            }
         }
 
         void update_last_transferred_position(PlayerPosition pos)
@@ -213,7 +237,7 @@ namespace game
 
         PlayerPosition last_position() const
         {
-            return _latest_pos;
+            return _gamedata.latest_pos();
         }
 
         PlayerPosition last_transferred_position() const
@@ -251,6 +275,17 @@ namespace game
             return supported_extensions.test(ext);
         }
 
+        void load_gamedata(const std::byte* data, std::size_t data_size)
+        {
+            _gamedata.ParseFromArray(data, int(data_size));
+        }
+
+        void copy_gamedata(std::byte* data, std::size_t data_size) const
+        {
+            assert(_gamedata.ByteSizeLong() <= data_size);
+            _gamedata.SerializePartialToArray(data, int(data_size));
+        }
+
     private:
         PlayerState _state = PlayerState::Initialized;
 
@@ -259,18 +294,17 @@ namespace game
         unsigned pending_extension_count = 0;
         std::bitset<64> supported_extensions;
 
+        // Row number of the player table (so always greater than 0)
         // it's used to verify that no same (identity) users already logged in.
-        // same as player row number of the database's table (so always greater than 0)
         unsigned _identity;
 
         PlayerType _player_type;
 
         char _username[16 + 1];
+        game::PlayerGamedata _gamedata;
 
-        PlayerPosition _latest_pos;
         PlayerPosition _last_transferred_pos;
         PlayerPosition _last_transferred_pos_tmp;
-        PlayerPosition _spawn_pos;
 
         std::size_t _last_ping_time = 0;
     };

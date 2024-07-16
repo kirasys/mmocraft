@@ -50,9 +50,25 @@ namespace database
         return true;
     }
 
+    bool SQLStatement::execute_direct(const char* query)
+    {
+        auto ret = ::SQLExecDirectA(statement_handle, (UCHAR*)query, SQL_NTS);
+        CHECK_DB_SUCCESS(ret);
+        return true;
+    }
+
     bool SQLStatement::fetch()
     {
         auto ret = ::SQLFetch(statement_handle);
+        if (ret == SQL_NO_DATA) return false;
+
+        CHECK_DB_SUCCESS(ret);
+        return true;
+    }
+
+    bool SQLStatement::more_results()
+    {
+        auto ret = ::SQLMoreResults(statement_handle);
         if (ret == SQL_NO_DATA) return false;
 
         CHECK_DB_SUCCESS(ret);
@@ -168,6 +184,23 @@ namespace database
         return true;
     }
 
+    bool SQLStatement::inbound_bytes_parameter(SQLUSMALLINT parameter_number, const std::byte* buf, SQLLEN column_size, SQLLEN& data_size)
+    {
+        auto ret = ::SQLBindParameter(statement_handle,
+            parameter_number,
+            SQL_PARAM_INPUT,
+            SQL_C_BINARY, SQL_BINARY,
+            /*ColumnSize=*/ column_size,
+            /*DecimalDigits=*/ 0,
+            /*ParameterValuePtr=*/ (SQLCHAR*)buf,
+            /*BufferLength=*/ 0,
+            /*StrLen_or_IndPtr=*/ &data_size);
+
+        CHECK_DB_STRONG_SUCCESS(ret);
+
+        return true;
+    }
+
     bool SQLStatement::inbound_null_terminated_string_parameter(SQLUSMALLINT parameter_number, const char* cstr, SQLLEN buf_size)
     {
         auto ret = ::SQLBindParameter(statement_handle,
@@ -182,6 +215,39 @@ namespace database
 
         CHECK_DB_STRONG_SUCCESS(ret);
 
+        return true;
+    }
+
+    bool SQLStatement::outbound_uint32_parameter(SQLUSMALLINT parameter_number, SQLUINTEGER& value)
+    {
+        auto ret = ::SQLBindParameter(statement_handle,
+            parameter_number,
+            SQL_PARAM_OUTPUT,
+            SQL_C_ULONG, SQL_INTEGER,
+            /*ColumnSize=*/ 0,
+            /*DecimalDigits=*/ 0,
+            /*ParameterValuePtr=*/ &value,
+            /*BufferLength=*/ 0,
+            /*StrLen_or_IndPtr=*/ NULL);
+
+        CHECK_DB_STRONG_SUCCESS(ret);
+
+        return true;
+    }
+
+    bool SQLStatement::outbound_bytes_parameter(SQLUSMALLINT parameter_number, std::byte* buf, SQLLEN column_size, SQLLEN& buf_size)
+    {
+        auto ret = ::SQLBindParameter(statement_handle,
+            parameter_number,
+            SQL_PARAM_OUTPUT,
+            SQL_C_BINARY, SQL_BINARY,
+            /*ColumnSize=*/ column_size,
+            /*DecimalDigits=*/ 0,
+            /*ParameterValuePtr=*/ (SQLCHAR*)buf,
+            /*BufferLength=*/ buf_size,
+            /*StrLen_or_IndPtr=*/ &buf_size);
+
+        CHECK_DB_STRONG_SUCCESS(ret);
         return true;
     }
 

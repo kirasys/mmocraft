@@ -36,6 +36,7 @@
     <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\packet_extension.cpp" />
     <ClCompile Include="game\player_command.cpp" />
+    <ClCompile Include="proto\player_gamedata.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -87,6 +88,7 @@
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="game\player_command.h" />
+    <ClInclude Include="proto\player_gamedata.pb.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />
@@ -97,9 +99,11 @@
     <None Include="database\sql\routines\create_functions.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="config\config.json" />
+    <None Include="database\sql\routines\create_procedures.sql" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="proto\config.proto" />
     <CustomBuild Include="proto\world_metadata.proto" />
+    <CustomBuild Include="proto\player_gamedata.proto" />
   </ItemGroup>
 </Project>

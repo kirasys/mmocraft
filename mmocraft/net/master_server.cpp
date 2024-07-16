@@ -185,29 +185,19 @@ namespace net
     void MasterServer::handle_deferred_handshake_packet(io::Task* task, const DeferredPacket<net::PacketHandshake>* packet_head)
     {
         database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
-        database::PlayerSearchSQL player_search{ database_core.get_connection_handle() };
-        database::PlayerDataLoadSQL player_data_load{ database_core.get_connection_handle() };
 
-        if (not player_login.is_valid() || not player_search.is_valid()) {
+        if (not player_login.is_valid()) {
             CONSOLE_LOG(error) << "Fail to allocate sql statement handles.";
             return;
         }
 
         for (auto packet = packet_head; packet; packet = packet->next) {
-            auto player_type = game::PlayerType::INVALID;
-
-            if (not player_search.search(packet->username)) {
-                player_type = game::PlayerType::GUEST;
-            }
-            else if (player_login.authenticate(packet->username, packet->password)) {
-                player_type = player_search.is_admin()
-                    ? game::PlayerType::ADMIN : game::PlayerType::AUTHENTICATED_USER;
-            }
+            player_login.authenticate(packet->username, packet->password);
 
             // return handshake result to clients.
 
             if (auto conn = connection_env.try_acquire_connection(packet->connection_key)) {
-                if (player_type == game::PlayerType::INVALID) {
+                if (player_login.player_type() == game::PlayerType::INVALID) {
                     conn->disconnect_with_message(error::PACKET_RESULT_FAIL_LOGIN);
                     continue;
                 }
@@ -220,12 +210,15 @@ namespace net
                 // Associate player with connection and load game data from database.
                 conn->associate_player(std::make_unique<game::Player>(
                         packet->connection_key,
-                        player_search.player_identity(),
-                        player_type,
+                        player_login.player_identity(),
+                        player_login.player_type(),
                         packet->username
                 ));
 
-                player_data_load.load(*conn->associated_player());
+                conn->associated_player()->load_gamedata(
+                    player_login.player_gamedata(),
+                    database::player_gamedata_column_size
+                );
 
                 // Register to world player table.
                 world.register_player(packet->username, packet->connection_key);
