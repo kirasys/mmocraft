@@ -5,15 +5,13 @@
 
 namespace database
 {
-    constexpr const char* sql_select_player_by_username_and_password = "SELECT COUNT(*) FROM player WHERE username = ? AND password = dbo.GetPasswordHash(?)";
-    constexpr const char* sql_select_player_by_username = "SELECT id, is_admin FROM player WHERE username = ?";
-    constexpr const char* sql_login_procedure = "{ call dbo.PlayerLogin(?, ?, ?, ?, ?) }";
-    
     constexpr std::size_t player_gamedata_column_size = 64;
 
     class PlayerLoginSQL : public SQLStatement
     {
     public:
+        static constexpr const char* query = "{ call dbo.PlayerLogin(?, ?, ?, ?, ?) }";
+
         PlayerLoginSQL(SQLHDBC);
 
         bool authenticate(const char* username, const char* password);
@@ -46,6 +44,8 @@ namespace database
     class PlayerSearchSQL : public SQLStatement
     {
     public:
+        static constexpr const char* query = "SELECT id, is_admin FROM player WHERE username = ?";
+
         PlayerSearchSQL(SQLHDBC);
 
         bool search(const char* username);
@@ -66,26 +66,11 @@ namespace database
         SQLUINTEGER _player_index = 0;
         SQLCHAR _is_admin;
     };
-
-    constexpr const char* sql_select_player_game_data = "SELECT latest_position, spawn_position FROM player_game_data WHERE player_id = ?";
-    constexpr const char* sql_update_player_game_data = "UPDATE player_game_data SET gamedata = ? WHERE player_id = ?";
-
-    class PlayerDataLoadSQL : public SQLStatement
-    {
-    public:
-        PlayerDataLoadSQL(SQLHDBC);
-
-        bool load(game::Player&);
-
-    private:
-        SQLINTEGER player_id;
-        game::PlayerPosition latest_pos;
-        game::PlayerPosition spawn_pos;
-    };
-
     class PlayerUpdateSQL : public SQLStatement
     {
     public:
+        static constexpr const char* query = "UPDATE player_game_data SET gamedata = ? WHERE player_id = ?";
+
         PlayerUpdateSQL(SQLHDBC);
 
         bool update(const game::Player&);

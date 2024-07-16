@@ -8,7 +8,7 @@ namespace database
     PlayerLoginSQL::PlayerLoginSQL(SQLHDBC a_connection_handle)
         : SQLStatement{ a_connection_handle }
     {
-        this->prepare(sql_login_procedure);
+        this->prepare(query);
 
         // bind input parameters.
         this->inbound_null_terminated_string_parameter(1, _username, sizeof(_username));
@@ -36,7 +36,7 @@ namespace database
     PlayerSearchSQL::PlayerSearchSQL(SQLHDBC a_connection_handle)
         : SQLStatement{ a_connection_handle }
     {
-        this->prepare(sql_select_player_by_username);
+        this->prepare(query);
 
         // bind input parameters.
         this->inbound_null_terminated_string_parameter(1, _username, sizeof(_username));
@@ -58,43 +58,10 @@ namespace database
         return false;
     }
 
-    PlayerDataLoadSQL::PlayerDataLoadSQL(SQLHDBC a_connection_handle)
-        : SQLStatement{ a_connection_handle }
-    {
-        this->prepare(sql_select_player_game_data);
-
-        // bind input parameters.
-        this->inbound_int32_parameter(1, player_id);
-
-        // bind output parameters.
-        this->outbound_uint64_column(1, latest_pos.raw);
-        this->outbound_uint64_column(1, spawn_pos.raw);
-    }
-
-    bool PlayerDataLoadSQL::load(game::Player& player)
-    {
-        if (player.player_type() < game::PlayerType::AUTHENTICATED_USER)
-            return true;
-
-        player_id = player.identity();
-
-        if (this->execute()) {
-            util::defer clear_cursor = [this] { this->close_cursor(); };
-            if (auto success = this->fetch()) {
-                player.set_position(latest_pos);
-                player.set_spawn_position(spawn_pos);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
     PlayerUpdateSQL::PlayerUpdateSQL(SQLHDBC a_connection_handle)
         : SQLStatement{ a_connection_handle }
     {
-        this->prepare(sql_update_player_game_data);
+        this->prepare(query);
 
         // bind input parameters.
         this->inbound_bytes_parameter(1, _player_gamedata, player_gamedata_column_size, _player_gamedata_size);
