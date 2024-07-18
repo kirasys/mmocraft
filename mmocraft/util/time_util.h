@@ -3,6 +3,9 @@
 #include <chrono>
 #include <ctime>
 
+#define NOMINMAX
+#include <Windows.h>
+
 namespace util
 {
     enum Second
