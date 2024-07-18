@@ -173,7 +173,7 @@ namespace net
 
     /// send event handler
 
-    void Connection::on_complete(io::IoSendEvent* event)
+    void Connection::on_complete(io::IoSendEvent* event, std::size_t transferred_bytes)
     {
         // Note: Can't start I/O event again due to the interleaving problem.
         event->is_processing = false;

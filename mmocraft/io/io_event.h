@@ -373,7 +373,7 @@ namespace io
 
         virtual void on_complete(IoRecvEvent*) { assert(false); }
 
-        virtual void on_complete(IoSendEvent*) { assert(false); }
+        virtual void on_complete(IoSendEvent*, std::size_t) { assert(false); }
 
         virtual std::size_t handle_io_event(IoAcceptEvent*)
         {

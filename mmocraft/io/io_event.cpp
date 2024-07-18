@@ -64,6 +64,6 @@ namespace io
 
         data->pop(transferred_bytes_or_signal);
 
-        event_handler.on_complete(this);
+        event_handler.on_complete(this, transferred_bytes_or_signal);
     }
 }
