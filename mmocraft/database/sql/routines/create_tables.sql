@@ -1,12 +1,16 @@
 USE $(DatabaseName);
 
 CREATE TABLE player (
-    id INT IDENTITY PRIMARY KEY,
+    id INT IDENTITY,
     username VARCHAR(64) NOT NULL,
     password BINARY(64) NOT NULL,
     is_admin BIT DEFAULT 0,
     created_at DATETIME2(0) DEFAULT (SYSDATETIME())
+
+    CONSTRAINT PK_player_id PRIMARY KEY NONCLUSTERED (id)
 );
+
+CREATE CLUSTERED INDEX idx_player_username ON player (username)
 
 CREATE TABLE player_game_data (
     player_id INT PRIMARY KEY,
