@@ -33,4 +33,6 @@ namespace util
     {
         ::Sleep(DWORD(ms));
     }
+
+    void busy_wait(std::size_t ms);
 }

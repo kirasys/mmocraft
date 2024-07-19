@@ -70,6 +70,7 @@
     </ClCompile>
     <ClCompile Include="util\compressor.cpp" />
     <ClCompile Include="util\protobuf_util.cpp" />
+    <ClCompile Include="util\time_util.cpp" />
     <ClCompile Include="win\file_mapping.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
   </ItemGroup>
