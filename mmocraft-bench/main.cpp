@@ -1,6 +1,7 @@
 #include "arguments.h"
 #include "client_bot.h"
 #include "game_scenario.h"
+#include "statistics.h"
 #include "system_initializer.h"
 
 #include "config/config.h"
@@ -69,12 +70,19 @@ int main(int argc, char* args[])
         }, scenarios[i]).detach();
     }
 
+    bench::start_benchmark();
+
     while (1) {
+        std::cout << "\n[Connection status per thread]\n";
         for (int i = 0; i < Args.num_of_worker_thread; i++) {
-            std::cout << "[Thread #" << i + 1 << "]\n";
+            std::cout << "Thread #" << i + 1 << " ";
             scenarios[i]->print_client_status();
         }
-        std::cout << "\n";
+
+        std::cout << "\n[Network I/O status]\n";
+        bench::print_statistics();
+
+        std::cout << "\n----------------------------------\n";
 
         util::sleep_ms(1000 * 2);
     }

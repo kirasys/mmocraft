@@ -65,7 +65,7 @@ namespace bench
 
         virtual std::size_t handle_io_event(io::IoSendEvent*) override;
 
-        virtual void on_complete(io::IoSendEvent*) override;
+        virtual void on_complete(io::IoSendEvent*, std::size_t) override;
 
         virtual std::size_t handle_io_event(io::IoRecvEvent*) override;
 

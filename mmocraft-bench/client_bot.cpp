@@ -4,6 +4,7 @@
 
 #include "net/packet.h"
 #include "logging/logger.h"
+#include "statistics.h"
 
 #define CONSUME_PACKET_SIZE(packet_size) \
     remain_packet_size = packet_size; \
@@ -124,9 +125,11 @@ namespace bench
         return 0;
     }
 
-    void ClientBot::on_complete(io::IoSendEvent* event)
+    void ClientBot::on_complete(io::IoSendEvent* event, std::size_t transferred_bytes)
     {
         event->is_processing = false;
+
+        bench::on_packet_send(transferred_bytes);
     }
 
     std::size_t ClientBot::handle_io_event(io::IoRecvEvent* event)
@@ -230,7 +233,7 @@ namespace bench
             }
         }
 
-        total_received_bytes += data_size;
+        bench::on_packet_receive(data_size);
         return data_size;
     }
 
