@@ -27,13 +27,25 @@ CREATE TABLE player_game_data (
     */
     gamedata BINARY(64)
 );
+GO
+
+CREATE TRIGGER dbo.insert_associated_player_gamedata ON player
+    AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON
+    DECLARE @PlayerID INT
+
+    SELECT @PlayerID = INSERTED.id FROM INSERTED;
+    INSERT INTO player_game_data (player_id) VALUES (@PlayerID);
+END
+GO
+
+-- Insert admin accounts.
 
 INSERT INTO player (username, password, is_admin) VALUES (
     '$(AdminPlayerName)',
     dbo.GetPasswordHash('$(AdminPlayerPassword)'),
     1
 );
-
-INSERT INTO player_game_data (player_id) VALUES (1);
-
 GO
