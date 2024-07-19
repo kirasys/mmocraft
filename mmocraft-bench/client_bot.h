@@ -72,6 +72,8 @@ namespace bench
         virtual void on_complete(io::IoRecvEvent*) override;
 
     private:
+        int _id;
+
         /* Client Status */
         ClientState _state = ClientState::Initialized;
         std::size_t total_received_bytes = 0;

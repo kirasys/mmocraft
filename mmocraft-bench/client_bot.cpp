@@ -1,6 +1,8 @@
 #include "client_bot.h"
 
+#include <atomic>
 #include <random>
+#include <stdio.h>
 
 #include "net/packet.h"
 #include "logging/logger.h"
@@ -13,6 +15,8 @@
 
 namespace
 {
+    std::atomic<int> client_counter{ 0 };
+
     std::random_device random_device;
     std::mt19937 random_generator(random_device());
     std::uniform_int_distribution<int> random_distributor;
@@ -26,8 +30,10 @@ namespace
 namespace bench
 {
     ClientBot::ClientBot(io::IoService& io_service)
-        : last_interactin_at{util::current_monotonic_tick()}
+        : _id{ client_counter.fetch_add(1, std::memory_order_relaxed) }
+        , last_interactin_at{util::current_monotonic_tick()}
     {
+        // Create socket for client
         win::UniqueSocket sock{ net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED) };
         io_accept_event.accepted_socket = sock.get();
 
@@ -67,7 +73,9 @@ namespace bench
 
     void ClientBot::send_handshake()
     {
-        net::PacketHandshake packet("user", "password", net::UserType::NORMAL);
+        char username[64];
+        ::snprintf(username, sizeof(username), "user%d", _id);
+        net::PacketHandshake packet(username, "password", net::UserType::NORMAL);
         connection_io->send_packet(packet);
         connection_io->emit_send_event();
     }
