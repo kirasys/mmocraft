@@ -111,13 +111,23 @@ namespace logging
     };
 
     // Console log functions
+    ConsoleLogger console_debug(const std::source_location& location = std::source_location::current());
+
+    ConsoleLogger console_info(const std::source_location& location = std::source_location::current());
+
+    ConsoleLogger console_warn(const std::source_location& location = std::source_location::current());
+
     ConsoleLogger console_error(const std::source_location &location = std::source_location::current());
     
     ConsoleLogger console_fatal(const std::source_location &location = std::source_location::current());
 
-
-
     // File log functions
+    FileLogger debug(const std::source_location& location = std::source_location::current());
+
+    FileLogger info(const std::source_location& location = std::source_location::current());
+
+    FileLogger warn(const std::source_location& location = std::source_location::current());
+
     FileLogger error(const std::source_location& location = std::source_location::current());
     
     FileLogger fatal(const std::source_location& location = std::source_location::current());

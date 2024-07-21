@@ -127,12 +127,36 @@ namespace logging
         clear_buffer();
     }
 
+    ConsoleLogger console_debug(const std::source_location& location) {
+        return { LogLevel::Debug, location };
+    }
+
+    ConsoleLogger console_info(const std::source_location& location) {
+        return { LogLevel::Info, location };
+    }
+
+    ConsoleLogger console_warn(const std::source_location& location) {
+        return { LogLevel::Warn, location };
+    }
+
     ConsoleLogger console_error(const std::source_location &location) {
         return { LogLevel::Error, location };
     }
 
     ConsoleLogger console_fatal(const std::source_location& location) {
         return { LogLevel::Fatal, location };
+    }
+
+    FileLogger debug(const std::source_location& location) {
+        return { LogLevel::Debug, location };
+    }
+
+    FileLogger info(const std::source_location& location) {
+        return { LogLevel::Info, location };
+    }
+
+    FileLogger warn(const std::source_location& location) {
+        return { LogLevel::Warn, location };
     }
 
     FileLogger error(const std::source_location& location) {
