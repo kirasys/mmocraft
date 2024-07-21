@@ -38,6 +38,7 @@ namespace config {
         // log default values
         auto& log_conf = get_log_config();
         log_conf.set_log_file_path("server.log");
+        log_conf.set_error_log_file_path("server_error.log");
 
         // database default values
         auto& database_conf = get_database_config();
@@ -69,8 +70,9 @@ namespace config {
     {
         if (not fs::exists(config_file_path)) {
             generate_config();
-            CONSOLE_LOG(fatal) << "Configuration file is generated at \"" << config_file_path << "\". "
+            std::cerr << "Configuration file is generated at \"" << config_file_path << "\". "
                 << "Please fill in appropriate values.";
+            std::exit(0);
         }
 
         util::json_file_to_proto_message(&g_configuration, config_file_path);
@@ -110,6 +112,9 @@ namespace config {
 
     void initialize_system()
     {
+        if (not fs::exists(config::config_dir))
+            fs::create_directories(config::config_dir);
+
         load_config();
     }
 }

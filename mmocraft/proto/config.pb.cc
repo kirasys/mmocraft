@@ -74,6 +74,7 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORIT
 PROTOBUF_CONSTEXPR Configuration_Log::Configuration_Log(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.log_file_path_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.error_log_file_path_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct Configuration_LogDefaultTypeInternal {
   PROTOBUF_CONSTEXPR Configuration_LogDefaultTypeInternal()
@@ -161,6 +162,7 @@ const uint32_t TableStruct_config_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(p
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::config::Configuration_Log, _impl_.log_file_path_),
+  PROTOBUF_FIELD_OFFSET(::config::Configuration_Log, _impl_.error_log_file_path_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::config::Configuration_System, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -187,8 +189,8 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 11, -1, -1, sizeof(::config::Configuration_World)},
   { 21, -1, -1, sizeof(::config::Configuration_Database)},
   { 32, -1, -1, sizeof(::config::Configuration_Log)},
-  { 39, -1, -1, sizeof(::config::Configuration_System)},
-  { 48, -1, -1, sizeof(::config::Configuration)},
+  { 40, -1, -1, sizeof(::config::Configuration_System)},
+  { 49, -1, -1, sizeof(::config::Configuration)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -201,7 +203,7 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 
 const char descriptor_table_protodef_config_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\014config.proto\022\006config\"\377\004\n\rConfiguration"
+  "\n\014config.proto\022\006config\"\234\005\n\rConfiguration"
   "\022,\n\006server\030\001 \001(\0132\034.config.Configuration."
   "Server\022*\n\005world\030\002 \001(\0132\033.config.Configura"
   "tion.World\0220\n\010database\030\003 \001(\0132\036.config.Co"
@@ -214,14 +216,15 @@ const char descriptor_table_protodef_config_2eproto[] PROTOBUF_SECTION_VARIABLE(
   "\006length\030\003 \001(\005\022\020\n\010save_dir\030\004 \001(\t\032p\n\010Datab"
   "ase\022\023\n\013driver_name\030\001 \001(\t\022\026\n\016server_addre"
   "ss\030\002 \001(\t\022\025\n\rdatabase_name\030\003 \001(\t\022\016\n\006useri"
-  "d\030\004 \001(\t\022\020\n\010password\030\005 \001(\t\032\034\n\003Log\022\025\n\rlog_"
-  "file_path\030\001 \001(\t\032W\n\006System\022\021\n\tpage_size\030\001"
-  " \001(\r\022\037\n\027alllocation_granularity\030\002 \001(\r\022\031\n"
-  "\021num_of_processors\030\003 \001(\rb\006proto3"
+  "d\030\004 \001(\t\022\020\n\010password\030\005 \001(\t\0329\n\003Log\022\025\n\rlog_"
+  "file_path\030\001 \001(\t\022\033\n\023error_log_file_path\030\002"
+  " \001(\t\032W\n\006System\022\021\n\tpage_size\030\001 \001(\r\022\037\n\027all"
+  "location_granularity\030\002 \001(\r\022\031\n\021num_of_pro"
+  "cessors\030\003 \001(\rb\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_config_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_config_2eproto = {
-    false, false, 672, descriptor_table_protodef_config_2eproto,
+    false, false, 701, descriptor_table_protodef_config_2eproto,
     "config.proto",
     &descriptor_table_config_2eproto_once, nullptr, 0, 6,
     schemas, file_default_instances, TableStruct_config_2eproto::offsets,
@@ -1306,6 +1309,7 @@ Configuration_Log::Configuration_Log(const Configuration_Log& from)
   Configuration_Log* const _this = this; (void)_this;
   new (&_impl_) Impl_{
       decltype(_impl_.log_file_path_){}
+    , decltype(_impl_.error_log_file_path_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -1317,6 +1321,14 @@ Configuration_Log::Configuration_Log(const Configuration_Log& from)
     _this->_impl_.log_file_path_.Set(from._internal_log_file_path(), 
       _this->GetArenaForAllocation());
   }
+  _impl_.error_log_file_path_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.error_log_file_path_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_error_log_file_path().empty()) {
+    _this->_impl_.error_log_file_path_.Set(from._internal_error_log_file_path(), 
+      _this->GetArenaForAllocation());
+  }
   // @@protoc_insertion_point(copy_constructor:config.Configuration.Log)
 }
 
@@ -1326,11 +1338,16 @@ inline void Configuration_Log::SharedCtor(
   (void)is_message_owned;
   new (&_impl_) Impl_{
       decltype(_impl_.log_file_path_){}
+    , decltype(_impl_.error_log_file_path_){}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.log_file_path_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
     _impl_.log_file_path_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.error_log_file_path_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.error_log_file_path_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
@@ -1346,6 +1363,7 @@ Configuration_Log::~Configuration_Log() {
 inline void Configuration_Log::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.log_file_path_.Destroy();
+  _impl_.error_log_file_path_.Destroy();
 }
 
 void Configuration_Log::SetCachedSize(int size) const {
@@ -1359,6 +1377,7 @@ void Configuration_Log::Clear() {
   (void) cached_has_bits;
 
   _impl_.log_file_path_.ClearToEmpty();
+  _impl_.error_log_file_path_.ClearToEmpty();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1375,6 +1394,16 @@ const char* Configuration_Log::_InternalParse(const char* ptr, ::_pbi::ParseCont
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "config.Configuration.Log.log_file_path"));
+        } else
+          goto handle_unusual;
+        continue;
+      // string error_log_file_path = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_error_log_file_path();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "config.Configuration.Log.error_log_file_path"));
         } else
           goto handle_unusual;
         continue;
@@ -1417,6 +1446,16 @@ uint8_t* Configuration_Log::_InternalSerialize(
         1, this->_internal_log_file_path(), target);
   }
 
+  // string error_log_file_path = 2;
+  if (!this->_internal_error_log_file_path().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_error_log_file_path().data(), static_cast<int>(this->_internal_error_log_file_path().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "config.Configuration.Log.error_log_file_path");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_error_log_file_path(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -1440,6 +1479,13 @@ size_t Configuration_Log::ByteSizeLong() const {
         this->_internal_log_file_path());
   }
 
+  // string error_log_file_path = 2;
+  if (!this->_internal_error_log_file_path().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_error_log_file_path());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -1460,6 +1506,9 @@ void Configuration_Log::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, cons
 
   if (!from._internal_log_file_path().empty()) {
     _this->_internal_set_log_file_path(from._internal_log_file_path());
+  }
+  if (!from._internal_error_log_file_path().empty()) {
+    _this->_internal_set_error_log_file_path(from._internal_error_log_file_path());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -1483,6 +1532,10 @@ void Configuration_Log::InternalSwap(Configuration_Log* other) {
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.log_file_path_, lhs_arena,
       &other->_impl_.log_file_path_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.error_log_file_path_, lhs_arena,
+      &other->_impl_.error_log_file_path_, rhs_arena
   );
 }
 

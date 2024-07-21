@@ -808,6 +808,7 @@ class Configuration_Log final :
 
   enum : int {
     kLogFilePathFieldNumber = 1,
+    kErrorLogFilePathFieldNumber = 2,
   };
   // string log_file_path = 1;
   void clear_log_file_path();
@@ -823,6 +824,20 @@ class Configuration_Log final :
   std::string* _internal_mutable_log_file_path();
   public:
 
+  // string error_log_file_path = 2;
+  void clear_error_log_file_path();
+  const std::string& error_log_file_path() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_error_log_file_path(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_error_log_file_path();
+  PROTOBUF_NODISCARD std::string* release_error_log_file_path();
+  void set_allocated_error_log_file_path(std::string* error_log_file_path);
+  private:
+  const std::string& _internal_error_log_file_path() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_error_log_file_path(const std::string& value);
+  std::string* _internal_mutable_error_log_file_path();
+  public:
+
   // @@protoc_insertion_point(class_scope:config.Configuration.Log)
  private:
   class _Internal;
@@ -832,6 +847,7 @@ class Configuration_Log final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr log_file_path_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr error_log_file_path_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1871,6 +1887,56 @@ inline void Configuration_Log::set_allocated_log_file_path(std::string* log_file
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:config.Configuration.Log.log_file_path)
+}
+
+// string error_log_file_path = 2;
+inline void Configuration_Log::clear_error_log_file_path() {
+  _impl_.error_log_file_path_.ClearToEmpty();
+}
+inline const std::string& Configuration_Log::error_log_file_path() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Log.error_log_file_path)
+  return _internal_error_log_file_path();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Configuration_Log::set_error_log_file_path(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.error_log_file_path_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.Log.error_log_file_path)
+}
+inline std::string* Configuration_Log::mutable_error_log_file_path() {
+  std::string* _s = _internal_mutable_error_log_file_path();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Log.error_log_file_path)
+  return _s;
+}
+inline const std::string& Configuration_Log::_internal_error_log_file_path() const {
+  return _impl_.error_log_file_path_.Get();
+}
+inline void Configuration_Log::_internal_set_error_log_file_path(const std::string& value) {
+  
+  _impl_.error_log_file_path_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Configuration_Log::_internal_mutable_error_log_file_path() {
+  
+  return _impl_.error_log_file_path_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Configuration_Log::release_error_log_file_path() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Log.error_log_file_path)
+  return _impl_.error_log_file_path_.Release();
+}
+inline void Configuration_Log::set_allocated_error_log_file_path(std::string* error_log_file_path) {
+  if (error_log_file_path != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.error_log_file_path_.SetAllocated(error_log_file_path, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.error_log_file_path_.IsDefault()) {
+    _impl_.error_log_file_path_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Log.error_log_file_path)
 }
 
 // -------------------------------------------------------------------

@@ -2,7 +2,6 @@
 #include "logger.h"
 
 #include <map>
-#include <mutex>
 #include <filesystem>
 #include <string_view>
 
@@ -13,8 +12,10 @@
 
 namespace
 {
-    std::ofstream system_log_file_stream;
-    std::mutex system_log_mutex;
+    std::ofstream general_log_stream;
+    std::ofstream error_log_stream;
+
+    logging::LogLevelDescriptor log_level_descriptors[logging::LogLevel::SIZE];
 }
 
 namespace logging
@@ -41,75 +42,105 @@ namespace logging
 
         setlocale(LC_ALL, ""); // user-default ANSI code page obtained from the operating system
 
-        system_log_file_stream.open(log_conf.log_file_path(), std::ofstream::out);
-        if (not system_log_file_stream.is_open())
+        // Initialize log level descriptors.
+
+        general_log_stream.open(log_conf.log_file_path(), std::ofstream::out);
+        if (not general_log_stream.is_open())
             CONSOLE_LOG(fatal) << "Fail to open file: " << log_conf.log_file_path();
 
+        error_log_stream.open(log_conf.error_log_file_path(), std::ofstream::out);
+        if (not error_log_stream.is_open())
+            CONSOLE_LOG(fatal) << "Fail to open file: " << log_conf.error_log_file_path();
+
         setup::add_termination_handler([]() {
-            system_log_file_stream.close();
+            general_log_stream.close();
+            error_log_stream.close();
         });
+
+        log_level_descriptors[LogLevel::Debug].prefix_string = "[Debug]";
+        log_level_descriptors[LogLevel::Info].prefix_string =  "[Info]";
+        log_level_descriptors[LogLevel::Warn].prefix_string =  "[Warn]";
+        log_level_descriptors[LogLevel::Error].prefix_string = "[Error]";
+        log_level_descriptors[LogLevel::Fatal].prefix_string = "[Fatal]";
+
+        log_level_descriptors[LogLevel::Debug].outstream = &general_log_stream;
+        log_level_descriptors[LogLevel::Info].outstream = &general_log_stream;
+        log_level_descriptors[LogLevel::Warn].outstream = &general_log_stream;
+        log_level_descriptors[LogLevel::Error].outstream = &error_log_stream;
+        log_level_descriptors[LogLevel::Fatal].outstream = &error_log_stream;
     }
 
-    /*  LogStream Class */
+    /*  Logger Class */
 
-    Logger::Logger
-        (bool is_fatal, std::ostream& os, const std::source_location &location)
-        : _is_fatal{ is_fatal }
-        , _output_stream{ os }
+    Logger::Logger(LogLevel level, const std::source_location &location)
+        : _level{ level }
     {
         set_line_prefix(location);
     }
 
     Logger::~Logger()
     {
-        if (_is_fatal)
+        if (_level == LogLevel::Fatal)
             std::exit(0);
-    }
-
-    void Logger::flush()
-    {
-        {
-            const std::lock_guard<std::mutex> lock(system_log_mutex);
-            _output_stream << _buffer.view() << std::endl;
-        }
-
-        _buffer.str(std::string());
-        _buffer.clear();
     }
 
     void Logger::set_line_prefix(const std::source_location& location)
     {
-        _buffer << std::filesystem::path(location.file_name()).filename() << '('
+        _buffer << log_level_descriptors[_level].prefix_string << ' '
+            << std::filesystem::path(location.file_name()).filename() << '('
             << location.line() << ':'
             << location.column() << ") : ";
     }
 
-    LogStream::LogStream
-        (bool is_fatal, std::ostream& os, const std::source_location& location)
-        : logger{ is_fatal, os, location }
+    ConsoleLogger::ConsoleLogger(LogLevel level, const std::source_location& location)
+        : Logger{level, location}
+    { }
+
+    ConsoleLogger::~ConsoleLogger()
     {
-        
+        flush();
     }
 
-    LogStream::~LogStream()
+    void ConsoleLogger::flush()
     {
-        logger.flush();
+        std::cout << buffer_view() << std::endl;
+
+        clear_buffer();
     }
 
-    LogStream console_error(const std::source_location &location) {
-        return { false, std::cerr, location };
+    FileLogger::FileLogger(LogLevel level, const std::source_location& location)
+        : Logger{ level, location }
+    { }
+
+    FileLogger::~FileLogger()
+    {
+        flush();
     }
 
-    LogStream console_fatal(const std::source_location& location) {
-        return { true, std::cerr, location };
+    void FileLogger::flush()
+    {
+        {
+            const std::lock_guard<std::mutex> lock(log_level_descriptors[log_level()].flush_mutex);
+            *log_level_descriptors[log_level()].outstream << buffer_view() << std::endl;
+        }
+
+        clear_buffer();
     }
 
-    LogStream error(const std::source_location& location) {
-        return { false, system_log_file_stream, location };
+    ConsoleLogger console_error(const std::source_location &location) {
+        return { LogLevel::Error, location };
     }
 
-    LogStream fatal(const std::source_location& location) {
-        return { true, system_log_file_stream, location };
+    ConsoleLogger console_fatal(const std::source_location& location) {
+        return { LogLevel::Fatal, location };
+    }
+
+    FileLogger error(const std::source_location& location) {
+        return { LogLevel::Error, location };
+    }
+
+    FileLogger fatal(const std::source_location& location) {
+        return { LogLevel::Fatal, location };
     }
 
     void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code)

@@ -132,7 +132,6 @@
     <ClInclude Include="win\win_type.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="config\config.json" />
     <None Include="database\sql\clean.sql" />
     <None Include="database\sql\configure.sql" />
     <None Include="database\sql\routines\create_database.sql" />

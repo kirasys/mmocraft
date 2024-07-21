@@ -44,19 +44,13 @@ namespace setup
         std::signal(SIGINT, termination_routine_for_signal);
         std::signal(SIGABRT, termination_routine_for_signal);
 
-        // config system
-        if (not fs::exists(config::config_dir))
-            fs::create_directories(config::config_dir);
-
         config::initialize_system();
 
-        // log system
         logging::initialize_system();
 
-        // network system
         net::Socket::initialize_system();
 
-        // save system
+        // Create working directories
         const auto& world_conf = config::get_world_config();
 
         if (not fs::exists(world_conf.save_dir()))

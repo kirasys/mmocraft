@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <source_location>
+#include <mutex>
 
 #include <sql.h>
 #include <sqlext.h>
@@ -28,6 +29,15 @@ namespace logging
         Warn,
         Error,
         Fatal,
+
+        SIZE,
+    };
+
+    struct LogLevelDescriptor
+    {
+        const char* prefix_string = nullptr;
+        std::ostream* outstream = nullptr;
+        std::mutex flush_mutex;
     };
 
     LogLevel to_log_level(std::string log_level);
@@ -37,9 +47,9 @@ namespace logging
     class Logger : util::NonCopyable, util::NonMovable
     {
     public:
-        Logger(bool is_fatal, std::ostream&, const std::source_location&);
+        Logger(LogLevel, const std::source_location&);
 
-        ~Logger();
+        virtual ~Logger();
         
         template <typename T>
         void append(T&& value)
@@ -47,45 +57,70 @@ namespace logging
             _buffer << std::forward<T>(value);
         }
 
-        void flush();
+        // template member function should be in the header.
+        template <typename T>
+        Logger& operator<<(T&& value)
+        {
+            _buffer << std::forward<T>(value);
+            return *this;
+        }
+
+        std::string_view buffer_view() const
+        {
+            return _buffer.view();
+        }
+
+        void clear_buffer()
+        {
+            _buffer.str(std::string());
+            _buffer.clear();
+        }
+
+        LogLevel log_level() const
+        {
+            return _level;
+        }
+
+        virtual void flush() = 0;
 
     private:
         void set_line_prefix(const std::source_location&);
 
-        bool _is_fatal;
-        std::ostream& _output_stream;
+        LogLevel _level;
         std::stringstream _buffer;
     };
 
-    class LogStream
+    class ConsoleLogger : public Logger
     {
     public:
-        LogStream(bool is_fatal, std::ostream&, const std::source_location&);
+        ConsoleLogger(LogLevel, const std::source_location&);
 
-        ~LogStream();
+        ~ConsoleLogger();
 
-        // template member function should be in the header.
-        template <typename T>
-        LogStream& operator<<(T&& value)
-        {
-            logger.append(std::forward<T>(value));
-            return *this;
-        }
+        virtual void flush() override;
+    };
 
-    private:
-        Logger logger;
+    class FileLogger : public Logger
+    {
+    public:
+        FileLogger(LogLevel, const std::source_location&);
+
+        ~FileLogger();
+
+        virtual void flush() override;
     };
 
     // Console log functions
-    LogStream console_error(const std::source_location &location = std::source_location::current());
+    ConsoleLogger console_error(const std::source_location &location = std::source_location::current());
     
-    LogStream console_fatal(const std::source_location &location = std::source_location::current());
+    ConsoleLogger console_fatal(const std::source_location &location = std::source_location::current());
+
 
 
     // File log functions
-    LogStream error(const std::source_location& location = std::source_location::current());
+    FileLogger error(const std::source_location& location = std::source_location::current());
     
-    LogStream fatal(const std::source_location& location = std::source_location::current());
+    FileLogger fatal(const std::source_location& location = std::source_location::current());
 
     void logging_sql_error(SQLSMALLINT handle_type, SQLHANDLE handle, RETCODE error_code);
 }

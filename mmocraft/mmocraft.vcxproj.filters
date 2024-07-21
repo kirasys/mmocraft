@@ -99,7 +99,6 @@
     <None Include="database\sql\routines\create_login_and_user.sql" />
     <None Include="database\sql\routines\create_functions.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
-    <None Include="config\config.json" />
     <None Include="database\sql\routines\create_procedures.sql" />
   </ItemGroup>
   <ItemGroup>

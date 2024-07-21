@@ -28,6 +28,7 @@ message Configuration {
 
     message Log {
         string log_file_path = 1;
+        string error_log_file_path = 2;
     }
 
     message System {
