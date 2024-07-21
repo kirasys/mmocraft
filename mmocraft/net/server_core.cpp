@@ -54,7 +54,8 @@ namespace net
         _listen_sock.bind(server_conf.ip(), server_conf.port());
         _listen_sock.listen();
         start_accept();
-        std::cout << "Listening to " << server_conf.ip() << ':' << server_conf.port() << "...\n";
+
+        CONSOLE_LOG(info) << "Listening to " << server_conf.ip() << ':' << server_conf.port() << "...\n";
 
         for (unsigned i = 0; i < system_conf.num_of_processors() * 2; i++)
             io_service.spawn_event_loop_thread().detach();
