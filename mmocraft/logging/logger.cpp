@@ -43,7 +43,19 @@ namespace logging
         setlocale(LC_ALL, ""); // user-default ANSI code page obtained from the operating system
 
         // Initialize log level descriptors.
+        log_level_descriptors[LogLevel::Debug].prefix_string = "[Debug]";
+        log_level_descriptors[LogLevel::Info].prefix_string = "[Info]";
+        log_level_descriptors[LogLevel::Warn].prefix_string = "[Warn]";
+        log_level_descriptors[LogLevel::Error].prefix_string = "[Error]";
+        log_level_descriptors[LogLevel::Fatal].prefix_string = "[Fatal]";
 
+        log_level_descriptors[LogLevel::Debug].outstream = &general_log_stream;
+        log_level_descriptors[LogLevel::Info].outstream = &general_log_stream;
+        log_level_descriptors[LogLevel::Warn].outstream = &general_log_stream;
+        log_level_descriptors[LogLevel::Error].outstream = &error_log_stream;
+        log_level_descriptors[LogLevel::Fatal].outstream = &error_log_stream;
+
+        // Open file stream for logging.
         general_log_stream.open(log_conf.log_file_path(), std::ofstream::out);
         if (not general_log_stream.is_open())
             CONSOLE_LOG(fatal) << "Fail to open file: " << log_conf.log_file_path();
@@ -56,18 +68,6 @@ namespace logging
             general_log_stream.close();
             error_log_stream.close();
         });
-
-        log_level_descriptors[LogLevel::Debug].prefix_string = "[Debug]";
-        log_level_descriptors[LogLevel::Info].prefix_string =  "[Info]";
-        log_level_descriptors[LogLevel::Warn].prefix_string =  "[Warn]";
-        log_level_descriptors[LogLevel::Error].prefix_string = "[Error]";
-        log_level_descriptors[LogLevel::Fatal].prefix_string = "[Fatal]";
-
-        log_level_descriptors[LogLevel::Debug].outstream = &general_log_stream;
-        log_level_descriptors[LogLevel::Info].outstream = &general_log_stream;
-        log_level_descriptors[LogLevel::Warn].outstream = &general_log_stream;
-        log_level_descriptors[LogLevel::Error].outstream = &error_log_stream;
-        log_level_descriptors[LogLevel::Fatal].outstream = &error_log_stream;
     }
 
     /*  Logger Class */
