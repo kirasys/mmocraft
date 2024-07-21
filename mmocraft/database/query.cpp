@@ -3,10 +3,29 @@
 
 #include <string.h>
 
+#include "database/database_core.h"
+#include "logging/logger.h"
+
+namespace
+{
+    database::DatabaseCore global_database_connection;
+}
+
 namespace database
 {
-    PlayerLoginSQL::PlayerLoginSQL(SQLHDBC a_connection_handle)
-        : SQLStatement{ a_connection_handle }
+    void initialize_system()
+    {
+        const auto& db_conf = config::get_database_config();
+
+        // start database system.
+        CONSOLE_LOG(info) << "Connecting database server...";
+        if (not global_database_connection.connect_with_password(db_conf))
+            throw error::DATABASE_CONNECT;
+        CONSOLE_LOG(info) << "Connected";
+    }
+
+    PlayerLoginSQL::PlayerLoginSQL()
+        : SQLStatement{ global_database_connection.get_connection_handle() }
     {
         this->prepare(query);
 
@@ -33,8 +52,8 @@ namespace database
         return false;
     }
 
-    PlayerSearchSQL::PlayerSearchSQL(SQLHDBC a_connection_handle)
-        : SQLStatement{ a_connection_handle }
+    PlayerSearchSQL::PlayerSearchSQL()
+        : SQLStatement{ global_database_connection.get_connection_handle() }
     {
         this->prepare(query);
 
@@ -58,8 +77,8 @@ namespace database
         return false;
     }
 
-    PlayerUpdateSQL::PlayerUpdateSQL(SQLHDBC a_connection_handle)
-        : SQLStatement{ a_connection_handle }
+    PlayerUpdateSQL::PlayerUpdateSQL()
+        : SQLStatement{ global_database_connection.get_connection_handle() }
     {
         this->prepare(query);
 

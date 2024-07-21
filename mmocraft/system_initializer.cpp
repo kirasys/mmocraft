@@ -11,6 +11,7 @@
 #include "logging/logger.h"
 #include "net/socket.h"
 #include "net/connection.h"
+#include "database/query.h"
 
 namespace fs = std::filesystem;
 
@@ -49,6 +50,8 @@ namespace setup
         logging::initialize_system();
 
         net::Socket::initialize_system();
+
+        database::initialize_system();
 
         // Create working directories
         const auto& world_conf = config::get_world_config();

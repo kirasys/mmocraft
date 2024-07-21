@@ -5,6 +5,8 @@
 
 namespace database
 {
+    void initialize_system();
+
     constexpr std::size_t player_gamedata_column_size = 64;
 
     class PlayerLoginSQL : public SQLStatement
@@ -12,7 +14,7 @@ namespace database
     public:
         static constexpr const char* query = "{ call dbo.PlayerLogin(?, ?, ?, ?, ?) }";
 
-        PlayerLoginSQL(SQLHDBC);
+        PlayerLoginSQL();
 
         bool authenticate(const char* username, const char* password);
 
@@ -46,7 +48,7 @@ namespace database
     public:
         static constexpr const char* query = "SELECT id, is_admin FROM player WHERE username = ?";
 
-        PlayerSearchSQL(SQLHDBC);
+        PlayerSearchSQL();
 
         bool search(const char* username);
 
@@ -72,7 +74,7 @@ namespace database
     public:
         static constexpr const char* query = "UPDATE player_game_data SET gamedata = ? WHERE player_id = ?";
 
-        PlayerUpdateSQL(SQLHDBC);
+        PlayerUpdateSQL();
 
         bool update(const game::Player&);
 

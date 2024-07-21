@@ -194,7 +194,7 @@ namespace game
         despawn_player(disconnect_wait_players);
 
         // Update player game data then set offline.
-        database::PlayerUpdateSQL player_update_sql{ database_core.get_connection_handle() };
+        database::PlayerUpdateSQL player_update_sql;
 
         for (auto player : disconnect_wait_players) {
             if (not player_update_sql.update(*player))

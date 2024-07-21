@@ -16,7 +16,6 @@ namespace net
         : connection_env{ a_connection_env }
         , io_service { a_io_service }
         , server_core{ *this, connection_env, io_service }
-        , database_core{ }
         , world{ connection_env, database_core }
         
         , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this, user_authentication_task_interval }
@@ -142,12 +141,6 @@ namespace net
 
     void MasterServer::serve_forever()
     {
-        const auto& db_conf = config::get_database_config();
-
-        // start database system.
-        if (not database_core.connect_with_password(db_conf))
-            throw error::DATABASE_CONNECT;
-
         // start network I/O system.
         server_core.start_network_io_service();
 
@@ -184,7 +177,7 @@ namespace net
 
     void MasterServer::handle_deferred_handshake_packet(io::Task* task, const DeferredPacket<net::PacketHandshake>* packet_head)
     {
-        database::PlayerLoginSQL player_login{ database_core.get_connection_handle() };
+        database::PlayerLoginSQL player_login;
 
         if (not player_login.is_valid()) {
             CONSOLE_LOG(error) << "Fail to allocate sql statement handles.";
