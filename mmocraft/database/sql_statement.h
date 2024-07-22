@@ -30,6 +30,12 @@ namespace database
             }
         }
 
+        bool is_valid() const
+        {
+            return statement_handle != SQL_NULL_HSTMT;
+        }
+
+    protected:
         void logging_current_statement_error(RETCODE) const;
 
         void close();
@@ -53,7 +59,7 @@ namespace database
         bool outbound_uint32_parameter(SQLUSMALLINT parameter_number, SQLUINTEGER&);
 
         bool outbound_bytes_parameter(SQLUSMALLINT column_number, std::byte* buf, SQLLEN column_size, SQLLEN& buf_size);
-        
+
         bool outbound_bool_column(SQLUSMALLINT column_number, SQLCHAR&);
 
         bool outbound_int32_column(SQLUSMALLINT column_number, SQLINTEGER&);
@@ -75,11 +81,6 @@ namespace database
         bool more_results();
 
         bool close_cursor();
-
-        bool is_valid() const
-        {
-            return statement_handle != SQL_NULL_HSTMT;
-        }
 
     private:
         SQLHSTMT statement_handle = SQL_NULL_HSTMT;
