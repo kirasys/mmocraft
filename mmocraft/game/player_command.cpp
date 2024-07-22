@@ -59,15 +59,17 @@ namespace game
             return;
         }
 
+        auto message = tokens[2];
+
         char from_message[64];
         std::snprintf(from_message, sizeof(from_message), BLUE_COLOR "[from %.*s] %.*s",
-            static_cast<int>(tokens[1].size()), tokens[1].data(),
-            static_cast<int>(tokens[2].size()), tokens[2].data());
+            static_cast<int>(std::strlen(_player.username())), _player.username(),
+            static_cast<int>(message.size()), message.data());
 
         char to_message[64];
         std::snprintf(to_message, sizeof(to_message), BLUE_COLOR "[to %.*s] %.*s",
             static_cast<int>(tokens[1].size()), tokens[1].data(),
-            static_cast<int>(tokens[2].size()), tokens[2].data());
+            static_cast<int>(message.size()), message.data());
 
         world.unicast_to_world_player(_player.username(), net::MessageType::Chat, to_message);
         world.unicast_to_world_player(tokens[1], net::MessageType::Chat, from_message);
