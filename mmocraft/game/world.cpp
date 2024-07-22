@@ -36,19 +36,14 @@ namespace game
         player_lookup_table.reserve(connection_env.size_of_max_connections());
     }
 
-    net::Connection* World::try_acquire_player_connection(std::string_view username)
+    net::Connection* World::try_acquire_player_connection(const char* key)
     {
-        char key[64];
-        assert(username.size() < sizeof(key));
-        std::memcpy(key, username.data(), username.size());
-        key[username.size()] = 0;
-
         std::shared_lock lock(player_lookup_table_mutex);
         return player_lookup_table.find(key) != player_lookup_table.end() ?
             connection_env.try_acquire_connection(player_lookup_table.at(key)) : nullptr;
     }
 
-    void World::unicast_to_world_player(std::string_view username, net::MessageType message_type, std::string_view message)
+    void World::unicast_to_world_player(const char* username, net::MessageType message_type, const char* message)
     {
         if (auto conn = try_acquire_player_connection(username)) {
             net::PacketExtMessage message_packet(message_type, message);
@@ -56,7 +51,7 @@ namespace game
         }
     }
 
-    void World::broadcast_to_world_player(net::MessageType message_type, std::string_view message)
+    void World::broadcast_to_world_player(net::MessageType message_type, const char* message)
     {
         std::vector<game::Player*> world_players;
         world_players.reserve(connection_env.size_of_max_connections());

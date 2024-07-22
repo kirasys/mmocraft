@@ -60,11 +60,11 @@ namespace game
             player_lookup_table.erase(username);
         }
 
-        net::Connection* try_acquire_player_connection(std::string_view username);
+        net::Connection* try_acquire_player_connection(const char* username);
 
-        void unicast_to_world_player(std::string_view username, net::MessageType, std::string_view message);
+        void unicast_to_world_player(const char* username, net::MessageType, const char* message);
 
-        void broadcast_to_world_player(net::MessageType, std::string_view message);
+        void broadcast_to_world_player(net::MessageType, const char* message);
 
         void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
 

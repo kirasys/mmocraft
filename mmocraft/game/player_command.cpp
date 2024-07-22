@@ -1,33 +1,33 @@
 #include "pch.h"
 #include "player_command.h"
 
-#include <cstdlib>
-#include <cstring>
 #include <string.h>
 #include <stdexcept>
 
+#include "database/query.h"
 #include "game/world.h"
 #include "logging/logger.h"
-
-#define ERROR_COLOR "&c"
-#define SUCCESS_COLOR "&2"
-#define BLUE_COLOR "&9"
 
 namespace game
 {
     void PlayerCommand::execute(game::World& world, std::string_view command)
     {
+        ::memcpy_s(_command, sizeof(_command), command.data(), command.size());
+
         try {
-            auto tokens = get_lexical_tokens(command);
+            auto tokens = parse_tokens(_command);
             if (tokens.size() == 0)
                 throw std::invalid_argument("");
 
             auto program = tokens[0];
-            if (program == "/set_spawn")
+
+            if (!std::strcmp("/set_spawn", program))
                 execute_set_spawn(tokens);
-            else if (program == "/dm")
+            else if (!std::strcmp("/mail", program))
+                execute_mail(tokens);
+            else if (!std::strcmp("/dm", program))
                 execute_direct_message(world, tokens);
-            else if (program == "/announcement")
+            else if (!std::strcmp("/announcement", program))
                 execute_announcement(world, tokens);
             else
                 set_response(ERROR_COLOR "Unsupported command");
@@ -37,7 +37,7 @@ namespace game
         }
     }
 
-    void PlayerCommand::execute_set_spawn(const std::vector<std::string_view>& tokens)
+    void PlayerCommand::execute_set_spawn(const std::vector<const char*>& tokens)
     {
         if (tokens.size() != 4) {
             set_response(ERROR_COLOR "Usage: /set_spawn X Y Z");
@@ -52,30 +52,52 @@ namespace game
         set_response(SUCCESS_COLOR "Spawn point saved.");
     }
 
-    void PlayerCommand::execute_direct_message(game::World& world, const std::vector<std::string_view>& tokens)
+    void PlayerCommand::execute_mail(const std::vector<const char*>& tokens)
+    {
+        if (tokens.size() < 3) {
+            set_response(ERROR_COLOR "Usage: /mail MODE(read | write | delete) USERNAME ...");
+            return;
+        }
+
+        auto username = tokens[1];
+        auto mode = tokens[2];
+        
+        database::PlayerSearchSQL player_search;
+        player_search.search(username);
+
+        if (!std::strcmp("write", mode))
+            execute_mail_write(tokens);
+    }
+
+    void PlayerCommand::execute_mail_write(const std::vector<const char*>& tokens)
+    {
+        if (tokens.size() != 4) {
+            set_response(ERROR_COLOR "Usage: /mail write USERNAME MESSAGE");
+            return;
+        }
+
+        char message[net::PacketFieldConstraint::max_string_length];
+        format_from_message(message, _player.username(), tokens[3]);
+    }
+
+    void PlayerCommand::execute_direct_message(game::World& world, const std::vector<const char*>& tokens)
     {
         if (tokens.size() != 3) {
             set_response(ERROR_COLOR "Usage: /dm TO MESSAGE");
             return;
         }
 
-        auto message = tokens[2];
+        char from_message[net::PacketFieldConstraint::max_string_length];
+        format_from_message(from_message, _player.username(), tokens[2]);
 
-        char from_message[64];
-        std::snprintf(from_message, sizeof(from_message), BLUE_COLOR "[from %.*s] %.*s",
-            static_cast<int>(std::strlen(_player.username())), _player.username(),
-            static_cast<int>(message.size()), message.data());
-
-        char to_message[64];
-        std::snprintf(to_message, sizeof(to_message), BLUE_COLOR "[to %.*s] %.*s",
-            static_cast<int>(tokens[1].size()), tokens[1].data(),
-            static_cast<int>(message.size()), message.data());
+        char to_message[net::PacketFieldConstraint::max_string_length];
+        format_to_message(to_message, tokens[1], tokens[2]);
 
         world.unicast_to_world_player(_player.username(), net::MessageType::Chat, to_message);
         world.unicast_to_world_player(tokens[1], net::MessageType::Chat, from_message);
     }
 
-    void PlayerCommand::execute_announcement(game::World& world, const std::vector<std::string_view>& tokens)
+    void PlayerCommand::execute_announcement(game::World& world, const std::vector<const char*>& tokens)
     {
         if (tokens.size() != 2) {
             set_response(ERROR_COLOR "Usage: /announcement MESSAGE");
@@ -90,22 +112,21 @@ namespace game
         world.broadcast_to_world_player(net::MessageType::Announcement, tokens[1]);
     }
 
-    std::vector<std::string_view> PlayerCommand::get_lexical_tokens(std::string_view command)
+    std::vector<const char*> PlayerCommand::parse_tokens(char* command)
     {
-        std::vector<std::string_view> tokens;
+        std::vector<const char*> tokens;
 
-        int token_start = -1;
-        for (int i = 0; i < command.size(); i++) {
-            if (token_start < 0 && not util::is_whitespace(command[i]))
-                token_start = i;
-            else if (token_start >= 0 && util::is_whitespace(command[i])) {
-                tokens.push_back(command.substr(token_start, i - token_start));
-                token_start = -1;
+        bool token_splited = true;
+        for (int i = 0; i < sizeof(_command); i++) {
+            if (util::is_whitespace(command[i])) {
+                command[i] = '\0';
+                token_splited = true;
+            }
+            else if (token_splited) {
+                tokens.push_back(command + i);
+                token_splited = false;
             }
         }
-
-        if (token_start >= 0)
-            tokens.push_back(command.substr(token_start, command.size() - token_start));
 
         return tokens;
     }

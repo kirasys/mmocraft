@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <cstdlib>
 #include <charconv>
 #include <stdexcept>
 
@@ -16,6 +17,12 @@ namespace util
     inline bool is_whitespace(char c)
     {
         return c == ' ' || (c >= 0x9 && c <= 0xD);
+    }
+
+    template <typename IntegerType>
+    IntegerType to_integer(const char* cstr)
+    {
+        return static_cast<IntegerType>(std::atoi(cstr));
     }
 
     template <typename IntegerType>

@@ -62,10 +62,10 @@ namespace net
         static constexpr PacketID packet_id = PacketID::ExtMessage;
         static constexpr std::size_t packet_size = 66;
 
-        PacketExtMessage(MessageType type, std::string_view msg)
+        PacketExtMessage(MessageType type, const char* msg)
             : Packet{ packet_id }
             , msg_type{ type }
-            , message{ msg.data(), msg.size() }
+            , message{ msg, std::strlen(msg) }
         { }
 
         bool serialize(io::IoEventData&) const;
