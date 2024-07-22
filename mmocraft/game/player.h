@@ -175,11 +175,6 @@ namespace game
             return PlayerID(_connection_key.index());
         }
 
-        const char* player_name() const
-        {
-            return _username;
-        }
-
         PlayerPosition spawn_position() const
         {
             return _gamedata.spawn_pos();

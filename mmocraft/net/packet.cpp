@@ -351,7 +351,7 @@ namespace net
             for (const auto* player : players) {
                 PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
                 PacketStructure::write_byte(buf_start, player->game_id());
-                PacketStructure::write_string(buf_start, player->player_name());
+                PacketStructure::write_string(buf_start, player->username());
                 
                 game::PlayerPosition last_player_pos = player->last_position().raw ? player->last_position() : player->spawn_position();
                 PacketStructure::write_coordinate(buf_start, last_player_pos.coordinate());
