@@ -230,7 +230,7 @@ win::Socket net::create_windows_socket(SocketProtocol protocol, DWORD flags)
         return WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, flags);
         break;
     case SocketProtocol::UDPv4:
-        return ::WSASocketW(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, flags);
+        return ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         break;
     default:
         return INVALID_SOCKET;
