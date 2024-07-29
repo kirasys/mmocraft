@@ -31,7 +31,7 @@ TEST_F(ServerCoreTest, Connection_Creation_Success) {
 
     // server core will create new connection.
     for (unsigned i = 0; i < max_player_count; i++) {
-        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
+        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4Overlapped);
         SUT_server.handle_io_event(&io_accept_event);
         is_success_create_max_player &= SUT_server.get_last_error().is_success();
     }
@@ -45,7 +45,7 @@ TEST_F(ServerCoreTest, Connection_Creation_Exceed) {
 
     // try to create more than maximum.
     for (unsigned i = 0; i < max_player_count + 1; i++) {
-        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
+        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4Overlapped);
         SUT_server.handle_io_event(&io_accept_event);
     }
 
@@ -60,7 +60,7 @@ TEST_F(ServerCoreTest, Check_Connection_Timeout) {;
 
     // server core will create new connection.
     for (unsigned i = 0; i < max_player_count; i++) {
-        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
+        io_accept_event.accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4Overlapped);
         SUT_server.handle_io_event(&io_accept_event);
     }
 

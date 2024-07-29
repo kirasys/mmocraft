@@ -16,7 +16,9 @@ namespace net
     {
         None,
         TCPv4,
+        TCPv4Overlapped,
         UDPv4,
+        UDPv4Overlapped,
     };
 
     class Socket : public win::WinBaseObject<win::Socket>, util::NonCopyable
@@ -71,5 +73,5 @@ namespace net
         win::UniqueSocket _handle;
     };
 
-    win::Socket create_windows_socket(SocketProtocol, DWORD flags);
+    win::Socket create_windows_socket(SocketProtocol);
 }

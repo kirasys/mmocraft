@@ -23,7 +23,7 @@ net::Socket::Socket() noexcept
 { }
 
 net::Socket::Socket(SocketProtocol protocol)
-    : _handle{ create_windows_socket(protocol, WSA_FLAG_OVERLAPPED) }
+    : _handle{ create_windows_socket(protocol) }
 {
     if (not is_valid())
         throw error::SOCKET_CREATE;
@@ -48,7 +48,7 @@ void net::Socket::initialize_system()
             ::WSACleanup();
         });
 
-        win::UniqueSocket sock{ create_windows_socket(SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED) };
+        win::UniqueSocket sock{ create_windows_socket(SocketProtocol::TCPv4Overlapped) };
 
         {
             GUID guid = WSAID_ACCEPTEX;
@@ -107,7 +107,7 @@ bool net::Socket::listen(int backlog) {
 
 error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event)
 {
-    event.accepted_socket = create_windows_socket(SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED);
+    event.accepted_socket = create_windows_socket(SocketProtocol::TCPv4Overlapped);
     if (event.accepted_socket == INVALID_SOCKET)
         return error::SOCKET_CREATE;
 
@@ -223,15 +223,17 @@ void net::Socket::close() noexcept {
     _handle.reset();
 }
 
-win::Socket net::create_windows_socket(SocketProtocol protocol, DWORD flags)
+win::Socket net::create_windows_socket(SocketProtocol protocol)
 {
     switch (protocol) {
     case SocketProtocol::TCPv4:
-        return WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, flags);
-        break;
+        return ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    case SocketProtocol::TCPv4Overlapped:
+        return ::WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
     case SocketProtocol::UDPv4:
         return ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-        break;
+    case SocketProtocol::UDPv4Overlapped:
+        return ::WSASocketW(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_OVERLAPPED);
     default:
         return INVALID_SOCKET;
     }

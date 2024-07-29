@@ -34,7 +34,7 @@ namespace bench
         , last_interactin_at{util::current_monotonic_tick()}
     {
         // Create socket for client
-        win::UniqueSocket sock{ net::create_windows_socket(net::SocketProtocol::TCPv4, WSA_FLAG_OVERLAPPED) };
+        win::UniqueSocket sock{ net::create_windows_socket(net::SocketProtocol::TCPv4Overlapped) };
         io_accept_event.accepted_socket = sock.get();
 
         // ConnectEx requires the socket to be initially bound.

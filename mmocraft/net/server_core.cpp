@@ -15,7 +15,7 @@ namespace net
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }
-        , _listen_sock{ net::SocketProtocol::TCPv4 }
+        , _listen_sock{ net::SocketProtocol::TCPv4Overlapped }
         , io_service{ a_io_service }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
