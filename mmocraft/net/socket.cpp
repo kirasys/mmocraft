@@ -164,6 +164,25 @@ bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
     return true;
 }
 
+bool net::Socket::send_to(const char* ip, int port, const char* data, std::size_t data_size)
+{
+    sockaddr_in sock_addr;
+    sock_addr.sin_family = get_address_family();
+    sock_addr.sin_port = ::htons(port);
+    ::inet_pton(get_address_family(), ip, &sock_addr.sin_addr);
+
+    int ret = ::sendto(
+        _handle, 
+        data,
+        static_cast<int>(data_size),
+        0,
+        reinterpret_cast<SOCKADDR*>(&sock_addr),
+        sizeof(sock_addr)
+    );
+
+    return ret != SOCKET_ERROR;
+}
+
 bool net::Socket::recv(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
 {
     DWORD flags = 0;
@@ -181,6 +200,23 @@ bool net::Socket::recv(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
         return false;
 
     return true;
+}
+
+bool net::Socket::recv_from(const char* ip, int port, char* buf, std::size_t buf_size)
+{
+    sockaddr_in sock_addr;
+    int sock_addr_size = sizeof(sock_addr);
+
+    int ret = ::recvfrom(
+        _handle,
+        buf,
+        static_cast<int>(buf_size),
+        0,
+        reinterpret_cast<SOCKADDR*>(&sock_addr),
+        &sock_addr_size
+    );
+
+    return ret != SOCKET_ERROR;
 }
 
 void net::Socket::close() noexcept {

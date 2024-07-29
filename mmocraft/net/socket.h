@@ -57,7 +57,11 @@ namespace net
 
         bool send(WSAOVERLAPPED*, WSABUF*);
 
+        bool send_to(const char* ip, int port, const char* data, std::size_t data_size);
+
         bool recv(WSAOVERLAPPED*, WSABUF*);
+
+        bool recv_from(const char* ip, int port, char* buf, std::size_t buf_size);
 
         int get_address_family() {
             return AF_INET; // TODO: IPv6
