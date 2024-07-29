@@ -61,6 +61,7 @@ PROTOBUF_CONSTEXPR Configuration_Database::Configuration_Database(
   , /*decltype(_impl_.database_name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.userid_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.password_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.mongodb_uri_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct Configuration_DatabaseDefaultTypeInternal {
   PROTOBUF_CONSTEXPR Configuration_DatabaseDefaultTypeInternal()
@@ -155,6 +156,7 @@ const uint32_t TableStruct_config_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(p
   PROTOBUF_FIELD_OFFSET(::config::Configuration_Database, _impl_.database_name_),
   PROTOBUF_FIELD_OFFSET(::config::Configuration_Database, _impl_.userid_),
   PROTOBUF_FIELD_OFFSET(::config::Configuration_Database, _impl_.password_),
+  PROTOBUF_FIELD_OFFSET(::config::Configuration_Database, _impl_.mongodb_uri_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::config::Configuration_Log, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -188,9 +190,9 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 0, -1, -1, sizeof(::config::Configuration_Server)},
   { 11, -1, -1, sizeof(::config::Configuration_World)},
   { 21, -1, -1, sizeof(::config::Configuration_Database)},
-  { 32, -1, -1, sizeof(::config::Configuration_Log)},
-  { 40, -1, -1, sizeof(::config::Configuration_System)},
-  { 49, -1, -1, sizeof(::config::Configuration)},
+  { 33, -1, -1, sizeof(::config::Configuration_Log)},
+  { 41, -1, -1, sizeof(::config::Configuration_System)},
+  { 50, -1, -1, sizeof(::config::Configuration)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -203,7 +205,7 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 
 const char descriptor_table_protodef_config_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\014config.proto\022\006config\"\234\005\n\rConfiguration"
+  "\n\014config.proto\022\006config\"\262\005\n\rConfiguration"
   "\022,\n\006server\030\001 \001(\0132\034.config.Configuration."
   "Server\022*\n\005world\030\002 \001(\0132\033.config.Configura"
   "tion.World\0220\n\010database\030\003 \001(\0132\036.config.Co"
@@ -213,18 +215,19 @@ const char descriptor_table_protodef_config_2eproto[] PROTOBUF_SECTION_VARIABLE(
   "ip\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\022\022\n\nmax_player\030\003 \001"
   "(\r\022\023\n\013server_name\030\004 \001(\t\022\014\n\004motd\030\005 \001(\t\032H\n"
   "\005World\022\r\n\005width\030\001 \001(\005\022\016\n\006height\030\002 \001(\005\022\016\n"
-  "\006length\030\003 \001(\005\022\020\n\010save_dir\030\004 \001(\t\032p\n\010Datab"
-  "ase\022\023\n\013driver_name\030\001 \001(\t\022\026\n\016server_addre"
-  "ss\030\002 \001(\t\022\025\n\rdatabase_name\030\003 \001(\t\022\016\n\006useri"
-  "d\030\004 \001(\t\022\020\n\010password\030\005 \001(\t\0329\n\003Log\022\025\n\rlog_"
-  "file_path\030\001 \001(\t\022\033\n\023error_log_file_path\030\002"
-  " \001(\t\032W\n\006System\022\021\n\tpage_size\030\001 \001(\r\022\037\n\027all"
-  "location_granularity\030\002 \001(\r\022\031\n\021num_of_pro"
-  "cessors\030\003 \001(\rb\006proto3"
+  "\006length\030\003 \001(\005\022\020\n\010save_dir\030\004 \001(\t\032\205\001\n\010Data"
+  "base\022\023\n\013driver_name\030\001 \001(\t\022\026\n\016server_addr"
+  "ess\030\002 \001(\t\022\025\n\rdatabase_name\030\003 \001(\t\022\016\n\006user"
+  "id\030\004 \001(\t\022\020\n\010password\030\005 \001(\t\022\023\n\013mongodb_ur"
+  "i\030\006 \001(\t\0329\n\003Log\022\025\n\rlog_file_path\030\001 \001(\t\022\033\n"
+  "\023error_log_file_path\030\002 \001(\t\032W\n\006System\022\021\n\t"
+  "page_size\030\001 \001(\r\022\037\n\027alllocation_granulari"
+  "ty\030\002 \001(\r\022\031\n\021num_of_processors\030\003 \001(\rb\006pro"
+  "to3"
   ;
 static ::_pbi::once_flag descriptor_table_config_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_config_2eproto = {
-    false, false, 701, descriptor_table_protodef_config_2eproto,
+    false, false, 723, descriptor_table_protodef_config_2eproto,
     "config.proto",
     &descriptor_table_config_2eproto_once, nullptr, 0, 6,
     schemas, file_default_instances, TableStruct_config_2eproto::offsets,
@@ -910,6 +913,7 @@ Configuration_Database::Configuration_Database(const Configuration_Database& fro
     , decltype(_impl_.database_name_){}
     , decltype(_impl_.userid_){}
     , decltype(_impl_.password_){}
+    , decltype(_impl_.mongodb_uri_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -953,6 +957,14 @@ Configuration_Database::Configuration_Database(const Configuration_Database& fro
     _this->_impl_.password_.Set(from._internal_password(), 
       _this->GetArenaForAllocation());
   }
+  _impl_.mongodb_uri_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.mongodb_uri_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_mongodb_uri().empty()) {
+    _this->_impl_.mongodb_uri_.Set(from._internal_mongodb_uri(), 
+      _this->GetArenaForAllocation());
+  }
   // @@protoc_insertion_point(copy_constructor:config.Configuration.Database)
 }
 
@@ -966,6 +978,7 @@ inline void Configuration_Database::SharedCtor(
     , decltype(_impl_.database_name_){}
     , decltype(_impl_.userid_){}
     , decltype(_impl_.password_){}
+    , decltype(_impl_.mongodb_uri_){}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.driver_name_.InitDefault();
@@ -988,6 +1001,10 @@ inline void Configuration_Database::SharedCtor(
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
     _impl_.password_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.mongodb_uri_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.mongodb_uri_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 Configuration_Database::~Configuration_Database() {
@@ -1006,6 +1023,7 @@ inline void Configuration_Database::SharedDtor() {
   _impl_.database_name_.Destroy();
   _impl_.userid_.Destroy();
   _impl_.password_.Destroy();
+  _impl_.mongodb_uri_.Destroy();
 }
 
 void Configuration_Database::SetCachedSize(int size) const {
@@ -1023,6 +1041,7 @@ void Configuration_Database::Clear() {
   _impl_.database_name_.ClearToEmpty();
   _impl_.userid_.ClearToEmpty();
   _impl_.password_.ClearToEmpty();
+  _impl_.mongodb_uri_.ClearToEmpty();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1079,6 +1098,16 @@ const char* Configuration_Database::_InternalParse(const char* ptr, ::_pbi::Pars
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "config.Configuration.Database.password"));
+        } else
+          goto handle_unusual;
+        continue;
+      // string mongodb_uri = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          auto str = _internal_mutable_mongodb_uri();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "config.Configuration.Database.mongodb_uri"));
         } else
           goto handle_unusual;
         continue;
@@ -1161,6 +1190,16 @@ uint8_t* Configuration_Database::_InternalSerialize(
         5, this->_internal_password(), target);
   }
 
+  // string mongodb_uri = 6;
+  if (!this->_internal_mongodb_uri().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_mongodb_uri().data(), static_cast<int>(this->_internal_mongodb_uri().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "config.Configuration.Database.mongodb_uri");
+    target = stream->WriteStringMaybeAliased(
+        6, this->_internal_mongodb_uri(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -1212,6 +1251,13 @@ size_t Configuration_Database::ByteSizeLong() const {
         this->_internal_password());
   }
 
+  // string mongodb_uri = 6;
+  if (!this->_internal_mongodb_uri().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_mongodb_uri());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -1244,6 +1290,9 @@ void Configuration_Database::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg,
   }
   if (!from._internal_password().empty()) {
     _this->_internal_set_password(from._internal_password());
+  }
+  if (!from._internal_mongodb_uri().empty()) {
+    _this->_internal_set_mongodb_uri(from._internal_mongodb_uri());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -1283,6 +1332,10 @@ void Configuration_Database::InternalSwap(Configuration_Database* other) {
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.password_, lhs_arena,
       &other->_impl_.password_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.mongodb_uri_, lhs_arena,
+      &other->_impl_.mongodb_uri_, rhs_arena
   );
 }
 

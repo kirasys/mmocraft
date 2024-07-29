@@ -83,4 +83,14 @@ namespace database
         std::byte _player_gamedata[player_gamedata_column_size];
         SQLLEN _player_gamedata_size = player_gamedata_column_size;
     };
+
+    class MailDocument
+    {
+    public:
+        static constexpr const char* collection_name = "mail";
+
+        MailDocument() = default;
+
+        void insert(const char*);
+    };
 }

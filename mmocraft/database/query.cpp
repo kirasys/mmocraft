@@ -4,11 +4,14 @@
 #include <string.h>
 
 #include "database/database_core.h"
+#include "database/mongodb_core.h"
 #include "logging/logger.h"
+#include "proto/config.pb.h"
 
 namespace
 {
     database::DatabaseCore global_database_connection;
+    database::MongoDBCore global_mongodb_connection;
 }
 
 namespace database
@@ -21,6 +24,10 @@ namespace database
         CONSOLE_LOG(info) << "Connecting database server...";
         if (not global_database_connection.connect_with_password(db_conf))
             throw error::DATABASE_CONNECT;
+        CONSOLE_LOG(info) << "Connected";
+
+        CONSOLE_LOG(info) << "Connecting mongodb server..";
+        global_mongodb_connection.connect(db_conf.mongodb_uri());
         CONSOLE_LOG(info) << "Connected";
     }
 
@@ -99,5 +106,11 @@ namespace database
         player.copy_gamedata(_player_gamedata, sizeof(_player_gamedata));
 
         return this->execute();
+    }
+
+    void MailDocument::insert(const char* message)
+    {
+        auto& db = global_mongodb_connection.get_database();
+        //db[collection_name].insert_one();
     }
 }

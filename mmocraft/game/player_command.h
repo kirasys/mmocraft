@@ -52,7 +52,7 @@ namespace game
 
         void execute_mail_read(const std::vector<const char*>&);
 
-        void execute_mail_write(const std::vector<const char*>&);
+        void execute_mail_write(unsigned player_id, const std::vector<const char*>&);
 
         void execute_mail_delete(const std::vector<const char*>&);
 

@@ -38,6 +38,7 @@
     <ClCompile Include="game\player_command.cpp" />
     <ClCompile Include="proto\player_gamedata.pb.cc" />
     <ClCompile Include="util\time_util.cpp" />
+    <ClCompile Include="database\mongodb_core.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -90,6 +91,7 @@
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="game\player_command.h" />
     <ClInclude Include="proto\player_gamedata.pb.h" />
+    <ClInclude Include="database\mongodb_core.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

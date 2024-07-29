@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="config\config.cpp" />
     <ClCompile Include="database\database_core.cpp" />
+    <ClCompile Include="database\mongodb_core.cpp" />
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
@@ -77,6 +78,7 @@
   <ItemGroup>
     <ClInclude Include="config\config.h" />
     <ClInclude Include="database\database_core.h" />
+    <ClInclude Include="database\mongodb_core.h" />
     <ClInclude Include="database\query.h" />
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="game\block.h" />

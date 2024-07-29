@@ -595,6 +595,7 @@ class Configuration_Database final :
     kDatabaseNameFieldNumber = 3,
     kUseridFieldNumber = 4,
     kPasswordFieldNumber = 5,
+    kMongodbUriFieldNumber = 6,
   };
   // string driver_name = 1;
   void clear_driver_name();
@@ -666,6 +667,20 @@ class Configuration_Database final :
   std::string* _internal_mutable_password();
   public:
 
+  // string mongodb_uri = 6;
+  void clear_mongodb_uri();
+  const std::string& mongodb_uri() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_mongodb_uri(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_mongodb_uri();
+  PROTOBUF_NODISCARD std::string* release_mongodb_uri();
+  void set_allocated_mongodb_uri(std::string* mongodb_uri);
+  private:
+  const std::string& _internal_mongodb_uri() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_mongodb_uri(const std::string& value);
+  std::string* _internal_mutable_mongodb_uri();
+  public:
+
   // @@protoc_insertion_point(class_scope:config.Configuration.Database)
  private:
   class _Internal;
@@ -679,6 +694,7 @@ class Configuration_Database final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr database_name_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr userid_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr password_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr mongodb_uri_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1833,6 +1849,56 @@ inline void Configuration_Database::set_allocated_password(std::string* password
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:config.Configuration.Database.password)
+}
+
+// string mongodb_uri = 6;
+inline void Configuration_Database::clear_mongodb_uri() {
+  _impl_.mongodb_uri_.ClearToEmpty();
+}
+inline const std::string& Configuration_Database::mongodb_uri() const {
+  // @@protoc_insertion_point(field_get:config.Configuration.Database.mongodb_uri)
+  return _internal_mongodb_uri();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Configuration_Database::set_mongodb_uri(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.mongodb_uri_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:config.Configuration.Database.mongodb_uri)
+}
+inline std::string* Configuration_Database::mutable_mongodb_uri() {
+  std::string* _s = _internal_mutable_mongodb_uri();
+  // @@protoc_insertion_point(field_mutable:config.Configuration.Database.mongodb_uri)
+  return _s;
+}
+inline const std::string& Configuration_Database::_internal_mongodb_uri() const {
+  return _impl_.mongodb_uri_.Get();
+}
+inline void Configuration_Database::_internal_set_mongodb_uri(const std::string& value) {
+  
+  _impl_.mongodb_uri_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Configuration_Database::_internal_mutable_mongodb_uri() {
+  
+  return _impl_.mongodb_uri_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Configuration_Database::release_mongodb_uri() {
+  // @@protoc_insertion_point(field_release:config.Configuration.Database.mongodb_uri)
+  return _impl_.mongodb_uri_.Release();
+}
+inline void Configuration_Database::set_allocated_mongodb_uri(std::string* mongodb_uri) {
+  if (mongodb_uri != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.mongodb_uri_.SetAllocated(mongodb_uri, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.mongodb_uri_.IsDefault()) {
+    _impl_.mongodb_uri_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:config.Configuration.Database.mongodb_uri)
 }
 
 // -------------------------------------------------------------------

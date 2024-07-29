@@ -24,6 +24,8 @@ message Configuration {
         string database_name = 3;
         string userid = 4;
         string password = 5;
+
+        string mongodb_uri = 6;
     }
 
     message Log {

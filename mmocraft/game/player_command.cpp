@@ -66,10 +66,10 @@ namespace game
         player_search.search(username);
 
         if (!std::strcmp("write", mode))
-            execute_mail_write(tokens);
+            execute_mail_write(player_search.player_identity(), tokens);
     }
 
-    void PlayerCommand::execute_mail_write(const std::vector<const char*>& tokens)
+    void PlayerCommand::execute_mail_write(unsigned player_id, const std::vector<const char*>& tokens)
     {
         if (tokens.size() != 4) {
             set_response(ERROR_COLOR "Usage: /mail write USERNAME MESSAGE");
