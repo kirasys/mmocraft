@@ -6,6 +6,7 @@
 #include <source_location>
 #include <mutex>
 
+#include <Windows.h>
 #include <sql.h>
 #include <sqlext.h>
 
@@ -42,7 +43,7 @@ namespace logging
 
     LogLevel to_log_level(std::string log_level);
 
-    void initialize_system();
+    void initialize_system(std::string_view general_log_path, std::string_view error_log_path);
 
     class Logger : util::NonCopyable, util::NonMovable
     {
