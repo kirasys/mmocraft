@@ -76,6 +76,7 @@
     <ClCompile Include="win\object_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="config\argparse.h" />
     <ClInclude Include="config\config.h" />
     <ClInclude Include="database\database_core.h" />
     <ClInclude Include="database\mongodb_core.h" />
@@ -217,15 +218,19 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="CommonPropertySheet.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="CommonPropertySheet.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="CommonPropertySheet.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="CommonPropertySheet.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -249,25 +254,21 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\mongo-cxx-driver\include\mongocxx\v_noabi;C:\mongo-cxx-driver\include\bsoncxx\v_noabi;C:\mongo-c-driver\include\libmongoc-1.0;C:\mongo-c-driver\include\libbson-1.0;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
-      <AdditionalDependencies>C:\mongo-c-driver\lib\bson-1.0.lib;C:\mongo-c-driver\lib\mongoc-1.0.lib;C:\mongo-cxx-driver\lib\*.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
 lib /NOLOGO /OUT:"$(TargetPath).test.lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -279,13 +280,9 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\mongo-cxx-driver\include\mongocxx\v_noabi;C:\mongo-cxx-driver\include\bsoncxx\v_noabi;C:\mongo-c-driver\include\libmongoc-1.0;C:\mongo-c-driver\include\libbson-1.0;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -294,12 +291,12 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
-      <AdditionalDependencies>C:\mongo-c-driver\lib\bson-1.0.lib;C:\mongo-c-driver\lib\mongoc-1.0.lib;C:\mongo-cxx-driver\lib\*.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
 lib /NOLOGO /OUT:"$(TargetPath).test.lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -309,25 +306,21 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\mongo-cxx-driver\include\mongocxx\v_noabi;C:\mongo-cxx-driver\include\bsoncxx\v_noabi;C:\mongo-c-driver\include\libmongoc-1.0;C:\mongo-c-driver\include\libbson-1.0;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
-      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\mongo-c-driver\lib\bson-1.0.lib;C:\mongo-c-driver\lib\mongoc-1.0.lib;C:\mongo-cxx-driver\lib\*.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>
       </AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
 lib /NOLOGO /OUT:"$(TargetPath).test.lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -339,27 +332,23 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\mongo-cxx-driver\include\mongocxx\v_noabi;C:\mongo-cxx-driver\include\bsoncxx\v_noabi;C:\mongo-c-driver\include\libmongoc-1.0;C:\mongo-c-driver\include\libbson-1.0;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\mongo-c-driver\lib\bson-1.0.lib;C:\mongo-c-driver\lib\mongoc-1.0.lib;C:\mongo-cxx-driver\lib\*.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>
       </AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
 lib /NOLOGO /OUT:"$(TargetPath).test.lib" "$(ProjectDir)$(IntDir)*.obj"
-lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" "$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj" 
+lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

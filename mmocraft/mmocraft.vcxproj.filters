@@ -92,6 +92,7 @@
     <ClInclude Include="game\player_command.h" />
     <ClInclude Include="proto\player_gamedata.pb.h" />
     <ClInclude Include="database\mongodb_core.h" />
+    <ClInclude Include="config\argparse.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

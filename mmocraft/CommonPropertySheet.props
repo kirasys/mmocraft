@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <MongoCXXPath>C:\mongo-cxx-driver\</MongoCXXPath>
+    <MongoCPath>C:\mongo-c-driver\</MongoCPath>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)mmocraft;$(MongoCXXPath)\include\mongocxx\v_noabi;$(MongoCXXPath)\include\bsoncxx\v_noabi;$(MongoCXXPath)\include\libmongoc-1.0;$(MongoCXXPath)\include\libbson-1.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;$(OutDir)mmocraft.exe.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="MongoCXXPath">
+      <Value>$(MongoCXXPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="MongoCPath">
+      <Value>$(MongoCPath)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
