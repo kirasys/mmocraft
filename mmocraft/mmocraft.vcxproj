@@ -61,7 +61,7 @@
     <ClCompile Include="net\packet.cpp" />
     <ClCompile Include="net\connection.cpp" />
     <ClCompile Include="net\master_server.cpp" />
-    <ClCompile Include="net\server_core.cpp" />
+    <ClCompile Include="net\tcp_server_core.cpp" />
     <ClCompile Include="net\socket.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -115,7 +115,7 @@
     <ClInclude Include="net\connection.h" />
     <ClInclude Include="net\master_server.h" />
     <ClInclude Include="net\socket.h" />
-    <ClInclude Include="net\server_core.h" />
+    <ClInclude Include="net\tcp_server_core.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="util\common_util.h" />
     <ClInclude Include="util\compressor.h" />

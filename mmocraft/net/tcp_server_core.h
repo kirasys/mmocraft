@@ -19,7 +19,7 @@ namespace net
 {
     class ConnectionEnvironment;
 
-    class ServerCore final : public io::IoEventHandler
+    class TcpServerCore final : public io::IoEventHandler
     {
     public:
         enum State
@@ -30,7 +30,7 @@ namespace net
             Stopped,
         };
 
-        ServerCore(net::PacketHandleServer&, net::ConnectionEnvironment&, io::IoService&);
+        TcpServerCore(net::PacketHandleServer&, net::ConnectionEnvironment&, io::IoService&);
 
         bool is_stopped() const
         {
@@ -59,7 +59,7 @@ namespace net
         virtual std::size_t handle_io_event(io::IoAcceptEvent*) override;
         
     private:
-        ServerCore::State _state = Uninitialized;
+        TcpServerCore::State _state = Uninitialized;
         error::ResultCode last_error_code;
 
         PacketHandleServer& packet_handle_server;

@@ -14,7 +14,7 @@
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
     <ClCompile Include="io\io_event.cpp" />
-    <ClCompile Include="net\server_core.cpp" />
+    <ClCompile Include="net\tcp_server_core.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
     <ClCompile Include="net\connection.cpp" />
@@ -51,7 +51,7 @@
     <ClInclude Include="win\object_pool.h" />
     <ClInclude Include="win\win_base_object.h" />
     <ClInclude Include="win\win_type.h" />
-    <ClInclude Include="net\server_core.h" />
+    <ClInclude Include="net\tcp_server_core.h" />
     <ClInclude Include="net\master_server.h" />
     <ClInclude Include="win\smart_handle.h" />
     <ClInclude Include="util\noncopyable.h" />
