@@ -89,8 +89,9 @@ namespace net
 
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
     {
+        char packet_buf[256]; // Note: client packet must not be more than 256 bytes.
+        auto packet_ptr = reinterpret_cast<Packet*>(packet_buf);
         auto data_cur = data_begin;
-        auto packet_ptr = static_cast<Packet*>(_alloca(PacketStructure::max_size_of_packet_struct()));
 
         while (data_cur < data_end) {
             auto [parsed_bytes, parsing_result] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
