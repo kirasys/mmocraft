@@ -10,6 +10,7 @@
 #include "net/packet.h"
 #include "net/connection.h"
 #include "net/deferred_packet.h"
+#include "net/server_core.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
 #include "win/object_pool.h"
@@ -19,30 +20,12 @@ namespace net
 {
     class ConnectionEnvironment;
 
-    class TcpServerCore final : public io::IoEventHandler
+    class TcpServerCore final : public net::ServerCore, public io::IoEventHandler
     {
     public:
-        enum State
-        {
-            Uninitialized,
-            Initialized,
-            Running,
-            Stopped,
-        };
-
         TcpServerCore(net::PacketHandleServer&, net::ConnectionEnvironment&, io::IoService&);
 
-        bool is_stopped() const
-        {
-            return _state == State::Stopped;
-        }
-
-        error::ResultCode get_last_error() const
-        {
-            return last_error_code;
-        }
-
-        void start_network_io_service();
+        void start_network_io_service() override;
 
         net::ConnectionKey new_connection(win::UniqueSocket &&client_sock = win::UniqueSocket());
 
@@ -59,9 +42,6 @@ namespace net
         virtual std::size_t handle_io_event(io::IoAcceptEvent*) override;
         
     private:
-        TcpServerCore::State _state = Uninitialized;
-        error::ResultCode last_error_code;
-
         PacketHandleServer& packet_handle_server;
 
         ConnectionEnvironment& connection_env;

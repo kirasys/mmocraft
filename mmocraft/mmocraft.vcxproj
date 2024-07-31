@@ -101,6 +101,7 @@
     </ClInclude>
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="net\packet_id.h" />
+    <ClInclude Include="net\server_core.h" />
     <ClInclude Include="proto\config.pb.h" />
     <ClInclude Include="proto\player_gamedata.pb.h" />
     <ClInclude Include="proto\world_metadata.pb.h" />

@@ -27,7 +27,7 @@ namespace net
             &ConnectionEnvironment::cleanup_expired_connection,
             util::MilliSecond(2000));
 
-        _state = TcpServerCore::State::Initialized;
+        set_state(TcpServerCore::State::Initialized);
     }
 
     net::ConnectionKey TcpServerCore::new_connection(win::UniqueSocket &&client_sock)
@@ -63,7 +63,7 @@ namespace net
 
     void TcpServerCore::start_accept()
     {
-        _state = State::Running;
+        set_state(State::Running);
 
         if (auto error_code = _listen_sock.accept(io_accept_event)) {
             LOG(error) << "Fail to request accept: " << error_code;
@@ -76,13 +76,13 @@ namespace net
 
     void TcpServerCore::on_error()
     {
-        _state = State::Stopped;
+        set_state(State::Stopped);
     }
 
     void TcpServerCore::on_complete(io::IoAcceptEvent* event)
     {
-        LOG_IF(error, not last_error_code.is_success()) 
-            << "Fail to accpet new connection: " << last_error_code;
+        LOG_IF(error, not last_error().is_success())
+            << "Fail to accpet new connection: " << last_error();
 
         start_accept();
     }
@@ -95,7 +95,7 @@ namespace net
         auto client_socket = win::UniqueSocket(event->accepted_socket);
 
         if (connection_env.size_of_connections() >= connection_env.size_of_max_connections()) {
-            last_error_code = error::CLIENT_CONNECTION_FULL;
+            set_last_error(error::CLIENT_CONNECTION_FULL);
             return 0;
         }
 
@@ -109,7 +109,7 @@ namespace net
 
         // add a client to the server.
         new_connection(std::move(client_socket));
-        last_error_code = error::SUCCESS;
+        set_last_error(error::SUCCESS);
         return 0;
     }
 }
