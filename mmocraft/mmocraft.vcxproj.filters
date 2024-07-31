@@ -103,6 +103,7 @@
     <None Include="database\sql\routines\create_functions.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="database\sql\routines\create_procedures.sql" />
+    <None Include="CommonPropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="proto\config.proto" />
