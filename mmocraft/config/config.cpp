@@ -48,12 +48,11 @@ namespace config {
         database_conf.set_password("12341234");
     }
 
-    void set_system_configuration()
+    void set_system_configuration(config::Configuration_System& system_conf)
     {
         SYSTEM_INFO sys_info;
         ::GetSystemInfo(&sys_info);
 
-        auto& system_conf = get_system_config();
         system_conf.set_page_size(sys_info.dwPageSize);
         system_conf.set_alllocation_granularity(sys_info.dwAllocationGranularity);
         system_conf.set_num_of_processors(sys_info.dwNumberOfProcessors);
@@ -76,8 +75,6 @@ namespace config {
         }
 
         util::json_file_to_proto_message(&g_configuration, config_file_path);
-
-        set_system_configuration();
     }
 
     Configuration& get_config()
@@ -107,7 +104,11 @@ namespace config {
 
     Configuration_System& get_system_config()
     {
-        return *g_configuration.mutable_system();
+        auto& system_conf = *g_configuration.mutable_system();
+        if (system_conf.page_size() == 0)
+            set_system_configuration(system_conf);
+
+        return system_conf;
     }
 
     void initialize_system()
