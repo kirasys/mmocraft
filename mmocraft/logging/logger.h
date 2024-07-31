@@ -35,8 +35,8 @@ namespace logging
 
     struct LogLevelDescriptor
     {
-        const char* prefix_string = nullptr;
-        std::ostream* outstream = nullptr;
+        const char* prefix_string = "";
+        std::ostream* outstream = &std::cerr;
         std::mutex flush_mutex;
     };
 
