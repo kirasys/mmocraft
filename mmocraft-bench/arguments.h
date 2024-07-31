@@ -1,6 +1,6 @@
 #pragma once
 
-#include "argparse.hpp"
+#include <config/argparse.h>
 
 namespace bench
 {
