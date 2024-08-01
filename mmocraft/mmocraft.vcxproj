@@ -36,22 +36,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="net\packet_extension.cpp" />
-    <ClCompile Include="proto\config.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="proto\player_gamedata.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="proto\world_metadata.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="net\udp_server_core.cpp" />
     <ClCompile Include="system_initializer.cpp" />
     <ClCompile Include="io\io_event.cpp" />
     <ClCompile Include="io\io_service.cpp" />
@@ -102,9 +87,7 @@
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\server_core.h" />
-    <ClInclude Include="proto\config.pb.h" />
-    <ClInclude Include="proto\player_gamedata.pb.h" />
-    <ClInclude Include="proto\world_metadata.pb.h" />
+    <ClInclude Include="net\udp_server_core.h" />
     <ClInclude Include="system_initializer.h" />
     <ClInclude Include="io\io_event.h" />
     <ClInclude Include="io\io_event_pool.h" />
@@ -145,39 +128,9 @@
     <None Include="database\sql\routines\create_procedures.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="database\sql\parameters.sql" />
-    <CustomBuild Include="proto\config.proto">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="proto\world_metadata.proto">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="proto\player_gamedata.proto">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)proto\%(Filename).pb.h;$(ProjectDir)proto\%(Filename).pb.cc;%(Outputs)</Outputs>
-    </CustomBuild>
+    <None Include="proto\config.proto" />
+    <None Include="proto\player_gamedata.proto" />
+    <None Include="proto\world_metadata.proto" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

@@ -28,17 +28,15 @@
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="util\compressor.cpp" />
     <ClCompile Include="game\world.cpp" />
-    <ClCompile Include="proto\config.pb.cc" />
     <ClCompile Include="util\protobuf_util.cpp" />
-    <ClCompile Include="proto\world_metadata.pb.cc" />
     <ClCompile Include="win\file_mapping.cpp" />
     <ClCompile Include="net\multicast_manager.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\packet_extension.cpp" />
     <ClCompile Include="game\player_command.cpp" />
-    <ClCompile Include="proto\player_gamedata.pb.cc" />
     <ClCompile Include="util\time_util.cpp" />
     <ClCompile Include="database\mongodb_core.cpp" />
+    <ClCompile Include="net\udp_server_core.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -76,9 +74,7 @@
     <ClInclude Include="util\compressor.h" />
     <ClInclude Include="game\world.h" />
     <ClInclude Include="game\block.h" />
-    <ClInclude Include="proto\config.pb.h" />
     <ClInclude Include="util\protobuf_util.h" />
-    <ClInclude Include="proto\world_metadata.pb.h" />
     <ClInclude Include="win\file_mapping.h" />
     <ClInclude Include="net\connection_key.h" />
     <ClInclude Include="io\task.h" />
@@ -90,9 +86,9 @@
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="game\player_command.h" />
-    <ClInclude Include="proto\player_gamedata.pb.h" />
     <ClInclude Include="database\mongodb_core.h" />
     <ClInclude Include="config\argparse.h" />
+    <ClInclude Include="net\udp_server_core.h" />
     <ClInclude Include="net\server_core.h" />
   </ItemGroup>
   <ItemGroup>
@@ -105,10 +101,8 @@
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="database\sql\routines\create_procedures.sql" />
     <None Include="CommonPropertySheet.props" />
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="proto\config.proto" />
-    <CustomBuild Include="proto\world_metadata.proto" />
-    <CustomBuild Include="proto\player_gamedata.proto" />
+    <None Include="proto\config.proto" />
+    <None Include="proto\player_gamedata.proto" />
+    <None Include="proto\world_metadata.proto" />
   </ItemGroup>
 </Project>
