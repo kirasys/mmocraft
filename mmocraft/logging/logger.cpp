@@ -8,6 +8,8 @@
 #include "logging/error.h"
 #include "system_initializer.h"
 
+namespace fs = std::filesystem;
+
 namespace
 {
     std::ofstream general_log_stream;
@@ -34,7 +36,7 @@ namespace logging
         return log_level_map.at(log_level);
     }
 
-    void initialize_system(std::string_view general_log_path, std::string_view error_log_path)
+    void initialize_system(std::string_view log_dir, std::string_view log_filename)
     {
         setlocale(LC_ALL, ""); // user-default ANSI code page obtained from the operating system
 
@@ -52,10 +54,17 @@ namespace logging
         log_level_descriptors[LogLevel::Fatal].outstream = &error_log_stream;
 
         // Open file stream for logging.
+        if (not fs::exists(log_dir))
+            fs::create_directories(log_dir);
+
+        fs::path general_log_path(log_dir);
+        general_log_path /= log_filename;
         general_log_stream.open(general_log_path, std::ofstream::out);
         if (not general_log_stream.is_open())
             CONSOLE_LOG(fatal) << "Fail to open file: " << general_log_path;
 
+        fs::path error_log_path(log_dir);
+        error_log_path /= "error_" + std::string(log_filename);
         error_log_stream.open(error_log_path, std::ofstream::out);
         if (not error_log_stream.is_open())
             CONSOLE_LOG(fatal) << "Fail to open file: " << error_log_path;

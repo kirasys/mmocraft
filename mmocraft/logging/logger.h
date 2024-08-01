@@ -43,7 +43,7 @@ namespace logging
 
     LogLevel to_log_level(std::string log_level);
 
-    void initialize_system(std::string_view general_log_path, std::string_view error_log_path);
+    void initialize_system(std::string_view log_dir, std::string_view log_filename);
 
     class Logger : util::NonCopyable, util::NonMovable
     {
