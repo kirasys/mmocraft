@@ -9,7 +9,7 @@
 #include "game/player.h"
 #include "game/block_history.h"
 #include "game/world_task.h"
-#include "proto/world_metadata.pb.h"
+#include "proto/generated/world_metadata.pb.h"
 #include "net/connection_key.h"
 #include "net/multicast_manager.h"
 #include "win/file_mapping.h"

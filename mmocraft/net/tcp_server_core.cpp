@@ -4,7 +4,7 @@
 #include <cassert>
 
 #include "config/config.h"
-#include "proto/config.pb.h"
+#include "proto/generated/config.pb.h"
 #include "logging/error.h"
 #include "net/connection_environment.h"
 

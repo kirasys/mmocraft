@@ -37,6 +37,24 @@
     </ClCompile>
     <ClCompile Include="net\packet_extension.cpp" />
     <ClCompile Include="net\udp_server_core.cpp" />
+    <ClCompile Include="proto\generated\config.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="proto\generated\player_gamedata.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="proto\generated\world_metadata.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="system_initializer.cpp" />
     <ClCompile Include="io\io_event.cpp" />
     <ClCompile Include="io\io_service.cpp" />
@@ -88,6 +106,9 @@
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\server_core.h" />
     <ClInclude Include="net\udp_server_core.h" />
+    <ClInclude Include="proto\generated\config.pb.h" />
+    <ClInclude Include="proto\generated\player_gamedata.pb.h" />
+    <ClInclude Include="proto\generated\world_metadata.pb.h" />
     <ClInclude Include="system_initializer.h" />
     <ClInclude Include="io\io_event.h" />
     <ClInclude Include="io\io_event_pool.h" />
@@ -128,9 +149,15 @@
     <None Include="database\sql\routines\create_procedures.sql" />
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="database\sql\parameters.sql" />
-    <None Include="proto\config.proto" />
-    <None Include="proto\player_gamedata.proto" />
-    <None Include="proto\world_metadata.proto" />
+    <CustomBuild Include="proto\config.proto">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="proto\player_gamedata.proto">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="proto\world_metadata.proto">
+      <FileType>Document</FileType>
+    </CustomBuild>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -226,6 +253,20 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"
 lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
+    <CustomBuild />
+    <CustomBuild />
+    <CustomBuild>
+      <Command>$(ProtocPath) --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto\generated %(Filename).proto</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(ProjectDir)proto\generated\%(Filename).pb.cc;$(ProjectDir)proto\generated\%(Filename).pb.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild>
+      <VerifyInputsAndOutputsExist>false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+    <CustomBuild>
+      <Message>protoc %(Filename).proto</Message>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -254,6 +295,20 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"
 lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
+    <CustomBuild />
+    <CustomBuild />
+    <CustomBuild>
+      <Command>$(ProtocPath) --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto\generated %(Filename).proto</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(ProjectDir)proto\generated\%(Filename).pb.cc;$(ProjectDir)proto\generated\%(Filename).pb.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild>
+      <VerifyInputsAndOutputsExist>false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+    <CustomBuild>
+      <Message>protoc %(Filename).proto</Message>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -278,6 +333,20 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"
 lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
+    <CustomBuild />
+    <CustomBuild />
+    <CustomBuild>
+      <Command>$(ProtocPath) --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto\generated %(Filename).proto</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(ProjectDir)proto\generated\%(Filename).pb.cc;$(ProjectDir)proto\generated\%(Filename).pb.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild>
+      <VerifyInputsAndOutputsExist>false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+    <CustomBuild>
+      <Message>protoc %(Filename).proto</Message>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -306,6 +375,20 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)socket.obj"
 lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statement.obj"</Command>
       <Message>벤치마크 및 테스트 빌드용 정적 라이브러리 생성</Message>
     </PostBuildEvent>
+    <CustomBuild />
+    <CustomBuild />
+    <CustomBuild>
+      <Command>$(ProtocPath) --proto_path=$(ProjectDir)proto --cpp_out=$(ProjectDir)proto\generated %(Filename).proto</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(ProjectDir)proto\generated\%(Filename).pb.cc;$(ProjectDir)proto\generated\%(Filename).pb.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild>
+      <VerifyInputsAndOutputsExist>false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+    <CustomBuild>
+      <Message>protoc %(Filename).proto</Message>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

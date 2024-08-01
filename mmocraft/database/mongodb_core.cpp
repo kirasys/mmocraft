@@ -2,7 +2,7 @@
 #include "mongodb_core.h"
 
 #include "config/config.h"
-#include "proto/config.pb.h"
+#include "proto/generated/config.pb.h"
 #include "logging/logger.h"
 
 namespace

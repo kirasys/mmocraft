@@ -37,6 +37,9 @@
     <ClCompile Include="util\time_util.cpp" />
     <ClCompile Include="database\mongodb_core.cpp" />
     <ClCompile Include="net\udp_server_core.cpp" />
+    <ClCompile Include="proto\generated\world_metadata.pb.cc" />
+    <ClCompile Include="proto\generated\config.pb.cc" />
+    <ClCompile Include="proto\generated\player_gamedata.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -90,6 +93,9 @@
     <ClInclude Include="config\argparse.h" />
     <ClInclude Include="net\udp_server_core.h" />
     <ClInclude Include="net\server_core.h" />
+    <ClInclude Include="proto\generated\world_metadata.pb.h" />
+    <ClInclude Include="proto\generated\player_gamedata.pb.h" />
+    <ClInclude Include="proto\generated\config.pb.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />
@@ -101,8 +107,10 @@
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="database\sql\routines\create_procedures.sql" />
     <None Include="CommonPropertySheet.props" />
-    <None Include="proto\config.proto" />
-    <None Include="proto\player_gamedata.proto" />
-    <None Include="proto\world_metadata.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="proto\config.proto" />
+    <CustomBuild Include="proto\player_gamedata.proto" />
+    <CustomBuild Include="proto\world_metadata.proto" />
   </ItemGroup>
 </Project>

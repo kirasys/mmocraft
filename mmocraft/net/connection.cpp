@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "config/config.h"
-#include "proto/config.pb.h"
+#include "proto/generated/config.pb.h"
 #include "logging/error.h"
 #include "net/tcp_server_core.h"
 #include "net/connection_environment.h"

@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "config/config.h"
-#include "proto/config.pb.h"
+#include "proto/generated/config.pb.h"
 #include "logging/logger.h"
 #include "net/socket.h"
 #include "net/connection.h"
