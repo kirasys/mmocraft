@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Protobuf generated files
+*.pb.cc
+*.pb.h
+
 # Vcpkg related files
 vcpkg_installed/
 
