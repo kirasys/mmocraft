@@ -58,17 +58,17 @@ namespace config {
         system_conf.set_num_of_processors(sys_info.dwNumberOfProcessors);
     }
 
-    void generate_config()
+    void generate_config(const fs::path& config_file_path)
     {
         set_default_configuration();
 
         util::proto_message_to_json_file(g_configuration, config_file_path);
     }
 
-    void load_config()
+    void load_config(const fs::path& config_file_path)
     {
         if (not fs::exists(config_file_path)) {
-            generate_config();
+            generate_config(config_file_path);
             std::cerr << "Configuration file is generated at \"" << config_file_path << "\". "
                 << "Please fill in appropriate values.";
             std::exit(0);
@@ -111,11 +111,11 @@ namespace config {
         return system_conf;
     }
 
-    void initialize_system()
+    void initialize_system(std::string_view config_dir, std::string_view config_filename)
     {
-        if (not fs::exists(config::config_dir))
-            fs::create_directories(config::config_dir);
+        if (not fs::exists(config_dir))
+            fs::create_directories(config_dir);
 
-        load_config();
+        load_config(fs::path(config_dir) / config_filename);
     }
 }

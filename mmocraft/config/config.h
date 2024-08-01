@@ -1,9 +1,8 @@
 #pragma once
 
-namespace config {
-    constexpr const char* config_dir = "config/";
-    constexpr const char* config_file_path = "config/config.json";
+#include <string_view>
 
+namespace config {
     class Configuration;
     class Configuration_Server;
     class Configuration_World;
@@ -19,5 +18,5 @@ namespace config {
     Configuration_System& get_system_config();
 
     void set_default_configuration();
-    void initialize_system();
+    void initialize_system(std::string_view config_dir, std::string_view config_filename);
 }

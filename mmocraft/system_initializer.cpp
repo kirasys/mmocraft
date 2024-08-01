@@ -19,6 +19,8 @@ namespace
 {
     constexpr const char* log_dir = "log";
     constexpr const char* log_filename = "server.log";
+    constexpr const char* config_dir = "config";
+    constexpr const char* config_filename = "config.json";
 
     std::vector<std::terminate_handler> system_terminatio_handlers;
 
@@ -48,7 +50,7 @@ namespace setup
         std::signal(SIGINT, termination_routine_for_signal);
         std::signal(SIGABRT, termination_routine_for_signal);
 
-        config::initialize_system();
+        config::initialize_system(config_dir, config_filename);
 
         logging::initialize_system(log_dir, log_filename);
 
