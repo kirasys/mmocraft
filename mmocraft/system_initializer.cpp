@@ -17,8 +17,8 @@ namespace fs = std::filesystem;
 
 namespace
 {
-    constexpr const char* general_log_path = "server.log";
-    constexpr const char* error_log_path = "server_error.log";
+    constexpr const char* log_dir = "log";
+    constexpr const char* log_filename = "server.log";
 
     std::vector<std::terminate_handler> system_terminatio_handlers;
 
@@ -50,7 +50,7 @@ namespace setup
 
         config::initialize_system();
 
-        logging::initialize_system(general_log_path, error_log_path);
+        logging::initialize_system(log_dir, log_filename);
 
         net::Socket::initialize_system();
 
