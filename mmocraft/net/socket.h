@@ -3,12 +3,16 @@
 #include <iostream>
 #include <string_view>
 
-#include "io/io_event.h"
 #include "win/win_type.h"
 #include "win/win_base_object.h"
 #include "win/smart_handle.h"
 #include "util/common_util.h"
 #include "logging/error.h"
+
+namespace io
+{
+    struct IoAcceptEvent;
+}
 
 namespace net
 {
