@@ -45,6 +45,10 @@ namespace net
             return _handle.get();
         }
 
+        int get_address_family() {
+            return AF_INET; // TODO: IPv6
+        }
+
         static void initialize_system();
 
         void close() noexcept;
@@ -65,9 +69,9 @@ namespace net
 
         bool recv_from(const char* ip, int port, char* buf, std::size_t buf_size);
 
-        int get_address_family() {
-            return AF_INET; // TODO: IPv6
-        }
+        bool set_socket_option(int optname, int optval);
+
+        bool set_nonblocking_mode(bool mode);
 
     private:
         win::UniqueSocket _handle;

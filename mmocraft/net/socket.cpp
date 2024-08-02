@@ -223,6 +223,19 @@ void net::Socket::close() noexcept {
     _handle.reset();
 }
 
+bool net::Socket::set_socket_option(int optname, int optval)
+{
+    auto ret = ::setsockopt(_handle, SOL_SOCKET, optname, (char*)&optval, sizeof(optval));
+    return ret != SOCKET_ERROR;
+}
+
+bool net::Socket::set_nonblocking_mode(bool mode)
+{
+    u_long iMode = mode ? 1 : 0;
+    auto ret = ioctlsocket(_handle, FIONBIO, &iMode);
+    return ret != SOCKET_ERROR;
+}
+
 win::Socket net::create_windows_socket(SocketProtocol protocol)
 {
     switch (protocol) {
