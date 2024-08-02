@@ -2,7 +2,6 @@
 #include "world_generator.h"
 
 #include "config/config.h"
-#include "proto/generated/config.pb.h"
 #include "proto/generated/world_metadata.pb.h"
 #include "util/protobuf_util.h"
 #include "logging/logger.h"

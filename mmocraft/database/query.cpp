@@ -5,7 +5,7 @@
 
 #include "database/database_core.h"
 #include "logging/logger.h"
-#include "proto/generated/config.pb.h"
+#include "config/config.h"
 
 namespace
 {

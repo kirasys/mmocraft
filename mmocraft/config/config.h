@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include "proto/generated/config.pb.h"
+
 namespace config {
     class Configuration;
     class Configuration_Server;

@@ -6,7 +6,6 @@
 #include <string>
 
 #include "logging/error.h"
-#include "proto/generated/config.pb.h"
 
 #define CHECK_DB_SUCCESS(ret) \
     if ((ret) != SQL_SUCCESS && (ret) != SQL_SUCCESS_WITH_INFO) \

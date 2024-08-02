@@ -8,7 +8,6 @@
 
 #include "logging/error.h"
 #include "logging/logger.h"
-#include "proto/generated/config.pb.h"
 #include "util/protobuf_util.h"
 
 namespace fs = std::filesystem;
