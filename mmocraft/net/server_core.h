@@ -40,6 +40,8 @@ namespace net
             last_error_code = code;
         }
 
+        virtual ~ServerCore() = default;
+
         virtual void start_network_io_service() = 0;
 
     private:
