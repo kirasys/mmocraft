@@ -8,10 +8,6 @@
 #include <optional>
 #include <limits>
 
-#define NOMINMAX
-#include <winsock2.h>
-#include <mswsock.h>
-
 #include "config/config.h"
 #include "logging/error.h"
 #include "win/win_type.h"

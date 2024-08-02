@@ -6,7 +6,7 @@
 #include <source_location>
 #include <mutex>
 
-#include <Windows.h>
+#include "win/win_type.h"
 #include <sql.h>
 #include <sqlext.h>
 

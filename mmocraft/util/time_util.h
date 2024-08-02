@@ -3,8 +3,7 @@
 #include <chrono>
 #include <ctime>
 
-#define NOMINMAX
-#include <Windows.h>
+#include "win/win_type.h"
 
 namespace util
 {
