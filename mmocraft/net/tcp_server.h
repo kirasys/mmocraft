@@ -20,10 +20,10 @@ namespace net
 {
     class ConnectionEnvironment;
 
-    class TcpServerCore final : public net::ServerCore, public io::IoEventHandler
+    class TcpServer final : public net::ServerCore, public io::IoEventHandler
     {
     public:
-        TcpServerCore(net::PacketHandleServer&, net::ConnectionEnvironment&, io::IoService&);
+        TcpServer(net::PacketHandleServer&, net::ConnectionEnvironment&, io::IoService&);
 
         void start_network_io_service() override;
 

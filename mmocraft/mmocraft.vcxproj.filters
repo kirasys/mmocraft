@@ -14,7 +14,7 @@
     <ClCompile Include="io\io_service.cpp" />
     <ClCompile Include="logging\error.cpp" />
     <ClCompile Include="io\io_event.cpp" />
-    <ClCompile Include="net\tcp_server_core.cpp" />
+    <ClCompile Include="net\tcp_server.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
     <ClCompile Include="net\connection.cpp" />
@@ -36,7 +36,7 @@
     <ClCompile Include="game\player_command.cpp" />
     <ClCompile Include="util\time_util.cpp" />
     <ClCompile Include="database\mongodb_core.cpp" />
-    <ClCompile Include="net\udp_server_core.cpp" />
+    <ClCompile Include="net\udp_server.cpp" />
     <ClCompile Include="proto\generated\world_metadata.pb.cc" />
     <ClCompile Include="proto\generated\config.pb.cc" />
     <ClCompile Include="proto\generated\player_gamedata.pb.cc" />
@@ -52,7 +52,7 @@
     <ClInclude Include="win\object_pool.h" />
     <ClInclude Include="win\win_base_object.h" />
     <ClInclude Include="win\win_type.h" />
-    <ClInclude Include="net\tcp_server_core.h" />
+    <ClInclude Include="net\tcp_server.h" />
     <ClInclude Include="net\master_server.h" />
     <ClInclude Include="win\smart_handle.h" />
     <ClInclude Include="util\noncopyable.h" />
@@ -91,7 +91,7 @@
     <ClInclude Include="game\player_command.h" />
     <ClInclude Include="database\mongodb_core.h" />
     <ClInclude Include="config\argparse.h" />
-    <ClInclude Include="net\udp_server_core.h" />
+    <ClInclude Include="net\udp_server.h" />
     <ClInclude Include="net\server_core.h" />
     <ClInclude Include="proto\generated\world_metadata.pb.h" />
     <ClInclude Include="proto\generated\player_gamedata.pb.h" />

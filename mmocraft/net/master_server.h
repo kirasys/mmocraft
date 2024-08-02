@@ -7,7 +7,7 @@
 #include "net/connection.h"
 #include "net/connection_environment.h"
 #include "net/deferred_packet.h"
-#include "net/tcp_server_core.h"
+#include "net/tcp_server.h"
 #include "net/packet_extension.h"
 
 namespace net
@@ -56,7 +56,7 @@ namespace net
 
         io::IoCompletionPort& io_service;
 
-        net::TcpServerCore server_core;
+        net::TcpServer server_core;
 
         database::DatabaseCore database_core;
 

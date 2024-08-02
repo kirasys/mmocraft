@@ -5,7 +5,7 @@
 
 #include "config/config.h"
 #include "logging/error.h"
-#include "net/tcp_server_core.h"
+#include "net/tcp_server.h"
 #include "net/connection_environment.h"
 
 namespace net

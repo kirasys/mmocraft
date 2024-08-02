@@ -36,7 +36,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="net\packet_extension.cpp" />
-    <ClCompile Include="net\udp_server_core.cpp" />
+    <ClCompile Include="net\udp_server.cpp" />
     <ClCompile Include="proto\generated\config.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -64,7 +64,7 @@
     <ClCompile Include="net\packet.cpp" />
     <ClCompile Include="net\connection.cpp" />
     <ClCompile Include="net\master_server.cpp" />
-    <ClCompile Include="net\tcp_server_core.cpp" />
+    <ClCompile Include="net\tcp_server.cpp" />
     <ClCompile Include="net\socket.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -105,7 +105,7 @@
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\server_core.h" />
-    <ClInclude Include="net\udp_server_core.h" />
+    <ClInclude Include="net\udp_server.h" />
     <ClInclude Include="proto\generated\config.pb.h" />
     <ClInclude Include="proto\generated\player_gamedata.pb.h" />
     <ClInclude Include="proto\generated\world_metadata.pb.h" />
@@ -120,7 +120,7 @@
     <ClInclude Include="net\connection.h" />
     <ClInclude Include="net\master_server.h" />
     <ClInclude Include="net\socket.h" />
-    <ClInclude Include="net\tcp_server_core.h" />
+    <ClInclude Include="net\tcp_server.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="util\common_util.h" />
     <ClInclude Include="util\compressor.h" />

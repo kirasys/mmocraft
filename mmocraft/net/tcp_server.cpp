@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "tcp_server_core.h"
+#include "tcp_server.h"
 
 #include <cassert>
 
@@ -9,7 +9,7 @@
 
 namespace net
 {
-    TcpServerCore::TcpServerCore
+    TcpServer::TcpServer
         (net::PacketHandleServer& a_packet_handle_server, net::ConnectionEnvironment& a_connection_env, io::IoService& a_io_service)
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
@@ -26,10 +26,10 @@ namespace net
             &ConnectionEnvironment::cleanup_expired_connection,
             util::MilliSecond(2000));
 
-        set_state(TcpServerCore::State::Initialized);
+        set_state(State::Initialized);
     }
 
-    net::ConnectionKey TcpServerCore::new_connection(win::UniqueSocket &&client_sock)
+    net::ConnectionKey TcpServer::new_connection(win::UniqueSocket &&client_sock)
     {
         auto connection_key = ConnectionKey(connection_env.get_unused_connection_id(), util::current_monotonic_tick32());
 
@@ -45,7 +45,7 @@ namespace net
         return connection_key;
     }
 
-    void TcpServerCore::start_network_io_service()
+    void TcpServer::start_network_io_service()
     {
         auto& server_conf = config::get_server_config();
         auto& system_conf = config::get_system_config();
@@ -60,7 +60,7 @@ namespace net
             io_service.spawn_event_loop_thread().detach();
     }
 
-    void TcpServerCore::start_accept()
+    void TcpServer::start_accept()
     {
         set_state(State::Running);
 
@@ -73,12 +73,12 @@ namespace net
      *  Event handler interface
      */
 
-    void TcpServerCore::on_error()
+    void TcpServer::on_error()
     {
         set_state(State::Stopped);
     }
 
-    void TcpServerCore::on_complete(io::IoAcceptEvent* event)
+    void TcpServer::on_complete(io::IoAcceptEvent* event)
     {
         LOG_IF(error, not last_error().is_success())
             << "Fail to accpet new connection: " << last_error();
@@ -86,7 +86,7 @@ namespace net
         start_accept();
     }
 
-    std::size_t TcpServerCore::handle_io_event(io::IoAcceptEvent* event)
+    std::size_t TcpServer::handle_io_event(io::IoAcceptEvent* event)
     {
         connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
 
