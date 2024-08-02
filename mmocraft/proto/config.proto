@@ -6,7 +6,7 @@ message Configuration {
     message Server {
         string ip = 1;
         int32  port = 2;
-        uint32 max_player = 3;
+        uint32 max_client = 3;
         string server_name = 4;
         string motd = 5;
     }
@@ -19,13 +19,11 @@ message Configuration {
     }
 
     message Database {
-        string driver_name = 1;
-        string server_address = 2;
-        string database_name = 3;
-        string userid = 4;
-        string password = 5;
-
-        string mongodb_uri = 6;
+        string server_address = 1;
+        string userid = 2;
+        string password = 3;
+        string database_name = 4;
+        string driver_name = 5;
     }
 
     message Log {
@@ -44,4 +42,12 @@ message Configuration {
    Database database = 3;
    Log log = 4;
    System system = 5;
+}
+
+message ChatConfiguration
+{
+    Configuration.Server server = 1;
+    Configuration.Database database = 2;
+    Configuration.Log log = 3;
+    Configuration.System system = 4;
 }

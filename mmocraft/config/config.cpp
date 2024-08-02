@@ -24,7 +24,7 @@ namespace config {
         auto& server_conf = get_server_config();
         server_conf.set_ip("127.0.0.1");
         server_conf.set_port(12345);
-        server_conf.set_max_player(1000);
+        server_conf.set_max_client(1000);
         server_conf.set_server_name("Massive Minecraft Classic Server");
         server_conf.set_motd("welcome to mmocraft server.");
 
