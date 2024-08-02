@@ -4,6 +4,7 @@
   <PropertyGroup Label="UserMacros">
     <MongoCXXPath>C:\mongo-cxx-driver\</MongoCXXPath>
     <MongoCPath>C:\mongo-c-driver\</MongoCPath>
+    <ProtocPath>C:\Users\kirasys0\source\repos\mmocraft\vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc.exe</ProtocPath>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup>
@@ -23,6 +24,9 @@
     </BuildMacro>
     <BuildMacro Include="MongoCPath">
       <Value>$(MongoCPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ProtocPath">
+      <Value>$(ProtocPath)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>
