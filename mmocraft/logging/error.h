@@ -20,6 +20,7 @@ namespace error
         SOCKET_SEND,
         SOCKET_RECV,
         SOCKET_SETOPT,
+        SOCKET_IOCTL,
 
         // IO Service
         IO_SERVICE_CREATE_COMPLETION_PORT,

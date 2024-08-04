@@ -18,6 +18,7 @@ namespace
         arr[ErrorCode::SOCKET_SEND] = "SOCKET_SEND";
         arr[ErrorCode::SOCKET_RECV] = "SOCKET_RECV";
         arr[ErrorCode::SOCKET_SETOPT] = "SOCKET_SETOPT";
+        arr[ErrorCode::SOCKET_IOCTL] = "SOCKET_IOCTL";
 
         // Io Service
         arr[ErrorCode::IO_SERVICE_CREATE_COMPLETION_PORT] = "IO_SERVICE_CREATE_COMPLETION_PORT";
