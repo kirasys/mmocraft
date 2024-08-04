@@ -16,8 +16,6 @@ namespace fs = std::filesystem;
 
 namespace
 {
-    constexpr const char* log_dir = "log";
-    constexpr const char* log_filename = "server.log";
     constexpr const char* config_dir = "config";
     constexpr const char* config_filename = "config.json";
 
@@ -51,7 +49,8 @@ namespace setup
 
         config::initialize_system(config_dir, config_filename);
 
-        logging::initialize_system(log_dir, log_filename);
+        auto& log_conf = config::get_log_config();
+        logging::initialize_system(log_conf.log_dir(), log_conf.log_filename());
 
         net::Socket::initialize_system();
 

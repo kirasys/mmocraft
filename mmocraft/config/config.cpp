@@ -36,8 +36,8 @@ namespace config {
 
         // log default values
         auto& log_conf = get_log_config();
-        log_conf.set_log_file_path("server.log");
-        log_conf.set_error_log_file_path("server_error.log");
+        log_conf.set_log_filename("server.log");
+        log_conf.set_log_dir("log");
 
         // database default values
         auto& database_conf = get_database_config();

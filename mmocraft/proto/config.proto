@@ -27,8 +27,8 @@ message Configuration {
     }
 
     message Log {
-        string log_file_path = 1;
-        string error_log_file_path = 2;
+        string log_filename = 1;
+        string log_dir = 2;
     }
 
     message System {
