@@ -59,7 +59,10 @@ namespace net
 
         while (not is_terminated) {
             auto transferred_bytes = ::recvfrom(_sock.get_handle(), buffer, sizeof(buffer), 0, (SOCKADDR*)&sender_addr, &sender_addr_size);
-            LOG_IF(error, transferred_bytes == SOCKET_ERROR) << "recvfrom() failed with :" << ::WSAGetLastError();
+            if (transferred_bytes == SOCKET_ERROR) {
+                LOG(error) << "recvfrom() failed with :" << ::WSAGetLastError();
+                return;
+            }
 
             std::cout << "transferred_bytes: " << transferred_bytes << '\n';
         }
