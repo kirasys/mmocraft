@@ -60,7 +60,9 @@ namespace net
         while (not is_terminated) {
             auto transferred_bytes = ::recvfrom(_sock.get_handle(), buffer, sizeof(buffer), 0, (SOCKADDR*)&sender_addr, &sender_addr_size);
             if (transferred_bytes == SOCKET_ERROR) {
-                LOG(error) << "recvfrom() failed with :" << ::WSAGetLastError();
+                auto errorcode = ::WSAGetLastError();
+                LOG_IF(error, errorcode != 10004 && errorcode != 10038)
+                    << "recvfrom() failed with :" << errorcode;
                 return;
             }
 
