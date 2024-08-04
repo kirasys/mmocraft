@@ -14,9 +14,6 @@ namespace net
         if (not _sock.bind(ip, port))
             throw error::SOCKET_BIND;
 
-        if (not _sock.set_nonblocking_mode(true))
-            throw error::SOCKET_IOCTL;
-
         if (not _sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) || 
             not _sock.set_socket_option(SO_SNDBUF, SOCKET_SND_BUFFER_SIZE))
             throw error::SOCKET_SETOPT;
@@ -64,9 +61,7 @@ namespace net
             auto transferred_bytes = ::recvfrom(_sock.get_handle(), buffer, sizeof(buffer), 0, (SOCKADDR*)&sender_addr, &sender_addr_size);
             LOG_IF(error, transferred_bytes == SOCKET_ERROR) << "recvfrom() failed with :" << ::WSAGetLastError();
 
-            if (transferred_bytes > 0) {
-                std::cout << transferred_bytes << '\n';
-            }
+            std::cout << "transferred_bytes: " << transferred_bytes << '\n';
         }
     }
 }
