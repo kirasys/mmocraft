@@ -96,6 +96,7 @@
     <ClInclude Include="proto\generated\world_metadata.pb.h" />
     <ClInclude Include="proto\generated\player_gamedata.pb.h" />
     <ClInclude Include="proto\generated\config.pb.h" />
+    <ClInclude Include="net\message_id.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

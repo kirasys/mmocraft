@@ -96,6 +96,7 @@
     <ClInclude Include="io\task.h" />
     <ClInclude Include="net\connection_environment.h" />
     <ClInclude Include="net\connection_key.h" />
+    <ClInclude Include="net\message_id.h" />
     <ClInclude Include="net\multicast_manager.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
