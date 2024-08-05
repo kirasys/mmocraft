@@ -4,6 +4,7 @@
 
 #include "net/socket.h"
 #include "net/server_core.h"
+#include "net/message_id.h"
 
 namespace net
 {
@@ -13,7 +14,7 @@ namespace net
     class MessageHandler
     {
     public:
-        virtual bool handle_message(char*, std::size_t) = 0;
+        virtual bool handle_message(net::MessageID, char*, std::size_t) = 0;
     };
 
     class UdpServer : public net::ServerCore

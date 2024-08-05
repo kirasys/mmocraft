@@ -66,7 +66,10 @@ namespace net
                 return;
             }
 
-            message_handler.handle_message(buffer, transferred_bytes);
+            if (transferred_bytes > 0) {
+                auto msg_id = net::MessageID(buffer[0]);
+                message_handler.handle_message(msg_id, buffer + 1, transferred_bytes - 1);
+            }
         }
     }
 }
