@@ -25,7 +25,7 @@ namespace net
     public:
         TcpServer(net::PacketHandleServer&, net::ConnectionEnvironment&, io::IoService&);
 
-        void start_network_io_service() override;
+        void start_network_io_service(std::size_t num_of_event_threads) override;
 
         net::ConnectionKey new_connection(win::UniqueSocket &&client_sock = win::UniqueSocket());
 

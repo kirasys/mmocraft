@@ -6,10 +6,11 @@
 
 namespace net
 {
-    UdpServer::UdpServer(std::string_view ip, int port)
+    UdpServer::UdpServer(std::string_view ip, int port, MessageHandler& msg_handler)
         : _ip{ ip }
         , _port{ port }
         , _sock{ net::SocketProtocol::UDPv4 }
+        , message_handler{ msg_handler }
     {
         if (not _sock.bind(ip, port))
             throw error::SOCKET_BIND;
@@ -33,12 +34,11 @@ namespace net
             event_thread.join();
     }
 
-    void UdpServer::start_network_io_service()
+    void UdpServer::start_network_io_service(std::size_t num_of_event_threads)
     {
         CONSOLE_LOG(info) << "Listening to " << _ip << ':' << _port << "...\n";
 
-        auto& system_conf = config::get_system_config();
-        for (unsigned i = 0; i < system_conf.num_of_processors() * 2; i++)
+        for (unsigned i = 0; i < num_of_event_threads; i++)
             event_threads.emplace_back(spawn_event_loop_thread());
 
     }
@@ -66,7 +66,7 @@ namespace net
                 return;
             }
 
-            std::cout << "transferred_bytes: " << transferred_bytes << '\n';
+            message_handler.handle_message(buffer, transferred_bytes);
         }
     }
 }

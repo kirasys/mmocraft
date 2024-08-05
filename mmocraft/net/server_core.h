@@ -42,7 +42,7 @@ namespace net
 
         virtual ~ServerCore() = default;
 
-        virtual void start_network_io_service() = 0;
+        virtual void start_network_io_service(std::size_t num_of_event_threads) = 0;
 
     private:
         State _state = Uninitialized;

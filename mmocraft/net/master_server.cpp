@@ -141,7 +141,8 @@ namespace net
     void MasterServer::serve_forever()
     {
         // start network I/O system.
-        server_core.start_network_io_service();
+        auto& system_conf = config::get_system_config();
+        server_core.start_network_io_service(system_conf.num_of_processors() * 2);
 
         // load world map.
         const auto& world_conf = config::get_world_config();
