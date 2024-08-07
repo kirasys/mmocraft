@@ -93,14 +93,14 @@ bool net::Socket::bind(std::string_view ip, int port){
     ::inet_pton(get_address_family(), ip.data(), &sock_addr.sin_addr);
 
     if (::bind(_handle, reinterpret_cast<SOCKADDR*>(&sock_addr), sizeof(sock_addr)) == SOCKET_ERROR)
-        throw error::SOCKET_BIND;
+        return false;
 
     return true;
 }
 
 bool net::Socket::listen(int backlog) {
     if (::listen(_handle, backlog) == SOCKET_ERROR)
-        throw error::SOCKET_LISTEN;
+        return false;
 
     return true;
 }
