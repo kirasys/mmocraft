@@ -57,6 +57,8 @@ namespace net
 
         void close() noexcept;
 
+        void reset(SocketProtocol);
+
         bool bind(std::string_view, int);
 
         bool listen(int backlog = SOMAXCONN);

@@ -37,6 +37,16 @@ net::Socket::Socket(win::UniqueSocket&& sock)
     : _handle{ std::move(sock) }
 { }
 
+void net::Socket::close() noexcept
+{
+    _handle.reset();
+}
+
+void net::Socket::reset(SocketProtocol protocol)
+{
+    _handle.reset(create_windows_socket(protocol));
+}
+
 void net::Socket::initialize_system()
 {
     if (not is_socket_system_initialized) {
@@ -217,10 +227,6 @@ bool net::Socket::recv_from(const char* ip, int port, char* buf, std::size_t buf
     );
 
     return ret != SOCKET_ERROR;
-}
-
-void net::Socket::close() noexcept {
-    _handle.reset();
 }
 
 bool net::Socket::set_socket_option(int optname, int optval)
