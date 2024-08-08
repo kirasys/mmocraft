@@ -9,7 +9,7 @@ namespace
     database::MongoDBCore global_mongodb_connection;
 }
 
-namespace database
+namespace chat_database
 {
     void connect_mongodb_server(std::string_view uri)
     {

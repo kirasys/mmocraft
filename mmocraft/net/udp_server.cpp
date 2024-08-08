@@ -1,42 +1,48 @@
 #include "pch.h"
 #include "udp_server.h"
 
+#include "net/server_communicator.h"
 #include "config/config.h"
 #include "logging/logger.h"
 
 namespace net
 {
-    UdpServer::UdpServer(std::string_view ip, int port, MessageHandler& msg_handler)
-        : _ip{ ip }
-        , _port{ port }
-        , _sock{ net::SocketProtocol::UDPv4 }
+    UdpServer::UdpServer(MessageHandler& msg_handler)
+        : _sock{ net::SocketProtocol::UDPv4 }
         , message_handler{ msg_handler }
     {
-        if (not _sock.bind(ip, port))
-            throw error::SOCKET_BIND;
-
-        if (not _sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) || 
+        if (not _sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) ||
             not _sock.set_socket_option(SO_SNDBUF, SOCKET_SND_BUFFER_SIZE))
             throw error::SOCKET_SETOPT;
     }
 
     UdpServer::~UdpServer()
     {
-        close();
+        reset();
     }
 
-    void UdpServer::close()
+    void UdpServer::reset()
     {
-        _sock.close();
+        _sock.reset(net::SocketProtocol::UDPv4);
         is_terminated = true;
 
         for (auto& event_thread : event_threads)
             event_thread.join();
+
+        event_threads.clear();
     }
 
-    void UdpServer::start_network_io_service(std::size_t num_of_event_threads)
+    bool UdpServer::send(const char* ip, int port, const char* data, std::size_t data_size)
     {
-        CONSOLE_LOG(info) << "Listening to " << _ip << ':' << _port << "...\n";
+        return _sock.send_to(ip, port, data, data_size);
+    }
+
+    void UdpServer::start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads)
+    {
+        if (not _sock.bind(ip, port))
+            return;
+
+        CONSOLE_LOG(info) << "Listening to " << ip << ':' << port << "...\n";
 
         for (unsigned i = 0; i < num_of_event_threads; i++)
             event_threads.emplace_back(spawn_event_loop_thread());
@@ -52,23 +58,30 @@ namespace net
 
     void UdpServer::run_event_loop_forever(DWORD)
     {
-        char buffer[1024];
-        
+        MessageRequest request;
+        MessageResponse response;
+
         struct sockaddr_in sender_addr;
         int sender_addr_size = sizeof(sender_addr);
 
         while (not is_terminated) {
-            auto transferred_bytes = ::recvfrom(_sock.get_handle(), buffer, sizeof(buffer), 0, (SOCKADDR*)&sender_addr, &sender_addr_size);
-            if (transferred_bytes == SOCKET_ERROR) {
-                auto errorcode = ::WSAGetLastError();
-                LOG_IF(error, errorcode != 10004 && errorcode != 10038)
-                    << "recvfrom() failed with :" << errorcode;
-                return;
-            }
+            if (not net::ServerCommunicator::read_message(_sock, request, sender_addr, sender_addr_size))
+                continue;
 
-            if (transferred_bytes > 0) {
-                auto msg_id = net::MessageID(buffer[0]);
-                message_handler.handle_message(msg_id, buffer + 1, transferred_bytes - 1);
+            response.set_message_id(request.message_id());
+
+            if (message_handler.handle_message(request, response) && response.message_size()) {
+                auto transferred_bytes = ::sendto(_sock.get_handle(),
+                    response.begin(), int(response.size()),
+                    0,
+                    (SOCKADDR*)&sender_addr, sender_addr_size);
+
+                LOG_IF(error, transferred_bytes == SOCKET_ERROR)
+                    << "sendto() failed with " << ::WSAGetLastError();
+                LOG_IF(error, transferred_bytes != SOCKET_ERROR && transferred_bytes < response.size())
+                    << "sendto() successed partially";
+
+                response.reset();
             }
         }
     }

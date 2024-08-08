@@ -40,6 +40,8 @@
     <ClCompile Include="proto\generated\world_metadata.pb.cc" />
     <ClCompile Include="proto\generated\config.pb.cc" />
     <ClCompile Include="proto\generated\player_gamedata.pb.cc" />
+    <ClCompile Include="proto\generated\protocol.pb.cc" />
+    <ClCompile Include="net\server_communicator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -97,6 +99,9 @@
     <ClInclude Include="proto\generated\player_gamedata.pb.h" />
     <ClInclude Include="proto\generated\config.pb.h" />
     <ClInclude Include="net\message_id.h" />
+    <ClInclude Include="proto\generated\protocol.pb.h" />
+    <ClInclude Include="net\server_communicator.h" />
+    <ClInclude Include="net\udp_message.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />
@@ -113,5 +118,6 @@
     <CustomBuild Include="proto\config.proto" />
     <CustomBuild Include="proto\player_gamedata.proto" />
     <CustomBuild Include="proto\world_metadata.proto" />
+    <CustomBuild Include="proto\protocol.proto" />
   </ItemGroup>
 </Project>

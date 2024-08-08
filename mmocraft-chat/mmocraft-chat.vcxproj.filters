@@ -18,7 +18,10 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="net\route_server.cpp">
+    <ClCompile Include="database\query.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="net\chat_server.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="config\config.cpp">
@@ -26,7 +29,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="net\route_server.h">
+    <ClInclude Include="database\query.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="net\chat_server.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="config\config.h">

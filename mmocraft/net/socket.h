@@ -73,7 +73,7 @@ namespace net
 
         bool recv(WSAOVERLAPPED*, WSABUF*);
 
-        bool recv_from(const char* ip, int port, char* buf, std::size_t buf_size);
+        int recv_from(char* buf, std::size_t buf_size);
 
         bool set_socket_option(int optname, int optval);
 

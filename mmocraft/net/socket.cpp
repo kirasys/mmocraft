@@ -212,12 +212,12 @@ bool net::Socket::recv(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
     return true;
 }
 
-bool net::Socket::recv_from(const char* ip, int port, char* buf, std::size_t buf_size)
+int net::Socket::recv_from(char* buf, std::size_t buf_size)
 {
     sockaddr_in sock_addr;
     int sock_addr_size = sizeof(sock_addr);
 
-    int ret = ::recvfrom(
+    return ::recvfrom(
         _handle,
         buf,
         static_cast<int>(buf_size),
@@ -225,8 +225,6 @@ bool net::Socket::recv_from(const char* ip, int port, char* buf, std::size_t buf
         reinterpret_cast<SOCKADDR*>(&sock_addr),
         &sock_addr_size
     );
-
-    return ret != SOCKET_ERROR;
 }
 
 bool net::Socket::set_socket_option(int optname, int optval)

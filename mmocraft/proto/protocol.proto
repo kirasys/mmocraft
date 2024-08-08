@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package protocol;
+
+enum ServerType {
+    Frontend = 0;
+    Router = 1;
+    Chat = 2;
+    Game = 3;
+
+    SIZE = 4;
+}
+
+message ServerInfo {
+    string ip = 1;
+    int32 port = 2;
+}
+
+message GetConfigRequest {
+    ServerType server_type = 1;
+}
+
+message GetConfigResponse {
+    bytes config = 1;
+}
+
+message GetServerRequest {
+    ServerType server_type = 1;
+}
+
+message GetServerResponse {
+    ServerInfo server_info = 1;
+}
+
+message RegisterServerRequest {
+    ServerType server_type = 1;
+    ServerInfo server_info = 2;
+}

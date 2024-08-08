@@ -5,6 +5,8 @@ namespace net
     // Protocol for communication with the chat server.
     enum MessageID
     {
+        Invalid_MessageID,
+
         Chat_Ping,
         Chat_Packet,
 
@@ -13,6 +15,6 @@ namespace net
         Router_ListChatServer,
 
         // Indicate size of the enum class.
-        SIZE,
+        Size_of_MessageID,
     };
 }

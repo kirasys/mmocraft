@@ -9,6 +9,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mmocraft-test", "mmocraft-t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mmocraft-bench", "mmocraft-bench\mmocraft-bench.vcxproj", "{71402CA3-E4B5-4544-82F3-1AE67CF234F3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mmocraft-router", "mmocraft-router\mmocraft-router.vcxproj", "{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mmocraft-chat", "mmocraft-chat\mmocraft-chat.vcxproj", "{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +45,22 @@ Global
 		{71402CA3-E4B5-4544-82F3-1AE67CF234F3}.Release|x64.Build.0 = Release|x64
 		{71402CA3-E4B5-4544-82F3-1AE67CF234F3}.Release|x86.ActiveCfg = Release|Win32
 		{71402CA3-E4B5-4544-82F3-1AE67CF234F3}.Release|x86.Build.0 = Release|Win32
+		{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}.Debug|x64.ActiveCfg = Debug|x64
+		{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}.Debug|x64.Build.0 = Debug|x64
+		{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}.Debug|x86.ActiveCfg = Debug|Win32
+		{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}.Debug|x86.Build.0 = Debug|Win32
+		{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}.Release|x64.ActiveCfg = Release|x64
+		{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}.Release|x64.Build.0 = Release|x64
+		{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}.Release|x86.ActiveCfg = Release|Win32
+		{0D56F29E-B7DD-40D3-AB00-792BBEF65E7D}.Release|x86.Build.0 = Release|Win32
+		{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}.Debug|x64.ActiveCfg = Debug|x64
+		{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}.Debug|x64.Build.0 = Debug|x64
+		{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}.Debug|x86.ActiveCfg = Debug|Win32
+		{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}.Debug|x86.Build.0 = Debug|Win32
+		{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}.Release|x64.ActiveCfg = Release|x64
+		{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}.Release|x64.Build.0 = Release|x64
+		{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}.Release|x86.ActiveCfg = Release|Win32
+		{DFCAAA73-C9F3-4A83-A295-C687C8C1FB8D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
