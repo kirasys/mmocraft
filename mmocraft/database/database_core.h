@@ -3,7 +3,7 @@
 #include <sqlext.h>
 #include <string_view>
 
-#include "config/config.h"
+#include "proto/generated/config.pb.h"
 #include "util/common_util.h"
 #include "logging/logger.h"
 #include "win/win_type.h"

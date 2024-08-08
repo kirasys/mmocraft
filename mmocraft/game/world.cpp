@@ -14,7 +14,6 @@
 #include "game/world_generator.h"
 
 #include "logging/logger.h"
-#include "config/config.h"
 #include "proto/generated/world_metadata.pb.h"
 #include "util/time_util.h"
 #include "util/protobuf_util.h"

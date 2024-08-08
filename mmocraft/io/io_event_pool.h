@@ -9,8 +9,8 @@
 
 namespace io
 {
-    /// ¿ÀºêÁ§Æ® Ç®À» ÅëÇØ IoContext ±¸Á¶Ã¼¸¦ ÇÒ´çÇÏ´Â Å¬·¡½º.
-    /// °¢°¢ÀÇ Ç®Àº VirtualAllocÀ¸·Î ¿¬¼ÓµÈ °ø°£¿¡ ÇÒ´çµÈ´Ù.
+    /// ì˜¤ë¸Œì íŠ¸ í’€ì„ í†µí•´ IoContext êµ¬ì¡°ì²´ë¥¼ í• ë‹¹í•˜ëŠ” í´ëž˜ìŠ¤.
+    /// ê°ê°ì˜ í’€ì€ VirtualAllocìœ¼ë¡œ ì—°ì†ëœ ê³µê°„ì— í• ë‹¹ëœë‹¤.
     class IoEventObjectPool
     {	
     public:

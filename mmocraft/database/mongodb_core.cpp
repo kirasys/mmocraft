@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "mongodb_core.h"
 
-#include "config/config.h"
 #include "logging/logger.h"
 
 namespace

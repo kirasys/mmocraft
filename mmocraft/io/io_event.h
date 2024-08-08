@@ -8,7 +8,6 @@
 #include <optional>
 #include <limits>
 
-#include "config/config.h"
 #include "logging/error.h"
 #include "win/win_type.h"
 #include "win/smart_handle.h"
