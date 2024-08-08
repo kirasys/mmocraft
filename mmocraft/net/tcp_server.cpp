@@ -45,15 +45,13 @@ namespace net
         return connection_key;
     }
 
-    void TcpServer::start_network_io_service(std::size_t num_of_event_threads)
+    void TcpServer::start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads)
     {
-        auto& server_conf = config::get_server_config();
-
-        _listen_sock.bind(server_conf.ip(), server_conf.port());
+        _listen_sock.bind(ip, port);
         _listen_sock.listen();
         start_accept();
 
-        CONSOLE_LOG(info) << "Listening to " << server_conf.ip() << ':' << server_conf.port() << "...\n";
+        CONSOLE_LOG(info) << "Listening to " << ip << ':' << port << "...\n";
 
         for (unsigned i = 0; i < num_of_event_threads; i++)
             io_service.spawn_event_loop_thread().detach();

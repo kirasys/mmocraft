@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include "logging/error.h"
 
 namespace net
@@ -42,7 +43,7 @@ namespace net
 
         virtual ~ServerCore() = default;
 
-        virtual void start_network_io_service(std::size_t num_of_event_threads) = 0;
+        virtual void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) = 0;
 
     private:
         State _state = Uninitialized;
