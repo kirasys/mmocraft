@@ -43,3 +43,16 @@ message Configuration {
    Log log = 4;
    System system = 5;
 }
+
+message RouterConfig {
+    Configuration.Server server = 1;
+    Configuration.Log log = 2;
+}
+
+message ChatConfig {
+    Configuration.Server server = 1;
+    Configuration.Database rel_database = 2;
+    Configuration.Database doc_database = 3;
+    Configuration.Log log = 4;
+    Configuration.System system = 5;
+}
