@@ -1,6 +1,7 @@
 #pragma once
 
 #include <net/udp_server.h>
+#include <net/server_communicator.h>
 
 namespace router
 {
@@ -9,7 +10,7 @@ namespace router
         class RouteServer : public ::net::MessageHandler
         {
         public:
-            using handler_type = bool (*)(const ::net::MessageRequest&, ::net::MessageResponse&);
+            using handler_type = bool (RouteServer::*)(const ::net::MessageRequest&, ::net::MessageResponse&);
 
             RouteServer();
 
@@ -17,10 +18,13 @@ namespace router
 
             bool handle_message(const ::net::MessageRequest&, ::net::MessageResponse&) override;
 
-            static bool handle_get_config(const ::net::MessageRequest&, ::net::MessageResponse&);
+            bool handle_get_config(const ::net::MessageRequest&, ::net::MessageResponse&);
+
+            bool handle_server_announcement(const ::net::MessageRequest&, ::net::MessageResponse&);
 
         private:
             ::net::UdpServer server_core;
+            ::net::ServerCommunicator _communicator;
         };
     }
 }

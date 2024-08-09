@@ -12,6 +12,7 @@ namespace net
 
         Router_Pong,
         Router_GetConfig,
+        Router_ServerAnnouncement,
         Router_ListChatServer,
 
         // Indicate size of the enum class.

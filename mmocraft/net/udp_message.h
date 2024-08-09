@@ -72,6 +72,11 @@ namespace net
             return _buf;
         }
 
+        const char* cbegin() const
+        {
+            return _buf;
+        }
+
         char* end()
         {
             return _buf + capacity();

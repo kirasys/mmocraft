@@ -32,9 +32,9 @@ namespace net
         event_threads.clear();
     }
 
-    bool UdpServer::send(const char* ip, int port, const char* data, std::size_t data_size)
+    bool UdpServer::send(const char* ip, int port, const net::MessageRequest& msg)
     {
-        return _sock.send_to(ip, port, data, data_size);
+        return _sock.send_to(ip, port, msg.cbegin(), msg.size());
     }
 
     void UdpServer::start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads)

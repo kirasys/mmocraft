@@ -32,7 +32,7 @@ message GetServerResponse {
     ServerInfo server_info = 1;
 }
 
-message RegisterServerRequest {
+message ServerAnnouncement {
     ServerType server_type = 1;
     ServerInfo server_info = 2;
 }

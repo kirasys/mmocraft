@@ -12,6 +12,20 @@ namespace net
         _servers[server_type] = server_info;
     }
 
+    bool ServerCommunicator::announce_server(protocol::ServerType server_type, const net::ServerInfo& server_info)
+    {
+        protocol::ServerAnnouncement announce_msg;
+        announce_msg.set_server_type(server_type);
+        announce_msg.mutable_server_info()->set_ip(server_info.ip);
+        announce_msg.mutable_server_info()->set_port(server_info.port);
+
+        net::MessageRequest request(net::MessageID::Router_ServerAnnouncement);
+        request.set_message(announce_msg);
+
+        auto& [router_ip, router_port] = _servers[protocol::ServerType::Router];
+        return router_port ? _source.send(router_ip.c_str(), router_port, request) : false;
+    }
+
     bool ServerCommunicator::read_message(net::Socket& sock, net::MessageRequest& message, struct sockaddr_in& sender_addr, int& sender_addr_size)
     {
         auto transferred_bytes = ::recvfrom(

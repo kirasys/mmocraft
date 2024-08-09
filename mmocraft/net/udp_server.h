@@ -23,7 +23,7 @@ namespace net
 
         void reset();
 
-        bool send(const char* ip, int port, const char* data, std::size_t data_size);
+        bool send(const char* ip, int port, const net::MessageRequest&);
 
         void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override;
 

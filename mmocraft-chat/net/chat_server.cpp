@@ -24,8 +24,6 @@ namespace chat
         auto router_ip = argv[1];
         auto router_port = std::atoi(argv[2]);
 
-        net::Socket::initialize_system();
-
         if (not ::config::load_remote_config(router_ip, router_port, protocol::ServerType::Chat, chat::config::get_config()))
             return;
 
@@ -43,6 +41,11 @@ namespace chat
         server_core.start_network_io_service(conf.server().ip(), conf.server().port(), conf.system().num_of_processors());
 
         while (1) {
+            _communicator.announce_server(protocol::ServerType::Chat, {
+                .ip = conf.server().ip(),
+                .port = conf.server().port()
+            });
+
             util::sleep_ms(3000);
         }
     }
