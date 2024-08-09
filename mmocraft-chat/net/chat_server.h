@@ -15,7 +15,7 @@ namespace chat
 
         bool handle_message(const net::MessageRequest&, net::MessageResponse& response) override;
 
-        void serve_forever();
+        void serve_forever(int argc, char* argv[]);
 
     private:
         net::UdpServer server_core;
