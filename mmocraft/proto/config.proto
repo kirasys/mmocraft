@@ -36,12 +36,14 @@ message Configuration {
         uint32 alllocation_granularity = 2;
         uint32 num_of_processors = 3;
     }
+}
 
-   Server server = 1;
-   World world = 2;
-   Database database = 3;
-   Log log = 4;
-   System system = 5;
+message FrontendConfig {
+    Configuration.Server server = 1;
+    Configuration.Database rel_database = 2;
+    Configuration.World world = 3;
+    Configuration.Log log = 4;
+    Configuration.System system = 5;
 }
 
 message RouterConfig {

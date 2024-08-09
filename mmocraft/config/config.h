@@ -7,27 +7,11 @@
 #include "proto/generated/config.pb.h"
 
 namespace config {
-    class Configuration;
-    class Configuration_Server;
-    class Configuration_World;
-    class Configuration_Database;
-    class Configuration_Log;
-    class Configuration_System;
-
-    Configuration& get_config();
-    Configuration_Server& get_server_config();
-    Configuration_World& get_world_config();
-    Configuration_Database& get_database_config();
-    Configuration_Log& get_log_config();
-    Configuration_System& get_system_config();
-
-    void set_default_configuration(Configuration_Server&);
-    void set_default_configuration(Configuration_World&);
-    void set_default_configuration(Configuration_Database&);
-    void set_default_configuration(Configuration_Log&);
-    void set_default_configuration(Configuration_System&);
+    FrontendConfig& get_config();
 
     void initialize_system(std::string_view config_dir, std::string_view config_filename);
+
+    void set_default_configuration(config::Configuration_System& conf);
 
     template <typename ConfigType>
     bool load_remote_config(const char* router_ip, int router_port, protocol::ServerType server_type, ConfigType& config)

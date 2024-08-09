@@ -16,11 +16,11 @@ namespace database
 {
     void initialize_system()
     {
-        const auto& db_conf = config::get_database_config();
+        const auto& conf = config::get_config();
 
         // start database system.
         CONSOLE_LOG(info) << "Connecting database server...";
-        if (not global_database_connection.connect_with_password(db_conf))
+        if (not global_database_connection.connect_with_password(conf.rel_database()))
             throw error::DATABASE_CONNECT;
         CONSOLE_LOG(info) << "Connected";
     }

@@ -38,7 +38,7 @@ namespace
 
 namespace setup
 {
-    void initialize_system()
+    void initialize_system(int argc, char* argv[])
     {
         std::set_terminate(termination_routine);
 
@@ -47,20 +47,22 @@ namespace setup
         std::signal(SIGINT, termination_routine_for_signal);
         std::signal(SIGABRT, termination_routine_for_signal);
 
-        config::initialize_system(config_dir, config_filename);
-
-        auto& log_conf = config::get_log_config();
-        logging::initialize_system(log_conf.log_dir(), log_conf.log_filename());
-
         net::Socket::initialize_system();
+
+        auto router_ip = argv[1];
+        auto router_port = std::atoi(argv[2]);
+
+        if (not config::load_remote_config(router_ip, router_port, protocol::ServerType::Frontend, config::get_config()))
+            return;
+
+        auto& conf = config::get_config();
+        logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
 
         database::initialize_system();
 
         // Create working directories
-        const auto& world_conf = config::get_world_config();
-
-        if (not fs::exists(world_conf.save_dir()))
-            fs::create_directories(world_conf.save_dir());
+        if (not fs::exists(conf.world().save_dir()))
+            fs::create_directories(conf.world().save_dir());
     }
 
     void add_termination_handler(std::terminate_handler handler)

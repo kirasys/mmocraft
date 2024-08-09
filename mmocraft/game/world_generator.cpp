@@ -15,12 +15,12 @@ namespace game
         if (fs::exists(metadata_path))
             return;
 
-        const auto& world_conf = config::get_world_config();
+        const auto& conf = config::get_config();
 
-        CONSOLE_LOG_IF(fatal, world_conf.width() < 10 || world_conf.height() < 10 || world_conf.length() < 10)
+        CONSOLE_LOG_IF(fatal, conf.world().width() < 10 || conf.world().height() < 10 || conf.world().length() < 10)
             << "world map size must greater than 10x10x10.";
 
-        auto map_size = util::Coordinate3D{ world_conf.width(), world_conf.height(), world_conf.length()};
+        auto map_size = util::Coordinate3D{ conf.world().width(), conf.world().height(), conf.world().length()};
         std::size_t map_volume = map_size.x * map_size.y * map_size.z;
 
         // write world files to the disk.

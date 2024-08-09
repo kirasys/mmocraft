@@ -141,14 +141,11 @@ namespace net
     void MasterServer::serve_forever()
     {
         // start network I/O system.
-        auto& server_conf = config::get_server_config();
-        auto& system_conf = config::get_system_config();
-        server_core.start_network_io_service(server_conf.ip(), server_conf.port(), system_conf.num_of_processors() * 2);
+        auto& conf = config::get_config();
+        server_core.start_network_io_service(conf.server().ip(), conf.server().port(), conf.system().num_of_processors() * 2);
 
         // load world map.
-        const auto& world_conf = config::get_world_config();
-
-        world.load_filesystem_world(world_conf.save_dir());
+        world.load_filesystem_world(conf.world().save_dir());
 
         while (1) {
             std::size_t start_tick = util::current_monotonic_tick();

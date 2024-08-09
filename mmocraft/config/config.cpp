@@ -13,49 +13,10 @@
 namespace fs = std::filesystem;
 
 namespace {
-    config::Configuration g_configuration;
+    config::FrontendConfig g_config;
 }
 
 namespace config {
-    void set_default_configuration()
-    {
-        set_default_configuration(get_server_config());
-        set_default_configuration(get_world_config());
-        set_default_configuration(get_log_config());
-        set_default_configuration(get_database_config());
-        set_default_configuration(get_system_config());
-    }
-
-    void set_default_configuration(config::Configuration_Server& conf)
-    {
-        conf.set_ip("127.0.0.1");
-        conf.set_port(12345);
-        conf.set_max_client(1000);
-        conf.set_server_name("Massive Minecraft Classic Server");
-        conf.set_motd("welcome to mmocraft server.");
-    }
-
-    void set_default_configuration(config::Configuration_World& conf)
-    {
-        conf.set_width(256);
-        conf.set_height(256);
-        conf.set_length(256);
-        conf.set_save_dir("world\\");
-    }
-
-    void set_default_configuration(config::Configuration_Log& conf)
-    {
-        conf.set_log_filename("server.log");
-        conf.set_log_dir("log");
-    }
-
-    void set_default_configuration(config::Configuration_Database& conf)
-    {
-        conf.set_driver_name("ODBC Driver 17 for SQL Server");
-        conf.set_database_name("mmocraft");
-        conf.set_userid("mmocraft_login");
-        conf.set_password("12341234");
-    }
 
     void set_default_configuration(config::Configuration_System& conf)
     {
@@ -69,8 +30,7 @@ namespace config {
 
     void generate_config(const fs::path& config_path)
     {
-        set_default_configuration();
-        util::proto_message_to_json_file(g_configuration, config_path);
+        util::proto_message_to_json_file(get_config(), config_path);
     }
 
     void load_config(const fs::path& config_path)
@@ -82,41 +42,12 @@ namespace config {
             std::exit(0);
         }
 
-        util::json_file_to_proto_message(&g_configuration, config_path);
+        util::json_file_to_proto_message(&get_config(), config_path);
     }
 
-    Configuration& get_config()
+    config::FrontendConfig& get_config()
     {
-        return g_configuration;
-    }
-
-    Configuration_Server& get_server_config()
-    {
-        return *g_configuration.mutable_server();
-    }
-
-    Configuration_World& get_world_config()
-    {
-        return *g_configuration.mutable_world();
-    }
-
-    Configuration_Database& get_database_config()
-    {
-        return *g_configuration.mutable_database();
-    }
-
-    Configuration_Log& get_log_config()
-    {
-        return *g_configuration.mutable_log();
-    }
-
-    Configuration_System& get_system_config()
-    {
-        auto& system_conf = *g_configuration.mutable_system();
-        if (system_conf.page_size() == 0)
-            set_default_configuration(system_conf);
-
-        return system_conf;
+        return g_config;
     }
 
     void initialize_system(std::string_view config_dir, std::string_view config_filename)

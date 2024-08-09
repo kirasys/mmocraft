@@ -115,10 +115,10 @@ namespace net
     void Connection::on_handshake_success()
     {
         assert(_player != nullptr);
-        const auto& server_conf = config::get_server_config();
+        const auto& conf = config::get_config();
 
         net::PacketHandshake handshake_packet{
-            server_conf.server_name(), server_conf.motd(),
+            conf.server().server_name(), conf.server().motd(),
             _player->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
         };
         net::PacketLevelInit level_init_packet;
