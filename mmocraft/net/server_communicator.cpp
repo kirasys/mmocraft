@@ -7,6 +7,11 @@
 
 namespace net
 {
+    const net::ServerInfo& ServerCommunicator::get_server(protocol::ServerType server_type)
+    {
+        return _servers[server_type];
+    }
+
     void ServerCommunicator::register_server(protocol::ServerType server_type, const net::ServerInfo& server_info)
     {
         _servers[server_type] = server_info;
@@ -53,6 +58,25 @@ namespace net
         return read_message(sock, message, sender_addr, sender_addr_size);
     }
 
+    bool ServerCommunicator::send_message_reliably(const char* ip, int port, const net::MessageRequest& request, net::MessageResponse& response, int retry_count)
+    {
+        net::Socket sock{ net::SocketProtocol::UDPv4 };
+        sock.set_socket_option(SO_RCVTIMEO, UDP_MESSAGE_RETRANSMISSION_PERIOD);
+        
+        for (int i = 0; i < retry_count; i++) {
+            auto sended_tick = util::current_monotonic_tick();
+            sock.send_to(ip, port, request.cbegin(), request.size());
+
+            if (net::ServerCommunicator::read_message(sock, response))
+                return true;
+
+            if (util::current_monotonic_tick() - sended_tick < UDP_MESSAGE_RETRANSMISSION_PERIOD)
+                util::sleep_ms(UDP_MESSAGE_RETRANSMISSION_PERIOD);
+        }
+
+        return false;
+    }
+
     bool ServerCommunicator::get_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse& response)
     {
         protocol::GetConfigRequest get_config_msg;
@@ -62,21 +86,10 @@ namespace net
         request.set_message(get_config_msg);
 
         // Send the get config message to the router.
-        net::Socket sock{ net::SocketProtocol::UDPv4 };
-        sock.set_socket_option(SO_RCVTIMEO, 1000);
+        CONSOLE_LOG(info) << "Wait to fetch config...";
+        send_message_reliably(router_ip, router_port, request, response);
+        CONSOLE_LOG(info) << "Done.";
 
-        CONSOLE_LOG(info) << "Trying to get config...";
-
-        for (int i = 0; i < 3; i++) {
-            sock.send_to(router_ip, router_port, request.begin(), request.size());
-
-            if (net::ServerCommunicator::read_message(sock, response)) {
-                CONSOLE_LOG(info) << "Done.";
-                return true;
-            }
-        }
-
-        CONSOLE_LOG(error) << "Failed to get config";
-        return false;
+        return true;
     }
 }
