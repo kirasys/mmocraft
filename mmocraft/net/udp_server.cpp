@@ -32,9 +32,9 @@ namespace net
         event_threads.clear();
     }
 
-    bool UdpServer::send(const char* ip, int port, const net::MessageRequest& msg)
+    bool UdpServer::send(const std::string& ip, int port, const net::MessageRequest& msg)
     {
-        return _sock.send_to(ip, port, msg.cbegin(), msg.size());
+        return _sock.send_to(ip.c_str(), port, msg.cbegin(), msg.size());
     }
 
     void UdpServer::start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads)
@@ -42,7 +42,7 @@ namespace net
         if (not _sock.bind(ip, port))
             return;
 
-        CONSOLE_LOG(info) << "Listening to " << ip << ':' << port << "...\n";
+        CONSOLE_LOG(info) << "Listening to " << ip << ':' << port << "...";
 
         for (unsigned i = 0; i < num_of_event_threads; i++)
             event_threads.emplace_back(spawn_event_loop_thread());

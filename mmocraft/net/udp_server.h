@@ -7,7 +7,6 @@
 #include "net/socket.h"
 #include "net/server_core.h"
 #include "net/udp_message.h"
-#include "proto/generated/protocol.pb.h"
 
 namespace net
 {
@@ -17,13 +16,13 @@ namespace net
     class UdpServer : public net::ServerCore
     {
     public:
-        UdpServer(MessageHandler&);
+        UdpServer(net::MessageHandler&);
 
         ~UdpServer();
 
         void reset();
 
-        bool send(const char* ip, int port, const net::MessageRequest&);
+        bool send(const std::string& ip, int port, const net::MessageRequest&);
 
         void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override;
 
@@ -33,7 +32,7 @@ namespace net
 
     private:
         net::Socket _sock;
-        MessageHandler& message_handler;
+        net::MessageHandler& message_handler;
 
         bool is_terminated = false;
         std::vector<std::thread> event_threads;
