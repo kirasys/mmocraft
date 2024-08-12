@@ -1,5 +1,8 @@
 #pragma once
 
+#include <initializer_list>
+#include <shared_mutex>
+
 #include "net/udp_server.h"
 #include "proto/generated/protocol.pb.h"
 
@@ -20,13 +23,15 @@ namespace net
             : _source{ src }
         { }
 
-        const net::ServerInfo& get_server(protocol::ServerType);
+        net::ServerInfo get_server(protocol::ServerType);
 
         void register_server(protocol::ServerType, const net::ServerInfo&);
 
         bool announce_server(protocol::ServerType, const net::ServerInfo&);
 
-        //bool (protocol::ServerType);
+        bool fetch_server_async(protocol::ServerType);
+
+        bool fetch_server(protocol::ServerType);
 
         static bool read_message(net::Socket&, net::MessageRequest&, struct sockaddr_in& sender_addr, int& sender_addr_size);
 
@@ -39,6 +44,7 @@ namespace net
     private:
         net::UdpServer& _source;
 
+        std::shared_mutex server_table_mutex;
         net::ServerInfo _servers[protocol::ServerType::SIZE];
     };
 }

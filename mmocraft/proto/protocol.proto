@@ -24,12 +24,13 @@ message GetConfigResponse {
     bytes config = 1;
 }
 
-message GetServerRequest {
+message FetchServerRequest {
     ServerType server_type = 1;
 }
 
-message GetServerResponse {
-    ServerInfo server_info = 1;
+message FetchServerResponse {
+    ServerType server_type = 1;
+    ServerInfo server_info = 2;
 }
 
 message ServerAnnouncement {

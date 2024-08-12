@@ -14,7 +14,10 @@ namespace net
     MasterServer::MasterServer(net::ConnectionEnvironment& a_connection_env, io::IoCompletionPort& a_io_service)
         : connection_env{ a_connection_env }
         , io_service { a_io_service }
-        , server_core{ *this, connection_env, io_service }
+        , tcp_server{ *this, connection_env, io_service }
+        , udp_server{ *this }
+        , _communicator{ udp_server }
+
         , world{ connection_env, database_core }
         
         , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this, user_authentication_task_interval }
@@ -127,6 +130,11 @@ namespace net
         return error::SUCCESS;
     }
 
+    bool MasterServer::handle_message(const MessageRequest&, MessageResponse&)
+    {
+        return true;
+    }
+
     void MasterServer::tick()
     {
         ConnectionIO::flush_send(connection_env);
@@ -134,15 +142,22 @@ namespace net
 
         flush_deferred_packet();
 
-        if (server_core.is_stopped())
-            server_core.start_accept();
+        if (tcp_server.is_stopped())
+            tcp_server.start_accept();
     }
 
-    void MasterServer::serve_forever()
+    void MasterServer::serve_forever(const char* router_ip, int router_port)
     {
+        // start UDP server.
+        const auto& conf = config::get_config();
+        udp_server.start_network_io_service(conf.udp_server().ip(), conf.udp_server().port(), 1);
+
+        // Fetch other UDP server.
+        _communicator.register_server(protocol::ServerType::Router, { router_ip, router_port });
+        _communicator.fetch_server(protocol::ServerType::Chat);
+
         // start network I/O system.
-        auto& conf = config::get_config();
-        server_core.start_network_io_service(conf.server().ip(), conf.server().port(), conf.system().num_of_processors() * 2);
+        tcp_server.start_network_io_service(conf.tcp_server().ip(), conf.tcp_server().port(), conf.system().num_of_processors() * 2);
 
         // load world map.
         world.load_filesystem_world(conf.world().save_dir());

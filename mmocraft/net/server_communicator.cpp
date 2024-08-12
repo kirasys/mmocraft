@@ -3,17 +3,20 @@
 
 #include "net/udp_message.h"
 #include "net/server_communicator.h"
+#include "proto/generated/protocol.pb.h"
 #include "logging/logger.h"
 
 namespace net
 {
-    const net::ServerInfo& ServerCommunicator::get_server(protocol::ServerType server_type)
+    net::ServerInfo ServerCommunicator::get_server(protocol::ServerType server_type)
     {
+        std::shared_lock lock(server_table_mutex);
         return _servers[server_type];
     }
 
     void ServerCommunicator::register_server(protocol::ServerType server_type, const net::ServerInfo& server_info)
     {
+        std::unique_lock lock(server_table_mutex);
         _servers[server_type] = server_info;
     }
 
@@ -27,8 +30,47 @@ namespace net
         net::MessageRequest request(net::MessageID::Router_ServerAnnouncement);
         request.set_message(announce_msg);
 
-        auto& [router_ip, router_port] = _servers[protocol::ServerType::Router];
-        return router_port ? _source.send(router_ip.c_str(), router_port, request) : false;
+        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
+        return router_port ? _source.send(router_ip, router_port, request) : false;
+    }
+
+    bool ServerCommunicator::fetch_server(protocol::ServerType server_type)
+    {
+        protocol::FetchServerRequest fetch_server_msg;
+        fetch_server_msg.set_server_type(server_type);
+
+        net::MessageRequest request(net::MessageID::Router_FetchServer);
+        request.set_message(fetch_server_msg);
+
+        // Send the get config message to the router.
+        net::MessageResponse response;
+        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
+
+        CONSOLE_LOG(info) << "Wait to fetch server("<< server_type << ") info...";
+        send_message_reliably(router_ip.c_str(), router_port, request, response);
+        CONSOLE_LOG(info) << "Done.";
+
+        // Register fetched server.
+        protocol::FetchServerResponse fetch_server_res;
+        if (not fetch_server_res.ParseFromArray(response.begin_message(), int(response.message_size()))) {
+            CONSOLE_LOG(error) << "Fail to parse FetchServerResponse";
+            return false;
+        }
+
+        register_server(server_type, { fetch_server_res.server_info().ip(), fetch_server_res.server_info().port() });
+        return true;
+    }
+
+    bool ServerCommunicator::fetch_server_async(protocol::ServerType server_type)
+    {
+        protocol::FetchServerRequest fetch_server_msg;
+        fetch_server_msg.set_server_type(server_type);
+
+        net::MessageRequest request(net::MessageID::Router_FetchServer);
+        request.set_message(fetch_server_msg);
+
+        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
+        return router_port ? _source.send(router_ip, router_port, request) : false;
     }
 
     bool ServerCommunicator::read_message(net::Socket& sock, net::MessageRequest& message, struct sockaddr_in& sender_addr, int& sender_addr_size)

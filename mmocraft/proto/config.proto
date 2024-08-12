@@ -39,11 +39,12 @@ message Configuration {
 }
 
 message FrontendConfig {
-    Configuration.Server server = 1;
-    Configuration.Database rel_database = 2;
-    Configuration.World world = 3;
-    Configuration.Log log = 4;
-    Configuration.System system = 5;
+    Configuration.Server tcp_server = 1;
+    Configuration.Server udp_server = 2;
+    Configuration.Database rel_database = 3;
+    Configuration.World world = 4;
+    Configuration.Log log = 5;
+    Configuration.System system = 6;
 }
 
 message RouterConfig {

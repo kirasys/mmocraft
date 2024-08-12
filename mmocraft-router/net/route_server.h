@@ -20,6 +20,8 @@ namespace router
 
             bool handle_get_config(const ::net::MessageRequest&, ::net::MessageResponse&);
 
+            bool handle_fetch_server(const ::net::MessageRequest&, ::net::MessageResponse&);
+
             bool handle_server_announcement(const ::net::MessageRequest&, ::net::MessageResponse&);
 
         private:

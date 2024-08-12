@@ -13,7 +13,7 @@ namespace net
         Router_Pong,
         Router_GetConfig,
         Router_ServerAnnouncement,
-        Router_ListChatServer,
+        Router_FetchServer,
 
         // Indicate size of the enum class.
         Size_of_MessageID,

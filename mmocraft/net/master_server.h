@@ -8,6 +8,7 @@
 #include "net/connection_environment.h"
 #include "net/deferred_packet.h"
 #include "net/tcp_server.h"
+#include "net/udp_server.h"
 #include "net/packet_extension.h"
 
 namespace net
@@ -15,10 +16,16 @@ namespace net
     static constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
     static constexpr std::size_t chat_message_task_interval = 1 * 1000; // 1 seconds.
 
-    class MasterServer : public net::PacketHandleServer
+    class MasterServer : public net::PacketHandleServer, public net::MessageHandler
     {
     public:
         MasterServer(net::ConnectionEnvironment&, io::IoCompletionPort&);
+
+        void tick();
+
+        void serve_forever(const char* router_ip, int router_port);
+
+        /* Packet handlers */
 
         error::ResultCode handle_packet(net::Connection&, Packet*) override;
         
@@ -36,9 +43,9 @@ namespace net
 
         error::ResultCode handle_ext_entry_packet(net::Connection&, net::PacketExtEntry&);
 
-        void tick();
+        /* Message handlers */
 
-        void serve_forever();
+        bool handle_message(const MessageRequest&, MessageResponse&) override;
 
         /**
          *  Deferred packet handler methods.
@@ -56,7 +63,9 @@ namespace net
 
         io::IoCompletionPort& io_service;
 
-        net::TcpServer server_core;
+        net::TcpServer tcp_server;
+        net::UdpServer udp_server;
+        net::ServerCommunicator _communicator;
 
         database::DatabaseCore database_core;
 
