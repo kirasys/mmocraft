@@ -118,7 +118,7 @@ namespace net
         const auto& conf = config::get_config();
 
         net::PacketHandshake handshake_packet{
-            conf.server().server_name(), conf.server().motd(),
+            conf.tcp_server().server_name(), conf.tcp_server().motd(),
             _player->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
         };
         net::PacketLevelInit level_init_packet;
