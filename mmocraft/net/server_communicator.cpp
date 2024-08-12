@@ -63,14 +63,14 @@ namespace net
         net::Socket sock{ net::SocketProtocol::UDPv4 };
         sock.set_socket_option(SO_RCVTIMEO, UDP_MESSAGE_RETRANSMISSION_PERIOD);
         
-        for (int i = 0; i < retry_count; i++) {
+        for (int i = retry_count; i >= 0 ; i--) {
             auto sended_tick = util::current_monotonic_tick();
             sock.send_to(ip, port, request.cbegin(), request.size());
 
             if (net::ServerCommunicator::read_message(sock, response))
                 return true;
 
-            if (util::current_monotonic_tick() - sended_tick < UDP_MESSAGE_RETRANSMISSION_PERIOD)
+            if (i > 0 && util::current_monotonic_tick() - sended_tick < UDP_MESSAGE_RETRANSMISSION_PERIOD)
                 util::sleep_ms(UDP_MESSAGE_RETRANSMISSION_PERIOD);
         }
 
