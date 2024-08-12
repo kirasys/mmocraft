@@ -5,6 +5,7 @@
 #include "net/udp_message.h"
 #include "net/server_communicator.h"
 #include "proto/generated/config.pb.h"
+#include "proto/generated/protocol.pb.h"
 
 namespace config {
     FrontendConfig& get_config();
