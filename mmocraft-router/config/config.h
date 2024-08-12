@@ -9,7 +9,7 @@ namespace router
     {
         void initialize_system();
 
-        bool load_server_config(protocol::ServerType, protocol::GetConfigResponse* msg = nullptr);
+        bool load_server_config(protocol::ServerType, protocol::FetchConfigResponse* msg = nullptr);
 
         ::config::Configuration_Server& get_server_config();
 

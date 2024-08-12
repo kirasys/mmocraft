@@ -11,7 +11,7 @@ namespace
 {
     const std::array<router::net::RouteServer::handler_type, 0xff> message_handler_db = [] {
         std::array<router::net::RouteServer::handler_type, 0xff> arr{};
-        arr[::net::MessageID::Router_GetConfig] = &router::net::RouteServer::handle_get_config;
+        arr[::net::MessageID::Router_GetConfig] = &router::net::RouteServer::handle_fetch_config;
         arr[::net::MessageID::Router_ServerAnnouncement] = &router::net::RouteServer::handle_server_announcement;
         arr[::net::MessageID::Router_FetchServer] = &router::net::RouteServer::handle_fetch_server;
         return arr;
@@ -49,13 +49,13 @@ namespace net {
         return false;
     }
 
-    bool RouteServer::handle_get_config(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    bool RouteServer::handle_fetch_config(const ::net::MessageRequest& request, ::net::MessageResponse& response)
     {
-        protocol::GetConfigRequest msg;
+        protocol::FetchConfigRequest msg;
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
             return false;
 
-        protocol::GetConfigResponse result_msg;
+        protocol::FetchConfigResponse result_msg;
         if (not router::config::load_server_config(msg.server_type(), &result_msg))
             return false;
 

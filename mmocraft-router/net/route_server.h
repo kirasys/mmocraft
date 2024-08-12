@@ -18,7 +18,7 @@ namespace router
 
             bool handle_message(const ::net::MessageRequest&, ::net::MessageResponse&) override;
 
-            bool handle_get_config(const ::net::MessageRequest&, ::net::MessageResponse&);
+            bool handle_fetch_config(const ::net::MessageRequest&, ::net::MessageResponse&);
 
             bool handle_fetch_server(const ::net::MessageRequest&, ::net::MessageResponse&);
 

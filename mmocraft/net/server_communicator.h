@@ -39,7 +39,7 @@ namespace net
 
         static bool send_message_reliably(const char* ip, int port, const net::MessageRequest&, net::MessageResponse&, int retry_count = std::numeric_limits<int>::max());
 
-        static bool get_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse&);
+        static bool fetch_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse&);
 
     private:
         net::UdpServer& _source;

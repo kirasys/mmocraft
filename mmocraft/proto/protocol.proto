@@ -16,11 +16,11 @@ message ServerInfo {
     int32 port = 2;
 }
 
-message GetConfigRequest {
+message FetchConfigRequest {
     ServerType server_type = 1;
 }
 
-message GetConfigResponse {
+message FetchConfigResponse {
     bytes config = 1;
 }
 

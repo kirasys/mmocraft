@@ -119,13 +119,13 @@ namespace net
         return false;
     }
 
-    bool ServerCommunicator::get_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse& response)
+    bool ServerCommunicator::fetch_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse& response)
     {
-        protocol::GetConfigRequest get_config_msg;
-        get_config_msg.set_server_type(target);
+        protocol::FetchConfigRequest fetch_config_msg;
+        fetch_config_msg.set_server_type(target);
 
         net::MessageRequest request(net::MessageID::Router_GetConfig);
-        request.set_message(get_config_msg);
+        request.set_message(fetch_config_msg);
 
         // Send the get config message to the router.
         CONSOLE_LOG(info) << "Wait to fetch config...";

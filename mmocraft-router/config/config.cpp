@@ -99,7 +99,7 @@ namespace config {
         return *g_route_server_config.mutable_log();
     }
 
-    bool load_server_config(protocol::ServerType server_type, protocol::GetConfigResponse* msg)
+    bool load_server_config(protocol::ServerType server_type, protocol::FetchConfigResponse* msg)
     {
         auto [_, config_path, config_msg] = config_path_db[server_type];
         if (config_path == nullptr) {

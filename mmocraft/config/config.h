@@ -18,18 +18,18 @@ namespace config {
     bool load_remote_config(const char* router_ip, int router_port, protocol::ServerType server_type, ConfigType& config)
     {
         net::MessageResponse response;
-        if (not net::ServerCommunicator::get_config(router_ip, router_port, server_type, response)) {
+        if (not net::ServerCommunicator::fetch_config(router_ip, router_port, server_type, response)) {
             std::cerr << "Fail to get config from remote(" << router_ip << ", " << router_port << ')';
             return false;
         }
 
-        protocol::GetConfigResponse get_config_res;
-        if (not get_config_res.ParseFromArray(response.begin_message(), int(response.message_size()))) {
+        protocol::FetchConfigResponse fetch_config_res;
+        if (not fetch_config_res.ParseFromArray(response.begin_message(), int(response.message_size()))) {
             std::cerr << "Fail to parse GetConfigResponse";
             return false;
         }
 
-        if (not config.ParseFromString(get_config_res.config())) {
+        if (not config.ParseFromString(fetch_config_res.config())) {
             std::cerr << "Fail to parse ChatConfig";
             return false;
         }
