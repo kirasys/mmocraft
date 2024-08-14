@@ -12,21 +12,19 @@ namespace
 {
     struct PacketStaticData
     {
-        void (*parse)(std::byte*, std::byte*, net::Packet*) = nullptr;
-        error::ErrorCode (*validate)(const net::Packet*) = nullptr;
         std::size_t size = 0;
     };
 
     constinit const std::array<PacketStaticData, 0x100> protocol_db = [] {
         using namespace net;
         std::array<PacketStaticData, 0x100> arr{};
-        arr[PacketID::Handshake] = { PacketHandshake::parse, PacketHandshake::validate, PacketHandshake::packet_size };
-        arr[PacketID::Ping] = { PacketPing::parse, nullptr, PacketPing::packet_size};
-        arr[PacketID::SetBlockClient] = { PacketSetBlockClient::parse, nullptr, PacketSetBlockClient::packet_size };
-        arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::parse, nullptr,  PacketSetPlayerPosition::packet_size };
-        arr[PacketID::ChatMessage] = { PacketChatMessage::parse, nullptr, PacketChatMessage::packet_size };
-        arr[PacketID::ExtInfo] = { PacketExtInfo::parse, nullptr, PacketExtInfo::packet_size };
-        arr[PacketID::ExtEntry] = { PacketExtEntry::parse, nullptr, PacketExtEntry::packet_size };
+        arr[PacketID::Handshake] = { PacketHandshake::packet_size };
+        arr[PacketID::Ping] = { PacketPing::packet_size};
+        arr[PacketID::SetBlockClient] = { PacketSetBlockClient::packet_size };
+        arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::packet_size };
+        arr[PacketID::ChatMessage] = { PacketChatMessage::packet_size };
+        arr[PacketID::ExtInfo] = { PacketExtInfo::packet_size };
+        arr[PacketID::ExtEntry] = { PacketExtEntry::packet_size };
         return arr;
     }();
 }
@@ -35,6 +33,7 @@ namespace net
 {
     /* Common Packet Static Methods */
 
+    /*
     auto PacketStructure::parse_packet(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
         -> std::pair<std::uint32_t, error::ResultCode>
     {
@@ -60,50 +59,48 @@ namespace net
 
         return { std::uint32_t(protocol_db[packet_id].size), result }; // insufficient packet data.
     }
+    */
 
-    void PacketStructure::read_string(std::byte*& buf, PacketFieldType::String& value)
+    std::pair<net::PacketID, int> PacketStructure::parse_packet(const std::byte* buf_start)
+    {
+        auto packet_id = decltype(Packet::id)(*buf_start);
+        auto packet_size = int(protocol_db[packet_id].size);
+        return { packet_size ? net::PacketID(packet_id) : net::PacketID::INVALID, packet_size };
+    }
+
+    void PacketStructure::read_string(const std::byte*& buf, PacketFieldType::String& value)
     {
         {
             std::uint16_t padding_size = 0;
-            for (; padding_size < 64 && buf[63 - padding_size] == std::byte(' '); padding_size++)
-                buf[63 - padding_size] = std::byte(0);
-            value.size = 64 - padding_size;
+            for (; padding_size < 64 && buf[63 - padding_size] == std::byte(' '); padding_size++) { }
+            
+            value = { reinterpret_cast<const char*>(buf), std::size_t(64 - padding_size) };
         }
-        value.data = reinterpret_cast<const char*>(buf);
-        buf += 64;
-        *(buf - 1) = std::byte(0);
+        buf += PacketFieldConstraint::max_string_length;
     }
 
     void PacketStructure::write_string(std::byte* &buf, const PacketFieldType::String& str)
     {
-        auto size = std::min(str.size, PacketFieldConstraint::max_string_length);
-        std::memcpy(buf, str.data, size);
-        std::memset(buf + size, ' ', str.size_with_padding - size);
-        buf += str.size_with_padding;
+        auto size = std::min(str.size(), PacketFieldConstraint::max_string_length);
+        std::memcpy(buf, str.data(), size);
+        std::memset(buf + size, ' ', PacketFieldConstraint::max_string_length - size);
+        buf += PacketFieldConstraint::max_string_length;
     }
 
     void PacketStructure::write_string(std::byte*& buf, const char* str)
     {
         auto size = std::min(std::strlen(str), PacketFieldConstraint::max_string_length);
         std::memcpy(buf, str, size);
-        std::memset(buf + size, ' ', PacketFieldType::String::size_with_padding - size);
-        buf += PacketFieldType::String::size_with_padding;
-    }
-
-    void PacketStructure::write_string(std::byte*& buf, std::string_view str)
-    {
-        auto size = std::min(str.size(), PacketFieldConstraint::max_string_length);
-        std::memcpy(buf, str.data(), size);
-        std::memset(buf + size, ' ', PacketFieldType::String::size_with_padding - size);
-        buf += PacketFieldType::String::size_with_padding;
+        std::memset(buf + size, ' ', PacketFieldConstraint::max_string_length - size);
+        buf += PacketFieldConstraint::max_string_length;
     }
 
     void PacketStructure::write_string(std::byte*& buf, const std::byte* data, std::size_t data_size)
     {
         auto size = std::min(data_size, PacketFieldConstraint::max_string_length);
         std::memcpy(buf, data, size);
-        std::memset(buf + size, ' ', PacketFieldType::String::size_with_padding - size);
-        buf += PacketFieldType::String::size_with_padding;
+        std::memset(buf + size, ' ', PacketFieldConstraint::max_string_length - size);
+        buf += PacketFieldConstraint::max_string_length;
     }
 
     void PacketStructure::write_coordinate(std::byte*& buf, util::Coordinate3D pos)
@@ -121,81 +118,63 @@ namespace net
 
     /* Concrete Packet Static Methods */
 
-    error::ErrorCode PacketHandshake::validate(const net::Packet* a_packet)
+    error::ErrorCode PacketHandshake::validate()
     {
-        auto& packet = *to_derived(a_packet);
-
-        if (packet.protocol_version != 7)
+        if (protocol_version != 7)
             return error::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION;
 
-        if (packet.username.size == 0 || packet.username.size > PacketFieldConstraint::max_username_length)
+        if (username.size() == 0 || username.size() > PacketFieldConstraint::max_username_length)
             return error::PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH;
 
-        if (not util::is_alphanumeric(packet.username.data, packet.username.size))
+        if (not util::is_alphanumeric(username))
             return error::PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT;
 
-        if (packet.password.size > PacketFieldConstraint::max_password_length)
+        if (password.size() > PacketFieldConstraint::max_password_length)
             return error::PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH;
 
         return error::SUCCESS;
     }
 
-    error::ErrorCode PacketSetBlockClient::validate(const net::Packet* a_packet)
+    void PacketHandshake::parse(const std::byte* buf_start)
     {
-        return error::SUCCESS;
+        buf_start++;
+        PacketStructure::read_scalar(buf_start, this->protocol_version);
+        PacketStructure::read_string(buf_start, this->username);
+        PacketStructure::read_string(buf_start, this->password);
+        PacketStructure::read_scalar(buf_start, this->cpe_magic);
     }
 
-
-    error::ErrorCode PacketSetPlayerPosition::validate(const net::Packet* a_packet)
-    {
-        return error::SUCCESS;
-    }
-
-    error::ErrorCode PacketChatMessage::validate(const net::Packet* a_packet)
-    {
-        return error::SUCCESS;
-    }
-
-    void PacketHandshake::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
-    {
-        auto packet = to_derived(out_packet);
-        PacketStructure::read_scalar(buf_start, packet->protocol_version);
-        PacketStructure::read_string(buf_start, packet->username);
-        PacketStructure::read_string(buf_start, packet->password);
-        PacketStructure::read_scalar(buf_start, packet->cpe_magic);
-    }
-
-    void PacketPing::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketPing::parse(const std::byte* buf_start)
     {
         return;
     }
 
-    void PacketSetBlockClient::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketSetBlockClient::parse(const std::byte* buf_start)
     {
-        auto packet = to_derived(out_packet);
-        PacketStructure::read_scalar(buf_start, packet->x);
-        PacketStructure::read_scalar(buf_start, packet->y);
-        PacketStructure::read_scalar(buf_start, packet->z);
-        PacketStructure::read_scalar(buf_start, packet->mode);
-        PacketStructure::read_scalar(buf_start, packet->block_id);
+        buf_start++;
+        PacketStructure::read_scalar(buf_start, this->x);
+        PacketStructure::read_scalar(buf_start, this->y);
+        PacketStructure::read_scalar(buf_start, this->z);
+        PacketStructure::read_scalar(buf_start, this->mode);
+        PacketStructure::read_scalar(buf_start, this->block_id);
     }
 
-    void PacketSetPlayerPosition::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketSetPlayerPosition::parse(const std::byte* buf_start)
     {
-        auto packet = to_derived(out_packet);
-        PacketStructure::read_scalar(buf_start, packet->player_id);
-        PacketStructure::read_scalar(buf_start, packet->player_pos.view.x);
-        PacketStructure::read_scalar(buf_start, packet->player_pos.view.y);
-        PacketStructure::read_scalar(buf_start, packet->player_pos.view.z);
-        PacketStructure::read_scalar(buf_start, packet->player_pos.view.yaw);
-        PacketStructure::read_scalar(buf_start, packet->player_pos.view.pitch);
+        buf_start++;
+        PacketStructure::read_scalar(buf_start, this->player_id);
+        PacketStructure::read_scalar(buf_start, this->player_pos.view.x);
+        PacketStructure::read_scalar(buf_start, this->player_pos.view.y);
+        PacketStructure::read_scalar(buf_start, this->player_pos.view.z);
+        PacketStructure::read_scalar(buf_start, this->player_pos.view.yaw);
+        PacketStructure::read_scalar(buf_start, this->player_pos.view.pitch);
     }
 
-    void PacketChatMessage::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketChatMessage::parse(const std::byte* buf_start)
     {
-        auto packet = to_derived(out_packet);
-        PacketStructure::read_scalar(buf_start, packet->player_id);
-        PacketStructure::read_string(buf_start, packet->message);
+        buf_start++;
+        PacketStructure::read_scalar(buf_start, this->player_id);
+        PacketStructure::read_string(buf_start, this->message);
     }
 
     bool PacketHandshake::serialize(io::IoEventData& event_data) const

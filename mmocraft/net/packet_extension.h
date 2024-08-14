@@ -16,13 +16,17 @@ namespace net
         static constexpr PacketID packet_id = PacketID::ExtInfo;
         constexpr static std::size_t packet_size = 67;
 
-        PacketExtInfo()
+        PacketExtInfo() = default;
+
+        PacketExtInfo(const std::byte* data)
             : Packet{ packet_id }
-        { }
+        { 
+            parse(data);
+        }
 
         bool serialize(io::IoEventData&) const;
 
-        DECLARE_PACKET_READ_METHOD(PacketExtInfo);
+        void parse(const std::byte* buf_start);
     };
 
     struct PacketExtEntry : Packet
@@ -33,13 +37,17 @@ namespace net
         static constexpr PacketID packet_id = PacketID::ExtEntry;
         constexpr static std::size_t packet_size = 69;
 
-        PacketExtEntry()
+        PacketExtEntry() = default;
+
+        PacketExtEntry(const std::byte* data)
             : Packet{ packet_id }
-        { }
+        {
+            parse(data);
+        }
 
         bool serialize(io::IoEventData&) const;
 
-        DECLARE_PACKET_READ_METHOD(PacketExtEntry);
+        void parse(const std::byte* buf_start);
     };
 
     enum MessageType

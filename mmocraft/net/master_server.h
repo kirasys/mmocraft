@@ -19,6 +19,8 @@ namespace net
     class MasterServer : public net::PacketHandleServer, public net::MessageHandler
     {
     public:
+        using handler_type = error::ResultCode (MasterServer::*)(net::Connection&, const std::byte*);
+
         MasterServer(net::ConnectionEnvironment&, io::IoCompletionPort&);
 
         void tick();
@@ -27,21 +29,21 @@ namespace net
 
         /* Packet handlers */
 
-        error::ResultCode handle_packet(net::Connection&, Packet*) override;
+        error::ResultCode handle_packet(net::Connection&, const std::byte*) override;
         
-        error::ResultCode handle_handshake_packet(net::Connection&, net::PacketHandshake&);
+        error::ResultCode handle_handshake_packet(net::Connection&, const std::byte*);
 
-        error::ResultCode handle_ping_packet(net::Connection&, net::PacketPing&);
+        error::ResultCode handle_ping_packet(net::Connection&, const std::byte*);
 
-        error::ResultCode handle_set_block_packet(net::Connection& conn_descriptor, net::PacketSetBlockClient& packet);
+        error::ResultCode handle_set_block_packet(net::Connection&, const std::byte*);
 
-        error::ResultCode handle_player_position_packet(net::Connection&, net::PacketSetPlayerPosition&);
+        error::ResultCode handle_player_position_packet(net::Connection&, const std::byte*);
 
-        error::ResultCode handle_chat_message_packet(net::Connection&, net::PacketChatMessage&);
+        error::ResultCode handle_chat_message_packet(net::Connection&, const std::byte*);
 
-        error::ResultCode handle_ext_info_packet(net::Connection&, net::PacketExtInfo&);
+        error::ResultCode handle_ext_info_packet(net::Connection&, const std::byte*);
 
-        error::ResultCode handle_ext_entry_packet(net::Connection&, net::PacketExtEntry&);
+        error::ResultCode handle_ext_entry_packet(net::Connection&, const std::byte*);
 
         /* Message handlers */
 

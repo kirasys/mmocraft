@@ -31,18 +31,18 @@ namespace net
         return supported_cpe_map.at(ext_name).index;
     }
 
-    void PacketExtInfo::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketExtInfo::parse(const std::byte* buf_start)
     {
-        auto packet = to_derived(out_packet);
-        PacketStructure::read_string(buf_start, packet->app_name);
-        PacketStructure::read_scalar(buf_start, packet->extension_count);
+        buf_start++;
+        PacketStructure::read_string(buf_start, this->app_name);
+        PacketStructure::read_scalar(buf_start, this->extension_count);
     }
 
-    void PacketExtEntry::parse(std::byte* buf_start, std::byte* buf_end, Packet* out_packet)
+    void PacketExtEntry::parse(const std::byte* buf_start)
     {
-        auto packet = to_derived(out_packet);
-        PacketStructure::read_string(buf_start, packet->extenstion_name);
-        PacketStructure::read_scalar(buf_start, packet->version);
+        buf_start++;
+        PacketStructure::read_string(buf_start, this->extenstion_name);
+        PacketStructure::read_scalar(buf_start, this->version);
     }
 
     bool PacketExtInfo::serialize(io::IoEventData& event_data) const

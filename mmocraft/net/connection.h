@@ -194,12 +194,12 @@ namespace net
     class PacketHandleServer
     {
     public:
-        virtual error::ResultCode handle_packet(net::Connection&, net::Packet*) = 0;
+        virtual error::ResultCode handle_packet(net::Connection&, const std::byte*) = 0;
     };
 
     class PacketHandleServerStub : public PacketHandleServer
     {
-        error::ResultCode handle_packet(net::Connection&, net::Packet*) override
+        error::ResultCode handle_packet(net::Connection&, const std::byte*) override
         {
             return error::SUCCESS;
         }

@@ -9,9 +9,9 @@
 
 namespace util
 {
-    inline bool is_alphanumeric(const char* data, std::size_t size)
+    inline bool is_alphanumeric(const std::string_view str)
     {
-        return std::all_of(data, data + size, [](unsigned char c) { return std::isalnum(c); });
+        return std::all_of(str.begin(), str.end(), [](unsigned char c) { return std::isalnum(c); });
     }
 
     inline bool is_whitespace(char c)

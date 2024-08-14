@@ -9,6 +9,21 @@
 #include "database/query.h"
 #include "game/player_command.h"
 
+namespace
+{
+    const std::array<net::MasterServer::handler_type, 0x100> packet_handler_db = [] {
+        std::array<net::MasterServer::handler_type, 0x100> arr{};
+        arr[net::PacketID::Handshake] = &net::MasterServer::handle_handshake_packet;
+        arr[net::PacketID::Ping] = &net::MasterServer::handle_ping_packet;
+        arr[net::PacketID::SetBlockClient] = &net::MasterServer::handle_set_block_packet;
+        arr[net::PacketID::SetPlayerPosition] = &net::MasterServer::handle_player_position_packet;
+        arr[net::PacketID::ChatMessage] = &net::MasterServer::handle_chat_message_packet;
+        arr[net::PacketID::ExtInfo] = &net::MasterServer::handle_ext_info_packet;
+        arr[net::PacketID::ExtEntry] = &net::MasterServer::handle_ext_entry_packet;
+        return arr;
+        }();
+}
+
 namespace net
 {
     MasterServer::MasterServer(net::ConnectionEnvironment& a_connection_env, io::IoCompletionPort& a_io_service)
@@ -26,44 +41,36 @@ namespace net
 
     }
 
-    error::ResultCode MasterServer::handle_packet(net::Connection& conn, Packet* packet)
+    error::ResultCode MasterServer::handle_packet(net::Connection& conn, const std::byte* packet_data)
     {
-        switch (packet->id) {
-        case PacketID::Handshake:
-            return handle_handshake_packet(conn, *static_cast<PacketHandshake*>(packet));
-        case PacketID::Ping:
-            return handle_ping_packet(conn, *static_cast<PacketPing*>(packet));
-        case PacketID::SetBlockClient:
-            return handle_set_block_packet(conn, *static_cast<PacketSetBlockClient*>(packet));
-        case PacketID::SetPlayerPosition:
-            return handle_player_position_packet(conn, *static_cast<PacketSetPlayerPosition*>(packet));
-        case PacketID::ChatMessage:
-            return handle_chat_message_packet(conn, *static_cast<PacketChatMessage*>(packet));
-        case PacketID::ExtInfo:
-            return handle_ext_info_packet(conn, *static_cast<PacketExtInfo*>(packet));
-        case PacketID::ExtEntry:
-            return handle_ext_entry_packet(conn, *static_cast<PacketExtEntry*>(packet));
-        default:
-            CONSOLE_LOG(error) << "Unimplemented packet id: " << int(packet->id);
-            return error::PACKET_UNIMPLEMENTED_ID;
-        }
+        auto [packet_id, _] = PacketStructure::parse_packet(packet_data);
+
+        if (auto handler = packet_handler_db[packet_id])
+            return (this->*handler)(conn, packet_data);
+
+        CONSOLE_LOG(error) << "Unimplemented packetd id : " << packet_id;
+        return error::PACKET_UNIMPLEMENTED_ID;
     }
 
-    error::ResultCode MasterServer::handle_handshake_packet(net::Connection& conn, net::PacketHandshake& packet)
+    error::ResultCode MasterServer::handle_handshake_packet(net::Connection& conn, const std::byte* packet_data)
     {
+        net::PacketHandshake packet(packet_data);
+
         deferred_handshake_packet_task.push_packet(conn.connection_key(), packet);
         return error::PACKET_HANDLE_DEFERRED;
     }
 
-    error::ResultCode MasterServer::handle_ping_packet(net::Connection& conn, net::PacketPing& packet)
+    error::ResultCode MasterServer::handle_ping_packet(net::Connection& conn, const std::byte* packet_data)
     {
         // send pong.
         conn.io()->send_ping();
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_set_block_packet(net::Connection& conn, net::PacketSetBlockClient& packet)
+    error::ResultCode MasterServer::handle_set_block_packet(net::Connection& conn, const std::byte* packet_data)
     {
+        net::PacketSetBlockClient packet(packet_data);
+
         auto block_id = packet.mode == game::BlockMode::SET ? packet.block_id : game::BLOCK_AIR;
         if (not world.try_change_block({ packet.x, packet.y, packet.z }, block_id))
             goto REVERT_BLOCK;
@@ -79,22 +86,26 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_player_position_packet(net::Connection& conn, net::PacketSetPlayerPosition& packet)
+    error::ResultCode MasterServer::handle_player_position_packet(net::Connection& conn, const std::byte* packet_data)
     {
+        net::PacketSetPlayerPosition packet(packet_data);
+
         if (auto player = conn.associated_player())
             player->set_position(packet.player_pos);
         
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_chat_message_packet(net::Connection& conn, net::PacketChatMessage& packet)
+    error::ResultCode MasterServer::handle_chat_message_packet(net::Connection& conn, const std::byte* packet_data)
     {
+        net::PacketChatMessage packet(packet_data);
+
         if (auto player = conn.associated_player()) {
             packet.player_id = player->game_id(); // client always sends 0xff(SELF ID).
 
-            if (packet.message.data[0] == '/') { // if command message
+            if (packet.message[0] == '/') { // if command message
                 game::PlayerCommand command(player);
-                command.execute(world, { packet.message.data, packet.message.size });
+                command.execute(world, packet.message);
 
                 net::PacketChatMessage msg_packet(command.get_response());
                 conn.io()->send_packet(msg_packet);
@@ -107,8 +118,10 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_ext_info_packet(net::Connection& conn, net::PacketExtInfo& packet)
+    error::ResultCode MasterServer::handle_ext_info_packet(net::Connection& conn, const std::byte* packet_data)
     {
+        net::PacketExtInfo packet(packet_data);
+
         if (auto player = conn.associated_player()) {
             player->set_extension_count(packet.extension_count);
         }
@@ -116,12 +129,13 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_ext_entry_packet(net::Connection& conn, net::PacketExtEntry& packet)
+    error::ResultCode MasterServer::handle_ext_entry_packet(net::Connection& conn, const std::byte* packet_data)
     {
+        net::PacketExtEntry packet(packet_data);
+
         if (auto player = conn.associated_player()) {
-            std::string_view cpe_name = { packet.extenstion_name.data, packet.extenstion_name.size };
-            if (net::is_cpe_support(cpe_name, packet.version))
-                player->register_extension(net::cpe_index_of(cpe_name));
+            if (net::is_cpe_support(packet.extenstion_name, packet.version))
+                player->register_extension(net::cpe_index_of(packet.extenstion_name));
 
             if (player->decrease_pending_extension_count() == 0)
                 conn.on_handshake_success();

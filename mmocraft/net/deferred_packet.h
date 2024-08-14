@@ -27,14 +27,14 @@ namespace net
             : connection_key{ key }
             , cpe_support{ src_packet.cpe_magic == 0x42 }
         {
-            ::strcpy_s(username, src_packet.username.data);
-            ::strcpy_s(password, src_packet.password.data);
+            ::memcpy_s(username, sizeof(username), src_packet.username.data(), src_packet.username.size());
+            ::memcpy_s(password, sizeof(password), src_packet.password.data(), src_packet.password.size());
         }
 
         DeferredPacket<PacketHandshake>* next = nullptr;
         net::ConnectionKey connection_key;
-        char username[net::PacketFieldConstraint::max_username_length + 1];
-        char password[net::PacketFieldConstraint::max_password_length + 1];
+        char username[net::PacketFieldConstraint::max_username_length + 1] = { 0 };
+        char password[net::PacketFieldConstraint::max_password_length + 1] = { 0 };
         bool cpe_support;
     };
 
@@ -44,9 +44,9 @@ namespace net
         DeferredPacket<PacketChatMessage>(net::ConnectionKey key, const PacketChatMessage& src_packet)
             : connection_key{ key }
             , player_id{ src_packet.player_id }
-            , message_length{ src_packet.message.size }
+            , message_length{ src_packet.message.size()}
         {
-            std::memcpy(message, src_packet.message.data, std::min(message_length, sizeof(message)));
+            ::memcpy_s(message, sizeof(message), src_packet.message.data(), message_length);
         }
 
         static std::size_t serialize(std::vector<const DeferredPacket<PacketChatMessage>*>& packets, std::unique_ptr<std::byte[]>& serialized_data)
@@ -69,7 +69,7 @@ namespace net
         net::ConnectionKey connection_key;
         
         game::PlayerID player_id;
-        std::byte message[net::PacketFieldConstraint::max_string_length];
+        std::byte message[net::PacketFieldConstraint::max_string_length] = {};
         std::size_t message_length;
     };
 

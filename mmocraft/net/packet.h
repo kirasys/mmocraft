@@ -13,20 +13,6 @@
 #include "util/compressor.h"
 #include "util/math.h"
 
-#define DECLARE_PACKET_READ_METHOD(packet_type) \
-    static void parse(std::byte* buf_start, std::byte* buf_end, net::Packet*); \
-                                                             \
-    static error::ErrorCode validate(const net::Packet*);	 \
-                                                             \
-    static inline auto to_derived(net::Packet* packet)		 \
-    {														 \
-        return static_cast<packet_type*>(packet);			 \
-    }														 \
-    static inline auto to_derived(const net::Packet* packet) \
-    {														 \
-        return static_cast<const packet_type*>(packet);		 \
-    }
-
 namespace net
 {
     enum UserType
@@ -44,12 +30,16 @@ namespace net
         using FShort = std::uint16_t;
         using Int = std::int32_t;
 
+        using String = std::string_view;
+
+        /*
         struct String
         {
             const char *data = nullptr;
             std::size_t size = 0;
             static constexpr std::size_t size_with_padding = 64;
         };
+        */
     };
 
     namespace PacketFieldConstraint
@@ -61,6 +51,7 @@ namespace net
 
     struct Packet
     {
+        Packet() : id{ PacketFieldType::Byte(net::PacketID::INVALID) } { }
         Packet(PacketID a_id) : id{ PacketFieldType::Byte(a_id) } { }
         virtual ~Packet() = default;
 
@@ -84,9 +75,13 @@ namespace net
         };
 
         static constexpr PacketID packet_id = PacketID::Handshake;
-        constexpr static std::size_t packet_size = 131;
+        static constexpr std::size_t packet_size = 131;
 
-        DECLARE_PACKET_READ_METHOD(PacketHandshake);
+        PacketHandshake(const std::byte* data)
+            : Packet{ packet_id }
+        { 
+            parse(data);
+        }
 
         PacketHandshake(std::string_view a_server_name, std::string_view a_motd, net::UserType a_user_type)
             : Packet{ packet_id }
@@ -96,31 +91,43 @@ namespace net
             , user_type{ PacketFieldType::Byte(a_user_type) }
         { }
 
+        void parse(const std::byte* buf_start);
+
+        error::ErrorCode validate();
+
         bool serialize(io::IoEventData&) const;
     };
 
     struct PacketPing : Packet
     {
-        constexpr static std::size_t packet_size = 1;
+        static constexpr PacketID packet_id = PacketID::Ping;
+        static constexpr std::size_t packet_size = 1;
 
-        DECLARE_PACKET_READ_METHOD(PacketHandshake);
+        PacketPing(const std::byte* data)
+            : Packet{ packet_id }
+        { 
+            parse(data);
+        }
+
+        void parse(const std::byte* buf_start);
     };
 
     struct PacketLevelInit : Packet
     {
-        PacketLevelInit()
-            : Packet{PacketID::LevelInitialize}
-        { }
+        static constexpr PacketID packet_id = PacketID::LevelInitialize;
+        static constexpr std::size_t packet_size = 1;
 
-        constexpr static std::size_t packet_size = 1;
+        PacketLevelInit()
+            : Packet{ packet_id }
+        { }
 
         bool serialize(io::IoEventData&) const;
     };
 
     struct PacketLevelDataChunk : Packet
     {
-        constexpr static unsigned chunk_size = 1024;
-        constexpr static std::size_t packet_size = 1028;
+        static constexpr unsigned chunk_size = 1024;
+        static constexpr std::size_t packet_size = 1028;
 
         std::size_t max_chunk_count = 0;
         PacketFieldType::Short x;
@@ -146,6 +153,12 @@ namespace net
         static constexpr PacketID packet_id = PacketID::SetBlockClient;
         static constexpr std::size_t packet_size = 9;
 
+        PacketSetBlockClient(const std::byte* data)
+            : Packet{ packet_id }
+        { 
+            parse(data);
+        }
+
         PacketSetBlockClient(util::Coordinate3D pos, PacketFieldType::Byte a_mode, PacketFieldType::Byte a_block_id)
             : Packet{ packet_id }
             , x{ pos.x }, y{ pos.y }, z{ pos.z }
@@ -153,9 +166,9 @@ namespace net
             , block_id{ a_block_id }
         { }
 
-        bool serialize(io::IoEventData&) const;
+        void parse(const std::byte* buf_start);
 
-        DECLARE_PACKET_READ_METHOD(PacketSetBlockClient);
+        bool serialize(io::IoEventData&) const;
     };
 
     struct PacketSetBlockServer : Packet
@@ -180,9 +193,16 @@ namespace net
         PacketFieldType::Byte player_id;
         game::PlayerPosition  player_pos;
 
+        static constexpr PacketID packet_id = PacketID::SetPlayerPosition;
         static constexpr std::size_t packet_size = 10;
 
-        DECLARE_PACKET_READ_METHOD(PacketSetPlayerPosition);
+        PacketSetPlayerPosition(const std::byte* data)
+            : Packet{ packet_id }
+        { 
+            parse(data);
+        }
+
+        void parse(const std::byte* buf_start);
 
         static std::size_t serialize(const std::vector<game::Player*>&, std::unique_ptr<std::byte[]>&);
     };
@@ -216,14 +236,19 @@ namespace net
         static constexpr PacketID packet_id = PacketID::ChatMessage;
         static constexpr std::size_t packet_size = 66;
 
-        DECLARE_PACKET_READ_METHOD(PacketChatMessage);
+        PacketChatMessage(const std::byte* data)
+            : Packet{ packet_id }
+        {
+            parse(data);
+        }
 
-        PacketChatMessage() = default;
         PacketChatMessage(std::string_view msg)
             : Packet { packet_id }
             , player_id{ 0xFF }
             , message{ msg.data(), msg.size() }
         { }
+
+        void parse(const std::byte* buf_start);
 
         bool serialize(io::IoEventData&) const;
     };
@@ -266,24 +291,26 @@ namespace net
 
         static auto parse_packet(std::byte* buf_start, std::byte* buf_end, Packet*) -> std::pair<std::uint32_t, error::ResultCode>;
 
-        static inline void read_scalar(std::byte*& buf, PacketFieldType::Byte &value)
+        static std::pair<net::PacketID, int> parse_packet(const std::byte* buf_start);
+
+        static inline void read_scalar(const std::byte*& buf, PacketFieldType::Byte &value)
         {
-            value = *reinterpret_cast<PacketFieldType::Byte*>(buf++);
+            value = *reinterpret_cast<const PacketFieldType::Byte*>(buf++);
         }
 
-        static inline void read_scalar(std::byte*& buf, PacketFieldType::Short& value)
+        static inline void read_scalar(const std::byte*& buf, PacketFieldType::Short& value)
         {
-            value = _byteswap_ushort(*reinterpret_cast<PacketFieldType::Short*>(buf));
+            value = _byteswap_ushort(*reinterpret_cast<const PacketFieldType::Short*>(buf));
             buf += sizeof(PacketFieldType::Short);
         }
 
-        static inline void read_scalar(std::byte*& buf, PacketFieldType::Int& value)
+        static inline void read_scalar(const std::byte*& buf, PacketFieldType::Int& value)
         {
-            value = _byteswap_ulong(*reinterpret_cast<PacketFieldType::Int*>(buf));
+            value = _byteswap_ulong(*reinterpret_cast<const PacketFieldType::Int*>(buf));
             buf += sizeof(PacketFieldType::Int);
         }
 
-        static void read_string(std::byte*& buf, PacketFieldType::String& value);
+        static void read_string(const std::byte*& buf, PacketFieldType::String& value);
 
         static inline void write_byte(std::byte*& buf, PacketFieldType::Byte value)
         {
@@ -309,8 +336,6 @@ namespace net
         }
 
         static void write_string(std::byte*&, const PacketFieldType::String&);
-
-        static void write_string(std::byte*& buf, std::string_view str);
 
         static void write_string(std::byte*&, const char*);
 

@@ -93,19 +93,24 @@ namespace net
         auto data_cur = data_begin;
 
         while (data_cur < data_end) {
-            auto [parsed_bytes, parsing_result] = PacketStructure::parse_packet(data_cur, data_end, packet_ptr);
-            if (not parsing_result.is_success()) {
-                last_error_code = parsing_result;
+            auto [packet_id, packet_size] = PacketStructure::parse_packet(data_cur);
+            if (packet_id == net::PacketID::INVALID) {
+                last_error_code = error::PACKET_INVALID_ID;
                 break;
             }
 
-            auto handle_result = packet_handle_server.handle_packet(*this, packet_ptr);
+            if (packet_size > data_end - data_cur) {
+                last_error_code = error::PACKET_INSUFFIENT_DATA;
+                break;
+            }
+
+            auto handle_result = packet_handle_server.handle_packet(*this, data_cur);
             if (not handle_result.is_packet_handle_success()) {
                 last_error_code = handle_result;
                 break;
             }
 
-            data_cur += parsed_bytes;
+            data_cur += packet_size;
         }
 
         assert(data_cur <= data_end && "Parsing error");
