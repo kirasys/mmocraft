@@ -11,6 +11,6 @@ int main(int argc, char* argv[])
     
     net::Socket::initialize_system();
 
-    chat::ChatServer chat_server;
+    chat::net::ChatServer chat_server;
     chat_server.serve_forever(argc, argv);
 }
