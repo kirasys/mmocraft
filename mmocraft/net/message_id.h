@@ -2,13 +2,13 @@
 
 namespace net
 {
-    // Protocol for communication with the chat server.
     enum MessageID
     {
         Invalid_MessageID,
 
+        General_PacketHandle,
+
         Chat_Ping,
-        Chat_Packet,
 
         Router_Pong,
         Router_GetConfig,

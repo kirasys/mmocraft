@@ -37,3 +37,11 @@ message ServerAnnouncement {
     ServerType server_type = 1;
     ServerInfo server_info = 2;
 }
+
+message PacketHandleRequest {
+    bytes packet_data = 1;
+}
+
+message PacketHandleResponse {
+    bytes result_data = 1;
+}

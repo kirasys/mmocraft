@@ -8,17 +8,26 @@
 
 namespace chat
 {
-    class ChatServer : public net::MessageHandler
+    namespace net
     {
-    public:
-        ChatServer();
+        class ChatServer : public ::net::MessageHandler
+        {
+        public:
+            using handler_type = bool (ChatServer::*)(const ::net::MessageRequest&, ::net::MessageResponse&);
 
-        bool handle_message(const net::MessageRequest&, net::MessageResponse& response) override;
+            using packet_handler_type = bool (ChatServer::*)(const ::net::PacketRequest&, ::net::PacketResponse&);
 
-        void serve_forever(int argc, char* argv[]);
+            ChatServer();
 
-    private:
-        net::UdpServer server_core;
-        net::ServerCommunicator _communicator;
-    };
+            bool handle_message(const ::net::MessageRequest&, ::net::MessageResponse&) override;
+            
+            bool handle_packet(const ::net::MessageRequest&, ::net::MessageResponse&);
+
+            void serve_forever(int argc, char* argv[]);
+
+        private:
+            ::net::UdpServer server_core;
+            ::net::ServerCommunicator _communicator;
+        };
+    }
 }

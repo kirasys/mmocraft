@@ -1,10 +1,28 @@
 #include "chat_server.h"
 #include "../config/config.h"
 
+#include <net/packet.h>
 #include <util/time_util.h>
 #include <logging/logger.h>
 
+namespace
+{
+    const std::array<chat::net::ChatServer::handler_type, 0xff> message_handler_db = [] {
+        std::array<chat::net::ChatServer::handler_type, 0xff> arr{};
+        arr[::net::MessageID::General_PacketHandle] = &chat::net::ChatServer::handle_packet;
+        return arr;
+    }();
+
+    const std::array<chat::net::ChatServer::packet_handler_type, 0xff> packet_handler_db = [] {
+        std::array<chat::net::ChatServer::packet_handler_type, 0xff> arr{};
+        //arr[::net::Packet]
+        return arr;
+    }();
+}
+
 namespace chat
+{
+namespace net
 {
     ChatServer::ChatServer()
         : server_core{ *this }
@@ -13,9 +31,25 @@ namespace chat
 
     }
 
-    bool ChatServer::handle_message(const net::MessageRequest&, net::MessageResponse& response)
+    bool ChatServer::handle_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
     {
-        return true;
+        if (auto handler = message_handler_db[request.message_id()])
+            return (this->*handler)(request, response);
+
+        CONSOLE_LOG(error) << "Unimplemented message id : " << request.message_id();
+        return false;
+    }
+
+    bool ChatServer::handle_packet(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    {
+        ::net::PacketRequest packet_request(request);
+        ::net::PacketResponse packet_response(response);
+
+        if (auto handler = packet_handler_db[packet_request.packet_id()])
+            return (this->*handler)(packet_request, packet_response);
+
+        CONSOLE_LOG(error) << "Unimplemented packet id : " << packet_request.packet_id();
+        return false;
     }
 
     void ChatServer::serve_forever(int argc, char* argv[])
@@ -49,4 +83,5 @@ namespace chat
             util::sleep_ms(3000);
         }
     }
+}
 }
