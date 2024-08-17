@@ -38,7 +38,7 @@ namespace
 
 namespace setup
 {
-    void initialize_system(int argc, char* argv[])
+    void initialize_system(const char* router_ip, int router_port)
     {
         std::set_terminate(termination_routine);
 
@@ -48,9 +48,6 @@ namespace setup
         std::signal(SIGABRT, termination_routine_for_signal);
 
         net::Socket::initialize_system();
-
-        auto router_ip = argv[1];
-        auto router_port = std::atoi(argv[2]);
 
         if (not config::load_remote_config(router_ip, router_port, protocol::ServerType::Frontend, config::get_config()))
             return;

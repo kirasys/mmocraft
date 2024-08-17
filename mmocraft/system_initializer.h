@@ -4,7 +4,7 @@
 
 namespace setup
 {
-    void initialize_system(int argc, char* argv[]);
+    void initialize_system(const char* router_ip, int router_port);
 
     void add_termination_handler(std::terminate_handler handler);
 
