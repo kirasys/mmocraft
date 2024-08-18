@@ -82,9 +82,11 @@ namespace net
 
         ~PacketResponse()
         {
-            protocol::PacketHandleResponse packet_handle_response;
-            packet_handle_response.set_result_data(std::move(_response_data));
-            _response.set_message(packet_handle_response);
+            if (not _response_data.empty()) {
+                protocol::PacketHandleResponse packet_handle_response;
+                packet_handle_response.set_result_data(std::move(_response_data));
+                _response.set_message(packet_handle_response);
+            }
         }
 
         std::string& response_data()
