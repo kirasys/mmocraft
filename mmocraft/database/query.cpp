@@ -97,7 +97,7 @@ namespace database
         player_id = player.identity();
 
         memset(_player_gamedata, 0, sizeof(_player_gamedata));
-        player.copy_gamedata(_player_gamedata, sizeof(_player_gamedata));
+        player.copy_gamedata({ _player_gamedata, sizeof(_player_gamedata) });
 
         return this->execute();
     }

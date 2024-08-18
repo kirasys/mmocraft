@@ -270,15 +270,15 @@ namespace game
             return supported_extensions.test(ext);
         }
 
-        void load_gamedata(const std::byte* data, std::size_t data_size)
+        void load_gamedata(std::pair<const std::byte*, int> gamedata)
         {
-            _gamedata.ParseFromArray(data, int(data_size));
+            _gamedata.ParseFromArray(gamedata.first, gamedata.second);
         }
 
-        void copy_gamedata(std::byte* data, std::size_t data_size) const
+        void copy_gamedata(std::pair<std::byte*, int> gamedata) const
         {
-            assert(_gamedata.ByteSizeLong() <= data_size);
-            _gamedata.SerializePartialToArray(data, int(data_size));
+            assert(_gamedata.ByteSizeLong() <= gamedata.second);
+            _gamedata.SerializePartialToArray(gamedata.first, gamedata.second);
         }
 
     private:

@@ -28,9 +28,9 @@ namespace database
             return game::PlayerType(_player_type);
         }
 
-        inline const std::byte* player_gamedata() const
+        inline std::pair<const std::byte*, int> player_gamedata() const
         {
-            return _gamedata;
+            return { _gamedata, sizeof(_gamedata) };
         }
 
     private:

@@ -236,8 +236,7 @@ namespace net
                 ));
 
                 conn->associated_player()->load_gamedata(
-                    player_login.player_gamedata(),
-                    database::player_gamedata_column_size
+                    player_login.player_gamedata()
                 );
 
                 // Register to world player table.
