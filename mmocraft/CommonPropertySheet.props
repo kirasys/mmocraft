@@ -10,7 +10,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>26495;4251</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26495;4251;4267</DisableSpecificWarnings>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)mmocraft;$(MongoCXXPath)\include\mongocxx\v_noabi;$(MongoCXXPath)\include\bsoncxx\v_noabi;$(MongoCXXPath)\include\libmongoc-1.0;$(MongoCXXPath)\include\libbson-1.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
