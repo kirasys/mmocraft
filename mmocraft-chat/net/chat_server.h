@@ -18,7 +18,7 @@ namespace chat
 
             ChatServer();
 
-            bool handle_chat_packet(const ::net::PacketRequest&, ::net::PacketResponse&);
+            bool handle_chat_packet(const ::net::PacketRequest&, ::net::MessageResponse&);
 
             bool initialize(const char* router_ip, int router_port);
 

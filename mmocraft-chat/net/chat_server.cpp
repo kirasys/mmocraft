@@ -30,7 +30,7 @@ namespace net
 
     }
 
-    bool ChatServer::handle_chat_packet(const ::net::PacketRequest& request, ::net::PacketResponse& response)
+    bool ChatServer::handle_chat_packet(const ::net::PacketRequest& request, ::net::MessageResponse& response)
     {
         ::net::PacketChatMessage packet(request.packet_data());
 

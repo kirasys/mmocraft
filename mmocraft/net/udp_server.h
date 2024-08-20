@@ -29,7 +29,7 @@ namespace net
 
         using handler_type = bool (ServerType::*)(const net::MessageRequest&, net::MessageResponse&);
 
-        using packet_handler_type = bool (ServerType::*)(const net::PacketRequest&, net::PacketResponse&);
+        using packet_handler_type = bool (ServerType::*)(const net::PacketRequest&, net::MessageResponse&);
 
         UdpServer(ServerType* server_inst, std::array<handler_type, 0x100>* msg_handler_table, std::array<packet_handler_type, 0x100>* pkt_handler_table)
             : _sock{ net::SocketProtocol::UDPv4 }
@@ -127,10 +127,9 @@ namespace net
         bool handle_packet(const ::net::MessageRequest& request, ::net::MessageResponse& response)
         {
             ::net::PacketRequest packet_request(request);
-            ::net::PacketResponse packet_response(response);
 
             if (auto handler = (*packet_handler_table)[packet_request.packet_id()])
-                return (app_server->*handler)(packet_request, packet_response);
+                return (app_server->*handler)(packet_request, response);
 
             CONSOLE_LOG(error) << "Unimplemented packet id : " << packet_request.packet_id();
             return false;
