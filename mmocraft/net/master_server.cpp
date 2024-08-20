@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstring>
+#include <filesystem>
 
 #include "config/config.h"
 #include "logging/error.h"
@@ -156,17 +157,40 @@ namespace net
             tcp_server.start_accept();
     }
 
+    bool MasterServer::initialize(const char* router_ip, int router_port)
+    {
+        auto& comm = udp_server.communicator();
+        comm.register_server(protocol::ServerType::Router, { router_ip, router_port });
+
+        // Fetch other UDP server.
+        comm.fetch_server(protocol::ServerType::Login);
+        comm.fetch_server(protocol::ServerType::Chat);
+
+        if (not comm.load_remote_config(server_type, config::get_config()))
+            return false;
+
+        auto& conf = config::get_config();
+        config::set_default_configuration(*conf.mutable_system());
+
+        logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
+
+        database::initialize_system();
+
+        // Create working directories
+        if (not std::filesystem::exists(conf.world().save_dir()))
+            std::filesystem::create_directories(conf.world().save_dir());
+
+        return true;
+    }
+
     void MasterServer::serve_forever(const char* router_ip, int router_port)
     {
+        if (not initialize(router_ip, router_port))
+            return;
+
         // start UDP server.
         const auto& conf = config::get_config();
         udp_server.start_network_io_service(conf.udp_server().ip(), conf.udp_server().port(), 1);
-
-        // Fetch other UDP server.
-        auto& comm = udp_server.communicator();
-        comm.register_server(protocol::ServerType::Router, {router_ip, router_port});
-        comm.fetch_server(protocol::ServerType::Login);
-        comm.fetch_server(protocol::ServerType::Chat);
 
         // start network I/O system.
         tcp_server.start_network_io_service(conf.tcp_server().ip(), conf.tcp_server().port(), conf.system().num_of_processors() * 2);

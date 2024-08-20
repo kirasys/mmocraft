@@ -20,6 +20,8 @@ namespace chat
 
             bool handle_chat_packet(const ::net::PacketRequest&, ::net::PacketResponse&);
 
+            bool initialize(const char* router_ip, int router_port);
+
             void serve_forever(int argc, char* argv[]);
 
         private:

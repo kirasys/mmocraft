@@ -43,7 +43,7 @@ namespace net
         auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
 
         CONSOLE_LOG(info) << "Wait to fetch server("<< server_type << ") info...";
-        send_message_reliably(router_ip.c_str(), router_port, request, response);
+        send_message_reliably(router_ip, router_port, request, response);
         CONSOLE_LOG(info) << "Done.";
 
         // Register fetched server.
@@ -63,6 +63,24 @@ namespace net
         fetch_server_msg.set_server_type(server_type);
 
         return send_message_to_router(fetch_server_msg, net::MessageID::Router_FetchServer);
+    }
+
+    bool ServerCommunicator::fetch_config(protocol::ServerType target, net::MessageResponse& response)
+    {
+        protocol::FetchConfigRequest fetch_config_msg;
+        fetch_config_msg.set_server_type(target);
+
+        net::MessageRequest request(net::MessageID::Router_GetConfig);
+        request.set_message(fetch_config_msg);
+
+        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
+
+        // Send the get config message to the router.
+        CONSOLE_LOG(info) << "Wait to fetch config...";
+        send_message_reliably(router_ip, router_port, request, response);
+        CONSOLE_LOG(info) << "Done.";
+
+        return true;
     }
 
     bool ServerCommunicator::forward_packet(protocol::ServerType server_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
@@ -101,14 +119,14 @@ namespace net
         return read_message(sock, message, sender_addr, sender_addr_size);
     }
 
-    bool ServerCommunicator::send_message_reliably(const char* ip, int port, const net::MessageRequest& request, net::MessageResponse& response, int retry_count)
+    bool ServerCommunicator::send_message_reliably(const std::string& ip, int port, const net::MessageRequest& request, net::MessageResponse& response, int retry_count)
     {
         net::Socket sock{ net::SocketProtocol::UDPv4 };
         sock.set_socket_option(SO_RCVTIMEO, UDP_MESSAGE_RETRANSMISSION_PERIOD);
         
         for (int i = retry_count; i >= 0 ; i--) {
             auto sended_tick = util::current_monotonic_tick();
-            sock.send_to(ip, port, request.cbegin(), request.size());
+            sock.send_to(ip.c_str(), port, request.cbegin(), request.size());
 
             if (net::ServerCommunicator::read_message(sock, response))
                 return true;
@@ -118,21 +136,5 @@ namespace net
         }
 
         return false;
-    }
-
-    bool ServerCommunicator::fetch_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse& response)
-    {
-        protocol::FetchConfigRequest fetch_config_msg;
-        fetch_config_msg.set_server_type(target);
-
-        net::MessageRequest request(net::MessageID::Router_GetConfig);
-        request.set_message(fetch_config_msg);
-
-        // Send the get config message to the router.
-        CONSOLE_LOG(info) << "Wait to fetch config...";
-        send_message_reliably(router_ip, router_port, request, response);
-        CONSOLE_LOG(info) << "Done.";
-
-        return true;
     }
 }

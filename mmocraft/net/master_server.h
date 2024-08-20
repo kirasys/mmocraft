@@ -13,17 +13,21 @@
 
 namespace net
 {
-    static constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
-    static constexpr std::size_t chat_message_task_interval = 1 * 1000; // 1 seconds.
+    constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
+    constexpr std::size_t chat_message_task_interval = 1 * 1000; // 1 seconds.
 
     class MasterServer : public net::PacketHandleServer, public net::MessageHandler
     {
     public:
+        static constexpr protocol::ServerType server_type = protocol::ServerType::Frontend;
+
         using handler_type = error::ResultCode (MasterServer::*)(net::Connection&, const std::byte*, std::size_t);
 
         MasterServer(net::ConnectionEnvironment&, io::IoCompletionPort&);
 
         void tick();
+
+        bool initialize(const char* router_ip, int router_port);
 
         void serve_forever(const char* router_ip, int router_port);
 

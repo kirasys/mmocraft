@@ -3,16 +3,10 @@
 
 #include <cstdlib>
 #include <csignal>
-#include <filesystem>
 #include <vector>
 
 #include "config/config.h"
-#include "logging/logger.h"
 #include "net/socket.h"
-#include "net/connection.h"
-#include "database/query.h"
-
-namespace fs = std::filesystem;
 
 namespace
 {
@@ -48,18 +42,6 @@ namespace setup
         std::signal(SIGABRT, termination_routine_for_signal);
 
         net::Socket::initialize_system();
-
-        if (not config::load_remote_config(router_ip, router_port, protocol::ServerType::Frontend, config::get_config()))
-            return;
-
-        auto& conf = config::get_config();
-        logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
-
-        database::initialize_system();
-
-        // Create working directories
-        if (not fs::exists(conf.world().save_dir()))
-            fs::create_directories(conf.world().save_dir());
     }
 
     void add_termination_handler(std::terminate_handler handler)

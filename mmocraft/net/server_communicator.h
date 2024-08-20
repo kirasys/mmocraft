@@ -35,7 +35,32 @@ namespace net
 
         bool fetch_server(protocol::ServerType);
 
+        bool fetch_config( protocol::ServerType target, net::MessageResponse&);
+
         bool forward_packet(protocol::ServerType, net::ConnectionKey, const std::byte*, std::size_t);
+
+        template <typename ConfigType>
+        bool load_remote_config(protocol::ServerType server_type, ConfigType& config)
+        {
+            net::MessageResponse response;
+            if (not net::ServerCommunicator::fetch_config(server_type, response)) {
+                std::cerr << "Fail to get config from remote(" << server_type << ')';
+                return false;
+            }
+
+            protocol::FetchConfigResponse fetch_config_res;
+            if (not fetch_config_res.ParseFromArray(response.begin_message(), int(response.message_size()))) {
+                std::cerr << "Fail to parse GetConfigResponse";
+                return false;
+            }
+
+            if (not config.ParseFromString(fetch_config_res.config())) {
+                std::cerr << "Fail to parse ChatConfig";
+                return false;
+            }
+
+            return true;
+        }
 
         template <typename MessageType>
         bool send_message_to_router(MessageType msg, net::MessageID msg_id)
@@ -51,9 +76,8 @@ namespace net
 
         static bool read_message(net::Socket&, net::MessageRequest&);
 
-        static bool send_message_reliably(const char* ip, int port, const net::MessageRequest&, net::MessageResponse&, int retry_count = std::numeric_limits<int>::max());
+        static bool send_message_reliably(const std::string& ip, int port, const net::MessageRequest&, net::MessageResponse&, int retry_count = std::numeric_limits<int>::max());
 
-        static bool fetch_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse&);
 
     private:
         net::Socket& _source;
