@@ -16,6 +16,9 @@ namespace net
         ConnectionKey() : key{ 0 }
         { }
 
+        ConnectionKey(std::uint64_t raw_key) : key{ raw_key }
+        { }
+
         ConnectionKey(ConnectionID index, std::size_t created_at) : key{ index | (created_at << 32) }
         { }
 
@@ -32,6 +35,11 @@ namespace net
         bool operator==(ConnectionKey rhs) const
         {
             return key == rhs.key;
+        }
+
+        auto raw() const
+        {
+            return key;
         }
 
     private:
