@@ -82,4 +82,17 @@ namespace database
     {
         logging::logging_sql_error(SQL_HANDLE_DBC, connection_handle, error_code);
     }
+
+    bool connect_database_server(database::DatabaseCore* db_core, const config::Configuration_Database& conf)
+    {
+        // start database system.
+        CONSOLE_LOG(info) << "Connecting database server...";
+        if (not db_core->connect_with_password(conf)) {
+            CONSOLE_LOG(info) << "Failed";
+            return false;
+        }
+
+        CONSOLE_LOG(info) << "Connected";
+        return true;
+    }
 }

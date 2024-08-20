@@ -50,4 +50,6 @@ namespace database
 		SQLHENV environment_handle = NULL;
 		SQLHDBC connection_handle = NULL;
 	};
+
+	bool connect_database_server(database::DatabaseCore* db_core, const config::Configuration_Database& conf);
 }

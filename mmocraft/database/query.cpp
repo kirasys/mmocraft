@@ -18,11 +18,8 @@ namespace database
     {
         const auto& conf = config::get_config();
 
-        // start database system.
-        CONSOLE_LOG(info) << "Connecting database server...";
-        if (not global_database_connection.connect_with_password(conf.rel_database()))
+        if (not database::connect_database_server(&global_database_connection, conf.rel_database()))
             throw error::DATABASE_CONNECT;
-        CONSOLE_LOG(info) << "Connected";
     }
 
     PlayerLoginSQL::PlayerLoginSQL()
