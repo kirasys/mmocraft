@@ -27,11 +27,7 @@ namespace net
         announce_msg.mutable_server_info()->set_ip(server_info.ip);
         announce_msg.mutable_server_info()->set_port(server_info.port);
 
-        net::MessageRequest request(net::MessageID::Router_ServerAnnouncement);
-        request.set_message(announce_msg);
-
-        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
-        return router_port ? _source.send(router_ip, router_port, request) : false;
+        return send_message_to_router(announce_msg, net::MessageID::Router_ServerAnnouncement);
     }
 
     bool ServerCommunicator::fetch_server(protocol::ServerType server_type)
@@ -66,11 +62,16 @@ namespace net
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
-        net::MessageRequest request(net::MessageID::Router_FetchServer);
-        request.set_message(fetch_server_msg);
+        return send_message_to_router(fetch_server_msg, net::MessageID::Router_FetchServer);
+    }
 
-        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
-        return router_port ? _source.send(router_ip, router_port, request) : false;
+    bool ServerCommunicator::forward_packet(protocol::ServerType server_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
+    {
+        protocol::PacketHandleRequest packet_handle_req;
+        packet_handle_req.set_source(source.raw());
+        packet_handle_req.set_packet_data(std::string{ reinterpret_cast<const char*>(data), data_size});
+
+        return send_message_to_router(packet_handle_req, net::MessageID::General_PacketHandle);
     }
 
     bool ServerCommunicator::read_message(net::Socket& sock, net::MessageRequest& message, struct sockaddr_in& sender_addr, int& sender_addr_size)

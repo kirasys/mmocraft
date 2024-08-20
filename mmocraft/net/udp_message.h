@@ -1,6 +1,9 @@
 #pragma once
 
+#include "net/packet_id.h"
 #include "net/message_id.h"
+#include "net/connection_key.h"
+#include "proto/generated/protocol.pb.h"
 
 namespace net
 {
@@ -111,9 +114,58 @@ namespace net
 
     using MessageResponse = MessageRequest;
 
-    class MessageHandler
+    class PacketRequest
     {
     public:
-        virtual bool handle_message(const MessageRequest&, MessageResponse& response) = 0;
+        PacketRequest(const net::MessageRequest& request)
+        {
+            _message.ParseFromArray(request.begin_message(), int(request.message_size()));
+        }
+
+        net::PacketID packet_id() const
+        {
+            return net::PacketID(_message.packet_data()[0]);
+        }
+
+        const std::byte* packet_data() const
+        {
+            return reinterpret_cast<const std::byte*>(_message.packet_data().data());
+        }
+
+        auto source() const
+        {
+            return net::ConnectionKey{ _message.source() };
+        }
+
+    private:
+        protocol::PacketHandleRequest _message;
+    };
+
+    class PacketResponse
+    {
+    public:
+        PacketResponse(net::MessageResponse& response)
+            : _response{ response }
+        {
+
+        }
+
+        ~PacketResponse()
+        {
+            if (not _response_data.empty()) {
+                protocol::PacketHandleResponse packet_handle_response;
+                packet_handle_response.set_result_data(std::move(_response_data));
+                _response.set_message(packet_handle_response);
+            }
+        }
+
+        std::string& response_data()
+        {
+            return _response_data;
+        }
+
+    private:
+        net::MessageResponse& _response;
+        std::string _response_data;
     };
 }

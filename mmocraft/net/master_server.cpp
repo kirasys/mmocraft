@@ -30,8 +30,7 @@ namespace net
         : connection_env{ a_connection_env }
         , io_service { a_io_service }
         , tcp_server{ *this, connection_env, io_service }
-        , udp_server{ *this }
-        , _communicator{ udp_server }
+        , udp_server{ this, nullptr, nullptr }
 
         , world{ connection_env, database_core }
         
@@ -43,33 +42,35 @@ namespace net
 
     error::ResultCode MasterServer::handle_packet(net::Connection& conn, const std::byte* packet_data)
     {
-        auto [packet_id, _] = PacketStructure::parse_packet(packet_data);
+        auto [packet_id, packet_size] = PacketStructure::parse_packet(packet_data);
 
         if (auto handler = packet_handler_db[packet_id])
-            return (this->*handler)(conn, packet_data);
+            return (this->*handler)(conn, packet_data, std::size_t(packet_size));
 
         CONSOLE_LOG(error) << "Unimplemented packetd id : " << packet_id;
         return error::PACKET_UNIMPLEMENTED_ID;
     }
 
-    error::ResultCode MasterServer::handle_handshake_packet(net::Connection& conn, const std::byte* packet_data)
+    error::ResultCode MasterServer::handle_handshake_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
-        net::PacketHandshake packet(packet_data);
+        net::PacketHandshake packet(data);
 
-        deferred_handshake_packet_task.push_packet(conn.connection_key(), packet);
+        //deferred_handshake_packet_task.push_packet(conn.connection_key(), packet);
+        udp_server.communicator().forward_packet(protocol::ServerType::Login, conn.connection_key(), data, data_size);
+
         return error::PACKET_HANDLE_DEFERRED;
     }
 
-    error::ResultCode MasterServer::handle_ping_packet(net::Connection& conn, const std::byte* packet_data)
+    error::ResultCode MasterServer::handle_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         // send pong.
         conn.io()->send_ping();
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_set_block_packet(net::Connection& conn, const std::byte* packet_data)
+    error::ResultCode MasterServer::handle_set_block_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
-        net::PacketSetBlockClient packet(packet_data);
+        net::PacketSetBlockClient packet(data);
 
         auto block_id = packet.mode == game::BlockMode::SET ? packet.block_id : game::BLOCK_AIR;
         if (not world.try_change_block({ packet.x, packet.y, packet.z }, block_id))
@@ -86,9 +87,9 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_player_position_packet(net::Connection& conn, const std::byte* packet_data)
+    error::ResultCode MasterServer::handle_player_position_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
-        net::PacketSetPlayerPosition packet(packet_data);
+        net::PacketSetPlayerPosition packet(data);
 
         if (auto player = conn.associated_player())
             player->set_position(packet.player_pos);
@@ -96,9 +97,9 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_chat_message_packet(net::Connection& conn, const std::byte* packet_data)
+    error::ResultCode MasterServer::handle_chat_message_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
-        net::PacketChatMessage packet(packet_data);
+        net::PacketChatMessage packet(data);
 
         if (auto player = conn.associated_player()) {
             packet.player_id = player->game_id(); // client always sends 0xff(SELF ID).
@@ -118,9 +119,9 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_ext_info_packet(net::Connection& conn, const std::byte* packet_data)
+    error::ResultCode MasterServer::handle_ext_info_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
-        net::PacketExtInfo packet(packet_data);
+        net::PacketExtInfo packet(data);
 
         if (auto player = conn.associated_player()) {
             player->set_extension_count(packet.extension_count);
@@ -129,9 +130,9 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_ext_entry_packet(net::Connection& conn, const std::byte* packet_data)
+    error::ResultCode MasterServer::handle_ext_entry_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
-        net::PacketExtEntry packet(packet_data);
+        net::PacketExtEntry packet(data);
 
         if (auto player = conn.associated_player()) {
             if (net::is_cpe_support(packet.extenstion_name, packet.version))
@@ -142,11 +143,6 @@ namespace net
         }
 
         return error::SUCCESS;
-    }
-
-    bool MasterServer::handle_message(const MessageRequest&, MessageResponse&)
-    {
-        return true;
     }
 
     void MasterServer::tick()
@@ -167,8 +163,10 @@ namespace net
         udp_server.start_network_io_service(conf.udp_server().ip(), conf.udp_server().port(), 1);
 
         // Fetch other UDP server.
-        _communicator.register_server(protocol::ServerType::Router, { router_ip, router_port });
-        _communicator.fetch_server(protocol::ServerType::Chat);
+        auto& comm = udp_server.communicator();
+        comm.register_server(protocol::ServerType::Router, {router_ip, router_port});
+        comm.fetch_server(protocol::ServerType::Login);
+        comm.fetch_server(protocol::ServerType::Chat);
 
         // start network I/O system.
         tcp_server.start_network_io_service(conf.tcp_server().ip(), conf.tcp_server().port(), conf.system().num_of_processors() * 2);
@@ -229,10 +227,10 @@ namespace net
 
                 // Associate player with connection and load game data from database.
                 conn->associate_player(std::make_unique<game::Player>(
-                        packet->connection_key,
-                        player_login.player_identity(),
-                        player_login.player_type(),
-                        packet->username
+                    packet->connection_key,
+                    player_login.player_identity(),
+                    player_login.player_type(),
+                    packet->username
                 ));
 
                 conn->associated_player()->load_gamedata(

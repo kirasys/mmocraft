@@ -19,7 +19,7 @@ namespace net
     class MasterServer : public net::PacketHandleServer, public net::MessageHandler
     {
     public:
-        using handler_type = error::ResultCode (MasterServer::*)(net::Connection&, const std::byte*);
+        using handler_type = error::ResultCode (MasterServer::*)(net::Connection&, const std::byte*, std::size_t);
 
         MasterServer(net::ConnectionEnvironment&, io::IoCompletionPort&);
 
@@ -31,23 +31,23 @@ namespace net
 
         error::ResultCode handle_packet(net::Connection&, const std::byte*) override;
         
-        error::ResultCode handle_handshake_packet(net::Connection&, const std::byte*);
+        error::ResultCode handle_handshake_packet(net::Connection&, const std::byte*, std::size_t);
 
-        error::ResultCode handle_ping_packet(net::Connection&, const std::byte*);
+        error::ResultCode handle_ping_packet(net::Connection&, const std::byte*, std::size_t);
 
-        error::ResultCode handle_set_block_packet(net::Connection&, const std::byte*);
+        error::ResultCode handle_set_block_packet(net::Connection&, const std::byte*, std::size_t);
 
-        error::ResultCode handle_player_position_packet(net::Connection&, const std::byte*);
+        error::ResultCode handle_player_position_packet(net::Connection&, const std::byte*, std::size_t);
 
-        error::ResultCode handle_chat_message_packet(net::Connection&, const std::byte*);
+        error::ResultCode handle_chat_message_packet(net::Connection&, const std::byte*, std::size_t);
 
-        error::ResultCode handle_ext_info_packet(net::Connection&, const std::byte*);
+        error::ResultCode handle_ext_info_packet(net::Connection&, const std::byte*, std::size_t);
 
-        error::ResultCode handle_ext_entry_packet(net::Connection&, const std::byte*);
+        error::ResultCode handle_ext_entry_packet(net::Connection&, const std::byte*, std::size_t);
 
         /* Message handlers */
 
-        bool handle_message(const MessageRequest&, MessageResponse&) override;
+        //bool handle_message(const MessageRequest&, MessageResponse&) override;
 
         /**
          *  Deferred packet handler methods.
@@ -66,8 +66,7 @@ namespace net
         io::IoCompletionPort& io_service;
 
         net::TcpServer tcp_server;
-        net::UdpServer udp_server;
-        net::ServerCommunicator _communicator;
+        net::UdpServer<MasterServer> udp_server;
 
         database::DatabaseCore database_core;
 

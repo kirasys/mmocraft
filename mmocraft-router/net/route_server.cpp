@@ -9,8 +9,8 @@
 
 namespace
 {
-    const std::array<router::net::RouteServer::handler_type, 0xff> message_handler_db = [] {
-        std::array<router::net::RouteServer::handler_type, 0xff> arr{};
+    std::array<router::net::RouteServer::handler_type, 0x100> message_handler_table = [] {
+        std::array<router::net::RouteServer::handler_type, 0x100> arr{};
         arr[::net::MessageID::Router_GetConfig] = &router::net::RouteServer::handle_fetch_config;
         arr[::net::MessageID::Router_ServerAnnouncement] = &router::net::RouteServer::handle_server_announcement;
         arr[::net::MessageID::Router_FetchServer] = &router::net::RouteServer::handle_fetch_server;
@@ -22,8 +22,7 @@ namespace
 namespace router {
 namespace net {
     RouteServer::RouteServer()
-        : server_core{ *this }
-        , _communicator{ server_core }
+        : server_core{ this, &message_handler_table, nullptr }
     {
         
     }
@@ -33,20 +32,11 @@ namespace net {
         auto& server_conf = config::get_server_config();
         server_core.start_network_io_service(server_conf.ip(), server_conf.port(), 1);
 
-        _communicator.register_server(protocol::ServerType::Router, { server_conf.ip(), server_conf.port() });
+        server_core.communicator().register_server(protocol::ServerType::Router, {server_conf.ip(), server_conf.port()});
 
         while (true) {
             util::sleep_ms(3000);
         }
-    }
-
-    bool RouteServer::handle_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
-    {
-        if (auto handler = message_handler_db[request.message_id()])
-            return (this->*handler)(request, response);
-
-        CONSOLE_LOG(error) << "Unimplemented message id : " << request.message_id();
-        return false;
     }
 
     bool RouteServer::handle_fetch_config(const ::net::MessageRequest& request, ::net::MessageResponse& response)
@@ -69,7 +59,7 @@ namespace net {
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
             return false;
 
-        auto requested_server_info = _communicator.get_server(msg.server_type());
+        auto requested_server_info = server_core.communicator().get_server(msg.server_type());
         if (not requested_server_info.port)
             return false;
 
@@ -88,7 +78,7 @@ namespace net {
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
             return false;
 
-        _communicator.register_server(msg.server_type(), {
+        server_core.communicator().register_server(msg.server_type(), {
             .ip = msg.server_info().ip(),
             .port = msg.server_info().port()
         });

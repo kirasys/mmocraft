@@ -4,7 +4,6 @@
 
 #include <net/udp_server.h>
 #include <net/server_communicator.h>
-#include <config/config.h>
 
 namespace chat
 {
@@ -13,21 +12,18 @@ namespace chat
         class ChatServer : public ::net::MessageHandler
         {
         public:
-            using handler_type = bool (ChatServer::*)(const ::net::MessageRequest&, ::net::MessageResponse&);
+            using handler_type = ::net::UdpServer<ChatServer>::handler_type;
 
-            using packet_handler_type = bool (ChatServer::*)(const ::net::PacketRequest&, ::net::PacketResponse&);
+            using packet_handler_type = ::net::UdpServer<ChatServer>::packet_handler_type;
 
             ChatServer();
 
-            bool handle_message(const ::net::MessageRequest&, ::net::MessageResponse&) override;
-            
-            bool handle_packet(const ::net::MessageRequest&, ::net::MessageResponse&);
+            bool handle_chat_packet(const ::net::PacketRequest&, ::net::PacketResponse&);
 
             void serve_forever(int argc, char* argv[]);
 
         private:
-            ::net::UdpServer server_core;
-            ::net::ServerCommunicator _communicator;
+            ::net::UdpServer<ChatServer> server_core;
         };
     }
 }

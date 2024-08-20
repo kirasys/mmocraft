@@ -1,21 +1,21 @@
 #include "chat_server.h"
 #include "../config/config.h"
 
+#include <config/config.h>
 #include <net/packet.h>
 #include <util/time_util.h>
 #include <logging/logger.h>
 
 namespace
 {
-    const std::array<chat::net::ChatServer::handler_type, 0xff> message_handler_db = [] {
-        std::array<chat::net::ChatServer::handler_type, 0xff> arr{};
-        arr[::net::MessageID::General_PacketHandle] = &chat::net::ChatServer::handle_packet;
+    std::array<chat::net::ChatServer::handler_type, 0x100> message_handler_table = [] {
+        std::array<chat::net::ChatServer::handler_type, 0x100> arr{};
         return arr;
     }();
 
-    const std::array<chat::net::ChatServer::packet_handler_type, 0xff> packet_handler_db = [] {
-        std::array<chat::net::ChatServer::packet_handler_type, 0xff> arr{};
-        //arr[::net::Packet]
+    std::array<chat::net::ChatServer::packet_handler_type, 0x100> packet_handler_table = [] {
+        std::array<chat::net::ChatServer::packet_handler_type, 0x100> arr{};
+        arr[::net::PacketID::ChatMessage] = &chat::net::ChatServer::handle_chat_packet;
         return arr;
     }();
 }
@@ -25,31 +25,34 @@ namespace chat
 namespace net
 {
     ChatServer::ChatServer()
-        : server_core{ *this }
-        , _communicator{ server_core }
+        : server_core{ this, &message_handler_table, &packet_handler_table }
     {
 
     }
 
-    bool ChatServer::handle_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    bool ChatServer::handle_chat_packet(const ::net::PacketRequest& request, ::net::PacketResponse& response)
     {
-        if (auto handler = message_handler_db[request.message_id()])
-            return (this->*handler)(request, response);
+        ::net::PacketChatMessage packet(request.packet_data());
 
-        CONSOLE_LOG(error) << "Unimplemented message id : " << request.message_id();
-        return false;
-    }
+        /*
+        if (auto player = conn.associated_player()) {
+            packet.player_id = player->game_id(); // client always sends 0xff(SELF ID).
 
-    bool ChatServer::handle_packet(const ::net::MessageRequest& request, ::net::MessageResponse& response)
-    {
-        ::net::PacketRequest packet_request(request);
-        ::net::PacketResponse packet_response(response);
+            if (packet.message[0] == '/') { // if command message
+                game::PlayerCommand command(player);
+                command.execute(world, packet.message);
 
-        if (auto handler = packet_handler_db[packet_request.packet_id()])
-            return (this->*handler)(packet_request, packet_response);
-
-        CONSOLE_LOG(error) << "Unimplemented packet id : " << packet_request.packet_id();
-        return false;
+                net::PacketChatMessage msg_packet(command.get_response());
+                conn.io()->send_packet(msg_packet);
+                ;
+            }
+            else {
+                deferred_chat_message_packet_task.push_packet(conn.connection_key(), packet);
+                return error::PACKET_HANDLE_DEFERRED;
+            }
+        }
+        */
+        return error::SUCCESS;
     }
 
     void ChatServer::serve_forever(int argc, char* argv[])
@@ -64,7 +67,7 @@ namespace net
         auto& conf = chat::config::get_config();
         logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
 
-        _communicator.register_server(protocol::ServerType::Router, 
+        server_core.communicator().register_server(protocol::ServerType::Router,
             {
                 .ip = router_ip,
                 .port = router_port
@@ -75,7 +78,7 @@ namespace net
         server_core.start_network_io_service(conf.server().ip(), conf.server().port(), conf.system().num_of_processors());
 
         while (1) {
-            _communicator.announce_server(protocol::ServerType::Chat, {
+            server_core.communicator().announce_server(protocol::ServerType::Chat, {
                 .ip = conf.server().ip(),
                 .port = conf.server().port()
             });

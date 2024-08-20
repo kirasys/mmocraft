@@ -6,35 +6,146 @@
 
 #include "net/socket.h"
 #include "net/server_core.h"
+#include "net/server_communicator.h"
 #include "net/udp_message.h"
+#include "logging/logger.h"
 
 namespace net
 {
     constexpr int SOCKET_RCV_BUFFER_SIZE = 1024 * 1024 * 4; // 4MB
     constexpr int SOCKET_SND_BUFFER_SIZE = 1024 * 1024 * 4; // 4MB
-    
+
+    class MessageHandler
+    {
+    public:
+        
+        
+    };
+
+    template <typename ServerType>
     class UdpServer : public net::ServerCore
     {
     public:
-        UdpServer(net::MessageHandler&);
 
-        ~UdpServer();
+        using handler_type = bool (ServerType::*)(const net::MessageRequest&, net::MessageResponse&);
 
-        void reset();
+        using packet_handler_type = bool (ServerType::*)(const net::PacketRequest&, net::PacketResponse&);
 
-        bool send(const std::string& ip, int port, const net::MessageRequest&);
+        UdpServer(ServerType* server_inst, std::array<handler_type, 0x100>* msg_handler_table, std::array<packet_handler_type, 0x100>* pkt_handler_table)
+            : _sock{ net::SocketProtocol::UDPv4 }
+            , app_server{ server_inst }
+            , message_handler_table{ msg_handler_table }
+            , packet_handler_table{ pkt_handler_table }
+            , _communicator{ _sock }
+        {
+            if (not _sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) ||
+                not _sock.set_socket_option(SO_SNDBUF, SOCKET_SND_BUFFER_SIZE))
+                throw error::SOCKET_SETOPT;
+        }
 
-        void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override;
+        ~UdpServer()
+        {
+            reset();
+        }
 
-        std::thread spawn_event_loop_thread();
+        net::ServerCommunicator& communicator()
+        {
+            return _communicator;
+        }
 
-        void run_event_loop_forever(DWORD get_event_timeout_ms);
+        void reset()
+        {
+            _sock.reset(net::SocketProtocol::UDPv4);
+            is_terminated = true;
+
+            for (auto& event_thread : event_threads)
+                event_thread.join();
+
+            event_threads.clear();
+        }
+
+        void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override
+        {
+            if (not _sock.bind(ip, port))
+                return;
+
+            CONSOLE_LOG(info) << "Listening to " << ip << ':' << port << "...";
+
+            for (unsigned i = 0; i < num_of_event_threads; i++)
+                event_threads.emplace_back(spawn_event_loop_thread());
+
+        }
+
+        std::thread spawn_event_loop_thread()
+        {
+            return std::thread([](UdpServer* udp_server) {
+                udp_server->run_event_loop_forever(0);
+                }, this);
+        }
+
+        void run_event_loop_forever(DWORD)
+        {
+            net::MessageRequest request;
+            net::MessageResponse response;
+
+            struct sockaddr_in sender_addr;
+            int sender_addr_size = sizeof(sender_addr);
+
+            while (not is_terminated) {
+                if (not net::ServerCommunicator::read_message(_sock, request, sender_addr, sender_addr_size))
+                    continue;
+
+                response.set_message_id(request.message_id());
+
+                if (handle_message(request, response) && response.message_size()) {
+                    auto transferred_bytes = ::sendto(_sock.get_handle(),
+                        response.begin(), int(response.size()),
+                        0,
+                        (SOCKADDR*)&sender_addr, sender_addr_size);
+
+                    LOG_IF(error, transferred_bytes == SOCKET_ERROR)
+                        << "sendto() failed with " << ::WSAGetLastError();
+                    LOG_IF(error, transferred_bytes != SOCKET_ERROR && transferred_bytes < response.size())
+                        << "sendto() successed partially";
+
+                    response.reset();
+                }
+            }
+        }
+
+        bool handle_message(const MessageRequest& request, MessageResponse& response)
+        {
+            if (request.message_id() == net::MessageID::General_PacketHandle)
+                return handle_packet(request, response);
+            else if (auto handler = (*message_handler_table)[request.message_id()])
+                return (app_server->*handler)(request, response);
+
+            CONSOLE_LOG(error) << "Unimplemented message id : " << request.message_id();
+            return false;
+        }
+
+        bool handle_packet(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+        {
+            ::net::PacketRequest packet_request(request);
+            ::net::PacketResponse packet_response(response);
+
+            if (auto handler = (*packet_handler_table)[packet_request.packet_id()])
+                return (app_server->*handler)(packet_request, packet_response);
+
+            CONSOLE_LOG(error) << "Unimplemented packet id : " << packet_request.packet_id();
+            return false;
+        }
 
     private:
         net::Socket _sock;
-        net::MessageHandler& message_handler;
 
         bool is_terminated = false;
         std::vector<std::thread> event_threads;
+
+        ServerType* const app_server = nullptr;
+        std::array<handler_type, 0x100>* const message_handler_table = nullptr;
+        std::array<packet_handler_type, 0x100>* const packet_handler_table = nullptr;
+
+        net::ServerCommunicator _communicator;
     };
 }

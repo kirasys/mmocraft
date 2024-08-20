@@ -13,6 +13,7 @@ namespace
     ::config::FrontendConfig g_frontend_server_config;
     ::config::RouterConfig g_route_server_config;
     ::config::ChatConfig g_chat_server_config;
+    ::config::LoginConfig g_login_server_config;
 
     struct ConfigEntry
     {
@@ -26,6 +27,7 @@ namespace
         arr[protocol::ServerType::Frontend] = { protocol::ServerType::Frontend, "config/frontend_config.json", &g_frontend_server_config };
         arr[protocol::ServerType::Router] = { protocol::ServerType::Router, "config/router_config.json", &g_route_server_config };
         arr[protocol::ServerType::Chat] = { protocol::ServerType::Chat, "config/chat_config.json", &g_chat_server_config };
+        arr[protocol::ServerType::Login] = { protocol::ServerType::Login, "config/login_config.json", &g_login_server_config };
         return arr;
     }();
 
@@ -51,6 +53,12 @@ namespace
             g_chat_server_config.mutable_doc_database();
             g_chat_server_config.mutable_log();
             return;
+        case protocol::ServerType::Login:
+            g_login_server_config.mutable_server();
+            g_login_server_config.mutable_rel_database();
+            g_login_server_config.mutable_log();
+            return;
+
         }
     }
 

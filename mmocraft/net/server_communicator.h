@@ -3,8 +3,9 @@
 #include <initializer_list>
 #include <shared_mutex>
 
-#include "net/udp_server.h"
-#include "net/packet_id.h"
+#include "net/connection_key.h"
+#include "net/socket.h"
+#include "net/udp_message.h"
 #include "proto/generated/protocol.pb.h"
 
 namespace net
@@ -20,7 +21,7 @@ namespace net
     class ServerCommunicator
     {
     public:
-        ServerCommunicator(net::UdpServer& src)
+        ServerCommunicator(net::Socket& src)
             : _source{ src }
         { }
 
@@ -34,6 +35,18 @@ namespace net
 
         bool fetch_server(protocol::ServerType);
 
+        bool forward_packet(protocol::ServerType, net::ConnectionKey, const std::byte*, std::size_t);
+
+        template <typename MessageType>
+        bool send_message_to_router(MessageType msg, net::MessageID msg_id)
+        {
+            net::MessageRequest request(msg_id);
+            request.set_message(msg);
+
+            auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
+            return router_port ? _source.send_to(router_ip.c_str(), router_port, request.cbegin(), request.size()) : false;
+        }
+
         static bool read_message(net::Socket&, net::MessageRequest&, struct sockaddr_in& sender_addr, int& sender_addr_size);
 
         static bool read_message(net::Socket&, net::MessageRequest&);
@@ -43,59 +56,9 @@ namespace net
         static bool fetch_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse&);
 
     private:
-        net::UdpServer& _source;
+        net::Socket& _source;
 
         std::shared_mutex server_table_mutex;
         net::ServerInfo _servers[protocol::ServerType::SIZE];
-    };
-
-    class PacketRequest
-    {
-    public:
-        PacketRequest(const net::MessageRequest& request)
-        {
-            _message.ParseFromArray(request.begin_message(), int(request.message_size()));
-        }
-
-        net::PacketID packet_id() const
-        {
-            return net::PacketID(_message.packet_data()[0]);
-        }
-
-        const std::byte* packet_data() const
-        {
-            return reinterpret_cast<const std::byte*>(_message.packet_data().data());
-        }
-
-    private:
-        protocol::PacketHandleRequest _message;
-    };
-
-    class PacketResponse
-    {
-    public:
-        PacketResponse(net::MessageResponse& response)
-            : _response{ response }
-        {
-
-        }
-
-        ~PacketResponse()
-        {
-            if (not _response_data.empty()) {
-                protocol::PacketHandleResponse packet_handle_response;
-                packet_handle_response.set_result_data(std::move(_response_data));
-                _response.set_message(packet_handle_response);
-            }
-        }
-
-        std::string& response_data()
-        {
-            return _response_data;
-        }
-
-    private:
-        net::MessageResponse& _response;
-        std::string _response_data;
     };
 }
