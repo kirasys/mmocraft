@@ -7,6 +7,9 @@
 
 #include "config/config.h"
 #include "net/socket.h"
+#include "net/server_communicator.h"
+#include "logging/logger.h"
+#include "database/query.h"
 
 namespace
 {
@@ -42,6 +45,17 @@ namespace setup
         std::signal(SIGABRT, termination_routine_for_signal);
 
         net::Socket::initialize_system();
+
+        // Load config from the route server.
+        if (not net::ServerCommunicator::load_remote_config(router_ip, router_port, protocol::ServerType::Frontend, config::get_config()))
+            return;
+
+        auto& conf = config::get_config();
+        config::set_default_configuration(*conf.mutable_system());
+
+        logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
+
+        database::initialize_system();
     }
 
     void add_termination_handler(std::terminate_handler handler)
