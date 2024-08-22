@@ -38,11 +38,6 @@ namespace net
             return connection_table[index].connection;
         }
 
-        bool is_expired(ConnectionID connection_id) const
-        {
-            return connection_table[connection_id].will_delete;
-        }
-
         bool is_expired(ConnectionKey key) const
         {
             return connection_table[key.index()].will_delete 
@@ -57,11 +52,6 @@ namespace net
         net::ConnectionIO* try_acquire_connection_io(ConnectionKey key) const
         {
             return is_expired(key) ? nullptr : connection_table[key.index()].connection->io();
-        }
-
-        net::Connection* try_acquire_connection(ConnectionID connection_id) const
-        {
-            return is_expired(connection_id) ? nullptr : connection_table[connection_id].connection;
         }
         
         std::size_t size_of_connections() const
