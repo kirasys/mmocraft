@@ -2,7 +2,6 @@
 #include "server_communicator.h"
 
 #include "net/udp_message.h"
-#include "net/server_communicator.h"
 #include "proto/generated/protocol.pb.h"
 #include "logging/logger.h"
 
@@ -27,7 +26,7 @@ namespace net
         announce_msg.mutable_server_info()->set_ip(server_info.ip);
         announce_msg.mutable_server_info()->set_port(server_info.port);
 
-        return send_message_to_router(announce_msg, net::MessageID::Router_ServerAnnouncement);
+        return send_message(protocol::ServerType::Router, net::MessageID::Router_ServerAnnouncement, announce_msg);
     }
 
     bool ServerCommunicator::fetch_server(protocol::ServerType server_type)
@@ -62,18 +61,22 @@ namespace net
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
-        return send_message_to_router(fetch_server_msg, net::MessageID::Router_FetchServer);
+        return send_message(protocol::ServerType::Router, net::MessageID::Router_FetchServer, fetch_server_msg);
     }
 
     bool ServerCommunicator::fetch_config(protocol::ServerType target, net::MessageResponse& response)
+    {
+        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
+        return fetch_config(router_ip.c_str(), router_port, target, response);
+    }
+
+    bool ServerCommunicator::fetch_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse& response)
     {
         protocol::FetchConfigRequest fetch_config_msg;
         fetch_config_msg.set_server_type(target);
 
         net::MessageRequest request(net::MessageID::Router_GetConfig);
         request.set_message(fetch_config_msg);
-
-        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
 
         // Send the get config message to the router.
         CONSOLE_LOG(info) << "Wait to fetch config...";
@@ -83,13 +86,13 @@ namespace net
         return true;
     }
 
-    bool ServerCommunicator::forward_packet(protocol::ServerType server_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
+    bool ServerCommunicator::forward_packet(protocol::ServerType server_type, net::MessageID packet_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
     {
         protocol::PacketHandleRequest packet_handle_req;
-        packet_handle_req.set_source(source.raw());
+        packet_handle_req.set_connection_key(source.raw());
         packet_handle_req.set_packet_data(std::string{ reinterpret_cast<const char*>(data), data_size});
 
-        return send_message_to_router(packet_handle_req, net::MessageID::General_PacketHandle);
+        return send_message(server_type, packet_type, packet_handle_req);
     }
 
     bool ServerCommunicator::read_message(net::Socket& sock, net::MessageRequest& message, struct sockaddr_in& sender_addr, int& sender_addr_size)

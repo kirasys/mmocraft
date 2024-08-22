@@ -69,6 +69,21 @@ namespace database
         SQLCHAR _is_admin;
     };
 
+    class PlayerLoadSQL : public SQLStatement
+    {
+    public:
+        static constexpr const char* query = "SELECT gamedata FROM player_game_data WHERE player_id = ?";
+
+        PlayerLoadSQL();
+
+        bool load(game::Player&);
+
+    private:
+        SQLINTEGER player_id;
+        std::byte _gamedata[player_gamedata_column_size];
+        SQLLEN _gamedata_size = player_gamedata_column_size;
+    };
+
     class PlayerUpdateSQL : public SQLStatement
     {
     public:

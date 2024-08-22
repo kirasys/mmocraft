@@ -60,6 +60,11 @@ namespace database
 
         bool outbound_bytes_parameter(SQLUSMALLINT column_number, std::byte* buf, SQLLEN column_size, SQLLEN& buf_size);
 
+        bool outbound_bytes_parameter(SQLUSMALLINT column_number, char* buf, SQLLEN column_size, SQLLEN& buf_size)
+        {
+            return outbound_bytes_parameter(column_number, reinterpret_cast<std::byte*>(buf), column_size, buf_size);
+        }
+
         bool outbound_bool_column(SQLUSMALLINT column_number, SQLCHAR&);
 
         bool outbound_int32_column(SQLUSMALLINT column_number, SQLINTEGER&);
@@ -69,6 +74,8 @@ namespace database
         bool outbound_uint32_column(SQLUSMALLINT column_number, SQLUINTEGER&);
 
         bool outbound_uint64_column(SQLUSMALLINT column_number, SQLUBIGINT&);
+
+        bool outbound_bytes_column(SQLUSMALLINT column_number, std::byte* buf, SQLLEN buf_size, SQLLEN& data_size);
 
         bool prepare(std::string_view query);
 

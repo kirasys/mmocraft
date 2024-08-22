@@ -3,8 +3,7 @@ CREATE PROCEDURE dbo.PlayerLogin
     @Username VARCHAR(64),
     @Password VARCHAR(64),
     @UserID INT OUTPUT,
-    @UserType INT OUTPUT,
-    @PlayerGameData BINARY(64) OUTPUT
+    @UserType INT OUTPUT
 )
 AS 
 BEGIN
@@ -13,7 +12,6 @@ BEGIN
     -- Default values
     SET @UserID = 0
     SET @UserType = 0
-    SET @PlayerGameData = 0
 
     DECLARE @UserFound INT
     DECLARE @IsAdmin BIT
@@ -35,7 +33,6 @@ BEGIN
     END
 
     SET @UserType = IIF(@IsAdmin != 0, 3, 2) -- is_admin ? ADMIN : AUTHENTICATED_USER
-    SELECT @PlayerGameData = gamedata FROM player_game_data WHERE player_id = @UserID;
     RETURN
 END
 GO

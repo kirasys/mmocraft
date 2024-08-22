@@ -154,7 +154,7 @@ namespace net
 
         std::size_t process_packets(std::byte*, std::byte*);
 
-        void associate_player(std::unique_ptr<game::Player> player)
+        void set_player(std::unique_ptr<game::Player> player)
         {
             _player = std::move(player);
         }

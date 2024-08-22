@@ -75,6 +75,34 @@ namespace database
         return false;
     }
 
+    PlayerLoadSQL::PlayerLoadSQL()
+        : SQLStatement{ global_database_connection.get_connection_handle() }
+    {
+        this->prepare(query);
+
+        // bind input parameters.
+        this->inbound_int32_parameter(1, player_id);
+
+        // bind output parameters.
+        this->outbound_bytes_column(1, _gamedata, sizeof(_gamedata), _gamedata_size);
+    }
+    
+    bool PlayerLoadSQL::load(game::Player& player)
+    {
+        // set input parameters.
+        player_id = player.identity();
+
+        if (this->execute()) {
+            util::defer clear_cursor = [this] { this->close_cursor(); };
+            if (this->fetch()) {
+                player.load_gamedata(_gamedata, sizeof(_gamedata));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     PlayerUpdateSQL::PlayerUpdateSQL()
         : SQLStatement{ global_database_connection.get_connection_handle() }
     {
@@ -94,7 +122,7 @@ namespace database
         player_id = player.identity();
 
         memset(_player_gamedata, 0, sizeof(_player_gamedata));
-        player.copy_gamedata({ _player_gamedata, sizeof(_player_gamedata) });
+        player.copy_gamedata(_player_gamedata, sizeof(_player_gamedata));
 
         return this->execute();
     }

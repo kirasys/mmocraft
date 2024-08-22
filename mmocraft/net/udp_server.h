@@ -15,13 +15,6 @@ namespace net
     constexpr int SOCKET_RCV_BUFFER_SIZE = 1024 * 1024 * 4; // 4MB
     constexpr int SOCKET_SND_BUFFER_SIZE = 1024 * 1024 * 4; // 4MB
 
-    class MessageHandler
-    {
-    public:
-        
-        
-    };
-
     template <typename ServerType>
     class UdpServer : public net::ServerCore
     {
@@ -29,13 +22,10 @@ namespace net
 
         using handler_type = bool (ServerType::*)(const net::MessageRequest&, net::MessageResponse&);
 
-        using packet_handler_type = bool (ServerType::*)(const net::PacketRequest&, net::MessageResponse&);
-
-        UdpServer(ServerType* server_inst, std::array<handler_type, 0x100>* msg_handler_table, std::array<packet_handler_type, 0x100>* pkt_handler_table)
+        UdpServer(ServerType* server_inst, std::array<handler_type, 0x100>* msg_handler_table)
             : _sock{ net::SocketProtocol::UDPv4 }
             , app_server{ server_inst }
             , message_handler_table{ msg_handler_table }
-            , packet_handler_table{ pkt_handler_table }
             , _communicator{ _sock }
         {
             if (not _sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) ||
@@ -115,23 +105,10 @@ namespace net
 
         bool handle_message(const MessageRequest& request, MessageResponse& response)
         {
-            if (request.message_id() == net::MessageID::General_PacketHandle)
-                return handle_packet(request, response);
-            else if (auto handler = (*message_handler_table)[request.message_id()])
+            if (auto handler = (*message_handler_table)[request.message_id()])
                 return (app_server->*handler)(request, response);
 
             CONSOLE_LOG(error) << "Unimplemented message id : " << request.message_id();
-            return false;
-        }
-
-        bool handle_packet(const ::net::MessageRequest& request, ::net::MessageResponse& response)
-        {
-            ::net::PacketRequest packet_request(request);
-
-            if (auto handler = (*packet_handler_table)[packet_request.packet_id()])
-                return (app_server->*handler)(packet_request, response);
-
-            CONSOLE_LOG(error) << "Unimplemented packet id : " << packet_request.packet_id();
             return false;
         }
 
@@ -143,7 +120,6 @@ namespace net
 
         ServerType* const app_server = nullptr;
         std::array<handler_type, 0x100>* const message_handler_table = nullptr;
-        std::array<packet_handler_type, 0x100>* const packet_handler_table = nullptr;
 
         net::ServerCommunicator _communicator;
     };

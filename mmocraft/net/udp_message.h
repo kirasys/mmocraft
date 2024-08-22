@@ -132,9 +132,9 @@ namespace net
             return reinterpret_cast<const std::byte*>(_message.packet_data().data());
         }
 
-        auto source() const
+        auto connection_key() const
         {
-            return net::ConnectionKey{ _message.source() };
+            return net::ConnectionKey{ _message.connection_key() };
         }
 
     private:
@@ -144,28 +144,6 @@ namespace net
     class PacketResponse
     {
     public:
-        PacketResponse(net::MessageResponse& response)
-            : _response{ response }
-        {
 
-        }
-
-        ~PacketResponse()
-        {
-            if (not _response_data.empty()) {
-                protocol::PacketHandleResponse packet_handle_response;
-                packet_handle_response.set_result_data(std::move(_response_data));
-                _response.set_message(packet_handle_response);
-            }
-        }
-
-        std::string& response_data()
-        {
-            return _response_data;
-        }
-
-    private:
-        net::MessageResponse& _response;
-        std::string _response_data;
     };
 }

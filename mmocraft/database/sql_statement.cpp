@@ -285,4 +285,13 @@ namespace database
         CHECK_DB_STRONG_SUCCESS(ret);
         return true;
     }
+
+    bool SQLStatement::outbound_bytes_column(SQLUSMALLINT column_number, std::byte* buf, SQLLEN buf_size, SQLLEN& data_size)
+    {
+        auto ret = ::SQLBindCol(statement_handle, column_number, SQL_C_BINARY, buf, buf_size, &data_size);
+        CHECK_DB_STRONG_SUCCESS(ret);
+        return true;
+    }
+
+    
 }

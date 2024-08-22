@@ -12,8 +12,8 @@
 
 namespace
 {
-    const std::array<net::MasterServer::handler_type, 0x100> packet_handler_db = [] {
-        std::array<net::MasterServer::handler_type, 0x100> arr{};
+    const std::array<net::MasterServer::packet_handler_type, 0x100> packet_handler_db = [] {
+        std::array<net::MasterServer::packet_handler_type, 0x100> arr{};
         arr[net::PacketID::Handshake] = &net::MasterServer::handle_handshake_packet;
         arr[net::PacketID::Ping] = &net::MasterServer::handle_ping_packet;
         arr[net::PacketID::SetBlockClient] = &net::MasterServer::handle_set_block_packet;
@@ -22,20 +22,24 @@ namespace
         arr[net::PacketID::ExtInfo] = &net::MasterServer::handle_ext_info_packet;
         arr[net::PacketID::ExtEntry] = &net::MasterServer::handle_ext_entry_packet;
         return arr;
-        }();
+    }();
+
+    std::array<net::MasterServer::message_handler_type, 0x100> message_handler_table = [] {
+        std::array<net::MasterServer::message_handler_type, 0x100> arr{};
+        arr[net::MessageID::Login_PacketHandshake] = &net::MasterServer::handle_handshake_response_message;
+        return arr;
+    }();
 }
 
 namespace net
 {
-    MasterServer::MasterServer(net::ConnectionEnvironment& a_connection_env, io::IoCompletionPort& a_io_service)
-        : connection_env{ a_connection_env }
-        , io_service { a_io_service }
+    MasterServer::MasterServer(unsigned max_clients)
+        : connection_env{ max_clients }
         , tcp_server{ *this, connection_env, io_service }
-        , udp_server{ this, nullptr, nullptr }
+        , udp_server{ this, &message_handler_table }
 
         , world{ connection_env, database_core }
         
-        , deferred_handshake_packet_task{ &MasterServer::handle_deferred_handshake_packet, this, user_authentication_task_interval }
         , deferred_chat_message_packet_task{ &MasterServer::handle_deferred_chat_message_packet, this, chat_message_task_interval }
     {
 
@@ -57,7 +61,21 @@ namespace net
         net::PacketHandshake packet(data);
 
         //deferred_handshake_packet_task.push_packet(conn.connection_key(), packet);
-        udp_server.communicator().forward_packet(protocol::ServerType::Login, conn.connection_key(), data, data_size);
+
+        conn.set_player(std::make_unique<game::Player>(
+            conn.connection_key(),
+            packet.username
+        ));
+
+        if (packet.cpe_magic == 0x42) // is CPE supported
+            conn.associated_player()->set_state(game::PlayerState::Extention_Wait);
+
+        udp_server.communicator().forward_packet(
+            protocol::ServerType::Login,
+            net::MessageID::Login_PacketHandshake,
+            conn.connection_key(),
+            data, data_size
+        );
 
         return error::PACKET_HANDLE_DEFERRED;
     }
@@ -162,19 +180,11 @@ namespace net
         auto& comm = udp_server.communicator();
         comm.register_server(protocol::ServerType::Router, { router_ip, router_port });
 
+        auto& conf = config::get_config();
+
         // Fetch other UDP server.
         comm.fetch_server(protocol::ServerType::Login);
         comm.fetch_server(protocol::ServerType::Chat);
-
-        if (not comm.load_remote_config(server_type, config::get_config()))
-            return false;
-
-        auto& conf = config::get_config();
-        config::set_default_configuration(*conf.mutable_system());
-
-        logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
-
-        database::initialize_system();
 
         // Create working directories
         if (not std::filesystem::exists(conf.world().save_dir()))
@@ -221,56 +231,50 @@ namespace net
     }
 
     /**
-     *  Deferred packet handler methods.
+     *  Message handlers.
      */
 
-    void MasterServer::handle_deferred_handshake_packet(io::Task* task, const DeferredPacket<net::PacketHandshake>* packet_head)
+    bool MasterServer::handle_handshake_response_message(const MessageRequest& request, MessageResponse& response)
     {
-        database::PlayerLoginSQL player_login;
+        protocol::PacketHandshakeResponse msg;
+        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
+            return false;
 
-        if (not player_login.is_valid()) {
-            CONSOLE_LOG(error) << "Fail to allocate sql statement handles.";
-            return;
-        }
-
-        for (auto packet = packet_head; packet; packet = packet->next) {
-            player_login.authenticate(packet->username, packet->password);
-
-            // return handshake result to clients.
-
-            if (auto conn = connection_env.try_acquire_connection(packet->connection_key)) {
-                if (player_login.player_type() == game::PlayerType::INVALID) {
-                    conn->disconnect_with_message(error::PACKET_RESULT_FAIL_LOGIN);
-                    continue;
-                }
-
-                if (world.is_already_exist_player(packet->username)) {
-                    conn->disconnect_with_message(error::PACKET_RESULT_ALREADY_LOGIN);
-                    continue;
-                }
-
-                // Associate player with connection and load game data from database.
-                conn->associate_player(std::make_unique<game::Player>(
-                    packet->connection_key,
-                    player_login.player_identity(),
-                    player_login.player_type(),
-                    packet->username
-                ));
-
-                conn->associated_player()->load_gamedata(
-                    player_login.player_gamedata()
-                );
-
-                // Register to world player table.
-                world.register_player(packet->username, packet->connection_key);
-
-                if (packet->cpe_support)
-                    conn->send_supported_cpe_list();
-                else
-                    conn->on_handshake_success();
+        if (auto conn = connection_env.try_acquire_connection(msg.connection_key())) {
+            if (msg.error_code() != error::PACKET_HANDLE_SUCCESS) {
+                conn->disconnect_with_message(error::PACKET_RESULT_FAIL_LOGIN);
+                return true;
             }
+
+            // Disconnect already logged in player.
+            if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
+                prev_conn->disconnect_with_message(error::PACKET_RESULT_ALREADY_LOGIN);
+
+            auto& player = *conn->associated_player();
+            player.set_identity(msg.player_identity());
+            player.set_player_type(game::PlayerType(msg.player_type()));
+
+            // Load player game data.
+            if (player.player_type() != game::PlayerType::GUEST) {
+                database::PlayerLoadSQL player_load;
+                if (not player_load.is_valid() || not player_load.load(player)) {
+                    conn->disconnect_with_message(error::PACKET_RESULT_FAIL_LOGIN);
+                    return true;
+                }
+            }
+
+            if (player.state() == game::PlayerState::Extention_Wait)
+                conn->send_supported_cpe_list();
+            else
+                conn->on_handshake_success();
         }
+
+        return true;
     }
+
+    /**
+     *  Deferred packet handlers.
+     */
 
     void MasterServer::handle_deferred_chat_message_packet(io::Task* task, const DeferredPacket<net::PacketChatMessage>* packet_head)
     {

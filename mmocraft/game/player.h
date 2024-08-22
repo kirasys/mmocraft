@@ -14,6 +14,8 @@ namespace game
 {
     using PlayerID = std::uint8_t;
 
+    // Warning: PlayerLogin procedure uses these enum as raw value.
+    //          we must reflect modification to the procedure.
     enum PlayerType
     {
         INVALID,
@@ -36,6 +38,8 @@ namespace game
         Disconnect_Wait,
 
         Initialized,
+
+        Extention_Wait,
 
         Handshake_Completed,
 
@@ -132,7 +136,7 @@ namespace game
     class Player : util::NonCopyable
     {
     public:
-        Player(net::ConnectionKey, unsigned identity, PlayerType, const char* username);
+        Player(net::ConnectionKey, std::string_view username);
 
         PlayerState state() const
         {
@@ -160,9 +164,19 @@ namespace game
             return _identity;
         }
 
+        void set_identity(unsigned id)
+        {
+            _identity = id;
+        }
+
         PlayerType player_type() const
         {
             return _player_type;
+        }
+
+        void set_player_type(PlayerType type)
+        {
+            _player_type = type;
         }
 
         const char* username() const
@@ -270,15 +284,15 @@ namespace game
             return supported_extensions.test(ext);
         }
 
-        void load_gamedata(std::pair<const std::byte*, int> gamedata)
+        void load_gamedata(std::byte* data, std::size_t data_size)
         {
-            _gamedata.ParseFromArray(gamedata.first, gamedata.second);
+            _gamedata.ParseFromArray(data, int(data_size));
         }
 
-        void copy_gamedata(std::pair<std::byte*, int> gamedata) const
+        void copy_gamedata(std::byte* data, std::size_t data_size) const
         {
-            assert(_gamedata.ByteSizeLong() <= gamedata.second);
-            _gamedata.SerializePartialToArray(gamedata.first, gamedata.second);
+            assert(_gamedata.ByteSizeLong() <= data_size);
+            _gamedata.SerializeToArray(data, int(data_size));
         }
 
     private:
