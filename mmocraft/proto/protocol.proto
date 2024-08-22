@@ -7,8 +7,9 @@ enum ServerType {
     Router = 1;
     Chat = 2;
     Game = 3;
+    Login = 4;
 
-    SIZE = 4;
+    SIZE = 5;
 }
 
 message ServerInfo {
@@ -39,9 +40,20 @@ message ServerAnnouncement {
 }
 
 message PacketHandleRequest {
-    bytes packet_data = 1;
+    uint64 connection_key = 1;
+    bytes packet_data = 2;
 }
 
 message PacketHandleResponse {
-    bytes result_data = 1;
+    uint64 connection_key = 1;
+    bytes response_data = 2;
+}
+
+message PacketHandshakeResponse {
+    uint64 connection_key = 1;
+    uint64 prev_connection_key = 2;
+    uint32 error_code = 3;
+
+    uint32 player_type = 4;
+    uint32 player_identity = 5;
 }
