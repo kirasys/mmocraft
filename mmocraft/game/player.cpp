@@ -3,11 +3,9 @@
 
 namespace game
 {
-    Player::Player(net::ConnectionKey a_connection_key, unsigned identity, PlayerType player_type, const char* username)
+    Player::Player(net::ConnectionKey a_connection_key, std::string_view username)
         : _connection_key{ a_connection_key }
-        , _identity{ identity }
-        , _player_type{ player_type }
     {
-        ::strcpy_s(_username, username);
+        util::string_copy(_username, username);
     }
 }
