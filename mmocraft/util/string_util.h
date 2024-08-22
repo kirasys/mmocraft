@@ -35,4 +35,12 @@ namespace util
 
         return value;
     }
+
+    template<std::size_t SIZE>
+    void string_copy(char (&dst)[SIZE], std::string_view src)
+    {
+        static_assert(SIZE > 0);
+        ::memcpy_s(dst, SIZE, src.data(), src.size());
+        dst[std::min(src.size(), SIZE - 1)] = 0;
+    }
 }
