@@ -59,3 +59,9 @@ message ChatConfig {
     Configuration.Log log = 4;
     Configuration.System system = 5;
 }
+
+message LoginConfig {
+    Configuration.Server server = 1;
+    Configuration.Database rel_database = 2;
+    Configuration.Log log = 3;
+}
