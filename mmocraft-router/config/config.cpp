@@ -39,7 +39,7 @@ namespace
         case protocol::ServerType::Frontend:
             g_frontend_server_config.mutable_tcp_server();
             g_frontend_server_config.mutable_udp_server();
-            g_frontend_server_config.mutable_rel_database();
+            g_frontend_server_config.mutable_player_database();
             g_frontend_server_config.mutable_world();
             g_frontend_server_config.mutable_log();
             return;
@@ -49,13 +49,13 @@ namespace
             return;
         case protocol::ServerType::Chat:
             g_chat_server_config.mutable_server();
-            g_chat_server_config.mutable_rel_database();
-            g_chat_server_config.mutable_doc_database();
+            g_chat_server_config.mutable_player_database();
+            g_chat_server_config.mutable_chat_database();
             g_chat_server_config.mutable_log();
             return;
         case protocol::ServerType::Login:
             g_login_server_config.mutable_server();
-            g_login_server_config.mutable_rel_database();
+            g_login_server_config.mutable_player_database();
             g_login_server_config.mutable_log();
             return;
 

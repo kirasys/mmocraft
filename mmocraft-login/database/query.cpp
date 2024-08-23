@@ -19,7 +19,7 @@ namespace database
     {
         const auto& conf = config::get_config();
 
-        if (not ::database::connect_database_server(&global_database_connection, conf.rel_database()))
+        if (not ::database::connect_database_server(&global_database_connection, conf.player_database()))
             throw error::DATABASE_CONNECT;
     }
 

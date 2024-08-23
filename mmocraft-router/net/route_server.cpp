@@ -22,7 +22,7 @@ namespace
 namespace router {
 namespace net {
     RouteServer::RouteServer()
-        : server_core{ this, &message_handler_table, nullptr }
+        : server_core{ this, &message_handler_table }
     {
         
     }
