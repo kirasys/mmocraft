@@ -22,11 +22,11 @@ namespace database
 
         ~MongoDBCore() = default;
 
-        void connect(std::string_view uri);
+        static void connect_server(std::string_view uri);
 
-        mongocxx::database& get_database();
+        static mongocxx::database& get_database();
 
     private:
-        std::unique_ptr<mongocxx::pool> connection_pool;
+        static std::unique_ptr<mongocxx::pool> connection_pool;
     };
 }

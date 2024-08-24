@@ -7,12 +7,14 @@ namespace
 {
     constexpr const char* mongodb_database_name = "mmocraft";
 
-    mongocxx::instance mongodb_instance{};
+    mongocxx::instance mongodb_instance{};   
 }
 
 namespace database
 {
-    void MongoDBCore::connect(std::string_view uri)
+    std::unique_ptr<mongocxx::pool> MongoDBCore::connection_pool;
+
+    void MongoDBCore::connect_server(std::string_view uri)
     {
         mongocxx::uri connection_uri{ uri };
         connection_pool.reset(new mongocxx::pool{ connection_uri });
