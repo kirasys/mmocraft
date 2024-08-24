@@ -5,43 +5,7 @@
 
 namespace database
 {
-    void initialize_system();
-
     constexpr std::size_t player_gamedata_column_size = 64;
-
-    class PlayerLoginSQL : public SQLStatement
-    {
-    public:
-        static constexpr const char* query = "{ call dbo.PlayerLogin(?, ?, ?, ?, ?) }";
-
-        PlayerLoginSQL();
-
-        bool authenticate(const char* username, const char* password);
-
-        inline SQLUINTEGER player_identity() const
-        {
-            return _player_identity;
-        }
-
-        inline game::PlayerType player_type() const
-        {
-            return game::PlayerType(_player_type);
-        }
-
-        inline std::pair<const std::byte*, int> player_gamedata() const
-        {
-            return { _gamedata, sizeof(_gamedata) };
-        }
-
-    private:
-        char _username[net::PacketFieldConstraint::max_username_length + 1];
-        char _password[net::PacketFieldConstraint::max_password_length + 1];
-
-        SQLUINTEGER _player_identity = 0;
-        SQLUINTEGER _player_type = 0;
-        std::byte _gamedata[player_gamedata_column_size];
-        SQLLEN _gamedata_size = player_gamedata_column_size;
-    };
 
     class PlayerSearchSQL : public SQLStatement
     {

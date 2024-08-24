@@ -1,4 +1,7 @@
 #pragma once
+
+#include "win/win_type.h"
+
 #include <sql.h>
 #include <sqlext.h>
 #include <string_view>
@@ -6,7 +9,6 @@
 #include "proto/generated/config.pb.h"
 #include "util/common_util.h"
 #include "logging/logger.h"
-#include "win/win_type.h"
 
 namespace database
 {
@@ -30,26 +32,23 @@ namespace database
 
 		~DatabaseCore();
 
-		bool connect(std::string_view connection_string);
+		static bool connect_server(std::string_view connection_string);
 
-		bool connect_with_password(const config::Configuration_Database&);
+		static bool connect_server_with_login(const config::Configuration_Database&);
 
 		void disconnect();
 
-		auto get_connection_handle() const
+		static auto get_connection()
 		{
 			return connection_handle;
 		}
 
-		void logging_current_connection_error(RETCODE) const;
+		static void logging_current_connection_error(RETCODE);
 
 	private:
-
 		State _state = Uninitialized;
 
-		SQLHENV environment_handle = NULL;
-		SQLHDBC connection_handle = NULL;
+		SQLHENV environment_handle;
+		static SQLHDBC connection_handle;
 	};
-
-	bool connect_database_server(database::DatabaseCore* db_core, const config::Configuration_Database& conf);
 }

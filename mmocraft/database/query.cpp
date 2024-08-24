@@ -9,49 +9,13 @@
 
 namespace
 {
-    database::DatabaseCore global_database_connection;
+    database::DatabaseCore msdb_core;
 }
 
 namespace database
 {
-    void initialize_system()
-    {
-        const auto& conf = config::get_config();
-
-        if (not database::connect_database_server(&global_database_connection, conf.player_database()))
-            throw error::DATABASE_CONNECT;
-    }
-
-    PlayerLoginSQL::PlayerLoginSQL()
-        : SQLStatement{ global_database_connection.get_connection_handle() }
-    {
-        this->prepare(query);
-
-        // bind input parameters.
-        this->inbound_null_terminated_string_parameter(1, _username, sizeof(_username));
-        this->inbound_null_terminated_string_parameter(2, _password, sizeof(_password));
-
-        // bind output parameters.
-        this->outbound_uint32_parameter(3, _player_identity);
-        this->outbound_uint32_parameter(4, _player_type);
-        this->outbound_bytes_parameter(5, _gamedata, player_gamedata_column_size, _gamedata_size);
-    }
-
-    bool PlayerLoginSQL::authenticate(const char* a_username, const char* a_password)
-    {
-        ::strcpy_s(_username, a_username);
-        ::strcpy_s(_password, a_password);
-
-        if (this->execute()) {
-            while (this->more_results()) { }
-            return true;
-        }
-
-        return false;
-    }
-
     PlayerSearchSQL::PlayerSearchSQL()
-        : SQLStatement{ global_database_connection.get_connection_handle() }
+        : SQLStatement{ msdb_core.get_connection() }
     {
         this->prepare(query);
 
@@ -76,7 +40,7 @@ namespace database
     }
 
     PlayerLoadSQL::PlayerLoadSQL()
-        : SQLStatement{ global_database_connection.get_connection_handle() }
+        : SQLStatement{ msdb_core.get_connection() }
     {
         this->prepare(query);
 
@@ -104,7 +68,7 @@ namespace database
     }
 
     PlayerUpdateSQL::PlayerUpdateSQL()
-        : SQLStatement{ global_database_connection.get_connection_handle() }
+        : SQLStatement{ msdb_core.get_connection() }
     {
         this->prepare(query);
 
