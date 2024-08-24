@@ -7,6 +7,10 @@
 #include "logging/logger.h"
 #include "config/config.h"
 
+using bsoncxx::builder::basic::kvp;
+using bsoncxx::builder::basic::make_array;
+using bsoncxx::builder::basic::make_document;
+
 namespace
 {
     database::DatabaseCore msdb_core;
@@ -89,5 +93,46 @@ namespace database
         player.copy_gamedata(_player_gamedata, sizeof(_player_gamedata));
 
         return this->execute();
+    }
+
+    PlayerSession::PlayerSession(std::string_view username)
+        : _username{ username }
+    {
+        find(username);
+    }
+
+    bool PlayerSession::find(std::string_view username)
+    {
+        auto collection = database::MongoDBCore::get_database().collection(collection_name);
+        _cursor = std::move(collection.find_one(make_document(kvp("username", username))));
+        return _cursor.has_value();
+    }
+
+    bool PlayerSession::update(net::ConnectionKey connection_key, game::PlayerType player_type, unsigned player_identity)
+    {
+        auto collection = database::MongoDBCore::get_database().collection(collection_name);
+
+        if (exists()) {
+            auto update_one_result = collection.update_one(
+                make_document(kvp("username", _username)),
+                make_document(kvp("$set", make_document(
+                    kvp("connection_key", bsoncxx::types::b_int64(connection_key.raw())),
+                    kvp("player_type", bsoncxx::types::b_int32(player_type)),
+                    kvp("player_identity", bsoncxx::types::b_int32(player_identity))
+                )
+            )));
+
+            return update_one_result->modified_count() == 1;
+        }
+        else {
+            auto insert_one_result = collection.insert_one(make_document(
+                kvp("username", _username),
+                kvp("connection_key", bsoncxx::types::b_int64(connection_key.raw())),
+                kvp("player_type", bsoncxx::types::b_int32(player_type)),
+                kvp("player_identity", bsoncxx::types::b_int32(player_identity))
+            ));
+            
+            return insert_one_result.has_value();
+        }
     }
 }

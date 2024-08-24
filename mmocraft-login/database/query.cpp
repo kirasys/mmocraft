@@ -6,25 +6,12 @@
 
 #include "../config/config.h"
 
-namespace
-{
-    database::DatabaseCore global_database_connection;
-}
-
 namespace login
 {
 namespace database
 {
-    void initialize_system()
-    {
-        const auto& conf = config::get_config();
-
-        if (not ::database::connect_database_server(&global_database_connection, conf.player_database()))
-            throw error::DATABASE_CONNECT;
-    }
-
     PlayerLoginSQL::PlayerLoginSQL()
-        : SQLStatement{ global_database_connection.get_connection_handle() }
+        : SQLStatement{ ::database::DatabaseCore::get_connection() }
     {
         this->prepare(query);
 

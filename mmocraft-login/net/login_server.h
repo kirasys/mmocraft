@@ -2,6 +2,8 @@
 
 #include <cstddef>
 
+#include <database/database_core.h>
+#include <database/mongodb_core.h>
 #include <net/connection_key.h>
 #include <net/udp_server.h>
 #include <net/server_communicator.h>
@@ -25,8 +27,8 @@ namespace login
 
         private:
             ::net::UdpServer<LoginServer> server_core;
-
-            std::map<std::string, ::net::ConnectionKey, std::less<>> player_lookup_table;
+            ::database::DatabaseCore player_db;
+            ::database::MongoDBCore session_db;
         };
     }
 }

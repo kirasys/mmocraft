@@ -9,8 +9,6 @@ namespace login
 
     namespace database
     {
-        void initialize_system();
-
         class PlayerLoginSQL : public ::database::SQLStatement
         {
         public:

@@ -10,6 +10,7 @@
 #include "net/server_communicator.h"
 #include "logging/logger.h"
 #include "database/database_core.h"
+#include "database/mongodb_core.h"
 
 namespace
 {

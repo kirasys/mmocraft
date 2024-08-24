@@ -1,6 +1,7 @@
 #include "login_server.h"
 
 #include <config/config.h>
+#include <database/query.h>
 #include <net/packet.h>
 #include <proto/generated/protocol.pb.h>
 #include <util/common_util.h>
@@ -39,7 +40,6 @@ namespace net
         };
 
         database::PlayerLoginSQL player_login;
-
         if (not player_login.is_valid()) {
             CONSOLE_LOG(error) << "Fail to allocate sql statement handles.";
             return false;
@@ -58,11 +58,11 @@ namespace net
         handshake_result.set_player_type(player_login.player_type());
         handshake_result.set_player_identity(player_login.player_identity());
 
-        if (player_lookup_table.find(packet.username) != player_lookup_table.end())
-            handshake_result.set_prev_connection_key(player_lookup_table.find(packet.username)->second.raw());
+        ::database::PlayerSession player_session(packet.username);
+        if (player_session.exists())
+            handshake_result.set_prev_connection_key(player_session.connection_key().raw());
 
-        player_lookup_table[std::string(packet.username)] = packet_request.connection_key();
-
+        player_session.update(packet_request.connection_key(), player_login.player_type(), player_login.player_identity());
         return true;
     }
 
@@ -77,8 +77,10 @@ namespace net
         auto& conf = login::config::get_config();
         logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
         
-        database::initialize_system();
+        ::database::DatabaseCore::connect_server_with_login(conf.player_database());
     
+        ::database::MongoDBCore::connect_server(conf.session_database().server_address());
+
         return true;
     }
 

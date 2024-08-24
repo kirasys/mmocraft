@@ -16,10 +16,12 @@ namespace database
 
     void MongoDBCore::connect_server(std::string_view uri)
     {
+        CONSOLE_LOG(info) << "Connecting mongodb database server...";
         mongocxx::uri connection_uri{ uri };
         connection_pool.reset(new mongocxx::pool{ connection_uri });
 
         get_database();
+        CONSOLE_LOG(info) << "Done";
     }
 
     mongocxx::database& MongoDBCore::get_database()

@@ -63,5 +63,6 @@ message ChatConfig {
 message LoginConfig {
     Configuration.Server server = 1;
     Configuration.Database player_database = 2;
-    Configuration.Log log = 3;
+    Configuration.Database session_database = 3;
+    Configuration.Log log = 4;
 }

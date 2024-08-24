@@ -2,6 +2,7 @@
 
 #include "net/packet.h"
 #include "database/sql_statement.h"
+#include "database/mongodb_core.h"
 
 namespace database
 {
@@ -61,5 +62,32 @@ namespace database
         SQLINTEGER player_id;
         std::byte _player_gamedata[player_gamedata_column_size];
         SQLLEN _player_gamedata_size = player_gamedata_column_size;
+    };
+
+    class PlayerSession
+    {
+    public:
+        static constexpr const char* collection_name = "player_session";
+
+        PlayerSession(std::string_view username);
+
+        bool exists() const
+        {
+            return _cursor.has_value();
+        }
+
+        auto connection_key() const
+        {
+            return net::ConnectionKey((*_cursor)["connection_key"].get_int64());
+        }
+
+        bool update(net::ConnectionKey, game::PlayerType, unsigned);
+
+    private:
+        bool find(std::string_view username);
+
+        std::string_view _username;
+
+        std::optional<bsoncxx::document::value> _cursor;
     };
 }
