@@ -195,6 +195,8 @@ namespace net
     {
     public:
         virtual error::ResultCode handle_packet(net::Connection&, const std::byte*) = 0;
+
+        virtual void on_disconnect(net::Connection&) = 0;
     };
 
     class PacketHandleServerStub : public PacketHandleServer
@@ -202,6 +204,11 @@ namespace net
         error::ResultCode handle_packet(net::Connection&, const std::byte*) override
         {
             return error::SUCCESS;
+        }
+
+        void on_disconnect(net::Connection&) override
+        {
+            return;
         }
     };
 }

@@ -72,6 +72,7 @@ namespace net
             return;
         }
 
+        packet_handle_server.on_disconnect(*this);
         set_offline();
     }
 
