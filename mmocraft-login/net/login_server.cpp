@@ -16,6 +16,7 @@ namespace
     std::array<login::net::LoginServer::handler_type, 0x100> message_handler_table = [] {
         std::array<login::net::LoginServer::handler_type, 0x100> arr{};
         arr[::net::MessageID::Login_PacketHandshake] = &login::net::LoginServer::handle_handshake_packet;
+        arr[::net::MessageID::Login_PlayerLogout] = &login::net::LoginServer::handle_player_logout_message;
         return arr;
     }();
 }
@@ -64,6 +65,15 @@ namespace net
 
         player_session.update(packet_request.connection_key(), player_login.player_type(), player_login.player_identity());
         return true;
+    }
+
+    bool LoginServer::handle_player_logout_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    {
+        protocol::PlayerLogoutRequest msg;
+        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
+            return false;
+
+
     }
 
     bool LoginServer::initialize(const char* router_ip, int router_port)

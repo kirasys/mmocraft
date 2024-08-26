@@ -39,6 +39,10 @@ message ServerAnnouncement {
     ServerInfo server_info = 2;
 }
 
+message PlayerLogoutRequest {
+    string username = 1;
+}
+
 message PacketHandleRequest {
     uint64 connection_key = 1;
     bytes packet_data = 2;

@@ -33,6 +33,8 @@ namespace net
 
         void serve_forever(const char* router_ip, int router_port);
 
+        void on_disconnect(net::Connection&) override;
+
         /* Packet handlers */
 
         error::ResultCode handle_packet(net::Connection&, const std::byte*) override;

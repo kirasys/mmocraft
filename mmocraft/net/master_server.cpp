@@ -230,6 +230,18 @@ namespace net
         }
     }
 
+    void MasterServer::on_disconnect(net::Connection& conn)
+    {
+        if (auto player = conn.associated_player()) {
+            // notify logout event to the login server.
+            if (player->state() >= game::PlayerState::Handshake_Completed) {
+                protocol::PlayerLogoutRequest logout_request;
+                logout_request.mutable_username()->append(player->username());
+                udp_server.communicator().send_message(protocol::ServerType::Login, net::MessageID::Login_PlayerLogout, logout_request);
+            }
+        }
+    }
+
     /**
      *  Message handlers.
      */

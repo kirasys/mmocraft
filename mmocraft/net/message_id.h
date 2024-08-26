@@ -15,6 +15,7 @@ namespace net
         Router_FetchServer,
 
         Login_PacketHandshake,
+        Login_PlayerLogout,
 
         // Indicate size of the enum class.
         Size_of_MessageID,

@@ -21,6 +21,8 @@ namespace login
 
             bool handle_handshake_packet(const ::net::MessageRequest&, ::net::MessageResponse&);
 
+            bool handle_player_logout_message(const ::net::MessageRequest&, ::net::MessageResponse&);
+
             bool initialize(const char* router_ip, int port);
 
             void serve_forever(int argc, char* argv[]);
