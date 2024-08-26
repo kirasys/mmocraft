@@ -117,7 +117,7 @@ namespace database
             kvp("connection_key", bsoncxx::types::b_int64(connection_key.raw())),
             kvp("player_type", bsoncxx::types::b_int32(player_type)),
             kvp("player_identity", bsoncxx::types::b_int32(player_identity)),
-            kvp("expired_at", bsoncxx::types::b_date(std::chrono::system_clock::now() + expiration_period))
+            kvp("expired_at", bsoncxx::types::b_date(std::chrono::system_clock::now() + session_max_lifetime))
         );
         
         if (exists()) {
@@ -139,7 +139,9 @@ namespace database
         auto update_one_result = collection.update_one(
             make_document(kvp("username", _username)),
             make_document(kvp("$set", 
-                make_document(kvp("expired_at", bsoncxx::types::b_date(std::chrono::system_clock::now()))))
+                make_document(
+                    kvp("expired_at", bsoncxx::types::b_date(std::chrono::system_clock::now() + expiration_period)))
+                )
             )
         );
         return update_one_result->modified_count() == 1;

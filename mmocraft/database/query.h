@@ -69,7 +69,9 @@ namespace database
     public:
         static constexpr const char* collection_name = "player_session";
 
-        static constexpr std::chrono::days expiration_period{ 30 };
+        static constexpr std::chrono::days session_max_lifetime{ 30 };
+
+        static constexpr std::chrono::days expiration_period{ 1 };
 
         PlayerSession(std::string_view username);
 
