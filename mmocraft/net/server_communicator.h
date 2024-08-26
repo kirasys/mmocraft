@@ -72,7 +72,7 @@ namespace net
         }
 
         template <typename MessageType>
-        bool send_message(protocol::ServerType server_type, net::MessageID msg_id, MessageType msg)
+        bool send_message(protocol::ServerType server_type, net::MessageID msg_id, MessageType& msg)
         {
             net::MessageRequest request(msg_id);
             request.set_message(msg);

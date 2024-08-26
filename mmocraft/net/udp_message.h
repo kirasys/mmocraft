@@ -101,7 +101,7 @@ namespace net
         }
 
         template <typename MessageType>
-        void set_message(MessageType msg)
+        void set_message(MessageType& msg)
         {
             msg.SerializeToArray(begin_message(), int(message_capacity()));
             set_message_size(msg.ByteSizeLong());
