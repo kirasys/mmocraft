@@ -112,27 +112,58 @@ namespace database
     {
         auto collection = database::MongoDBCore::get_database().collection(collection_name);
 
+        auto doc = bsoncxx::builder::basic::document{};
+        doc.append(
+            kvp("connection_key", bsoncxx::types::b_int64(connection_key.raw())),
+            kvp("player_type", bsoncxx::types::b_int32(player_type)),
+            kvp("player_identity", bsoncxx::types::b_int32(player_identity)),
+            kvp("expired_at", bsoncxx::types::b_date(std::chrono::system_clock::now() + expiration_period))
+        );
+        
         if (exists()) {
             auto update_one_result = collection.update_one(
                 make_document(kvp("username", _username)),
-                make_document(kvp("$set", make_document(
-                    kvp("connection_key", bsoncxx::types::b_int64(connection_key.raw())),
-                    kvp("player_type", bsoncxx::types::b_int32(player_type)),
-                    kvp("player_identity", bsoncxx::types::b_int32(player_identity))
-                )
-            )));
-
+                make_document(kvp("$set", doc.view()))
+            );
             return update_one_result->modified_count() == 1;
         }
         else {
-            auto insert_one_result = collection.insert_one(make_document(
-                kvp("username", _username),
-                kvp("connection_key", bsoncxx::types::b_int64(connection_key.raw())),
-                kvp("player_type", bsoncxx::types::b_int32(player_type)),
-                kvp("player_identity", bsoncxx::types::b_int32(player_identity))
-            ));
-            
-            return insert_one_result.has_value();
+            doc.append(kvp("username", _username));
+            return collection.insert_one(doc.view()).has_value();
+        }
+    }
+
+    bool PlayerSession::revoke()
+    {
+        auto collection = database::MongoDBCore::get_database().collection(collection_name);
+        auto update_one_result = collection.update_one(
+            make_document(kvp("username", _username)),
+            make_document(kvp("$set", 
+                make_document(kvp("expired_at", bsoncxx::types::b_date(std::chrono::system_clock::now()))))
+            )
+        );
+        return update_one_result->modified_count() == 1;
+    }
+
+    void PlayerSession::create_collection()
+    {
+        auto& db = database::MongoDBCore::get_database();
+        db.create_collection(collection_name);
+
+        auto coll = db[collection_name];
+
+        {
+            mongocxx::options::index index_options{};
+            index_options.unique(true);
+
+            coll.create_index(make_document(kvp("username", 1)), index_options);
+        }
+
+        {
+            mongocxx::options::index index_options{};
+            index_options.expire_after(std::chrono::seconds(0));
+
+            coll.create_index(make_document(kvp("expired_at", 1)), index_options);
         }
     }
 }

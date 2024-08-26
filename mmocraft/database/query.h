@@ -69,6 +69,8 @@ namespace database
     public:
         static constexpr const char* collection_name = "player_session";
 
+        static constexpr std::chrono::days expiration_period{ 30 };
+
         PlayerSession(std::string_view username);
 
         bool exists() const
@@ -82,6 +84,10 @@ namespace database
         }
 
         bool update(net::ConnectionKey, game::PlayerType, unsigned);
+
+        bool revoke();
+
+        static void create_collection();
 
     private:
         bool find(std::string_view username);
