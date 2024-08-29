@@ -296,7 +296,7 @@ namespace net
 
         std::unique_ptr<std::byte[]> packet_data;
         if (auto data_size = DeferredPacket<net::PacketChatMessage>::serialize(packets, packet_data)) {
-            world.multicast_to_world_player(net::MuticastTag::Chat_Message, std::move(packet_data), data_size);
+            //world.multicast_to_world_player(net::MuticastTag::Chat_Message, std::move(packet_data), data_size);
         }
     }
 }

@@ -67,24 +67,15 @@ namespace game
         }
     }
 
-    void World::multicast_to_world_player(net::MuticastTag tag, std::unique_ptr<std::byte[]>&& multicast_data, std::size_t data_size)
+    void World::send_to_players(const std::vector<game::Player*>& players, const std::byte* data, std::size_t data_size,
+                                void(*successed)(game::Player*), void(*failed)(game::Player*))
     {
-        multicast_manager.set_multicast_data(
-            tag,
-            std::move(multicast_data),
-            data_size
-        );
-
-        std::vector<game::Player*> world_players;
-        world_players.reserve(connection_env.size_of_max_connections());
-
-        connection_env.select_players([](const game::Player* player)
-            { return player->state() >= PlayerState::Spawned; },
-            world_players);
-
-        for (auto player : world_players) {
-            if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
-                multicast_manager.send(tag, conn);
+        for (auto player : players) {
+            if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
+                if (connection_io->send_raw_data(data, data_size))
+                    if (successed) successed(player);
+                else
+                    if (failed) failed(player);
             }
         }
     }
@@ -101,17 +92,14 @@ namespace game
             net::PacketFieldType::Short(_metadata.length())
         );
 
-        std::unique_ptr<std::byte[]> serialized_level_packet;
-        auto packet_size = level_packet.serialize(serialized_level_packet);
+        std::unique_ptr<std::byte[]> level_packet_data;
+        auto data_size = level_packet.serialize(level_packet_data);
 
-        multicast_manager.set_multicast_data(net::MuticastTag::Level_Data, std::move(serialized_level_packet), packet_size);
-
-        for (auto player : level_wait_players) {
-            auto conn = connection_env.try_acquire_connection(player->connection_key());
-            if (multicast_manager.send(net::MuticastTag::Level_Data, conn))
+        send_to_players(level_wait_players, level_packet_data.get(), data_size,
+            [](game::Player* player) {
                 player->set_state(game::PlayerState::Level_Initialized);
-        }
-
+            });
+        
         last_level_data_submission_at = util::current_monotonic_tick();
     }
 
@@ -127,32 +115,17 @@ namespace game
 
         // create spawn packet of all players.
         std::unique_ptr<std::byte[]> spawn_packet_data;
-        auto data_size = net::PacketSpawnPlayer::serialize(old_players, spawn_wait_players, spawn_packet_data);
+        auto spawn_packet_data_size = net::PacketSpawnPlayer::serialize(old_players, spawn_wait_players, spawn_packet_data);
 
-        // spawn new player to the existing players. 
-        auto new_player_spawn_packet_data = spawn_packet_data.get() + old_players.size() * net::PacketSpawnPlayer::packet_size;
-
-        for (auto player : old_players) {
-            if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
-                connection_io->send_raw_data(
-                    new_player_spawn_packet_data,
-                    spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size
-                );
-            }
-        }
-
-        // spawn all players to the new players. (use multicast)
-        multicast_manager.set_multicast_data(
-            net::MuticastTag::Spawn_Player,
-            std::move(spawn_packet_data),
-            data_size
-        );
-
-        for (auto player : spawn_wait_players) {
-            auto conn = connection_env.try_acquire_connection(player->connection_key());
-            if (multicast_manager.send(net::MuticastTag::Spawn_Player, conn))
+        // spawn all players to the new players.
+        send_to_players(spawn_wait_players, spawn_packet_data.get(), spawn_packet_data_size,
+            [](game::Player* player) {
                 player->set_state(game::PlayerState::Spawned);
-        }
+            });
+
+        // spawn new player to the old players. 
+        auto new_players_spawn_packet_data = spawn_packet_data.get() + old_players.size() * net::PacketSpawnPlayer::packet_size;
+        send_to_players(old_players, new_players_spawn_packet_data, spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size);
     }
 
     void World::despawn_player(const std::vector<game::Player*>& despawn_wait_players)
@@ -161,25 +134,7 @@ namespace game
         std::unique_ptr<std::byte[]> despawn_packet_data;
         auto data_size = net::PacketDespawnPlayer::serialize(despawn_wait_players, despawn_packet_data);
 
-        multicast_manager.set_multicast_data(
-            net::MuticastTag::Despawn_Player,
-            std::move(despawn_packet_data),
-            data_size
-        );
-
-        // get existing all players in the world.
-        std::vector<game::Player*> world_players;
-        world_players.reserve(connection_env.size_of_max_connections());
-
-        connection_env.select_players([](const game::Player* player)
-            { return player->state() >= PlayerState::Spawned; },
-            world_players);
-
-        for (auto player : world_players) {
-            if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
-                multicast_manager.send(net::MuticastTag::Despawn_Player, conn);
-            }
-        }
+        send_to_specific_players<PlayerState::Spawned>(despawn_packet_data.get(), data_size);
     }
 
     void World::disconnect_player(const std::vector<game::Player*>& disconnect_wait_players)
@@ -230,26 +185,8 @@ namespace game
         if (std::size_t data_size = block_history.fetch_serialized_data(block_history_data)) {
             commit_block_changes(block_history_data.get(), data_size);
 
-            // send block changes to players.
-            multicast_manager.set_multicast_data(
-                net::MuticastTag::Sync_Block_Data,
-                std::move(block_history_data),
-                data_size
-            );
-
-            std::vector<game::Player*> level_completed_players;
-            level_completed_players.reserve(connection_env.size_of_max_connections());
-
-            connection_env.select_players([](const game::Player* player)
-                { return player->state() >= PlayerState::Level_Initialized; },
-                level_completed_players);
-
-            for (auto player : level_completed_players) {
-                auto conn = connection_env.try_acquire_connection(player->connection_key());
-                if (not multicast_manager.send(net::MuticastTag::Sync_Block_Data, conn)) {
-                    // todo: send error message
-                }
-            }
+            // todo: recover send fails
+            send_to_specific_players<PlayerState::Level_Initialized>(block_history_data.get(), data_size);
         }
         
         // submit level data to handshaked players.
@@ -269,21 +206,13 @@ namespace game
             { return player->state() >= PlayerState::Spawned; },
             world_players);
 
-
         // create set player position packets.
         std::unique_ptr<std::byte[]> position_packet_data;
         if (auto data_size = net::PacketSetPlayerPosition::serialize(world_players, position_packet_data)) {
-            multicast_manager.set_multicast_data(
-                net::MuticastTag::Sync_Player_Position,
-                std::move(position_packet_data),
-                data_size
-            );
-
-            for (auto player : world_players) {
-                auto conn = connection_env.try_acquire_connection(player->connection_key());
-                if (multicast_manager.send(net::MuticastTag::Sync_Player_Position, conn))
+            send_to_players(world_players, position_packet_data.get(), data_size,
+                [](game::Player* player) {
                     player->commit_last_transferrd_position();
-            }
+                });
         }
     }
 

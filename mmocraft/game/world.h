@@ -66,7 +66,19 @@ namespace game
 
         void broadcast_to_world_player(net::MessageType, const char* message);
 
-        void multicast_to_world_player(net::MuticastTag, std::unique_ptr<std::byte[]>&&, std::size_t);
+        template <game::PlayerState T> 
+        void send_to_specific_players(const std::byte* data, std::size_t data_size,
+                        void(*successed)(game::Player*) = nullptr, void(*failed)(game::Player*) = nullptr)
+        {
+            std::vector<game::Player*> players;
+            players.reserve(connection_env.size_of_max_connections());
+
+            connection_env.select_players([](const game::Player* player)
+                { return player->state() >= T; },
+                players);
+
+            send_to_players(players, data, data_size, successed, failed);
+        }
 
         void process_level_wait_player(const std::vector<game::Player*>&);
 
@@ -87,6 +99,9 @@ namespace game
         bool load_filesystem_world(std::string_view);
 
     private:
+        void send_to_players(const std::vector<game::Player*>&, const std::byte*, std::size_t,
+                void(*successed)(game::Player*) = nullptr, void(*failed)(game::Player*) = nullptr);
+
         void commit_block_changes(const std::byte* block_history_data, std::size_t);
 
         void load_metadata();
