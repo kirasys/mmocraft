@@ -74,7 +74,7 @@ namespace net
 
     void Connection::disconnect_with_message(std::string_view message)
     {
-        connection_io->send_disconnect_message(message);
+        connection_io->send_disconnect_message_immediately(message);
         disconnect();
     }
 
@@ -276,7 +276,7 @@ namespace net
         return io_send_event.data->push(data, data_size);
     }
 
-    bool ConnectionIO::send_disconnect_message(std::string_view reason)
+    bool ConnectionIO::send_disconnect_message_immediately(std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
         bool result = disconnect_packet.serialize(*io_send_event.data);

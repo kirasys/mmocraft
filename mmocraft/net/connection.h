@@ -56,7 +56,7 @@ namespace net
 
         bool send_raw_data(const std::byte*, std::size_t) const;
 
-        bool send_disconnect_message(std::string_view);
+        bool send_disconnect_message_immediately(std::string_view);
 
         bool send_ping() const;
 
