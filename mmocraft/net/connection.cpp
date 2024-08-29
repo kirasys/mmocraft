@@ -19,14 +19,10 @@ namespace net
         , _connection_key{ a_connection_key }
         , connection_env{ a_connection_env }
         , online{ true }
-        , connection_io { new ConnectionIO(std::move(sock)) }
+        , connection_io { new ConnectionIO(this, io_service, std::move(sock)) }
     {
         if (not is_valid())
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
-
-        // start to service client socket events.
-        connection_io->register_event_handler(io_service, this);
-        connection_io->emit_receive_event();
 
         update_last_interaction_time();
     }
@@ -187,21 +183,19 @@ namespace net
      *  Connection descriptor interface
      */
 
-    ConnectionIO::ConnectionIO(win::UniqueSocket&& a_sock)
+    ConnectionIO::ConnectionIO(net::Connection* conn, io::IoService& io_service, win::UniqueSocket&& a_sock)
         : client_socket{ std::move(a_sock) }
         , io_multicast_send_events(num_of_multicast_event)
     {
+        // start to service client socket events.
+        io_service.register_event_source(client_socket.get_handle(), conn);
 
+        emit_receive_event(&io_recv_event);
     }
 
     ConnectionIO::~ConnectionIO()
     {
 
-    }
-
-    void ConnectionIO::register_event_handler(io::IoService& io_service, io::IoEventHandler* event_handler)
-    {
-        io_service.register_event_source(client_socket.get_handle(), event_handler);
     }
 
     void ConnectionIO::close()
@@ -212,11 +206,6 @@ namespace net
     bool ConnectionIO::emit_connect_event(io::IoAcceptEvent* event, std::string_view ip, int port)
     {
         return client_socket.connect(ip, port, &event->overlapped);
-    }
-
-    void ConnectionIO::emit_receive_event()
-    {
-        emit_receive_event(&io_recv_event);
     }
 
     void ConnectionIO::emit_receive_event(io::IoRecvEvent* event)
@@ -250,11 +239,6 @@ namespace net
             if (not client_socket.send(&event->overlapped, wbuf))
                 event->is_processing = false;
         }
-    }
-
-    void ConnectionIO::emit_send_event()
-    {
-        emit_send_event(&io_send_event);
     }
 
     bool ConnectionIO::emit_multicast_send_event(io::IoSendEventSharedData* event_data)

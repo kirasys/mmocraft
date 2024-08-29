@@ -24,15 +24,15 @@ namespace net
 
     class ConnectionEnvironment;
 
+    class Connection;
+
     struct ConnectionIO : util::NonCopyable, util::NonMovable
     {
         ConnectionIO() = default;
 
         ~ConnectionIO();
 
-        ConnectionIO(win::UniqueSocket&&);
-
-        void register_event_handler(io::IoService&, io::IoEventHandler* event_handler);
+        ConnectionIO(net::Connection*, io::IoService&, win::UniqueSocket&&);
 
         bool is_receive_io_busy() const
         {
@@ -48,11 +48,7 @@ namespace net
 
         bool emit_connect_event(io::IoAcceptEvent*, std::string_view ip, int port);
 
-        void emit_receive_event();
-
         void emit_receive_event(io::IoRecvEvent* event);
-
-        void emit_send_event();
 
         void emit_send_event(io::IoSendEvent*);
 
