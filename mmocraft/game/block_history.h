@@ -11,7 +11,7 @@
 
 namespace game
 {
-    constexpr std::size_t max_block_history_size = 1024 * 8;
+    constexpr std::size_t max_block_history_size = 1024;
 
     // Note: Must be packed in order to optimize serialization operation.
     #pragma pack(push, 1)
