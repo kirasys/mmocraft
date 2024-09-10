@@ -40,7 +40,7 @@ namespace util
     void string_copy(char (&dst)[SIZE], std::string_view src)
     {
         static_assert(SIZE > 0);
-        ::memcpy_s(dst, SIZE, src.data(), src.size());
+        std::memcpy(dst, src.data(), std::min(SIZE, src.size()));
         dst[std::min(src.size(), SIZE - 1)] = 0;
     }
 }
