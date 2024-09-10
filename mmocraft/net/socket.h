@@ -23,6 +23,7 @@ namespace net
         TCPv4Overlapped,
         UDPv4,
         UDPv4Overlapped,
+        TCPv4Rio,
     };
 
     class Socket : public win::WinBaseObject<win::Socket>, util::NonCopyable
@@ -63,15 +64,15 @@ namespace net
 
         bool listen(int backlog = SOMAXCONN);
 
-        error::ErrorCode accept(io::IoAcceptEvent&);
-
         bool connect(std::string_view, int, WSAOVERLAPPED*);
 
-        bool send(WSAOVERLAPPED*, WSABUF*);
+        static bool accept(win::Socket listen_sock, win::Socket accepted_sock, std::byte* buf, WSAOVERLAPPED*);
+
+        static bool send(win::Socket, std::byte* buf, std::size_t buf_size, WSAOVERLAPPED*);
+
+        static bool recv(win::Socket, std::byte* buf, std::size_t buf_size, WSAOVERLAPPED*);
 
         bool send_to(const char* ip, int port, const char* data, std::size_t data_size);
-
-        bool recv(WSAOVERLAPPED*, WSABUF*);
 
         int recv_from(char* buf, std::size_t buf_size);
 
@@ -83,5 +84,17 @@ namespace net
         win::UniqueSocket _handle;
     };
 
+    class RioSocket
+    {
+    public:
+
+    private:
+        Socket _sock;
+
+        RIO_RQ request_queue;
+    };
+
     win::Socket create_windows_socket(SocketProtocol);
+
+    const RIO_EXTENSION_FUNCTION_TABLE& rio_api();
 }

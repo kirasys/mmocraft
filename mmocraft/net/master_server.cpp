@@ -35,6 +35,7 @@ namespace net
 {
     MasterServer::MasterServer(unsigned max_clients)
         : connection_env{ max_clients }
+        , io_service { max_clients }
         , tcp_server{ *this, connection_env, io_service }
         , udp_server{ this, &message_handler_table }
 

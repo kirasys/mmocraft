@@ -56,8 +56,10 @@ namespace net
 
         void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override
         {
-            if (not _sock.bind(ip, port))
+            if (not _sock.bind(ip, port)) {
+                CONSOLE_LOG(fatal) << "Couldn't bind server " << ip << ':' << port;
                 return;
+            }
 
             CONSOLE_LOG(info) << "Listening to " << ip << ':' << port << "...";
 

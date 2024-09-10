@@ -221,7 +221,7 @@ namespace game
         return sync_block_task.push(pos, block_id);
     }
 
-    void World::tick(io::IoCompletionPort& task_scheduler)
+    void World::tick(io::RegisteredIO& task_scheduler)
     {
         auto transit_player_state = [this](net::Connection& conn, game::Player& player) {
             switch (player.state()) {

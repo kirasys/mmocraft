@@ -263,6 +263,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -305,6 +306,7 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -343,6 +345,7 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -385,6 +388,7 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"

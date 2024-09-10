@@ -14,7 +14,7 @@ namespace net
                                 net::ConnectionKey a_connection_key,
                                 net::ConnectionEnvironment& a_connection_env,
                                 win::UniqueSocket&& sock,
-                                io::IoService& io_service)
+                                io::RegisteredIO& io_service)
         : packet_handle_server{ a_packet_handle_server }
         , _connection_key{ a_connection_key }
         , connection_env{ a_connection_env }
@@ -153,14 +153,14 @@ namespace net
 
     void Connection::on_complete(io::IoRecvEvent* event)
     {
-        if (last_error_code.is_packet_handle_success()) {
-            last_error_code.reset();
-            connection_io->emit_receive_event(event);
+        event->is_processing = false;
+
+        if (false && not last_error_code.is_packet_handle_success()) {
+            disconnect_with_message(last_error_code.to_string());
             return;
         }
 
-        disconnect_with_message(last_error_code.to_string());
-        event->is_processing = false;
+        last_error_code.reset();
     }
 
     std::size_t Connection::handle_io_event(io::IoRecvEvent* event)
@@ -168,7 +168,7 @@ namespace net
         if (not try_interact_with_client()) // timeout case: connection will be deleted soon.
             return 0; 
 
-        return process_packets(event->data->begin(), event->data->end());
+        return process_packets(event->event_data()->begin(), event->event_data()->end());
     }
 
     /// send event handler
@@ -177,20 +177,24 @@ namespace net
     {
         // Note: Can't start I/O event again due to the interleaving problem.
         event->is_processing = false;
+
+        if (event->is_disposable())
+            delete event;
     }
 
     /**
      *  Connection descriptor interface
      */
 
-    ConnectionIO::ConnectionIO(net::Connection* conn, io::IoService& io_service, win::UniqueSocket&& a_sock)
-        : client_socket{ std::move(a_sock) }
-        , io_multicast_send_events(num_of_multicast_event)
+    ConnectionIO::ConnectionIO(net::Connection* conn, io::RegisteredIO& a_io_service, win::UniqueSocket&& a_sock)
+        : io_service{ a_io_service }
+        , connection_id{ conn->connection_id() }
+        , client_socket{ std::move(a_sock) }
+        , io_recv_event{ io_service.create_recv_io_event(connection_id) }
+        , io_send_event{ io_service.create_send_io_event(connection_id) }
     {
         // start to service client socket events.
-        io_service.register_event_source(client_socket.get_handle(), conn);
-
-        emit_receive_event(&io_recv_event);
+        io_service.register_event_source(connection_id, client_socket.get_handle(), conn);
     }
 
     ConnectionIO::~ConnectionIO()
@@ -203,93 +207,38 @@ namespace net
         client_socket.close();
     }
 
-    bool ConnectionIO::emit_connect_event(io::IoAcceptEvent* event, std::string_view ip, int port)
+    bool ConnectionIO::post_recv_event()
     {
-        return client_socket.connect(ip, port, &event->overlapped);
+        return io_recv_event->post_rio_event(io_service, connection_id);
     }
 
-    void ConnectionIO::emit_receive_event(io::IoRecvEvent* event)
+    bool ConnectionIO::post_send_event()
     {
-        if (event->data->unused_size() < PacketStructure::max_size_of_packet_struct()) {
-            event->is_processing = false;
-            return;
-        }
-
-        WSABUF wbuf[1] = {};
-        wbuf[0].buf = reinterpret_cast<char*>(event->data->begin_unused());
-        wbuf[0].len = ULONG(event->data->unused_size());
-
-        // should assign flag first to avoid data race.
-        event->is_processing = true;
-        if (not client_socket.recv(&event->overlapped, wbuf))
-            event->is_processing = false;
-    }
-
-    void ConnectionIO::emit_send_event(io::IoSendEvent* event)
-    {
-        WSABUF wbuf[1] = {};
-        wbuf[0].buf = reinterpret_cast<char*>(event->data->begin());
-        wbuf[0].len = ULONG(event->data->size());
-
-        if (wbuf[0].len) {
-            std::lock_guard<std::mutex> lock(send_event_lock);
-
-            // should assign flag first to avoid data race.
-            event->is_processing = true;
-            if (not client_socket.send(&event->overlapped, wbuf))
-                event->is_processing = false;
-        }
-    }
-
-    bool ConnectionIO::emit_multicast_send_event(io::IoSendEventSharedData* event_data)
-    {
-        WSABUF wbuf[1] = {};
-        wbuf[0].buf = reinterpret_cast<char*>(event_data->begin());
-        wbuf[0].len = ULONG(event_data->size());
-
-        if (wbuf[0].len) {
-            std::lock_guard<std::mutex> lock(send_event_lock);
-
-            auto unused_event = std::find_if(io_multicast_send_events.begin(), io_multicast_send_events.end(),
-                [](auto& event) {
-                    return not event.is_processing;
-                }
-            );
-
-            if (unused_event == io_multicast_send_events.end()) {
-                LOG(error) << "Insufficient multicast events.";
-                return false;
-            }
-
-            unused_event->set_data(event_data);
-
-            // should assign flag first to avoid data race.
-            unused_event->is_processing = true;
-            if (not client_socket.send(&unused_event->overlapped, wbuf))
-                return unused_event->is_processing = false;
-        }
-        return true;
+        return io_send_event->post_rio_event(io_service, connection_id);
     }
 
     bool ConnectionIO::send_raw_data(const std::byte* data, std::size_t data_size) const
     {
-        return io_send_event.data->push(data, data_size);
+        return io_send_event->event_data()->push(data, data_size);
     }
 
     bool ConnectionIO::send_disconnect_message_immediately(std::string_view reason)
     {
         net::PacketDisconnectPlayer disconnect_packet{ reason };
-        bool result = disconnect_packet.serialize(*io_send_event.data);
 
-        emit_send_event(&io_send_event);
+        auto disposable_event = io::IoSendEvent::create_disposable_event(disconnect_packet.packet_size);
+        
+        bool success = false;
+        if (success = disconnect_packet.serialize(*disposable_event->event_data()))
+            success = disposable_event->post_overlapped_io(client_socket.get_handle());
 
-        return result;
+        return success;
     }
 
     bool ConnectionIO::send_ping() const
     {
         auto packet = std::byte(net::PacketID::Ping);
-        return io_send_event.data->push(&packet, net::PacketPing::packet_size);
+        return io_send_event->event_data()->push(&packet, net::PacketPing::packet_size);
     }
 
     void ConnectionIO::flush_send(net::ConnectionEnvironment& connection_env)
@@ -298,9 +247,8 @@ namespace net
             // flush immedidate and deferred messages.
             auto connection_io = conn.io();
 
-            if (not connection_io->is_send_io_busy()) {
-                connection_io->emit_send_event(&connection_io->io_send_event);
-            }
+            if (not connection_io->is_send_io_busy())
+                connection_io->post_send_event();
         };
 
         connection_env.for_each_connection(flush_message);
@@ -311,15 +259,8 @@ namespace net
         auto flush_message = [](Connection& conn) {
             auto connection_io = conn.io();
 
-            if (not connection_io->is_receive_io_busy()) {
-                connection_io->io_recv_event.is_processing = true;
-
-                // Note: receive event may stop only for one reason: insuffient buffer space.
-                //       unlike flush_server_message(), it need to invoke the I/O handler to process pending packets.
-                connection_io->io_recv_event.invoke_handler(conn,
-                    connection_io->io_recv_event.data->size() ? io::RETRY_SIGNAL : io::EOF_SIGNAL,
-                    ERROR_SUCCESS);
-            }
+            if (not connection_io->is_receive_io_busy())
+                connection_io->post_recv_event();
         };
 
         connection_env.for_each_connection(flush_message);

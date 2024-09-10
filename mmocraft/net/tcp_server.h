@@ -23,7 +23,7 @@ namespace net
     class TcpServer final : public net::ServerCore, public io::IoEventHandler
     {
     public:
-        TcpServer(net::PacketHandleServer&, net::ConnectionEnvironment&, io::IoService&);
+        TcpServer(net::PacketHandleServer&, net::ConnectionEnvironment&, io::RegisteredIO&);
 
         void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override;
 
@@ -49,9 +49,8 @@ namespace net
 
         net::Socket _listen_sock;
 
-        io::IoService& io_service;
+        io::RegisteredIO& io_service;
 
-        io::IoAcceptEventData io_accept_event_data;
-        io::IoAcceptEvent io_accept_event{ &io_accept_event_data };
+        io::IoAcceptEvent io_accept_event;
     };
 }

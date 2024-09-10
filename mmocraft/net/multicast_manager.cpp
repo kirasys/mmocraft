@@ -29,7 +29,7 @@ namespace net
     {
         if (auto event_data = active_event_datas[tag]) {
             event_data->update_lifetime();
-            return conn ? conn->io()->emit_multicast_send_event(event_data) : false;
+            //return conn ? conn->io()->emit_multicast_send_event(event_data) : false;
         }
         return false;
     }

@@ -94,7 +94,7 @@ namespace game
 
         bool try_change_block(util::Coordinate3D, BlockID);
 
-        void tick(io::IoCompletionPort&);
+        void tick(io::RegisteredIO&);
 
         bool load_filesystem_world(std::string_view);
 

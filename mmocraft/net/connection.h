@@ -32,27 +32,23 @@ namespace net
 
         ~ConnectionIO();
 
-        ConnectionIO(net::Connection*, io::IoService&, win::UniqueSocket&&);
+        ConnectionIO(net::Connection*, io::RegisteredIO&, win::UniqueSocket&&);
 
         bool is_receive_io_busy() const
         {
-            return io_recv_event.is_processing;
+            return io_recv_event->is_processing;
         }
 
         bool is_send_io_busy() const
         {
-            return io_send_event.is_processing;
+            return io_send_event->is_processing;
         }
 
         void close();
 
-        bool emit_connect_event(io::IoAcceptEvent*, std::string_view ip, int port);
+        bool post_recv_event();
 
-        void emit_receive_event(io::IoRecvEvent* event);
-
-        void emit_send_event(io::IoSendEvent*);
-
-        bool emit_multicast_send_event(io::IoSendEventSharedData*);
+        bool post_send_event();
 
         bool send_raw_data(const std::byte*, std::size_t) const;
 
@@ -63,7 +59,7 @@ namespace net
         template <typename PacketType>
         bool send_packet(const PacketType& packet) const
         {
-            return packet.serialize(*io_send_event.data);
+            return packet.serialize(*io_send_event->event_data());
         }
 
         static void flush_send(net::ConnectionEnvironment&);
@@ -71,20 +67,17 @@ namespace net
         static void flush_receive(net::ConnectionEnvironment&);
 
     private:
+        io::RegisteredIO& io_service;
+
+        net::ConnectionID connection_id;
         net::Socket client_socket;
 
-        io::IoRecvEventData io_recv_data;
-        io::IoSendEventLockFreeData io_send_data;
+        std::unique_ptr<io::IoRecvEvent> io_recv_event;
+        std::unique_ptr<io::IoSendEvent> io_send_event;
 
-        io::IoRecvEvent io_recv_event{ &io_recv_data };
-        io::IoSendEvent io_send_event{ &io_send_data };
-
-        static constexpr unsigned num_of_multicast_event = 8;
-        std::vector<io::IoSendEvent> io_multicast_send_events;
-
-        // it is used to prevent data interleaving problem when multiple threads sending together.
-        // Todo: performance benchmark versus lockfree stack version.
-        std::mutex send_event_lock;
+        // RIO request queue is not a thread-safe.
+        // we need to prevent recving and sending together (accessing same queue from multiple threads)
+        std::mutex request_queue_lock;
     };
 
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
@@ -95,7 +88,7 @@ namespace net
         static constexpr unsigned REQUIRED_MILLISECONDS_FOR_SECURE_DELETION = 5 * 1000;
 
     public:
-        Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::IoService&);
+        Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::RegisteredIO&);
 
         ~Connection();
 
@@ -117,6 +110,11 @@ namespace net
         ConnectionKey connection_key() const
         {
             return _connection_key;
+        }
+
+        ConnectionID connection_id() const
+        {
+            return _connection_key.index();
         }
 
         ConnectionIO* io()

@@ -16,6 +16,13 @@ namespace
     LPFN_ACCEPTEX AcceptEx_fn;
 
     LPFN_CONNECTEX ConnectEx_fn;
+
+    RIO_EXTENSION_FUNCTION_TABLE Rio_fn = { 0 };
+}
+
+const RIO_EXTENSION_FUNCTION_TABLE& net::rio_api()
+{
+    return Rio_fn;
 }
 
 net::Socket::Socket() noexcept
@@ -57,8 +64,8 @@ void net::Socket::initialize_system()
         setup::add_termination_handler([]() {
             ::WSACleanup();
         });
-
-        win::UniqueSocket sock{ create_windows_socket(SocketProtocol::TCPv4Overlapped) };
+        
+        win::UniqueSocket sock{ create_windows_socket(SocketProtocol::TCPv4Rio) };
 
         {
             GUID guid = WSAID_ACCEPTEX;
@@ -92,6 +99,22 @@ void net::Socket::initialize_system()
             CONSOLE_LOG_IF(fatal, res == SOCKET_ERROR) << "Fail to get pointer of ConnectEx: " << res;
         }
 
+        {
+            GUID guid = WSAID_MULTIPLE_RIO;
+            DWORD bytes = 0;
+
+            auto res = ::WSAIoctl(
+                sock.get(),
+                SIO_GET_MULTIPLE_EXTENSION_FUNCTION_POINTER,
+                &guid,
+                sizeof(guid),
+                &Rio_fn,
+                sizeof(Rio_fn),
+                &bytes, NULL, NULL);
+
+            CONSOLE_LOG_IF(fatal, res == SOCKET_ERROR) << "Fail to get pointer of rio function table: " << res;
+        }
+
         is_socket_system_initialized = true;
     }
 }
@@ -115,26 +138,6 @@ bool net::Socket::listen(int backlog) {
     return true;
 }
 
-error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event)
-{
-    event.accepted_socket = create_windows_socket(SocketProtocol::TCPv4Overlapped);
-    if (event.accepted_socket == INVALID_SOCKET)
-        return error::SOCKET_CREATE;
-
-    DWORD bytes_received;
-    BOOL success = AcceptEx_fn(
-        _handle, event.accepted_socket,
-        LPVOID(event.data->begin()),
-        0, // does not recevice packet data.
-        sizeof(SOCKADDR_STORAGE) + 16, sizeof(SOCKADDR_STORAGE) + 16,
-        &bytes_received,
-        &event.overlapped
-    );
-
-    return not success && (ERROR_IO_PENDING != ::WSAGetLastError()) ?
-        error::SOCKET_ACCEPTEX : error::SUCCESS;
-}
-
 bool net::Socket::connect(std::string_view ip, int port, WSAOVERLAPPED* overlapped)
 {
     sockaddr_in sock_addr;
@@ -152,26 +155,62 @@ bool net::Socket::connect(std::string_view ip, int port, WSAOVERLAPPED* overlapp
         overlapped
     );
 
-    return not success && (ERROR_IO_PENDING != ::WSAGetLastError()) ? false : true;
+    return success || ERROR_IO_PENDING == ::WSAGetLastError();
 }
 
-bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
+bool net::Socket::accept(win::Socket listen_sock, win::Socket accepted_sock, std::byte* buf, WSAOVERLAPPED* overlapped)
 {
+    DWORD bytes_received;
+    BOOL success = AcceptEx_fn(
+        listen_sock, accepted_sock,
+        LPVOID(buf),
+        0, // does not recevice packet data.
+        sizeof(SOCKADDR_STORAGE) + 16, sizeof(SOCKADDR_STORAGE) + 16,
+        &bytes_received,
+        overlapped
+    );
+
+    return success || ERROR_IO_PENDING == ::WSAGetLastError();
+}
+
+bool net::Socket::send(win::Socket sock, std::byte* buf, std::size_t buf_size, WSAOVERLAPPED* overlapped)
+{
+    WSABUF wbuf[1];
+    wbuf[0].buf = reinterpret_cast<char*>(buf);
+    wbuf[0].len = ULONG(buf_size);
+
     DWORD flags = 0;
 
     int ret = ::WSASend(
-        _handle,
-        wsa_buf, 1,
+        sock,
+        wbuf, std::size(wbuf),
         NULL,
         flags,
         overlapped,
         NULL
     );
 
-    if (ret == SOCKET_ERROR && (ERROR_IO_PENDING != ::WSAGetLastError()))
-        return false;
+    return ret == 0 || ERROR_IO_PENDING == ::WSAGetLastError();
+}
 
-    return true;
+bool net::Socket::recv(win::Socket sock, std::byte* buf, std::size_t buf_size, WSAOVERLAPPED* overlapped)
+{
+    WSABUF wbuf[1];
+    wbuf[0].buf = reinterpret_cast<char*>(buf);
+    wbuf[0].len = ULONG(buf_size);
+
+    DWORD flags = 0;
+
+    int ret = ::WSARecv(
+        sock,
+        wbuf, std::size(wbuf),
+        NULL,
+        &flags,
+        overlapped,
+        NULL
+    );
+
+    return ret == 0 || ERROR_IO_PENDING == ::WSAGetLastError();
 }
 
 bool net::Socket::send_to(const char* ip, int port, const char* data, std::size_t data_size)
@@ -191,25 +230,6 @@ bool net::Socket::send_to(const char* ip, int port, const char* data, std::size_
     );
 
     return ret != SOCKET_ERROR;
-}
-
-bool net::Socket::recv(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf)
-{
-    DWORD flags = 0;
-
-    int ret = ::WSARecv(
-        _handle,
-        wsa_buf, 1,
-        NULL,
-        &flags,
-        overlapped,
-        NULL
-    );
-
-    if (ret == SOCKET_ERROR && (ERROR_IO_PENDING != ::WSAGetLastError()))
-        return false;
-
-    return true;
 }
 
 int net::Socket::recv_from(char* buf, std::size_t buf_size)
@@ -251,6 +271,8 @@ win::Socket net::create_windows_socket(SocketProtocol protocol)
         return ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     case SocketProtocol::UDPv4Overlapped:
         return ::WSASocketW(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_OVERLAPPED);
+    case SocketProtocol::TCPv4Rio:
+        return ::WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_REGISTERED_IO | WSA_FLAG_OVERLAPPED);
     default:
         return INVALID_SOCKET;
     }

@@ -10,11 +10,11 @@
 namespace net
 {
     TcpServer::TcpServer
-        (net::PacketHandleServer& a_packet_handle_server, net::ConnectionEnvironment& a_connection_env, io::IoService& a_io_service)
+        (net::PacketHandleServer& a_packet_handle_server, net::ConnectionEnvironment& a_connection_env, io::RegisteredIO& a_io_service)
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }
-        , _listen_sock{ net::SocketProtocol::TCPv4Overlapped }
+        , _listen_sock{ net::SocketProtocol::TCPv4Rio }
         , io_service{ a_io_service }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
@@ -54,15 +54,16 @@ namespace net
         CONSOLE_LOG(info) << "Listening to " << ip << ':' << port << "...\n";
 
         for (unsigned i = 0; i < num_of_event_threads; i++)
-            io_service.spawn_event_loop_thread().detach();
+            io_service.spawn_event_thread();
     }
 
     void TcpServer::start_accept()
     {
         set_state(State::Running);
 
-        if (auto error_code = _listen_sock.accept(io_accept_event)) {
-            LOG(error) << "Fail to request accept: " << error_code;
+        if (not io_accept_event.post_overlapped_io(_listen_sock.get_handle())) {
+            LOG(error) << "Fail to request accept";
+            set_state(State::Stopped);
         }
     }
 
@@ -94,15 +95,15 @@ namespace net
             set_last_error(error::CLIENT_CONNECTION_FULL);
             return 0;
         }
-
+        
         // inherit the properties of the listen socket.
         win::Socket listen_sock = _listen_sock.get_handle();
         if (SOCKET_ERROR == ::setsockopt(client_socket,
-            SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
-            reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
+                SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
+                reinterpret_cast<char*>(&listen_sock), sizeof(listen_sock))) {
             LOG(error) << "setsockopt(SO_UPDATE_ACCEPT_CONTEXT) failed but suppressed.";
         }
-
+        
         // add a client to the server.
         new_connection(std::move(client_socket));
         set_last_error(error::SUCCESS);

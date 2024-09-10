@@ -69,7 +69,7 @@ namespace net
 
         net::ConnectionEnvironment connection_env;
 
-        io::IoCompletionPort io_service;
+        io::RegisteredIO io_service;
 
         net::TcpServer tcp_server;
         net::UdpServer<MasterServer> udp_server;
