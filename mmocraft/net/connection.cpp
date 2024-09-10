@@ -89,6 +89,7 @@ namespace net
 
         while (data_cur < data_end) {
             auto [packet_id, packet_size] = PacketStructure::parse_packet(data_cur);
+
             if (packet_id == net::PacketID::INVALID) {
                 last_error_code = error::PACKET_INVALID_ID;
                 break;
@@ -155,7 +156,7 @@ namespace net
     {
         event->is_processing = false;
 
-        if (false && not last_error_code.is_packet_handle_success()) {
+        if (not last_error_code.is_packet_handle_success()) {
             disconnect_with_message(last_error_code.to_string());
             return;
         }

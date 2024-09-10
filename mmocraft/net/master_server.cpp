@@ -61,8 +61,6 @@ namespace net
     {
         net::PacketHandshake packet(data);
 
-        //deferred_handshake_packet_task.push_packet(conn.connection_key(), packet);
-
         conn.set_player(std::make_unique<game::Player>(
             conn.connection_key(),
             packet.username
