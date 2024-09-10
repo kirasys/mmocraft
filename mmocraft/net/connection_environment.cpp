@@ -30,24 +30,21 @@ namespace net
         return unsigned(unused_slot - connection_table.begin());
     }
 
-    void ConnectionEnvironment::on_connection_create(ConnectionKey key, std::unique_ptr<net::Connection>&& a_connection_ptr)
+    void ConnectionEnvironment::on_connection_create(ConnectionKey key, std::unique_ptr<net::Connection>&& connection_ptr)
     {
         ++num_of_connections;
 
         auto& entry = connection_table[key.index()];
         entry.created_at = key.created_at();
-        entry.connection = a_connection_ptr.get();
+        entry.connection = std::move(connection_ptr);
         entry.used.store(true, std::memory_order_release);
         entry.will_delete = false;
-
-        entry.connection_life = std::move(a_connection_ptr);
     }
 
     void ConnectionEnvironment::on_connection_delete(ConnectionKey key)
     {
         auto& entry = connection_table[key.index()];
         entry.created_at = INVALID_TICK;
-        entry.connection = nullptr;
         entry.used.store(false, std::memory_order_release);
     }
 
@@ -63,10 +60,10 @@ namespace net
             [](auto& entry) {
                 if (not entry.used) return false;
 
-                auto conn = entry.connection;
+                auto conn = entry.connection.get();
 
                 if (conn->is_safe_delete()) {
-                    entry.connection_life.reset();
+                    entry.connection.reset();
                     return true;
                 }
 

@@ -21,8 +21,7 @@ namespace net
         std::atomic<bool> used{ false };
         bool will_delete = true;
 
-        net::Connection* connection = nullptr;
-        std::unique_ptr<net::Connection> connection_life;
+        std::unique_ptr<net::Connection> connection;
 
         std::uint32_t created_at = INVALID_TICK;
     };
@@ -35,7 +34,7 @@ namespace net
         // used for testing purpose only.
         auto get_connection(int index)
         {
-            return connection_table[index].connection;
+            return connection_table[index].connection.get();
         }
 
         bool is_expired(ConnectionKey key) const
@@ -46,7 +45,7 @@ namespace net
 
         net::Connection* try_acquire_connection(ConnectionKey key) const
         {
-            return is_expired(key) ? nullptr : connection_table[key.index()].connection;
+            return is_expired(key) ? nullptr : connection_table[key.index()].connection.get();
         }
 
         net::ConnectionIO* try_acquire_connection_io(ConnectionKey key) const
