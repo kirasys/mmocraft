@@ -177,14 +177,11 @@ namespace io
 
         bool send(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* context);
 
-        bool schedule_task(io::Task* task, void* task_handler_inst = nullptr)
-        {
-            //return _iocp.schedule_task(task, task_handler_inst);
-            return true;
-        }
+        bool schedule_task(io::Task* task, void* task_handler_inst = nullptr);
+
         void spawn_event_thread();
 
-        void run_event_loop_forever(io::RioCompletionQueue&);
+        void run_event_loop_forever();
 
     private:
         const std::size_t _max_connections;

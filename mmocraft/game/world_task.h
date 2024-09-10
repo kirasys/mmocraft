@@ -16,47 +16,42 @@ namespace game
     public:
         using handler_type = void (game::World::* const)(const std::vector<game::Player*>&);
 
-        WorldPlayerTask(handler_type handler, game::World* world, std::size_t interval_ms = 0)
+        WorldPlayerTask(handler_type handler, game::World* world_inst, std::size_t interval_ms = 0)
             : io::Task{ interval_ms }
             , _handler{ handler }
-            , _world{ world }
+            , _world_inst{ world_inst }
         { }
 
         virtual bool ready() const override
         {
-            return io::Task::ready() && not _task_data_queue.empty();
+            return io::Task::ready() && not _players_queue.empty();
         }
 
         virtual void before_scheduling() override
         {
             set_state(State::Processing);
-            _task_data_queue.swap(_task_datas);
+            _players_queue.swap(_players_target);
         }
 
         void push(game::Player* task_data)
         {
-            _task_data_queue.push_back(task_data);
+            _players_queue.push_back(task_data);
         }
 
-        virtual void invoke_handler(ULONG_PTR task_handler_inst) override
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
         {
-            try {
-                std::invoke(_handler, _world, _task_datas);
-            }
-            catch (...) {
-                CONSOLE_LOG(error) << "Unexpected error occured at simple task handler";
-            }
+            std::invoke(_handler, _world_inst, _players_target);
 
-            _task_datas.clear();
+            _players_target.clear();
             set_state(State::Unused);
         }
 
     private:
         handler_type _handler;
-        game::World* _world = nullptr;
+        game::World* _world_inst = nullptr;
 
-        std::vector<game::Player*> _task_datas;
-        std::vector<game::Player*> _task_data_queue;
+        std::vector<game::Player*> _players_target;
+        std::vector<game::Player*> _players_queue;
     };
 
     class BlockSyncTask : public io::Task
@@ -92,14 +87,9 @@ namespace game
             return block_histories[inbound_block_history_index].add_record(pos, block_id);
         }
 
-        virtual void invoke_handler(ULONG_PTR task_handler_inst) override
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
         {
-            try {
-                std::invoke(_handler, _world, _level_wait_players, block_histories[outbound_block_history_index]);
-            }
-            catch (...) {
-                CONSOLE_LOG(error) << "Unexpected error occured at simple task handler";
-            }
+            std::invoke(_handler, _world, _level_wait_players, block_histories[outbound_block_history_index]);
 
             _level_wait_players.clear();
             set_state(State::Unused);

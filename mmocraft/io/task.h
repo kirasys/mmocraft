@@ -1,12 +1,13 @@
 #pragma once
 
+#include "io/io_event.h"
 #include "net/connection_key.h"
 #include "logging/logger.h"
 #include "util/time_util.h"
 
 namespace io
 {
-    class Task
+    class Task : public io::Event
     {
     public:
         enum State
@@ -50,8 +51,6 @@ namespace io
             set_state(State::Processing);
         }
 
-        virtual void invoke_handler(ULONG_PTR task_handler_inst) = 0;
-
     private:
         State _state = Unused;
         std::size_t interval_ms = 0;
@@ -70,16 +69,11 @@ namespace io
             , _handler_inst{ handler_inst }
         { }
 
-        virtual void invoke_handler(ULONG_PTR task_handler_inst) override
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
         {
-            try {
-                std::invoke(_handler,
-                    _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(task_handler_inst)
-                );
-            }
-            catch (...) {
-                CONSOLE_LOG(error) << "Unexpected error occured at simple task handler";
-            }
+            std::invoke(_handler,
+                _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(completion_key)
+            );
 
             set_state(State::Unused);
         }

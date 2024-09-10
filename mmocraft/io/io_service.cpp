@@ -32,10 +32,7 @@ namespace io
     {
         task->before_scheduling();
 
-        return ::PostQueuedCompletionStatus(_handle.get(),
-            DWORD(io::IO_TASK_SIGNAL),
-            ULONG_PTR(task_handler_inst),
-            LPOVERLAPPED(task)) != 0;
+        return ::PostQueuedCompletionStatus(_handle.get(), 0, ULONG_PTR(task_handler_inst), &task->overlapped) != 0;
     }
 
     int IoCompletionPort::dequeue_event_results(io::IoEventResult* event_results, std::size_t max_results)
@@ -85,7 +82,7 @@ namespace io
                     if (transferred_bytes_or_signal == IO_TASK_SIGNAL) {
                         auto task = reinterpret_cast<io::Task*>(event_results[i].lpOverlapped);
 
-                        task->invoke_handler(event_results[i].lpCompletionKey);
+                        //task->invoke_handler(event_results[i].lpCompletionKey);
                     }
                     else {
                         auto io_event = CONTAINING_RECORD(event_results[i].lpOverlapped, io::IoEvent, overlapped);
@@ -300,7 +297,18 @@ namespace io
         return true;
     }
 
-    void RegisteredIO::run_event_loop_forever(io::RioCompletionQueue& completion_queue)
+    bool RegisteredIO::schedule_task(io::Task* task, void* task_handler_inst)
+    {
+        task->before_scheduling();
+
+        return ::PostQueuedCompletionStatus(
+            completion_queue.iocp_handle(),
+            0, 
+            ULONG_PTR(task_handler_inst), 
+            &task->overlapped) != 0;
+    }
+
+    void RegisteredIO::run_event_loop_forever()
     {
         io::IoEventResult event_results[MAX_IO_EVENT_RESULTS];
 
@@ -349,7 +357,7 @@ namespace io
     void RegisteredIO::spawn_event_thread()
     {
         event_threads.emplace_back(std::thread([](RegisteredIO* io_service) {
-            io_service->run_event_loop_forever(io_service->completion_queue);
+            io_service->run_event_loop_forever();
             }, this)
         );
     }

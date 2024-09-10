@@ -19,7 +19,7 @@ namespace io
     constexpr DWORD IO_TASK_SIGNAL = RETRY_SIGNAL - 1;
 
     constexpr int RECV_BUFFER_SIZE = 4096;
-    constexpr int SEND_BUFFER_SIZE = 4096;
+    constexpr int SEND_BUFFER_SIZE = 8192;
     constexpr int CONCURRENT_SEND_BUFFER_SIZE = 4096;
     constexpr int SEND_SMALL_BUFFER_SIZE = 256;
 

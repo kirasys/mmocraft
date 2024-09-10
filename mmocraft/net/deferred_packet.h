@@ -85,20 +85,15 @@ namespace net
             , _handler_inst{ handler_inst }
         { }
 
-        virtual void invoke_handler(ULONG_PTR task_handler_inst) override
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
         {
             auto head_ptr = pop_pending_packet();
-            
-            try {
-                std::invoke(_handler,
-                    _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(task_handler_inst),
-                    this,
-                    head_ptr.get()
-                );
-            }
-            catch (...) {
-                CONSOLE_LOG(error) << "Unexpected error occured at deferred packet handler";
-            }
+
+            std::invoke(_handler,
+                _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(completion_key),
+                this,
+                head_ptr.get()
+            );
 
             set_state(io::Task::Unused);
         }
