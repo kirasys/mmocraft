@@ -265,7 +265,7 @@ namespace io
     {
         RIO_BUF rbuf{
             .BufferId = recv_buffer_pool.id(),
-            .Offset = ULONG(buf - recv_buffer_pool.buffer(connection_id)),
+            .Offset = ULONG(buf - recv_buffer_pool.buffer()),
             .Length = ULONG(buf_size)
         };
 
@@ -283,7 +283,7 @@ namespace io
     {
         RIO_BUF rbuf{
             .BufferId = send_buffer_pool.id(),
-            .Offset = ULONG(buf - send_buffer_pool.buffer(connection_id)),
+            .Offset = ULONG(buf - send_buffer_pool.buffer()),
             .Length = ULONG(buf_size)
         };
 
