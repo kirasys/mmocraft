@@ -29,25 +29,8 @@ namespace game
         , disconnect_player_task{ &World::disconnect_player, this, despawn_player_task_interval }
         , sync_block_task{ &World::sync_block, this, sync_block_data_task_interval }
         , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
-    {
-        player_lookup_table.reserve(connection_env.size_of_max_connections());
-    }
-    /*
-    net::Connection* World::try_acquire_player_connection(const char* key)
-    {
-        std::shared_lock lock(player_lookup_table_mutex);
-        return player_lookup_table.find(key) != player_lookup_table.end() ?
-            connection_env.try_acquire_connection(player_lookup_table.at(key)) : nullptr;
-    }
+    { }
 
-    void World::unicast_to_world_player(const char* username, net::MessageType message_type, const char* message)
-    {
-        if (auto conn = try_acquire_player_connection(username)) {
-            net::PacketExtMessage message_packet(message_type, message);
-            conn->io()->send_packet(message_packet);
-        }
-    }
-    */
     void World::broadcast_to_world_player(net::MessageType message_type, const char* message)
     {
         std::vector<game::Player*> world_players;

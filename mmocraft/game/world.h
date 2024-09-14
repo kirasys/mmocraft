@@ -37,30 +37,6 @@ namespace game
     {
     public:
         World(net::ConnectionEnvironment&, database::DatabaseCore&);
-        
-        /*
-        bool is_already_exist_player(const char* username)
-        {
-            std::shared_lock lock(player_lookup_table_mutex);
-            return player_lookup_table.find(username) != player_lookup_table.end();
-        }
-
-        void register_player(const char* username, net::ConnectionKey connection_key)
-        {
-            std::unique_lock lock(player_lookup_table_mutex);
-            player_lookup_table[username] = connection_key;
-        }
-
-        void unregister_player(const char* username)
-        {
-            std::unique_lock lock(player_lookup_table_mutex);
-            player_lookup_table.erase(username);
-        }
-
-        net::Connection* try_acquire_player_connection(const char* username);
-
-        void unicast_to_world_player(const char* username, net::MessageType, const char* message);
-        */
 
         void broadcast_to_world_player(net::MessageType, const char* message);
 
@@ -127,9 +103,6 @@ namespace game
         database::DatabaseCore& database_core;
 
         io::MulticastManager multicast_manager;
-
-        std::shared_mutex player_lookup_table_mutex;
-        std::unordered_map<std::string, net::ConnectionKey> player_lookup_table;
 
         game::WorldPlayerTask spawn_player_task;
         game::WorldPlayerTask disconnect_player_task;
