@@ -10,6 +10,7 @@
 #include "win/win_type.h"
 #include "win/win_base_object.h"
 #include "win/smart_handle.h"
+#include "win/registered_io.h"
 
 namespace io
 {
@@ -70,81 +71,6 @@ namespace io
         std::vector<std::thread> event_threads;
     };
 
-    class RioCompletionQueue : public util::NonCopyable
-    {
-    public:
-        RioCompletionQueue(std::size_t queue_size, WSAOVERLAPPED*, void* completion_key);
-
-        ~RioCompletionQueue()
-        {
-            reset();
-        }
-
-        win::Handle iocp_handle() const
-        {
-            return _iocp_handle.get();
-        }
-
-        RIO_CQ rio_handle() const
-        {
-            return _cq_handle;
-        }
-
-        bool is_valid() const
-        {
-            return _iocp_handle.is_valid() && _cq_handle != RIO_INVALID_CQ;
-        }
-
-        void reset();
-
-        static RIO_CQ create_complete_queue(std::size_t queue_size, win::Handle, WSAOVERLAPPED*, void* completion_key);
-
-    private:
-        win::UniqueHandle _iocp_handle;
-        RIO_CQ _cq_handle = RIO_INVALID_CQ;
-    };
-
-    class RioBufferPool : public util::NonCopyable
-    {
-    public:
-        RioBufferPool(std::size_t pool_size, std::size_t buffer_size);
-
-        ~RioBufferPool();
-
-        std::size_t offset(unsigned index = 0) const
-        {
-            assert(index < _pool_size);
-            return _buffer_size * index;
-        }
-
-        std::byte* buffer(unsigned index = 0) const
-        {
-            assert(index < _pool_size);
-            return reinterpret_cast<std::byte*>(_buffer) + offset(index);
-        }
-
-        std::size_t buffer_size() const
-        {
-            return _buffer_size;
-        }
-
-        RIO_BUFFERID id() const
-        {
-            return _buffer_id;
-        }
-
-        bool is_valid() const
-        {
-            return _buffer != nullptr && id() != RIO_INVALID_BUFFERID;
-        }
-
-    private:
-        std::size_t _pool_size = 0;
-        std::size_t _buffer_size = 0;
-        void* _buffer = nullptr;
-        RIO_BUFFERID _buffer_id = RIO_INVALID_BUFFERID;
-    };
-
     class RegisteredIO final : public util::NonCopyable
     {
     public:
@@ -156,8 +82,6 @@ namespace io
         ~RegisteredIO();
 
         void notify_completion();
-
-        static RIO_BUFFERID create_buffer(void* buffer, std::size_t buffer_size);
 
         io::IoRecvEvent* create_recv_io_event(unsigned connection_id);
 
@@ -177,6 +101,8 @@ namespace io
 
         bool send(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* context);
 
+        bool multicast_send(unsigned connection_id, RIO_BUFFERID buffer_id, std::size_t buf_size, void* context);
+
         bool schedule_task(io::Task* task, void* task_handler_inst = nullptr);
 
         void spawn_event_thread();
@@ -186,12 +112,12 @@ namespace io
     private:
         const std::size_t _max_connections;
 
-        io::RioCompletionQueue completion_queue;
+        win::RioCompletionQueue completion_queue;
 
         std::vector<RIO_RQ> request_queues;
 
-        RioBufferPool recv_buffer_pool;
-        RioBufferPool send_buffer_pool;
+        win::RioBufferPool recv_buffer_pool;
+        win::RioBufferPool send_buffer_pool;
 
         std::vector<std::thread> event_threads;
 

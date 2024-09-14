@@ -9,20 +9,16 @@
 #include "game/player.h"
 #include "game/block_history.h"
 #include "game/world_task.h"
+#include "io/multicast_manager.h"
 #include "proto/generated/world_metadata.pb.h"
 #include "net/connection_key.h"
-#include "net/multicast_manager.h"
+#include "net/connection_environment.h"
 #include "win/file_mapping.h"
 #include "util/common_util.h"
 
 namespace database
 {
     class DatabaseCore;
-}
-
-namespace net
-{
-    class ConnectionEnvironment;
 }
 
 namespace game
@@ -42,6 +38,7 @@ namespace game
     public:
         World(net::ConnectionEnvironment&, database::DatabaseCore&);
         
+        /*
         bool is_already_exist_player(const char* username)
         {
             std::shared_lock lock(player_lookup_table_mutex);
@@ -63,6 +60,7 @@ namespace game
         net::Connection* try_acquire_player_connection(const char* username);
 
         void unicast_to_world_player(const char* username, net::MessageType, const char* message);
+        */
 
         void broadcast_to_world_player(net::MessageType, const char* message);
 
@@ -78,6 +76,19 @@ namespace game
                 players);
 
             send_to_players(players, data, data_size, successed, failed);
+        }
+
+        template <game::PlayerState T>
+        void multicast_to_specific_players(io::MulticastDataEntry& entry)
+        {
+            std::vector<game::Player*> players;
+            players.reserve(connection_env.size_of_max_connections());
+
+            connection_env.select_players([](const game::Player* player)
+                { return player->state() >= T; },
+                players);
+
+            multicast_to_players(players, entry);
         }
 
         void process_level_wait_player(const std::vector<game::Player*>&);
@@ -102,6 +113,8 @@ namespace game
         void send_to_players(const std::vector<game::Player*>&, const std::byte*, std::size_t,
                 void(*successed)(game::Player*) = nullptr, void(*failed)(game::Player*) = nullptr);
 
+        void multicast_to_players(const std::vector<game::Player*>&, io::MulticastDataEntry&, void(*successed)(game::Player*) = nullptr);
+
         void commit_block_changes(const std::byte* block_history_data, std::size_t);
 
         void load_metadata();
@@ -113,7 +126,7 @@ namespace game
         net::ConnectionEnvironment& connection_env;
         database::DatabaseCore& database_core;
 
-        net::MulticastManager multicast_manager;
+        io::MulticastManager multicast_manager;
 
         std::shared_mutex player_lookup_table_mutex;
         std::unordered_map<std::string, net::ConnectionKey> player_lookup_table;

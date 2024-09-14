@@ -8,6 +8,7 @@
 #include <optional>
 #include <limits>
 
+#include "io/multicast_manager.h"
 #include "logging/error.h"
 #include "win/win_type.h"
 #include "win/smart_handle.h"
@@ -339,26 +340,26 @@ namespace io
         { }
     };
 
-    class IoSendEventSharedData : public IoEventData
+    class IoSendEventReadonlyData : public IoEventData
     {
     public:
-        IoSendEventSharedData(std::unique_ptr<std::byte[]>&& data, unsigned data_size, unsigned data_capacity)
-            : _data{ std::move(data) }
+        IoSendEventReadonlyData() = default;
+
+        IoSendEventReadonlyData(std::byte* data, std::size_t data_size)
+            : _data{ data }
             , _data_size{ data_size }
-            , _data_capacity{ data_capacity }
-            , lifetime_end_at{ max_data_lifetime + util::current_monotonic_tick() }
         { }
 
         // data points to used space.
 
         std::byte* begin()
         {
-            return _data.get();
+            return _data;
         }
 
         std::byte* end()
         {
-            return _data.get() + _data_size;
+            return _data + _data_size;
         }
 
         std::size_t size() const
@@ -375,47 +376,34 @@ namespace io
 
         std::byte* end_unused()
         {
-            return _data.get() + _data_capacity;
+            return end();
         }
 
         std::size_t unused_size() const
         {
-            return _data_capacity - _data_size;
+            return 0;
         }
 
         bool push(const std::byte* data, std::size_t n) override
         {
-            if (n > unused_size())
-                return false;
-
-            std::memcpy(begin_unused(), data, n);
-            _data_size += unsigned(n);
-
-            return true;
+            return false;
         }
 
         void pop(std::size_t) override
         {
             // TODO: handling partial send;
+            return;
         }
 
-        void update_lifetime()
+        void set_data(std::byte* data, std::size_t data_size)
         {
-            lifetime_end_at = max_data_lifetime + util::current_monotonic_tick();
-        }
-
-        bool is_safe_delete() const
-        {
-            return lifetime_end_at < util::current_monotonic_tick();
+            _data = data;
+            _data_size = data_size;
         }
 
     private:
-        std::unique_ptr<std::byte[]> _data;
-        unsigned _data_size = 0;
-        unsigned _data_capacity = 0;
-
-        static constexpr std::size_t max_data_lifetime = 5 * 1000; // 5 seconds.
-        std::size_t lifetime_end_at = 0;
+        std::byte* _data = nullptr;
+        std::size_t _data_size = 0;
     };
 
     enum class EventType
@@ -444,11 +432,19 @@ namespace io
             : _event_data{ a_data }
         { }
 
-        virtual ~IoEvent() = default;
-
-        void set_event_data(IoEventData* a_data)
+        ~IoEvent()
         {
-            _event_data.reset(a_data);
+            reset();
+        }
+
+        void reset(IoEventData* other = nullptr)
+        {
+            is_processing = false;
+
+            if (_is_non_owning_event_data)
+                _event_data.release();
+
+            _event_data.reset(other);
         }
 
         io::IoEventData* event_data()
@@ -461,6 +457,11 @@ namespace io
             _is_disposable = true;
         }
 
+        void set_non_owning_event_data()
+        {
+            _is_non_owning_event_data = true;
+        }
+
         bool is_disposable() const
         {
             return _is_disposable;
@@ -468,6 +469,7 @@ namespace io
 
     private:
         bool _is_disposable = false;
+        bool _is_non_owning_event_data = false;
 
         std::unique_ptr<IoEventData> _event_data;
     };
@@ -484,14 +486,14 @@ namespace io
 
         bool post_overlapped_io(win::Socket);
 
-        void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
     };
 
     struct IoRecvEvent : IoEvent
     {
         using IoEvent::IoEvent;
 
-        void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
 
         bool post_rio_event(RegisteredIO&, unsigned connection_id);
     };
@@ -504,7 +506,7 @@ namespace io
 
         bool post_rio_event(RegisteredIO&, unsigned connection_id);
 
-        void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
 
         static IoSendEvent* create_disposable_event(std::size_t data_size)
         {
@@ -518,11 +520,48 @@ namespace io
         }
     };
 
+    struct IoMulticastSendEvent : IoEvent
+    {
+        IoMulticastSendEvent()
+            : IoEvent{ &_event_data }
+        {
+            set_non_owning_event_data();
+        }
+
+        ~IoMulticastSendEvent()
+        {
+            reset_multicast_data();
+        }
+
+        bool post_rio_event(RegisteredIO&, unsigned connection_id);
+
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+
+        void set_multicast_data(io::MulticastDataEntry* data)
+        {
+            data->increase_ref();
+
+            _event_data.set_data(data->data(), data->data_size());
+            multicast_data = data;
+        }
+
+        void reset_multicast_data()
+        {
+            multicast_data->decrease_ref();
+            multicast_data = nullptr;
+        }
+
+    private:
+        io::IoSendEventReadonlyData _event_data;
+
+        io::MulticastDataEntry* multicast_data = nullptr;
+    };
+
     struct RioEvent : IoEvent
     {
         using IoEvent::IoEvent;
 
-        void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
     };
 
     class IoEventHandler
@@ -536,17 +575,19 @@ namespace io
 
         virtual void on_complete(IoSendEvent*, std::size_t) { assert(false); }
 
+        virtual void on_complete(IoMulticastSendEvent*, std::size_t) { assert(false); }
+
+        virtual std::size_t handle_io_event(IoSendEvent*)
+        {
+            assert(false); return 0;
+        }
+
         virtual std::size_t handle_io_event(IoAcceptEvent*)
         {
             assert(false); return 0;
         }
 
         virtual std::size_t handle_io_event(IoRecvEvent*)
-        {
-            assert(false); return 0;
-        }
-
-        virtual std::size_t handle_io_event(IoSendEvent*)
         {
             assert(false); return 0;
         }

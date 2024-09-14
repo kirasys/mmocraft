@@ -25,7 +25,6 @@ namespace game
     World::World(net::ConnectionEnvironment& a_connection_env, database::DatabaseCore& db_core)
         : connection_env{ a_connection_env }
         , database_core{ db_core }
-        , multicast_manager{ a_connection_env }
         , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
         , disconnect_player_task{ &World::disconnect_player, this, despawn_player_task_interval }
         , sync_block_task{ &World::sync_block, this, sync_block_data_task_interval }
@@ -33,7 +32,7 @@ namespace game
     {
         player_lookup_table.reserve(connection_env.size_of_max_connections());
     }
-
+    /*
     net::Connection* World::try_acquire_player_connection(const char* key)
     {
         std::shared_lock lock(player_lookup_table_mutex);
@@ -48,7 +47,7 @@ namespace game
             conn->io()->send_packet(message_packet);
         }
     }
-
+    */
     void World::broadcast_to_world_player(net::MessageType message_type, const char* message)
     {
         std::vector<game::Player*> world_players;
@@ -80,6 +79,19 @@ namespace game
         }
     }
 
+    void World::multicast_to_players(const std::vector<game::Player*>& players, io::MulticastDataEntry& entry, void(*successed)(game::Player*))
+    {
+        for (auto player : players) {
+            if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
+                connection_io->send_multicast_data(entry);
+                // multicast fails only fatal situation.
+                if (successed) successed(player);
+            }
+        }
+
+        entry.set_reference_count_mode(true);
+    }
+
     void World::process_level_wait_player(const std::vector<game::Player*>& level_wait_players)
     {
         if (last_level_data_submission_at + level_data_submission_interval > util::current_monotonic_tick())
@@ -95,10 +107,10 @@ namespace game
         std::unique_ptr<std::byte[]> level_packet_data;
         auto data_size = level_packet.serialize(level_packet_data);
 
-        send_to_players(level_wait_players, level_packet_data.get(), data_size,
-            [](game::Player* player) {
-                player->set_state(game::PlayerState::Level_Initialized);
-            });
+        auto& data_entry = multicast_manager.set_data(io::MulticastTag::Level_Data, std::move(level_packet_data), data_size);
+        multicast_to_players(level_wait_players, data_entry, [](game::Player* player) {
+            player->set_state(game::PlayerState::Level_Initialized);
+        });
         
         last_level_data_submission_at = util::current_monotonic_tick();
     }
@@ -148,8 +160,6 @@ namespace game
             if (not player_update_sql.update(*player))
                 CONSOLE_LOG(error) << "Fail to update player data.";
 
-            unregister_player(player->username());
-
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
                 conn->set_offline();
             }
@@ -185,8 +195,8 @@ namespace game
         if (std::size_t data_size = block_history.fetch_serialized_data(block_history_data)) {
             commit_block_changes(block_history_data.get(), data_size);
 
-            // todo: recover send fails
-            send_to_specific_players<PlayerState::Level_Initialized>(block_history_data.get(), data_size);
+            auto& data_entry = multicast_manager.set_data(io::MulticastTag::Sync_Block_Data, std::move(block_history_data), data_size);
+            multicast_to_specific_players< PlayerState::Level_Initialized>(data_entry);
         }
         
         // submit level data to handshaked players.
@@ -209,10 +219,10 @@ namespace game
         // create set player position packets.
         std::unique_ptr<std::byte[]> position_packet_data;
         if (auto data_size = net::PacketSetPlayerPosition::serialize(world_players, position_packet_data)) {
-            send_to_players(world_players, position_packet_data.get(), data_size,
-                [](game::Player* player) {
-                    player->commit_last_transferrd_position();
-                });
+            auto& data_entry = multicast_manager.set_data(io::MulticastTag::Sync_Player_Position, std::move(position_packet_data), data_size);
+            multicast_to_players(world_players, data_entry, [](game::Player* player) {
+                player->commit_last_transferrd_position();
+            });
         }
     }
 

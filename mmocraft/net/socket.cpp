@@ -190,7 +190,10 @@ bool net::Socket::send(win::Socket sock, std::byte* buf, std::size_t buf_size, W
         NULL
     );
 
-    return ret == 0 || ERROR_IO_PENDING == ::WSAGetLastError();
+    auto success = ret == 0 || ERROR_IO_PENDING == ::WSAGetLastError();
+    CONSOLE_LOG_IF(error, not success) << "WSASend failed with " << ::WSAGetLastError();
+
+    return success;
 }
 
 bool net::Socket::recv(win::Socket sock, std::byte* buf, std::size_t buf_size, WSAOVERLAPPED* overlapped)
@@ -210,7 +213,10 @@ bool net::Socket::recv(win::Socket sock, std::byte* buf, std::size_t buf_size, W
         NULL
     );
 
-    return ret == 0 || ERROR_IO_PENDING == ::WSAGetLastError();
+    auto success = ret == 0 || ERROR_IO_PENDING == ::WSAGetLastError();
+    CONSOLE_LOG_IF(error, not success) << "WSARecv failed with " << ::WSAGetLastError();
+
+    return success;
 }
 
 bool net::Socket::send_to(const char* ip, int port, const char* data, std::size_t data_size)

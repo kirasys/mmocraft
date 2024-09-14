@@ -29,7 +29,7 @@
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
-    <ClCompile Include="net\multicast_manager.cpp">
+    <ClCompile Include="io\multicast_manager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -84,6 +84,7 @@
     <ClCompile Include="util\time_util.cpp" />
     <ClCompile Include="win\file_mapping.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
+    <ClCompile Include="win\registered_io.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\argparse.h" />
@@ -104,7 +105,7 @@
     <ClInclude Include="net\connection_environment.h" />
     <ClInclude Include="net\connection_key.h" />
     <ClInclude Include="net\message_id.h" />
-    <ClInclude Include="net\multicast_manager.h">
+    <ClInclude Include="io\multicast_manager.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -146,6 +147,7 @@
     <ClInclude Include="util\time_util.h" />
     <ClInclude Include="win\file_mapping.h" />
     <ClInclude Include="win\object_pool.h" />
+    <ClInclude Include="win\registered_io.h" />
     <ClInclude Include="win\smart_handle.h" />
     <ClInclude Include="win\win_base_object.h" />
     <ClInclude Include="win\win_type.h" />

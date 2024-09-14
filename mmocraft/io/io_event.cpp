@@ -61,11 +61,6 @@ namespace io
         return true;
     }
 
-    bool IoSendEvent::post_overlapped_io(win::Socket sock)
-    {
-        return net::Socket::send(sock, event_data()->begin(), event_data()->size(), &overlapped);
-    }
-
     void IoSendEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
         auto event_handler = static_cast<IoEventHandler*>(completion_key);
@@ -81,6 +76,11 @@ namespace io
         event_handler->on_complete(this, transferred_bytes_or_signal);
     }
 
+    bool IoSendEvent::post_overlapped_io(win::Socket sock)
+    {
+        return net::Socket::send(sock, event_data()->begin(), event_data()->size(), &overlapped);
+    }
+
     bool IoSendEvent::post_rio_event(io::RegisteredIO& rio, unsigned connection_id)
     {
         if (is_processing || event_data()->size() == 0)
@@ -92,6 +92,33 @@ namespace io
             return is_processing = false;
 
         return true;
+    }
+
+    bool IoMulticastSendEvent::post_rio_event(io::RegisteredIO& rio, unsigned connection_id)
+    {
+        if (is_processing || event_data()->size() == 0)
+            return false;
+
+        is_processing = true;
+
+        assert(multicast_data != nullptr);
+        if (not rio.multicast_send(connection_id, multicast_data->buffer_id(), event_data()->size(), this))
+            return is_processing = false;
+
+        return true;
+    }
+
+    void IoMulticastSendEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
+    {
+        auto event_handler = static_cast<IoEventHandler*>(completion_key);
+
+        // pre-processing
+        if (transferred_bytes_or_signal == EOF_SIGNAL) {
+            event_handler->on_error();
+            return;
+        }
+
+        event_handler->on_complete(this, transferred_bytes_or_signal);
     }
 
     void RioEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)

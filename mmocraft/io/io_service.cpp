@@ -109,50 +109,6 @@ namespace io
         ));
     }
 
-    RioCompletionQueue::RioCompletionQueue(std::size_t queue_size, WSAOVERLAPPED* overlapped, void* completion_key)
-        : _iocp_handle{ ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, ULONG_PTR(0), 0) }
-        , _cq_handle{ create_complete_queue(queue_size, iocp_handle(), overlapped, completion_key) }
-    { }
-
-    void RioCompletionQueue::reset()
-    {
-        if (is_valid()) {
-            net::rio_api().RIOCloseCompletionQueue(_cq_handle);
-            _cq_handle = RIO_INVALID_CQ;
-        }
-
-        _iocp_handle.reset();
-    }
-
-    RIO_CQ RioCompletionQueue::create_complete_queue
-        (std::size_t queue_size, win::Handle iocp_handle, WSAOVERLAPPED* overlapped, void* completion_key)
-    {
-        RIO_NOTIFICATION_COMPLETION cq_type;
-        ::ZeroMemory(&cq_type, sizeof(cq_type));
-        cq_type.Type = RIO_IOCP_COMPLETION;
-        cq_type.Iocp.IocpHandle = iocp_handle;
-        cq_type.Iocp.Overlapped = overlapped;
-        cq_type.Iocp.CompletionKey = completion_key;
-
-        return net::rio_api().RIOCreateCompletionQueue(DWORD(queue_size), &cq_type);
-    }
-
-    RioBufferPool::RioBufferPool(std::size_t pool_size, std::size_t buffer_size)
-        : _pool_size{ pool_size }
-        , _buffer_size{ buffer_size }
-        , _buffer{ ::VirtualAlloc(0, buffer_size * pool_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE) }
-        , _buffer_id{ RegisteredIO::create_buffer(_buffer, buffer_size * pool_size) }
-    { }
-
-    RioBufferPool::~RioBufferPool()
-    {
-        if (id() != RIO_INVALID_BUFFERID)
-            net::rio_api().RIODeregisterBuffer(id());
-
-        if (_buffer != nullptr)
-            ::VirtualFree(_buffer, 0, MEM_RELEASE);
-    }
-
     RegisteredIO::RegisteredIO(std::size_t max_connections)
         : _max_connections{ max_connections }
         , completion_queue{ 2 * max_connections, &_event.overlapped, this }
@@ -182,11 +138,6 @@ namespace io
         auto notified_result = net::rio_api().RIONotify(completion_queue.rio_handle());
         if (notified_result != ERROR_SUCCESS)
             CONSOLE_LOG(error) << "RIONotify failed with:" << ::GetLastError();
-    }
-
-    RIO_BUFFERID RegisteredIO::create_buffer(void* buffer, std::size_t buffer_size)
-    {
-        return net::rio_api().RIORegisterBuffer(reinterpret_cast<char*>(buffer), buffer_size);
     }
 
     io::IoRecvEvent* RegisteredIO::create_recv_io_event(unsigned connection_id)
@@ -222,6 +173,8 @@ namespace io
 
         CONSOLE_LOG_IF(error, request_queues[connection_id] == RIO_INVALID_RQ)
             << "Fail to create request queue with " << ::WSAGetLastError();
+
+        register_event_source(event_source, event_handler);
     }
 
     void RegisteredIO::register_event_source(win::Handle event_source, IoEventHandler* event_handler)
@@ -284,6 +237,24 @@ namespace io
         RIO_BUF rbuf{
             .BufferId = send_buffer_pool.id(),
             .Offset = ULONG(buf - send_buffer_pool.buffer()),
+            .Length = ULONG(buf_size)
+        };
+
+        DWORD flags = 0;
+
+        if (net::rio_api().RIOSend(request_queues[connection_id], &rbuf, 1, flags, context) != TRUE) {
+            CONSOLE_LOG(error) << "RIOSend failed with " << ::WSAGetLastError();
+            return false;
+        }
+
+        return true;
+    }
+
+    bool RegisteredIO::multicast_send(unsigned connection_id, RIO_BUFFERID buffer_id, std::size_t buf_size, void* context)
+    {
+        RIO_BUF rbuf{
+            .BufferId = buffer_id,
+            .Offset = 0,
             .Length = ULONG(buf_size)
         };
 

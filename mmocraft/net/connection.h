@@ -11,6 +11,7 @@
 #include "game/player.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
+#include "io/multicast_manager.h"
 #include "net/socket.h"
 #include "net/packet_extension.h"
 #include "net/connection_key.h"
@@ -52,9 +53,13 @@ namespace net
 
         bool send_raw_data(const std::byte*, std::size_t) const;
 
+        void send_multicast_data(io::MulticastDataEntry&);
+
         bool send_disconnect_message_immediately(std::string_view);
 
         bool send_ping() const;
+
+        void on_complete_event(io::IoMulticastSendEvent* event);
 
         template <typename PacketType>
         bool send_packet(const PacketType& packet) const
@@ -63,6 +68,8 @@ namespace net
         }
 
         static void flush_send(net::ConnectionEnvironment&);
+
+        void flush_multicast_send();
 
         static void flush_receive(net::ConnectionEnvironment&);
 
@@ -75,9 +82,10 @@ namespace net
         std::unique_ptr<io::IoRecvEvent> io_recv_event;
         std::unique_ptr<io::IoSendEvent> io_send_event;
 
-        // RIO request queue is not a thread-safe.
-        // we need to prevent recving and sending together (accessing same queue from multiple threads)
-        std::mutex request_queue_lock;
+        static constexpr std::size_t max_multicast_event_count = 32;
+        std::mutex multicast_event_lock;
+        std::vector<io::IoMulticastSendEvent*> ready_multicast_events;
+        std::vector<io::IoMulticastSendEvent*> free_multicast_events;
     };
 
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
@@ -168,6 +176,8 @@ namespace net
         virtual std::size_t handle_io_event(io::IoRecvEvent*) override;
 
         virtual void on_complete(io::IoSendEvent*, std::size_t) override;
+
+        virtual void on_complete(io::IoMulticastSendEvent*, std::size_t) override;
 
     private:
         error::ResultCode last_error_code;
