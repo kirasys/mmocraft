@@ -161,7 +161,7 @@ namespace game
                 CONSOLE_LOG(error) << "Fail to update player data.";
 
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
-                conn->set_offline();
+                conn->disconnect();
             }
         }
     }
