@@ -452,23 +452,12 @@ namespace io
             return _event_data.get();
         }
 
-        void set_disposable()
-        {
-            _is_disposable = true;
-        }
-
         void set_non_owning_event_data()
         {
             _is_non_owning_event_data = true;
         }
 
-        bool is_disposable() const
-        {
-            return _is_disposable;
-        }
-
     private:
-        bool _is_disposable = false;
         bool _is_non_owning_event_data = false;
 
         std::unique_ptr<IoEventData> _event_data;
@@ -507,17 +496,6 @@ namespace io
         bool post_rio_event(RegisteredIO&, unsigned connection_id);
 
         virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
-
-        static IoSendEvent* create_disposable_event(std::size_t data_size)
-        {
-            auto io_event = new io::IoSendEvent(
-                new io::IoSendEventDynData(new std::byte[data_size], data_size)
-            );
-
-            io_event->set_disposable();
-
-            return io_event;
-        }
     };
 
     struct IoMulticastSendEvent : IoEvent

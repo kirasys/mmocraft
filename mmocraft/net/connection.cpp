@@ -184,9 +184,6 @@ namespace net
     {
         // Note: Can't start I/O event again due to the interleaving problem.
         event->is_processing = false;
-
-        if (event->is_disposable())
-            delete event; // Todo: handle partial sending
     }
 
     void Connection::on_complete(io::IoMulticastSendEvent* event, std::size_t transferred_bytes)
