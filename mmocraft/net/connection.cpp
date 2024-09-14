@@ -65,8 +65,8 @@ namespace net
         if (not is_online() || (_player && _player->state() == game::PlayerState::Disconnect_Wait))
            return;
 
-        // player manager(aka. world) has some extra works for disconnecting players.
-        // in this case, return without setting offline the connection.
+        // Spawned players need some teardown operations before going offline.
+        // Delegate to the world by updating player state to Disconnect_Wait.
         if (_player && _player->state() >= game::PlayerState::Spawned) {
             _player->set_state(game::PlayerState::Disconnect_Wait);
             return;
