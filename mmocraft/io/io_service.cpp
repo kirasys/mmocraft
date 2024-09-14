@@ -302,18 +302,6 @@ namespace io
 
                 try {
                     event->on_event_complete(completion_key, transferred_bytes_or_signal);
-                    /*
-                    if (transferred_bytes_or_signal == IO_TASK_SIGNAL) {
-                        auto task = reinterpret_cast<io::Task*>(io_event_results[i].lpOverlapped);
-                        task->invoke_handler(io_event_results[i].lpCompletionKey);
-                    }
-                    else {
-                        auto io_event = CONTAINING_RECORD(io_event_results[i].lpOverlapped, io::IoEvent, overlapped);
-                        auto event_handler = reinterpret_cast<IoEventHandler*>(io_event_results[i].lpCompletionKey);
-
-                        io_event->invoke_handler(*event_handler, transferred_bytes_or_signal, ERROR_SUCCESS);
-                    }
-                    */
                 }
                 catch (error::ErrorCode error_code) {
                     LOG(error) << "Exception was caught with " << error_code << ", buf supressed..";
