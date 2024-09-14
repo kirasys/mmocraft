@@ -18,7 +18,7 @@ namespace net
         : packet_handle_server{ a_packet_handle_server }
         , _connection_key{ a_connection_key }
         , connection_env{ a_connection_env }
-        , online{ true }
+        , _is_online{ true }
         , connection_io { new ConnectionIO(this, io_service, std::move(sock)) }
     {
         if (not is_valid())
@@ -34,7 +34,7 @@ namespace net
 
     void Connection::set_offline(std::size_t current_tick)
     {
-        online = false;
+        _is_online = false;
         last_offline_tick = current_tick;
         connection_env.on_connection_offline(_connection_key);
     }
@@ -46,13 +46,13 @@ namespace net
 
     bool Connection::is_safe_delete(std::size_t current_tick) const
     {
-        return not online
+        return not _is_online
             && current_tick >= last_offline_tick + REQUIRED_MILLISECONDS_FOR_SECURE_DELETION;
     }
 
     bool Connection::try_interact_with_client()
     {
-        if (online) {
+        if (_is_online) {
             update_last_interaction_time();
             return true;
         }

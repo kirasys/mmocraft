@@ -132,7 +132,7 @@ namespace net
 
         inline bool is_online() const
         {
-            return online;
+            return _is_online;
         }
 
         inline bool is_kicked() const
@@ -193,7 +193,7 @@ namespace net
         
         bool _is_kicked = false;
 
-        bool online = false;
+        bool _is_online = false;
 
         std::size_t last_offline_tick = 0;
         std::size_t last_interaction_tick = 0;
