@@ -55,8 +55,6 @@ namespace net
 
         void send_multicast_data(io::MulticastDataEntry&);
 
-        bool send_disconnect_message_immediately(std::string_view);
-
         bool send_ping() const;
 
         void on_complete_event(io::IoMulticastSendEvent* event);
@@ -105,11 +103,6 @@ namespace net
             return connection_io.get() != nullptr;
         }
 
-        inline bool is_online() const
-        {
-            return online;
-        }
-
         error::ResultCode get_last_error() const
         {
             return last_error_code;
@@ -137,6 +130,16 @@ namespace net
 
         void set_offline(std::size_t current_tick = util::current_monotonic_tick());
 
+        inline bool is_online() const
+        {
+            return online;
+        }
+
+        inline bool is_kicked() const
+        {
+            return _is_kicked;
+        }
+
         bool is_expired(std::size_t current_tick = util::current_monotonic_tick()) const;
 
         bool is_safe_delete(std::size_t current_tick = util::current_monotonic_tick()) const;
@@ -150,9 +153,9 @@ namespace net
 
         void disconnect();
 
-        void disconnect_with_message(std::string_view);
+        void kick(std::string_view);
 
-        void disconnect_with_message(error::ResultCode);
+        void kick(error::ResultCode);
 
         std::size_t process_packets(std::byte*, std::byte*);
 
@@ -187,8 +190,11 @@ namespace net
         net::ConnectionKey _connection_key;
         net::ConnectionEnvironment& connection_env;
         std::unique_ptr<ConnectionIO> connection_io;
+        
+        bool _is_kicked = false;
 
         bool online = false;
+
         std::size_t last_offline_tick = 0;
         std::size_t last_interaction_tick = 0;
 

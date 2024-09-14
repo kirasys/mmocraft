@@ -253,13 +253,13 @@ namespace net
 
         if (auto conn = connection_env.try_acquire_connection(msg.connection_key())) {
             if (msg.error_code() != error::PACKET_HANDLE_SUCCESS) {
-                conn->disconnect_with_message(error::PACKET_RESULT_FAIL_LOGIN);
+                conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
                 return true;
             }
 
             // Disconnect already logged in player.
             if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
-                prev_conn->disconnect_with_message(error::PACKET_RESULT_ALREADY_LOGIN);
+                prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
 
             auto& player = *conn->associated_player();
             player.set_identity(msg.player_identity());
@@ -269,7 +269,7 @@ namespace net
             if (player.player_type() != game::PlayerType::GUEST) {
                 database::PlayerLoadSQL player_load;
                 if (not player_load.is_valid() || not player_load.load(player)) {
-                    conn->disconnect_with_message(error::PACKET_RESULT_FAIL_LOGIN);
+                    conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
                     return true;
                 }
             }

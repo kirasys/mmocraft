@@ -61,26 +61,32 @@ namespace net
 
     void Connection::disconnect()
     {
+        // already disconencted.
+        if (not is_online() || (_player && _player->state() == game::PlayerState::Disconnect_Wait))
+           return;
+
         // player manager(aka. world) has some extra works for disconnecting players.
         // in this case, return without setting offline the connection.
         if (_player && _player->state() >= game::PlayerState::Spawned) {
             _player->set_state(game::PlayerState::Disconnect_Wait);
             return;
         }
-
+        
         packet_handle_server.on_disconnect(*this);
         set_offline();
     }
 
-    void Connection::disconnect_with_message(std::string_view message)
+    void Connection::kick(std::string_view message)
     {
-        connection_io->send_disconnect_message_immediately(message);
-        disconnect();
+        net::PacketDisconnectPlayer disconnect_packet{ message };
+        connection_io->send_packet(disconnect_packet);
+
+        _is_kicked = true;
     }
 
-    void Connection::disconnect_with_message(error::ResultCode result)
+    void Connection::kick(error::ResultCode result)
     {
-        disconnect_with_message(result.to_string());
+        kick(result.to_string());
     }
 
     std::size_t Connection::process_packets(std::byte* data_begin, std::byte* data_end)
@@ -157,7 +163,7 @@ namespace net
         event->is_processing = false;
 
         if (not last_error_code.is_packet_handle_success()) {
-            disconnect_with_message(last_error_code.to_string());
+            kick(last_error_code.to_string());
             return;
         }
 
@@ -258,19 +264,6 @@ namespace net
         }
     }
 
-    bool ConnectionIO::send_disconnect_message_immediately(std::string_view reason)
-    {
-        net::PacketDisconnectPlayer disconnect_packet{ reason };
-
-        auto disposable_event = io::IoSendEvent::create_disposable_event(disconnect_packet.packet_size);
-        
-        bool success = false;
-        if (success = disconnect_packet.serialize(*disposable_event->event_data()))
-            success = disposable_event->post_overlapped_io(client_socket.get_handle());
-
-        return success;
-    }
-
     bool ConnectionIO::send_ping() const
     {
         auto packet = std::byte(net::PacketID::Ping);
@@ -286,6 +279,10 @@ namespace net
                 connection_io->post_send_event();
 
             connection_io->flush_multicast_send();
+
+            // Disconnect if a kick message has been sent.
+            if (conn.is_kicked())
+                conn.disconnect();
         };
 
         connection_env.for_each_connection(flush_message);
