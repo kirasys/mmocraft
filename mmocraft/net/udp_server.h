@@ -23,13 +23,13 @@ namespace net
         using handler_type = bool (ServerType::*)(const net::MessageRequest&, net::MessageResponse&);
 
         UdpServer(ServerType* server_inst, std::array<handler_type, 0x100>* msg_handler_table)
-            : _sock{ net::SocketProtocol::UDPv4 }
+            : listen_sock{ net::SocketProtocol::UDPv4 }
             , app_server{ server_inst }
             , message_handler_table{ msg_handler_table }
-            , _communicator{ _sock }
+            , _communicator{ listen_sock }
         {
-            if (not _sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) ||
-                not _sock.set_socket_option(SO_SNDBUF, SOCKET_SND_BUFFER_SIZE))
+            if (not listen_sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) ||
+                not listen_sock.set_socket_option(SO_SNDBUF, SOCKET_SND_BUFFER_SIZE))
                 throw error::SOCKET_SETOPT;
         }
 
@@ -45,7 +45,7 @@ namespace net
 
         void reset()
         {
-            _sock.reset(net::SocketProtocol::UDPv4);
+            listen_sock.reset(net::SocketProtocol::UDPv4);
             is_terminated = true;
 
             for (auto& event_thread : event_threads)
@@ -56,7 +56,7 @@ namespace net
 
         void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override
         {
-            if (not _sock.bind(ip, port)) {
+            if (not listen_sock.bind(ip, port)) {
                 CONSOLE_LOG(fatal) << "Couldn't bind server " << ip << ':' << port;
                 return;
             }
@@ -84,13 +84,14 @@ namespace net
             int sender_addr_size = sizeof(sender_addr);
 
             while (not is_terminated) {
-                if (not net::ServerCommunicator::read_message(_sock, request, sender_addr, sender_addr_size))
+                if (not net::ServerCommunicator::read_message(listen_sock, request, sender_addr, sender_addr_size))
                     continue;
 
                 response.set_message_id(request.message_id());
 
+                // handle message and send reply.
                 if (handle_message(request, response) && response.message_size()) {
-                    auto transferred_bytes = ::sendto(_sock.get_handle(),
+                    auto transferred_bytes = ::sendto(listen_sock.get_handle(),
                         response.begin(), int(response.size()),
                         0,
                         (SOCKADDR*)&sender_addr, sender_addr_size);
@@ -115,7 +116,7 @@ namespace net
         }
 
     private:
-        net::Socket _sock;
+        net::Socket listen_sock;
 
         bool is_terminated = false;
         std::vector<std::thread> event_threads;
