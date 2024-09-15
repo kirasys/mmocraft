@@ -36,10 +36,6 @@ namespace io
             num_of_deleted++;
         }
 
-        if (num_of_deleted) {
-            std::cout << "gc delete " << num_of_deleted << '\n';
-        }
-
         gc_timeouts[tag] = util::current_monotonic_tick() + gc_period;
     }
 }
