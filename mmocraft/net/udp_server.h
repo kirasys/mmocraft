@@ -99,17 +99,20 @@ namespace net
 
         bool handle_message(const MessageRequest& request, MessageResponse& response)
         {
-            // invoke common handlers first.
-            auto common_handler_result = _communicator.handle_common_message(request, response);
-
             // invoke user-defined handlers if exists.
-            if (common_handler_result.value_or(true)) {
-                if (auto handler = (*message_handler_table)[request.message_id()])
-                    return (app_server->*handler)(request, response);
+            bool success = false;
+
+            if (auto handler = (*message_handler_table)[request.message_id()]) {
+                if (success = (app_server->*handler)(request, response); not success)
+                    return false;
             }
 
-            CONSOLE_LOG_IF(error, not common_handler_result.has_value()) << "Unimplemented message id : " << request.message_id();
-            return common_handler_result.value_or(false);
+            // invoke common message handlers.
+            auto common_handler_success = _communicator.handle_common_message(request, response);
+            CONSOLE_LOG_IF(error, not success && not common_handler_success.has_value()) 
+                << "Unimplemented message id : " << request.message_id();
+
+            return success || common_handler_success.value_or(false);
         }
 
     private:
