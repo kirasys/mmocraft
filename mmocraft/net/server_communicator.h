@@ -2,6 +2,7 @@
 
 #include <initializer_list>
 #include <shared_mutex>
+#include <optional>
 
 #include "net/connection_key.h"
 #include "net/socket.h"
@@ -27,7 +28,7 @@ namespace net
             : _source{ src }
         { }
 
-        bool handle_common_message(const ::net::MessageRequest&, ::net::MessageResponse&);
+        std::optional<bool> handle_common_message(const ::net::MessageRequest&, ::net::MessageResponse&);
 
         net::ServerInfo get_server(protocol::ServerType);
 

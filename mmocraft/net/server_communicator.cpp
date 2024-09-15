@@ -18,12 +18,12 @@ namespace
 
 namespace net
 {
-    bool ServerCommunicator::handle_common_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    std::optional<bool> ServerCommunicator::handle_common_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
     {
         if (auto handler = common_message_handler_table[request.message_id()])
             return (this->*handler)(request, response);
-
-        return true;
+        else
+            return std::nullopt;
     }
 
     net::ServerInfo ServerCommunicator::get_server(protocol::ServerType server_type)
