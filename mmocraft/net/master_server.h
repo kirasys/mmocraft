@@ -11,6 +11,8 @@
 #include "net/udp_server.h"
 #include "net/packet_extension.h"
 
+#include "util/interval_task.h"
+
 namespace net
 {
     constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
@@ -28,6 +30,8 @@ namespace net
         MasterServer(unsigned max_clients);
 
         void tick();
+
+        void announce_server();
 
         bool initialize(const char* router_ip, int router_port);
 
@@ -83,5 +87,7 @@ namespace net
         io::Task *deferred_packet_tasks[1] = {
             &deferred_chat_message_packet_task
         };
+
+        util::IntervalTaskScheduler<MasterServer> interval_tasks;
     };
 }

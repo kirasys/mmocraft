@@ -42,8 +42,13 @@ namespace net
         , world{ connection_env, database_core }
         
         , deferred_chat_message_packet_task{ &MasterServer::handle_deferred_chat_message_packet, this, chat_message_task_interval }
-    {
 
+        , interval_tasks{ this }
+    {
+        interval_tasks.schedule(util::TaskTag::ANNOUNCE_SERVER, 
+            &MasterServer::announce_server, 
+            util::MilliSecond(config::announce_server_period_ms)
+        );
     }
 
     error::ResultCode MasterServer::handle_packet(net::Connection& conn, const std::byte* packet_data)
@@ -172,6 +177,18 @@ namespace net
 
         if (tcp_server.is_stopped())
             tcp_server.start_accept();
+    }
+
+    void MasterServer::announce_server()
+    {
+        auto& conf = config::get_config();
+
+        if (not udp_server.communicator().announce_server(server_type, {
+            .ip = conf.udp_server().ip(),
+            .port = conf.udp_server().port()
+            })) {
+            CONSOLE_LOG(error) << "Fail to announce world server";
+        }
     }
 
     bool MasterServer::initialize(const char* router_ip, int router_port)

@@ -15,8 +15,16 @@ namespace util
     enum TaskTag
     {
         INVALID,
+
+        // Tcp server task
         CLEAN_CONNECTION,
         CLEAN_PLAYER,
+
+        // Interval server task
+        ANNOUNCE_SERVER,
+
+        // Chat server task
+        HANDLE_COMMON_CHAT_PACKET,
 
         // Size of enum.
         SIZE
