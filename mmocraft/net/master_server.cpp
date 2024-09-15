@@ -187,7 +187,7 @@ namespace net
             .ip = conf.udp_server().ip(),
             .port = conf.udp_server().port()
             })) {
-            CONSOLE_LOG(error) << "Fail to announce world server";
+            CONSOLE_LOG(error) << "Fail to announce game server";
         }
     }
 
@@ -227,7 +227,10 @@ namespace net
         while (1) {
             std::size_t start_tick = util::current_monotonic_tick();
 
+            interval_tasks.process_tasks();
+
             this->tick();
+
             world.tick(io_service);
 
             std::size_t end_tick = util::current_monotonic_tick();
