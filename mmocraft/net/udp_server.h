@@ -84,23 +84,14 @@ namespace net
             int sender_addr_size = sizeof(sender_addr);
 
             while (not is_terminated) {
-                if (not net::ServerCommunicator::read_message(listen_sock, request, sender_addr, sender_addr_size))
+                if (not request.read_message(listen_sock.get_handle()))
                     continue;
 
                 response.set_message_id(request.message_id());
 
                 // handle message and send reply.
                 if (handle_message(request, response) && response.message_size()) {
-                    auto transferred_bytes = ::sendto(listen_sock.get_handle(),
-                        response.begin(), int(response.size()),
-                        0,
-                        (SOCKADDR*)&sender_addr, sender_addr_size);
-
-                    LOG_IF(error, transferred_bytes == SOCKET_ERROR)
-                        << "sendto() failed with " << ::WSAGetLastError();
-                    LOG_IF(error, transferred_bytes != SOCKET_ERROR && transferred_bytes < response.size())
-                        << "sendto() successed partially";
-
+                    request.send_reply(listen_sock.get_handle(), response);
                     response.reset();
                 }
             }

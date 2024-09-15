@@ -128,33 +128,6 @@ namespace net
         return send_message(server_type, packet_type, packet_handle_req);
     }
 
-    bool ServerCommunicator::read_message(net::Socket& sock, net::MessageRequest& message, struct sockaddr_in& sender_addr, int& sender_addr_size)
-    {
-        auto transferred_bytes = ::recvfrom(
-            sock.get_handle(),
-            message.begin(), int(message.capacity()),
-            0,
-            (SOCKADDR*)&sender_addr, &sender_addr_size
-        );
-
-        if (transferred_bytes == SOCKET_ERROR || transferred_bytes == 0) {
-            auto errorcode = ::WSAGetLastError();
-            LOG_IF(error, errorcode != 10004 && errorcode != 10038)
-                << "recvfrom() failed with :" << errorcode;
-            return false;
-        }
-
-        message.set_size(transferred_bytes);
-        return true;
-    }
-        
-    bool ServerCommunicator::read_message(net::Socket& sock, net::MessageRequest& message)
-    {
-        struct sockaddr_in sender_addr;
-        int sender_addr_size = sizeof(sender_addr);
-        return read_message(sock, message, sender_addr, sender_addr_size);
-    }
-
     bool ServerCommunicator::send_message_reliably(const std::string& ip, int port, const net::MessageRequest& request, net::MessageResponse& response, int retry_count)
     {
         net::Socket sock{ net::SocketProtocol::UDPv4 };
@@ -164,7 +137,7 @@ namespace net
             auto sended_tick = util::current_monotonic_tick();
             sock.send_to(ip.c_str(), port, request.cbegin(), request.size());
 
-            if (net::ServerCommunicator::read_message(sock, response))
+            if (response.read_message(sock.get_handle()))
                 return true;
 
             if (i > 0 && util::current_monotonic_tick() - sended_tick < UDP_MESSAGE_RETRANSMISSION_PERIOD)

@@ -43,6 +43,7 @@
     <ClCompile Include="proto\generated\protocol.pb.cc" />
     <ClCompile Include="net\server_communicator.cpp" />
     <ClCompile Include="win\registered_io.cpp" />
+    <ClCompile Include="net\udp_message.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />

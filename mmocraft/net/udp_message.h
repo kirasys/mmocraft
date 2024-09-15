@@ -3,6 +3,7 @@
 #include "net/packet_id.h"
 #include "net/message_id.h"
 #include "net/connection_key.h"
+#include "win/win_type.h"
 #include "proto/generated/protocol.pb.h"
 
 namespace net
@@ -107,9 +108,16 @@ namespace net
             set_message_size(msg.ByteSizeLong());
         }
 
+        bool read_message(win::Socket sock);
+
+        void send_reply(win::Socket sender_sock, const MessageRequest& response);
+
     private:
         std::size_t _size;
         char _buf[REQUEST_MESSAGE_SIZE];
+
+        struct sockaddr_in requester_addr;
+        int requester_addr_size = sizeof(requester_addr);
     };
 
     using MessageResponse = MessageRequest;

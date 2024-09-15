@@ -37,6 +37,7 @@
     </ClCompile>
     <ClCompile Include="net\packet_extension.cpp" />
     <ClCompile Include="net\server_communicator.cpp" />
+    <ClCompile Include="net\udp_message.cpp" />
     <ClCompile Include="net\udp_server.cpp" />
     <ClCompile Include="proto\generated\config.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

@@ -88,10 +88,6 @@ namespace net
             return port ? _source.send_to(ip.c_str(), port, request.cbegin(), request.size()) : false;
         }
 
-        static bool read_message(net::Socket&, net::MessageRequest&, struct sockaddr_in& sender_addr, int& sender_addr_size);
-
-        static bool read_message(net::Socket&, net::MessageRequest&);
-
         static bool send_message_reliably(const std::string& ip, int port, const net::MessageRequest&, net::MessageResponse&, int retry_count = std::numeric_limits<int>::max());
 
     private:
