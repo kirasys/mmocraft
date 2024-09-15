@@ -73,7 +73,8 @@ namespace net
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
             return false;
 
-
+        ::database::PlayerSession player_session(msg.username());
+        return player_session.revoke();
     }
 
     bool LoginServer::initialize(const char* router_ip, int router_port)
