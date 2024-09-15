@@ -29,6 +29,20 @@ namespace net
         return send_message(protocol::ServerType::Router, net::MessageID::Router_ServerAnnouncement, announce_msg);
     }
 
+    bool ServerCommunicator::handle_server_announcement(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    {
+        protocol::ServerAnnouncement msg;
+        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
+            return false;
+
+        register_server(msg.server_type(), {
+            .ip = msg.server_info().ip(),
+            .port = msg.server_info().port()
+            });
+
+        return true;
+    }
+
     bool ServerCommunicator::fetch_server(protocol::ServerType server_type)
     {
         protocol::FetchServerRequest fetch_server_msg;

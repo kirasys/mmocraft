@@ -12,7 +12,6 @@ namespace
     std::array<router::net::RouteServer::handler_type, 0x100> message_handler_table = [] {
         std::array<router::net::RouteServer::handler_type, 0x100> arr{};
         arr[::net::MessageID::Router_GetConfig] = &router::net::RouteServer::handle_fetch_config;
-        arr[::net::MessageID::Router_ServerAnnouncement] = &router::net::RouteServer::handle_server_announcement;
         arr[::net::MessageID::Router_FetchServer] = &router::net::RouteServer::handle_fetch_server;
         return arr;
     }();
@@ -69,20 +68,6 @@ namespace net {
         result_msg.mutable_server_info()->set_port(requested_server_info.port);
         response.set_message(result_msg);
         
-        return true;
-    }
-
-    bool RouteServer::handle_server_announcement(const ::net::MessageRequest& request, ::net::MessageResponse& response)
-    {
-        protocol::ServerAnnouncement msg;
-        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
-            return false;
-
-        server_core.communicator().register_server(msg.server_type(), {
-            .ip = msg.server_info().ip(),
-            .port = msg.server_info().port()
-        });
-
         return true;
     }
 }

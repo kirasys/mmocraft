@@ -31,6 +31,8 @@ namespace net
 
         bool announce_server(protocol::ServerType, const net::ServerInfo&);
 
+        bool handle_server_announcement(const ::net::MessageRequest&, ::net::MessageResponse&);
+
         bool fetch_server_async(protocol::ServerType);
 
         bool fetch_server(protocol::ServerType);
@@ -86,7 +88,6 @@ namespace net
         static bool read_message(net::Socket&, net::MessageRequest&);
 
         static bool send_message_reliably(const std::string& ip, int port, const net::MessageRequest&, net::MessageResponse&, int retry_count = std::numeric_limits<int>::max());
-
 
     private:
         net::Socket& _source;

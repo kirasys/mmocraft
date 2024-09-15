@@ -20,8 +20,6 @@ namespace router
 
             bool handle_fetch_server(const ::net::MessageRequest&, ::net::MessageResponse&);
 
-            bool handle_server_announcement(const ::net::MessageRequest&, ::net::MessageResponse&);
-
         private:
             ::net::UdpServer<RouteServer> server_core;
         };
