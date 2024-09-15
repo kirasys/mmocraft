@@ -89,6 +89,7 @@
   <ItemGroup>
     <ClInclude Include="config\argparse.h" />
     <ClInclude Include="config\config.h" />
+    <ClInclude Include="config\constants.h" />
     <ClInclude Include="database\database_core.h" />
     <ClInclude Include="database\mongodb_core.h" />
     <ClInclude Include="database\query.h" />

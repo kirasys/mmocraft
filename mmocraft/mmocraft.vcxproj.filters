@@ -104,6 +104,7 @@
     <ClInclude Include="net\server_communicator.h" />
     <ClInclude Include="net\udp_message.h" />
     <ClInclude Include="win\registered_io.h" />
+    <ClInclude Include="config\constants.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />
