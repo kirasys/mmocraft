@@ -108,11 +108,13 @@ namespace net
 
         bool handle_message(const MessageRequest& request, MessageResponse& response)
         {
+            // invoke common handlers first.
+            if (not _communicator.handle_common_message(request, response))
+                return false;
+
+            // invoke user-defined handlers if exists.
             if (auto handler = (*message_handler_table)[request.message_id()])
                 return (app_server->*handler)(request, response);
-
-            if (request.message_id() == net::MessageID::Router_ServerAnnouncement)
-                return _communicator.handle_server_announcement(request, response);
 
             CONSOLE_LOG(error) << "Unimplemented message id : " << request.message_id();
             return false;

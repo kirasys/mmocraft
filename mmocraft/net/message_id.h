@@ -6,12 +6,13 @@ namespace net
     {
         Invalid_MessageID,
 
+        Common_ServerAnnouncement,
+
         Chat_Ping,
         Chat_PacketMessage,
 
         Router_Pong,
         Router_GetConfig,
-        Router_ServerAnnouncement,
         Router_FetchServer,
 
         Login_PacketHandshake,

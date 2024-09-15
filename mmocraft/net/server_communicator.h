@@ -21,17 +21,21 @@ namespace net
     class ServerCommunicator
     {
     public:
+        using common_handler_type = bool (ServerCommunicator::*)(const net::MessageRequest&, net::MessageResponse&);
+
         ServerCommunicator(net::Socket& src)
             : _source{ src }
         { }
 
+        bool handle_common_message(const ::net::MessageRequest&, ::net::MessageResponse&);
+
         net::ServerInfo get_server(protocol::ServerType);
+
+        bool handle_server_announcement(const ::net::MessageRequest&, ::net::MessageResponse&);
 
         void register_server(protocol::ServerType, const net::ServerInfo&);
 
         bool announce_server(protocol::ServerType, const net::ServerInfo&);
-
-        bool handle_server_announcement(const ::net::MessageRequest&, ::net::MessageResponse&);
 
         bool fetch_server_async(protocol::ServerType);
 

@@ -1,12 +1,31 @@
 #include "pch.h"
 #include "server_communicator.h"
 
+#include <array>
+
 #include "net/udp_message.h"
 #include "proto/generated/protocol.pb.h"
 #include "logging/logger.h"
 
+namespace
+{
+    std::array<net::ServerCommunicator::common_handler_type, 0x100> common_message_handler_table = [] {
+        std::array<net::ServerCommunicator::common_handler_type, 0x100> arr{};
+        arr[net::MessageID::Common_ServerAnnouncement] = &net::ServerCommunicator::handle_server_announcement;
+        return arr;
+    }();
+}
+
 namespace net
 {
+    bool ServerCommunicator::handle_common_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    {
+        if (auto handler = common_message_handler_table[request.message_id()])
+            return (this->*handler)(request, response);
+
+        return true;
+    }
+
     net::ServerInfo ServerCommunicator::get_server(protocol::ServerType server_type)
     {
         std::shared_lock lock(server_table_mutex);
@@ -26,7 +45,7 @@ namespace net
         announce_msg.mutable_server_info()->set_ip(server_info.ip);
         announce_msg.mutable_server_info()->set_port(server_info.port);
 
-        return send_message(protocol::ServerType::Router, net::MessageID::Router_ServerAnnouncement, announce_msg);
+        return send_message(protocol::ServerType::Router, net::MessageID::Common_ServerAnnouncement, announce_msg);
     }
 
     bool ServerCommunicator::handle_server_announcement(const ::net::MessageRequest& request, ::net::MessageResponse& response)
