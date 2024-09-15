@@ -27,8 +27,13 @@ namespace net
 {
     LoginServer::LoginServer()
         : server_core{ this, &message_handler_table }
+        , interval_tasks{ this }
     {
-
+        interval_tasks.schedule(
+            ::util::TaskTag::ANNOUNCE_SERVER,
+            &LoginServer::announce_server,
+            ::util::MilliSecond(::config::announce_server_period_ms)
+        );
     }
 
     bool LoginServer::handle_handshake_packet(const ::net::MessageRequest& request, ::net::MessageResponse& response)
@@ -109,12 +114,21 @@ namespace net
         server_core.start_network_io_service(conf.server().ip(), conf.server().port(), 1);
 
         while (1) {
-            server_core.communicator().announce_server(protocol::ServerType::Login, {
-                .ip = conf.server().ip(),
-                .port = conf.server().port()
-            });
+            interval_tasks.process_tasks();
 
             util::sleep_ms(3000);
+        }
+    }
+
+    void LoginServer::announce_server()
+    {
+        auto& conf = login::config::get_config();
+
+        if (not server_core.communicator().announce_server(server_type, {
+            .ip = conf.server().ip(),
+            .port = conf.server().port()
+            })) {
+            CONSOLE_LOG(error) << "Fail to announce login server";
         }
     }
 }

@@ -25,9 +25,14 @@ namespace chat
 namespace net
 {
     ChatServer::ChatServer()
-        : server_core{ this, &message_handler_table, &packet_handler_table }
+        : server_core{ this, &message_handler_table }
+        , interval_tasks{ this }
     {
-
+        interval_tasks.schedule(
+            ::util::TaskTag::ANNOUNCE_SERVER, 
+            &ChatServer::announce_server, 
+            ::util::MilliSecond(::config::announce_server_period_ms)
+        );
     }
 
     bool ChatServer::handle_chat_packet(const ::net::PacketRequest& request, ::net::MessageResponse& response)
@@ -85,12 +90,14 @@ namespace net
         server_core.start_network_io_service(conf.server().ip(), conf.server().port(), conf.system().num_of_processors());
 
         while (1) {
-            server_core.communicator().announce_server(protocol::ServerType::Chat, {
-                .ip = conf.server().ip(),
-                .port = conf.server().port()
-            });
+            std::size_t start_tick = util::current_monotonic_tick();
 
-            util::sleep_ms(3000);
+            interval_tasks.process_tasks();
+
+            std::size_t end_tick = util::current_monotonic_tick();
+
+            if (auto diff = end_tick - start_tick; diff < 300)
+                util::sleep_ms(std::max(300 - diff, std::size_t(100)));
         }
     }
 }

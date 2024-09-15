@@ -8,6 +8,8 @@
 #include <net/udp_server.h>
 #include <net/server_communicator.h>
 
+#include <util/interval_task.h>
+
 namespace login
 {
     namespace net
@@ -15,6 +17,8 @@ namespace login
         class LoginServer
         {
         public:
+            static constexpr protocol::ServerType server_type = protocol::ServerType::Login;
+
             using handler_type = ::net::UdpServer<LoginServer>::handler_type;
 
             LoginServer();
@@ -27,10 +31,14 @@ namespace login
 
             void serve_forever(int argc, char* argv[]);
 
+            void announce_server();
+
         private:
             ::net::UdpServer<LoginServer> server_core;
             ::database::DatabaseCore player_db;
             ::database::MongoDBCore session_db;
+
+            ::util::IntervalTaskScheduler<LoginServer> interval_tasks;
         };
     }
 }
