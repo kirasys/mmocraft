@@ -132,6 +132,14 @@ namespace net
             return reinterpret_cast<const std::byte*>(_message.packet_data().data());
         }
 
+        auto clone_packet_data()
+        {
+            auto data_size = _message.packet_data().size();
+            auto data = new std::byte[data_size];
+            std::memcpy(data, packet_data(), data_size);
+            return std::unique_ptr<std::byte[]>(data);
+        }
+
         auto connection_key() const
         {
             return net::ConnectionKey{ _message.connection_key() };
