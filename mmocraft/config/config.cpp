@@ -13,7 +13,7 @@
 namespace fs = std::filesystem;
 
 namespace {
-    config::FrontendConfig g_config;
+    config::GameConfig g_config;
 }
 
 namespace config {
@@ -45,7 +45,7 @@ namespace config {
         util::json_file_to_proto_message(&get_config(), config_path);
     }
 
-    config::FrontendConfig& get_config()
+    config::GameConfig& get_config()
     {
         return g_config;
     }

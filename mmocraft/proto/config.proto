@@ -38,7 +38,7 @@ message Configuration {
     }
 }
 
-message FrontendConfig {
+message GameConfig {
     Configuration.Server tcp_server = 1;
     Configuration.Server udp_server = 2;
     Configuration.Database player_database = 3;

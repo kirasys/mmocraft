@@ -19,7 +19,7 @@ namespace net
     class MasterServer : public net::PacketHandleServer
     {
     public:
-        static constexpr protocol::ServerType server_type = protocol::ServerType::Frontend;
+        static constexpr protocol::ServerType server_type = protocol::ServerType::Game;
 
         using packet_handler_type = error::ResultCode (MasterServer::*)(net::Connection&, const std::byte*, std::size_t);
 

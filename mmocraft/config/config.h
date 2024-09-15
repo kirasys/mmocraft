@@ -5,7 +5,7 @@
 #include "proto/generated/config.pb.h"
 
 namespace config {
-    config::FrontendConfig& get_config();
+    config::GameConfig& get_config();
 
     void initialize_system(std::string_view config_dir, std::string_view config_filename);
 

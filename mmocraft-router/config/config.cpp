@@ -10,7 +10,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-    ::config::FrontendConfig g_frontend_server_config;
+    ::config::GameConfig g_game_server_config;
     ::config::RouterConfig g_route_server_config;
     ::config::ChatConfig g_chat_server_config;
     ::config::LoginConfig g_login_server_config;
@@ -24,7 +24,7 @@ namespace
 
     constinit const std::array<ConfigEntry, 0xff> config_path_db = [] {
         std::array<ConfigEntry, 0xff> arr{};
-        arr[protocol::ServerType::Frontend] = { protocol::ServerType::Frontend, "config/frontend_config.json", &g_frontend_server_config };
+        arr[protocol::ServerType::Game] = { protocol::ServerType::Game, "config/game_config.json", &g_game_server_config };
         arr[protocol::ServerType::Router] = { protocol::ServerType::Router, "config/router_config.json", &g_route_server_config };
         arr[protocol::ServerType::Chat] = { protocol::ServerType::Chat, "config/chat_config.json", &g_chat_server_config };
         arr[protocol::ServerType::Login] = { protocol::ServerType::Login, "config/login_config.json", &g_login_server_config };
@@ -36,12 +36,12 @@ namespace
     void set_default_configuration(protocol::ServerType server_type)
     {
         switch (server_type) {
-        case protocol::ServerType::Frontend:
-            g_frontend_server_config.mutable_tcp_server();
-            g_frontend_server_config.mutable_udp_server();
-            g_frontend_server_config.mutable_player_database();
-            g_frontend_server_config.mutable_world();
-            g_frontend_server_config.mutable_log();
+        case protocol::ServerType::Game:
+            g_game_server_config.mutable_tcp_server();
+            g_game_server_config.mutable_udp_server();
+            g_game_server_config.mutable_player_database();
+            g_game_server_config.mutable_world();
+            g_game_server_config.mutable_log();
             return;
         case protocol::ServerType::Router:
             g_route_server_config.mutable_server();

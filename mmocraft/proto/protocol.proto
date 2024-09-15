@@ -3,13 +3,12 @@ syntax = "proto3";
 package protocol;
 
 enum ServerType {
-    Frontend = 0;
+    Game = 0;
     Router = 1;
     Chat = 2;
-    Game = 3;
-    Login = 4;
+    Login = 3;
 
-    SIZE = 5;
+    SIZE = 4;
 }
 
 message ServerInfo {
