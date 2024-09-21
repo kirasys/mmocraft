@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "database/query.h"
+#include "net/packet_extension.h"
 #include "game/world.h"
 #include "logging/logger.h"
 
@@ -93,8 +94,8 @@ namespace game
         char to_message[net::PacketFieldConstraint::max_string_length];
         format_to_message(to_message, tokens[1], tokens[2]);
 
-        world.unicast_to_world_player(_player.username(), net::MessageType::Chat, to_message);
-        world.unicast_to_world_player(tokens[1], net::MessageType::Chat, from_message);
+        //world.unicast_to_world_player(_player.username(), net::MessageType::Chat, to_message);
+        //world.unicast_to_world_player(tokens[1], net::MessageType::Chat, from_message);
     }
 
     void PlayerCommand::execute_announcement(game::World& world, const std::vector<const char*>& tokens)

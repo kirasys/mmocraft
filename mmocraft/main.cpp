@@ -1,31 +1,82 @@
 #include "pch.h"
 #include <iostream>
 #include <locale>
-#include <winsock2.h>
 
 #include "config/config.h"
 #include "util/deferred_call.h"
-#include "net/master_server.h"
-#include "database/sql_statement.h"
-#include "database/database_core.h"
+#include "net/game_server.h"
+#include "database/query.h"
 #include "logging/error.h"
-
 #include "net/deferred_packet.h"
-
 #include "system_initializer.h"
 
-int main()
+int main(int argc, char* argv[])
 {
-	setup::initialize_system();
+	if (argc != 3) {
+		std::cout << "Usage: " << argv[0] << " ROUTE_SERVER_IP ROUTE_SERVER_PORT";
+		return 0;
+	}
+
+	auto router_ip = argv[1];
+	auto router_port = std::atoi(argv[2]);
+
+	setup::initialize_system(router_ip, router_port);
 
 	try {
-		logging::err() << "error!";
+		/*
+		database::MongoDBCore::connect_server("mongodb://localhost:27017/");
 
-		auto server = net::MasterServer("127.0.0.1", 12345, 10000, 4);
-		server.serve_forever();
+		database::PlayerSession player_session("username");
+		std::cout << player_session.exists();
+		
+		player_session.update(net::ConnectionKey(12), game::PlayerType::AUTHENTICATED_USER, 3);
+		//player_session.revoke();
+		*/
+		
+		
+		auto& conf = config::get_config();
+		auto server = net::GameServer(conf.tcp_server().max_client());
+		server.serve_forever(router_ip, router_port);
+		
+		/*
+		std::byte* data = (std::byte*)"123213123";
+		auto event = new io::IoMulticastSendEvent;
+		event->set_multicast_data(data, 9);
+		
+		net::Socket sock{ net::SocketProtocol::TCPv4Overlapped };
+		sock.bind("127.0.0.1", 9003);
+		sock.listen();
+		*/
+		/*
+		io::RegisteredIO io_service{ 1000 };
+
+		net::ConnectionEnvironment connection_env{ 1000 };
+		net::PacketHandleServerStub packet_server;
+		net::TcpServer tcp_server{ packet_server, connection_env, io_service };
+
+		tcp_server.start_network_io_service("127.0.0.1", 9002, 4);
+		*/
+		while (true) {
+			/*
+			win::Socket accepted_socket = ::accept(sock.get_handle(), NULL, NULL);
+			if (accepted_socket == INVALID_SOCKET)
+			{
+				printf_s("[DEBUG] accept: invalid socket\n");
+				continue;
+			}
+			
+			event->post_overlapped_io(accepted_socket);
+			*/
+
+			while (1) {
+				//net::ConnectionIO::flush_receive(connection_env);
+
+				util::sleep_ms(300);
+			}
+		}
+		
 
 		/*
-		const auto& conf = config::get_config();
 
 		auto db_core = database::DatabaseCore();
 		if (not db_core.connect_with_password(conf.db)) {
@@ -37,27 +88,8 @@ int main()
 		std::cout << stmt.search("admin2") << '\n';
 		std::cout << stmt.get_player_identity_number() << '\n';
 		*/
-
-		/*
-		net::PacketHandshake pkt;
-		pkt.id = 1;
-		pkt.username.data = "1234";
-		pkt.password.data = "1234";
-
-		auto deferred_packet_stack = net::DeferredPacketStack();
-		deferred_packet_stack.push<net::PacketHandshake>(net::DescriptorLevel::WorkerThread(1), pkt);
-
-		pkt.id = 2;
-		deferred_packet_stack.push<net::PacketHandshake>(net::DescriptorLevel::WorkerThread(2), pkt);
-
-		pkt.id = 3;
-		deferred_packet_stack.push<net::PacketHandshake>(net::DescriptorLevel::WorkerThread(3), pkt);
-		
-		auto deferred_pkt = deferred_packet_stack.pop<net::PacketHandshake>();
-		std::cout << deferred_pkt->connection_descriptor;
-		*/
 	}
-	catch (const error::Exception ex) {
-		std::cout << ex.code << std::endl;
+	catch (const error::ErrorCode code) {
+		std::cout << code << std::endl;
 	}
 }
