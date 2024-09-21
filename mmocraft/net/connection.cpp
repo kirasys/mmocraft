@@ -227,6 +227,11 @@ namespace net
         io_service.register_event_source(connection_id, client_socket.get_handle(), event_handler);
     }
 
+    bool ConnectionIO::post_connect_event(io::IoConnectEvent* event, std::string_view ip, int port)
+    {
+        return event->post_overlapped_io(client_socket.get_handle(), ip, port);
+    }
+
     bool ConnectionIO::post_recv_event()
     {
         return io_recv_event->post_rio_event(io_service, connection_id);

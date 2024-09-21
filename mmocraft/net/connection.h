@@ -49,6 +49,8 @@ namespace net
 
         void register_event_handler(io::IoEventHandler*);
 
+        bool post_connect_event(io::IoConnectEvent*, std::string_view ip, int port);
+
         bool post_recv_event();
 
         bool post_send_event();

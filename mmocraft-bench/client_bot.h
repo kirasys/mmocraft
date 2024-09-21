@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <unordered_set>
 
 #include "io/io_event.h"
@@ -44,6 +45,10 @@ namespace bench
 
         void disconnect();
 
+        void post_send_event();
+
+        void post_recv_event();
+
         void send_handshake();
 
         void send_ping();
@@ -59,9 +64,9 @@ namespace bench
 
         virtual void on_error() override;
 
-        virtual std::size_t handle_io_event(io::IoAcceptEvent*) override;
+        virtual std::size_t handle_io_event(io::IoConnectEvent*) override;
 
-        virtual void on_complete(io::IoAcceptEvent*) override;
+        virtual void on_complete(io::IoConnectEvent*) override;
 
         virtual std::size_t handle_io_event(io::IoSendEvent*) override;
 
@@ -84,6 +89,8 @@ namespace bench
 
         std::unique_ptr<net::ConnectionIO> connection_io;
 
-        io::IoAcceptEvent io_accept_event;
+        io::IoConnectEvent io_connect_event;
+
+        std::mutex network_io_lock;
     };
 }

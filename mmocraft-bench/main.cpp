@@ -5,7 +5,7 @@
 #include "system_initializer.h"
 
 #include "config/config.h"
-#include "proto/config.pb.h"
+#include "proto/generated/config.pb.h"
 
 enum ScenarioType {
     IntensiveIO = 1,
@@ -26,7 +26,7 @@ void print_available_scenarios()
 
 bench::GameScenario* create_scenario(ScenarioType type, io::IoService& io_service, std::size_t max_client_size)
 {
-    auto& world_conf = config::get_world_config();
+    auto& conf = config::get_config();
 
     switch (type)
     {
@@ -34,9 +34,9 @@ bench::GameScenario* create_scenario(ScenarioType type, io::IoService& io_servic
     case ScenarioType::FrequentAccept: return new bench::FrequentAcceptScenario(io_service, max_client_size);
     case ScenarioType::RandomBlock:
     {
-        auto map_size = util::Coordinate3D{ world_conf.width(), 
-                                             world_conf.height(), 
-                                             world_conf.length() };
+        auto map_size = util::Coordinate3D{ conf.world().width(),
+                                             conf.world().height(),
+                                             conf.world().length() };
         return new bench::RandomBlockScenario(io_service, max_client_size, map_size);
     }
     default:
@@ -49,7 +49,7 @@ bench::GameScenario* create_scenario(ScenarioType type, io::IoService& io_servic
 int main(int argc, char* args[])
 {
     bench::parse_arguments(argc, args);
-    setup::initialize_system();
+    setup::initialize_system("127.0.0.1", 20000);
 
     print_available_scenarios();
     int selection = 0;
@@ -57,9 +57,9 @@ int main(int argc, char* args[])
 
     auto& Args = bench::get_args();
 
-    io::IoCompletionPort io_service(Args.num_of_event_worker_thread);
+    io::IoService io_service(Args.max_client, Args.num_of_event_worker_thread);
     for (int i=0; i < Args.num_of_event_worker_thread * 2; i++)
-        io_service.spawn_event_loop_thread().detach();
+        io_service.spawn_event_thread();
     
     std::vector<bench::GameScenario*> scenarios;
 

@@ -101,7 +101,7 @@ namespace io
         }
     }
 
-    void IoCompletionPort::spawn_event_loop_thread()
+    void IoCompletionPort::spawn_event_thread()
     {
         event_threads.emplace_back(std::thread([](IoCompletionPort* io_service) {
             io_service->run_event_loop_forever();
@@ -109,9 +109,9 @@ namespace io
         ));
     }
 
-    RegisteredIO::RegisteredIO(std::size_t max_connections)
+    RegisteredIO::RegisteredIO(std::size_t max_connections, int num_of_concurrent_threads)
         : _max_connections{ max_connections }
-        , completion_queue{ 2 * max_connections, &_event.overlapped, this }
+        , completion_queue{ 2 * max_connections, num_of_concurrent_threads, &_event.overlapped, this }
         , request_queues{ max_connections, RIO_INVALID_RQ }
         , recv_buffer_pool{ max_connections, io::RECV_BUFFER_SIZE }
         , send_buffer_pool{ max_connections, io::SEND_BUFFER_SIZE }

@@ -5,8 +5,8 @@
 
 namespace win
 {
-    RioCompletionQueue::RioCompletionQueue(std::size_t queue_size, WSAOVERLAPPED* overlapped, void* completion_key)
-        : _iocp_handle{ ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, ULONG_PTR(0), 0) }
+    RioCompletionQueue::RioCompletionQueue(std::size_t queue_size, int num_of_concurrent_threads, WSAOVERLAPPED* overlapped, void* completion_key)
+        : _iocp_handle{ ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, ULONG_PTR(0), num_of_concurrent_threads) }
         , _cq_handle{ create_complete_queue(queue_size, iocp_handle(), overlapped, completion_key) }
     { }
 

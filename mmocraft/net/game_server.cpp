@@ -33,9 +33,9 @@ namespace
 
 namespace net
 {
-    GameServer::GameServer(unsigned max_clients)
+    GameServer::GameServer(unsigned max_clients, int num_of_event_threads)
         : connection_env{ max_clients }
-        , io_service { max_clients }
+        , io_service { max_clients, num_of_event_threads }
         , tcp_server{ *this, connection_env, io_service }
         , udp_server{ this, &message_handler_table }
 

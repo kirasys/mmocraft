@@ -25,6 +25,20 @@ namespace io
         event_handler->on_complete(this);
     }
 
+    bool IoConnectEvent::post_overlapped_io(win::Socket sock, std::string_view ip, int port)
+    {
+        connected_socket = sock;
+
+        return net::Socket::connect(sock, ip, port, &overlapped);
+    }
+
+    void IoConnectEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
+    {
+        auto event_handler = static_cast<IoEventHandler*>(completion_key);
+        event_handler->handle_io_event(this);
+        event_handler->on_complete(this);
+    }
+
     void IoRecvEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
         auto event_handler = static_cast<IoEventHandler*>(completion_key);
