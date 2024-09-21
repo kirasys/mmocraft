@@ -33,7 +33,7 @@ namespace net
 
         ~ConnectionIO();
 
-        ConnectionIO(net::Connection*, io::RegisteredIO&, win::UniqueSocket&&);
+        ConnectionIO(net::ConnectionID, io::RegisteredIO&, win::UniqueSocket&&);
 
         bool is_receive_io_busy() const
         {
@@ -46,6 +46,8 @@ namespace net
         }
 
         void close();
+
+        void register_event_handler(io::IoEventHandler*);
 
         bool post_recv_event();
 
