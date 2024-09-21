@@ -18,16 +18,16 @@ namespace net
     constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
     constexpr std::size_t chat_message_task_interval = 1 * 1000; // 1 seconds.
 
-    class MasterServer : public net::PacketHandleServer
+    class GameServer : public net::PacketHandleServer
     {
     public:
         static constexpr protocol::ServerType server_type = protocol::ServerType::Game;
 
-        using packet_handler_type = error::ResultCode (MasterServer::*)(net::Connection&, const std::byte*, std::size_t);
+        using packet_handler_type = error::ResultCode (GameServer::*)(net::Connection&, const std::byte*, std::size_t);
 
-        using message_handler_type = bool(MasterServer::*)(const MessageRequest&, MessageResponse&);
+        using message_handler_type = bool(GameServer::*)(const MessageRequest&, MessageResponse&);
 
-        MasterServer(unsigned max_clients);
+        GameServer(unsigned max_clients);
 
         void tick();
 
@@ -76,18 +76,18 @@ namespace net
         io::RegisteredIO io_service;
 
         net::TcpServer tcp_server;
-        net::UdpServer<MasterServer> udp_server;
+        net::UdpServer<GameServer> udp_server;
 
         database::DatabaseCore database_core;
 
         game::World world;
 
-        DeferredPacketTask<net::PacketChatMessage, MasterServer> deferred_chat_message_packet_task;
+        DeferredPacketTask<net::PacketChatMessage, GameServer> deferred_chat_message_packet_task;
 
         io::Task *deferred_packet_tasks[1] = {
             &deferred_chat_message_packet_task
         };
 
-        util::IntervalTaskScheduler<MasterServer> interval_tasks;
+        util::IntervalTaskScheduler<GameServer> interval_tasks;
     };
 }

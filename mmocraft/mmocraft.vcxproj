@@ -71,7 +71,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="net\packet.cpp" />
     <ClCompile Include="net\connection.cpp" />
-    <ClCompile Include="net\master_server.cpp" />
+    <ClCompile Include="net\game_server.cpp" />
     <ClCompile Include="net\tcp_server.cpp" />
     <ClCompile Include="net\socket.cpp" />
     <ClCompile Include="pch.cpp">
@@ -132,7 +132,7 @@
     <ClInclude Include="net\deferred_packet.h" />
     <ClInclude Include="net\packet.h" />
     <ClInclude Include="net\connection.h" />
-    <ClInclude Include="net\master_server.h" />
+    <ClInclude Include="net\game_server.h" />
     <ClInclude Include="net\socket.h" />
     <ClInclude Include="net\tcp_server.h" />
     <ClInclude Include="pch.h" />

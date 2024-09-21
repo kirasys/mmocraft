@@ -18,7 +18,7 @@
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="win\object_pool.cpp" />
     <ClCompile Include="net\connection.cpp" />
-    <ClCompile Include="net\master_server.cpp" />
+    <ClCompile Include="net\game_server.cpp" />
     <ClCompile Include="net\packet.cpp" />
     <ClCompile Include="database\database_core.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
@@ -57,7 +57,7 @@
     <ClInclude Include="win\win_base_object.h" />
     <ClInclude Include="win\win_type.h" />
     <ClInclude Include="net\tcp_server.h" />
-    <ClInclude Include="net\master_server.h" />
+    <ClInclude Include="net\game_server.h" />
     <ClInclude Include="win\smart_handle.h" />
     <ClInclude Include="util\noncopyable.h" />
     <ClInclude Include="net\connection.h" />

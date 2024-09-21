@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "master_server.h"
+#include "game_server.h"
 
 #include <array>
 #include <cstring>
@@ -12,28 +12,28 @@
 
 namespace
 {
-    const std::array<net::MasterServer::packet_handler_type, 0x100> packet_handler_db = [] {
-        std::array<net::MasterServer::packet_handler_type, 0x100> arr{};
-        arr[net::PacketID::Handshake] = &net::MasterServer::handle_handshake_packet;
-        arr[net::PacketID::Ping] = &net::MasterServer::handle_ping_packet;
-        arr[net::PacketID::SetBlockClient] = &net::MasterServer::handle_set_block_packet;
-        arr[net::PacketID::SetPlayerPosition] = &net::MasterServer::handle_player_position_packet;
-        arr[net::PacketID::ChatMessage] = &net::MasterServer::handle_chat_message_packet;
-        arr[net::PacketID::ExtInfo] = &net::MasterServer::handle_ext_info_packet;
-        arr[net::PacketID::ExtEntry] = &net::MasterServer::handle_ext_entry_packet;
+    const std::array<net::GameServer::packet_handler_type, 0x100> packet_handler_db = [] {
+        std::array<net::GameServer::packet_handler_type, 0x100> arr{};
+        arr[net::PacketID::Handshake] = &net::GameServer::handle_handshake_packet;
+        arr[net::PacketID::Ping] = &net::GameServer::handle_ping_packet;
+        arr[net::PacketID::SetBlockClient] = &net::GameServer::handle_set_block_packet;
+        arr[net::PacketID::SetPlayerPosition] = &net::GameServer::handle_player_position_packet;
+        arr[net::PacketID::ChatMessage] = &net::GameServer::handle_chat_message_packet;
+        arr[net::PacketID::ExtInfo] = &net::GameServer::handle_ext_info_packet;
+        arr[net::PacketID::ExtEntry] = &net::GameServer::handle_ext_entry_packet;
         return arr;
     }();
 
-    std::array<net::MasterServer::message_handler_type, 0x100> message_handler_table = [] {
-        std::array<net::MasterServer::message_handler_type, 0x100> arr{};
-        arr[net::MessageID::Login_PacketHandshake] = &net::MasterServer::handle_handshake_response_message;
+    std::array<net::GameServer::message_handler_type, 0x100> message_handler_table = [] {
+        std::array<net::GameServer::message_handler_type, 0x100> arr{};
+        arr[net::MessageID::Login_PacketHandshake] = &net::GameServer::handle_handshake_response_message;
         return arr;
     }();
 }
 
 namespace net
 {
-    MasterServer::MasterServer(unsigned max_clients)
+    GameServer::GameServer(unsigned max_clients)
         : connection_env{ max_clients }
         , io_service { max_clients }
         , tcp_server{ *this, connection_env, io_service }
@@ -41,17 +41,17 @@ namespace net
 
         , world{ connection_env, database_core }
         
-        , deferred_chat_message_packet_task{ &MasterServer::handle_deferred_chat_message_packet, this, chat_message_task_interval }
+        , deferred_chat_message_packet_task{ &GameServer::handle_deferred_chat_message_packet, this, chat_message_task_interval }
 
         , interval_tasks{ this }
     {
         interval_tasks.schedule(util::TaskTag::ANNOUNCE_SERVER, 
-            &MasterServer::announce_server, 
+            &GameServer::announce_server,
             util::MilliSecond(config::announce_server_period_ms)
         );
     }
 
-    error::ResultCode MasterServer::handle_packet(net::Connection& conn, const std::byte* packet_data)
+    error::ResultCode GameServer::handle_packet(net::Connection& conn, const std::byte* packet_data)
     {
         auto [packet_id, packet_size] = PacketStructure::parse_packet(packet_data);
 
@@ -62,7 +62,7 @@ namespace net
         return error::PACKET_UNIMPLEMENTED_ID;
     }
 
-    error::ResultCode MasterServer::handle_handshake_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_handshake_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         net::PacketHandshake packet(data);
 
@@ -84,14 +84,14 @@ namespace net
         return error::PACKET_HANDLE_DEFERRED;
     }
 
-    error::ResultCode MasterServer::handle_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         // send pong.
         conn.io()->send_ping();
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_set_block_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_set_block_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         net::PacketSetBlockClient packet(data);
 
@@ -110,7 +110,7 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_player_position_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_player_position_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         net::PacketSetPlayerPosition packet(data);
 
@@ -120,7 +120,7 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_chat_message_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_chat_message_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         net::PacketChatMessage packet(data);
 
@@ -142,7 +142,7 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_ext_info_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_ext_info_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         net::PacketExtInfo packet(data);
 
@@ -153,7 +153,7 @@ namespace net
         return error::SUCCESS;
     }
 
-    error::ResultCode MasterServer::handle_ext_entry_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_ext_entry_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         net::PacketExtEntry packet(data);
 
@@ -168,7 +168,7 @@ namespace net
         return error::SUCCESS;
     }
 
-    void MasterServer::tick()
+    void GameServer::tick()
     {
         ConnectionIO::flush_send(connection_env);
         ConnectionIO::flush_receive(connection_env);
@@ -179,7 +179,7 @@ namespace net
             tcp_server.start_accept();
     }
 
-    void MasterServer::announce_server()
+    void GameServer::announce_server()
     {
         auto& conf = config::get_config();
 
@@ -191,7 +191,7 @@ namespace net
         }
     }
 
-    bool MasterServer::initialize(const char* router_ip, int router_port)
+    bool GameServer::initialize(const char* router_ip, int router_port)
     {
         auto& comm = udp_server.communicator();
         comm.register_server(protocol::ServerType::Router, { router_ip, router_port });
@@ -209,7 +209,7 @@ namespace net
         return true;
     }
 
-    void MasterServer::serve_forever(const char* router_ip, int router_port)
+    void GameServer::serve_forever(const char* router_ip, int router_port)
     {
         if (not initialize(router_ip, router_port))
             return;
@@ -240,7 +240,7 @@ namespace net
         }
     }
 
-    void MasterServer::flush_deferred_packet()
+    void GameServer::flush_deferred_packet()
     {
         for (auto task : deferred_packet_tasks) {
             if (task->ready()) {
@@ -249,7 +249,7 @@ namespace net
         }
     }
 
-    void MasterServer::on_disconnect(net::Connection& conn)
+    void GameServer::on_disconnect(net::Connection& conn)
     {
         if (auto player = conn.associated_player()) {
             // notify logout event to the login server.
@@ -265,7 +265,7 @@ namespace net
      *  Message handlers.
      */
 
-    bool MasterServer::handle_handshake_response_message(const MessageRequest& request, MessageResponse& response)
+    bool GameServer::handle_handshake_response_message(const MessageRequest& request, MessageResponse& response)
     {
         protocol::PacketHandshakeResponse msg;
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
@@ -307,7 +307,7 @@ namespace net
      *  Deferred packet handlers.
      */
 
-    void MasterServer::handle_deferred_chat_message_packet(io::Task* task, const DeferredPacket<net::PacketChatMessage>* packet_head)
+    void GameServer::handle_deferred_chat_message_packet(io::Task* task, const DeferredPacket<net::PacketChatMessage>* packet_head)
     {
         std::vector<const DeferredPacket<net::PacketChatMessage>*> packets;
         for (auto packet = packet_head; packet; packet = packet->next)
