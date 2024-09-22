@@ -7,6 +7,7 @@
 #include "net/packet.h"
 #include "logging/logger.h"
 #include "statistics.h"
+#include <mswsock.h>
 
 #define CONSUME_PACKET_SIZE(packet_size) \
     remain_packet_size = packet_size; \
@@ -82,10 +83,8 @@ namespace bench
 
     void ClientBot::send_ping()
     {
-        connection_io->send_ping();
-
-        if (not connection_io->is_send_io_busy())
-            connection_io->emit_send_event();
+        for (int i=0; i<1024; i++)
+            connection_io->send_ping();
     }
 
     void ClientBot::send_random_block(util::Coordinate3D map_size)
@@ -124,6 +123,10 @@ namespace bench
 
         _state = ClientState::Connected;
         connection_io->emit_receive_event();
+
+        send_ping();
+        post_send_event();
+
         event->is_processing = false;
     }
 
@@ -138,6 +141,9 @@ namespace bench
         event->is_processing = false;
 
         bench::on_packet_send(transferred_bytes);
+
+        send_ping();
+        post_send_event();
     }
 
     std::size_t ClientBot::handle_io_event(io::IoRecvEvent* event)

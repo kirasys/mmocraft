@@ -41,9 +41,18 @@ namespace bench
 
     void GameScenario::ping_all()
     {
-        for (std::size_t i = 0; i < max_client_size; i++) {
-            if (clients[i]->state() == ClientState::Connected)
+        auto& args = bench::get_args();
+
+        for (std::size_t i = 0; i < size_of_max_clients(); i++) {
+            auto state = clients[i]->state();
+
+            switch (state) {
+            case ClientState::Connected:
                 clients[i]->send_ping();
+                break;
+            default:
+                clients[i]->connect(args.ip, args.port);
+            }
         }
     }
 
@@ -65,7 +74,7 @@ namespace bench
         auto& args = bench::get_args();
 
         while (not is_canceled()) {
-            ping_all();
+            //ping_all();
             if (args.tick_interval) util::sleep_ms(args.tick_interval);
         }
     }

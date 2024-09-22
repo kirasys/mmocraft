@@ -44,6 +44,12 @@ namespace bench
 
         void disconnect();
 
+        void post_send_event()
+        {
+            if (not connection_io->is_send_io_busy())
+                connection_io->emit_send_event();
+        }
+
         void send_handshake();
 
         void send_ping();

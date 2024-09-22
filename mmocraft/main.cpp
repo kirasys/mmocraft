@@ -16,13 +16,12 @@
 
 int main()
 {
-	setup::initialize_system();
+	setup::initialize_system("127.0.0.1", 20000);
 
 	try {
-		logging::err() << "error!";
 
-		auto server = net::MasterServer("127.0.0.1", 12345, 10000, 4);
-		server.serve_forever();
+		net::MasterServer server(1000000);
+		server.serve_forever("127.0.0.1", 20000);
 
 		/*
 		const auto& conf = config::get_config();
@@ -57,7 +56,7 @@ int main()
 		std::cout << deferred_pkt->connection_descriptor;
 		*/
 	}
-	catch (const error::Exception ex) {
-		std::cout << ex.code << std::endl;
+	catch (...) {
+		
 	}
 }
