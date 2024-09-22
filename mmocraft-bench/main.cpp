@@ -49,13 +49,13 @@ bench::GameScenario* create_scenario(ScenarioType type, io::IoService& io_servic
 int main(int argc, char* args[])
 {
     bench::parse_arguments(argc, args);
-    setup::initialize_system("127.0.0.1", 20000);
+    auto& Args = bench::get_args();
+
+    setup::initialize_system(Args.router_ip.c_str(), Args.router_port);
 
     print_available_scenarios();
     int selection = 0;
     std::cin >> selection;
-
-    auto& Args = bench::get_args();
 
     io::IoService io_service(Args.max_client, Args.num_of_event_worker_thread);
     for (int i=0; i < Args.num_of_event_worker_thread * 2; i++)
