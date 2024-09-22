@@ -49,7 +49,7 @@ bench::GameScenario* create_scenario(ScenarioType type, io::IoService& io_servic
 int main(int argc, char* args[])
 {
     bench::parse_arguments(argc, args);
-    setup::initialize_system("192.168.21.12", 20000);
+    setup::initialize_system("127.0.0.1", 20000);
 
     print_available_scenarios();
     int selection = 0;
