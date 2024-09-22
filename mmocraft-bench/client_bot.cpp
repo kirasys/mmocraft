@@ -31,10 +31,11 @@ namespace bench
 {
     ClientBot::ClientBot(io::IoService& io_service)
         : _id{ client_counter.fetch_add(1, std::memory_order_relaxed) }
+        , _sock{ net::create_windows_socket(net::SocketProtocol::TCPv4Rio) }
         , last_interactin_at{util::current_monotonic_tick()}
     {
         // Create socket for client
-        win::UniqueSocket sock{ net::create_windows_socket(net::SocketProtocol::TCPv4Rio) };
+        win::UniqueSocket sock{ _sock };
 
         {
             BOOL opt = TRUE;
@@ -59,10 +60,7 @@ namespace bench
 
     bool ClientBot::connect(std::string_view ip, int port)
     {
-        auto success = connection_io->post_connect_event(&io_connect_event, ip, port);
-        if (not success)
-            _state = ClientState::Error;
-        return success;
+        return connection_io->post_connect_event(&io_connect_event, ip, port);
     }
 
     void ClientBot::disconnect()
@@ -96,9 +94,11 @@ namespace bench
 
     void ClientBot::send_ping()
     {
-        connection_io->send_ping();
+        if (state() >= ClientState::Connected) {
+            connection_io->send_ping();
 
-        post_send_event();
+            post_send_event();
+        }
     }
 
     void ClientBot::send_random_block(util::Coordinate3D map_size)

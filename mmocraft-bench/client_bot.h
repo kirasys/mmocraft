@@ -79,6 +79,8 @@ namespace bench
     private:
         int _id;
 
+        win::Socket _sock;
+
         /* Client Status */
         ClientState _state = ClientState::Initialized;
         std::size_t total_received_bytes = 0;
