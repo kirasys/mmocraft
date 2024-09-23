@@ -12,6 +12,13 @@ namespace bench
             .required()
             .help("Port number of the game server")
             .scan<'i', int>();
+        program.add_argument("--router_ip")
+            .required()
+            .help("Maximum number of clients");
+        program.add_argument("--router_port")
+            .required()
+            .help("Maximum number of clients")
+            .scan<'i', int>();
         program.add_argument("--max_client")
             .required()
             .help("Maximum number of clients")
@@ -41,9 +48,15 @@ namespace bench
         auto& Args = get_args();
         Args.ip = program.get<std::string>("ip");
         Args.port = program.get<int>("port");
+
+        Args.router_ip = program.get<std::string>("ip");
+        Args.router_port = program.get<int>("router_port");
+
         Args.max_client = program.get<int>("--max_client");
+
         Args.num_of_worker_thread = program.get<int>("--worker_thread");
         Args.num_of_event_worker_thread = program.get<int>("--event_thread");
+
         Args.tick_interval = std::size_t(program.get<int>("--interval"));
     }
 

@@ -27,7 +27,7 @@ namespace net
 
         using message_handler_type = bool(GameServer::*)(const MessageRequest&, MessageResponse&);
 
-        GameServer(unsigned max_clients);
+        GameServer(unsigned max_clients, int num_of_event_threads = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
         void tick();
 

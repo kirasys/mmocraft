@@ -17,10 +17,10 @@ namespace io
     const int DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS = 0;
     // 0 means the number of threads concurrently running threads as many processors.
     
-    class IoService
+    class IoServiceModel
     {
     public:
-        virtual ~IoService() = default;
+        virtual ~IoServiceModel() = default;
 
         virtual void register_event_source(win::Handle event_source, IoEventHandler* event_handler) = 0;
 
@@ -28,10 +28,10 @@ namespace io
 
         virtual void run_event_loop_forever(DWORD get_event_timeout_ms) = 0;
 
-        virtual void spawn_event_loop_thread() = 0;
+        virtual void spawn_event_thread() = 0;
     };
 
-    class IoCompletionPort : public IoService
+    class IoCompletionPort : public IoServiceModel
     {
     public:
 
@@ -62,7 +62,7 @@ namespace io
 
         void run_event_loop_forever(DWORD get_event_timeout_ms = INFINITE);
 
-        void spawn_event_loop_thread();
+        void spawn_event_thread();
 
     private:
 
@@ -77,7 +77,7 @@ namespace io
         static constexpr std::size_t MAX_IO_EVENT_RESULTS = 128;
         static constexpr std::size_t MAX_RIO_EVENT_RESULTS = 512;
 
-        RegisteredIO(std::size_t max_connections);
+        RegisteredIO(std::size_t max_connections, int num_of_concurrent_threads = DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
         ~RegisteredIO();
 
@@ -123,4 +123,6 @@ namespace io
 
         io::RioEvent _event;
     };
+
+    using IoService = RegisteredIO;
 }

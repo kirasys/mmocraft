@@ -11,7 +11,7 @@ namespace win
     class RioCompletionQueue : public util::NonCopyable
     {
     public:
-        RioCompletionQueue(std::size_t queue_size, WSAOVERLAPPED*, void* completion_key);
+        RioCompletionQueue(std::size_t queue_size, int num_of_concurrent_threads, WSAOVERLAPPED*, void* completion_key);
 
         ~RioCompletionQueue()
         {

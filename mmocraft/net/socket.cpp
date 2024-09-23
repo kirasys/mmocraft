@@ -138,7 +138,7 @@ bool net::Socket::listen(int backlog) {
     return true;
 }
 
-bool net::Socket::connect(std::string_view ip, int port, WSAOVERLAPPED* overlapped)
+bool net::Socket::connect(win::Socket sock, std::string_view ip, int port, WSAOVERLAPPED* overlapped)
 {
     sockaddr_in sock_addr;
     sock_addr.sin_family = get_address_family();
@@ -146,7 +146,7 @@ bool net::Socket::connect(std::string_view ip, int port, WSAOVERLAPPED* overlapp
     ::inet_pton(get_address_family(), ip.data(), &sock_addr.sin_addr);
 
     BOOL success = ConnectEx_fn(
-        _handle,
+        sock,
         reinterpret_cast<SOCKADDR*>(&sock_addr),
         sizeof(sock_addr),
         nullptr,
@@ -155,7 +155,10 @@ bool net::Socket::connect(std::string_view ip, int port, WSAOVERLAPPED* overlapp
         overlapped
     );
 
-    return success || ERROR_IO_PENDING == ::WSAGetLastError();
+    success = success || ERROR_IO_PENDING == ::WSAGetLastError();
+    CONSOLE_LOG_IF(error, not success) << "ConnectEx failed with " << ::WSAGetLastError();
+
+    return success;
 }
 
 bool net::Socket::accept(win::Socket listen_sock, win::Socket accepted_sock, std::byte* buf, WSAOVERLAPPED* overlapped)

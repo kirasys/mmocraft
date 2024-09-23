@@ -19,10 +19,12 @@ namespace net
         , _connection_key{ a_connection_key }
         , connection_env{ a_connection_env }
         , _is_online{ true }
-        , connection_io { new ConnectionIO(this, io_service, std::move(sock)) }
+        , connection_io { new ConnectionIO(connection_id(), io_service, std::move(sock))}
     {
         if (not is_valid())
             throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
+
+        connection_io->register_event_handler(this);
 
         update_last_interaction_time();
     }
@@ -199,15 +201,14 @@ namespace net
      *  Connection descriptor interface
      */
 
-    ConnectionIO::ConnectionIO(net::Connection* conn, io::RegisteredIO& a_io_service, win::UniqueSocket&& a_sock)
+    ConnectionIO::ConnectionIO(net::ConnectionID connect_id, io::RegisteredIO& a_io_service, win::UniqueSocket&& a_sock)
         : io_service{ a_io_service }
-        , connection_id{ conn->connection_id() }
+        , connection_id{ connect_id }
         , client_socket{ std::move(a_sock) }
         , io_recv_event{ io_service.create_recv_io_event(connection_id) }
         , io_send_event{ io_service.create_send_io_event(connection_id) }
     {
-        // start to service client socket events.
-        io_service.register_event_source(connection_id, client_socket.get_handle(), conn);
+        
     }
 
     ConnectionIO::~ConnectionIO()
@@ -218,6 +219,17 @@ namespace net
     void ConnectionIO::close()
     {
         client_socket.close();
+    }
+
+    void ConnectionIO::register_event_handler(io::IoEventHandler* event_handler)
+    {
+        // start to service client socket events.
+        io_service.register_event_source(connection_id, client_socket.get_handle(), event_handler);
+    }
+
+    bool ConnectionIO::post_connect_event(io::IoConnectEvent* event, std::string_view ip, int port)
+    {
+        return event->post_overlapped_io(client_socket.get_handle(), ip, port);
     }
 
     bool ConnectionIO::post_recv_event()

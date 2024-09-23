@@ -478,6 +478,19 @@ namespace io
         virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
     };
 
+    struct IoConnectEvent : IoEvent
+    {
+        win::Socket connected_socket;
+
+        IoConnectEvent(IoEventData* data = nullptr)
+            : IoEvent{ data ? data : new io::IoRecvEventData() }
+        { }
+
+        bool post_overlapped_io(win::Socket, std::string_view ip, int port);
+
+        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+    };
+
     struct IoRecvEvent : IoEvent
     {
         using IoEvent::IoEvent;
@@ -549,6 +562,8 @@ namespace io
 
         virtual void on_complete(IoAcceptEvent*) { assert(false); }
 
+        virtual void on_complete(IoConnectEvent*) { assert(false); }
+
         virtual void on_complete(IoRecvEvent*) { assert(false); }
 
         virtual void on_complete(IoSendEvent*, std::size_t) { assert(false); }
@@ -561,6 +576,11 @@ namespace io
         }
 
         virtual std::size_t handle_io_event(IoAcceptEvent*)
+        {
+            assert(false); return 0;
+        }
+
+        virtual std::size_t handle_io_event(IoConnectEvent*)
         {
             assert(false); return 0;
         }

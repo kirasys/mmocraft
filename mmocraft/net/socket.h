@@ -50,7 +50,7 @@ namespace net
             return _handle.get();
         }
 
-        int get_address_family() {
+        static int get_address_family() {
             return AF_INET; // TODO: IPv6
         }
 
@@ -64,7 +64,7 @@ namespace net
 
         bool listen(int backlog = SOMAXCONN);
 
-        bool connect(std::string_view, int, WSAOVERLAPPED*);
+        static bool connect(win::Socket, std::string_view, int, WSAOVERLAPPED*);
 
         static bool accept(win::Socket listen_sock, win::Socket accepted_sock, std::byte* buf, WSAOVERLAPPED*);
 

@@ -31,11 +31,18 @@ namespace bench
 {
     ClientBot::ClientBot(io::IoService& io_service)
         : _id{ client_counter.fetch_add(1, std::memory_order_relaxed) }
+        , _sock{ net::create_windows_socket(net::SocketProtocol::TCPv4Rio) }
         , last_interactin_at{util::current_monotonic_tick()}
     {
         // Create socket for client
-        win::UniqueSocket sock{ net::create_windows_socket(net::SocketProtocol::TCPv4Overlapped) };
-        io_accept_event.accepted_socket = sock.get();
+        win::UniqueSocket sock{ _sock };
+
+        {
+            BOOL opt = TRUE;
+            if (auto result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt))) {
+                CONSOLE_LOG(error) << "SO_REUSEADDR failed: %d\n" << WSAGetLastError();
+            }
+        }
 
         // ConnectEx requires the socket to be initially bound.
         struct sockaddr_in addr;
@@ -43,32 +50,36 @@ namespace bench
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = INADDR_ANY;
         addr.sin_port = 0;
+
         if (::bind(sock.get(), (SOCKADDR*)&addr, sizeof(addr)))
             CONSOLE_LOG(fatal) << "could't bind initially.";
 
-        connection_io.reset(new net::ConnectionIO(std::move(sock)));
-        connection_io->register_event_handler(io_service, this);
-        
-        {
-            BOOL opt = TRUE;
-            if (auto result = setsockopt(io_accept_event.accepted_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt))) {
-                CONSOLE_LOG(error) << "SO_REUSEADDR failed: %d\n" << WSAGetLastError();
-            }
-        }
+        connection_io.reset(new net::ConnectionIO(net::ConnectionID(_id), io_service, std::move(sock)));
+        connection_io->register_event_handler(this);
     }
 
     bool ClientBot::connect(std::string_view ip, int port)
     {
-        auto success = connection_io->emit_connect_event(&io_accept_event, ip, port);
-        if (not success)
-            _state = ClientState::Error;
-        return success;
+        return connection_io->post_connect_event(&io_connect_event, ip, port);
     }
 
     void ClientBot::disconnect()
     {
-        if (_state == ClientState::Connected)
-            connection_io->close();
+        connection_io->close();
+    }
+
+    void ClientBot::post_recv_event()
+    {
+        std::unique_lock lock(network_io_lock);
+        connection_io->post_recv_event();
+    }
+
+    void ClientBot::post_send_event()
+    {
+        if (not connection_io->is_send_io_busy()) {
+            std::unique_lock lock(network_io_lock);
+            connection_io->post_send_event();
+        }
     }
 
     void ClientBot::send_handshake()
@@ -77,15 +88,17 @@ namespace bench
         ::snprintf(username, sizeof(username), "user%d", _id);
         net::PacketHandshake packet(username, "password", net::UserType::NORMAL);
         connection_io->send_packet(packet);
-        connection_io->emit_send_event();
+
+        post_send_event();
     }
 
     void ClientBot::send_ping()
     {
-        connection_io->send_ping();
+        if (state() >= ClientState::Connected) {
+            connection_io->send_ping();
 
-        if (not connection_io->is_send_io_busy())
-            connection_io->emit_send_event();
+            post_send_event();
+        }
     }
 
     void ClientBot::send_random_block(util::Coordinate3D map_size)
@@ -99,8 +112,7 @@ namespace bench
         net::PacketSetBlockClient packet(pos, mode, block_id);
         connection_io->send_packet(packet);
 
-        if (not connection_io->is_send_io_busy())
-            connection_io->emit_send_event();
+        post_send_event();
     }
 
     /* IOEvent handlers */
@@ -110,20 +122,25 @@ namespace bench
         _state = ClientState::Error;
     }
 
-    std::size_t ClientBot::handle_io_event(io::IoAcceptEvent*)
+    std::size_t ClientBot::handle_io_event(io::IoConnectEvent* event)
     {
+        if (auto result = setsockopt(event->connected_socket, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0)) {
+            on_error();
+            return 0;
+        }
+
         last_interactin_at = util::current_monotonic_tick();
+        event->is_processing = false;
         return 0;
     }
 
-    void ClientBot::on_complete(io::IoAcceptEvent* event)
+    void ClientBot::on_complete(io::IoConnectEvent* event)
     {
-        if (auto result = setsockopt(event->accepted_socket, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0)) {
-            CONSOLE_LOG(error) << "SO_UPDATE_CONNECT_CONTEXT failed: %d\n" << WSAGetLastError();
+        if (_state != ClientState::Error) {
+            _state = ClientState::Connected;
+            post_recv_event();
         }
 
-        _state = ClientState::Connected;
-        connection_io->emit_receive_event();
         event->is_processing = false;
     }
 
@@ -144,9 +161,9 @@ namespace bench
     {
         last_interactin_at = util::current_monotonic_tick();
 
-        auto data_begin = event->data->begin();
-        const auto data_end = event->data->end();
-        const auto data_size = event->data->size();
+        auto data_begin = event->event_data()->begin();
+        const auto data_end = event->event_data()->end();
+        const auto data_size = event->event_data()->size();
 
         // handle partial receive.
         if (auto partial_packet_size = std::min(remain_packet_size, data_size)) {
@@ -245,8 +262,11 @@ namespace bench
         return data_size;
     }
 
-    void ClientBot::on_complete(io::IoRecvEvent*)
+    void ClientBot::on_complete(io::IoRecvEvent* event)
     {
-        connection_io->emit_receive_event();
+        event->is_processing = false;
+
+        if (_state != ClientState::Error)
+            post_recv_event();
     }
 }
