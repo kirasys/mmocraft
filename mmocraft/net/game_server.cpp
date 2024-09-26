@@ -21,6 +21,7 @@ namespace
         arr[net::PacketID::ChatMessage] = &net::GameServer::handle_chat_message_packet;
         arr[net::PacketID::ExtInfo] = &net::GameServer::handle_ext_info_packet;
         arr[net::PacketID::ExtEntry] = &net::GameServer::handle_ext_entry_packet;
+        arr[net::PacketID::ExtPing] = &net::GameServer::handle_ext_ping_packet;
         return arr;
     }();
 
@@ -88,6 +89,16 @@ namespace net
     {
         // send pong.
         conn.io()->send_ping();
+        return error::SUCCESS;
+    }
+
+    error::ResultCode GameServer::handle_ext_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    {
+        net::PacketExtPing packet(data);
+
+        packet.set_response_time(util::current_timestmap());
+        conn.io()->send_packet(packet);
+
         return error::SUCCESS;
     }
 

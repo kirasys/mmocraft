@@ -45,6 +45,13 @@ namespace net
         PacketStructure::read_scalar(buf_start, this->version);
     }
 
+    void PacketExtPing::parse(const std::byte* buf_start)
+    {
+        buf_start++;
+        PacketStructure::read_scalar(buf_start, this->request_time);
+        PacketStructure::read_scalar(buf_start, this->response_time);
+    }
+
     bool PacketExtInfo::serialize(io::IoEventData& event_data) const
     {
         std::byte buf[packet_size];
@@ -81,6 +88,18 @@ namespace net
         PacketStructure::write_byte(buf_start, packet_id);
         PacketStructure::write_byte(buf_start, PacketFieldType::Byte(msg_type));
         PacketStructure::write_string(buf_start, message);
+
+        return event_data.push(buf, sizeof(buf));
+    }
+
+    bool PacketExtPing::serialize(io::IoEventData& event_data) const
+    {
+        std::byte buf[packet_size];
+
+        std::byte* buf_start = buf;
+        PacketStructure::write_byte(buf_start, packet_id);
+        PacketStructure::write_uint64(buf_start, request_time);
+        PacketStructure::write_uint64(buf_start, response_time);
 
         return event_data.push(buf, sizeof(buf));
     }

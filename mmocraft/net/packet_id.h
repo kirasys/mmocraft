@@ -67,6 +67,7 @@ namespace net
         /* Custom Protocol */
         SetPlayerID = 0x37,
         ExtMessage = 0x38,
+        ExtPing = 0x39,
 
         // Indicate size of the enum class.
         SIZE,

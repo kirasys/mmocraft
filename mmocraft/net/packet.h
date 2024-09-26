@@ -29,6 +29,7 @@ namespace net
         using Short = std::int16_t;
         using FShort = std::uint16_t;
         using Int = std::int32_t;
+        using UInt64 = std::uint64_t;
 
         using String = std::string_view;
 
@@ -308,6 +309,12 @@ namespace net
         {
             value = _byteswap_ulong(*reinterpret_cast<const PacketFieldType::Int*>(buf));
             buf += sizeof(PacketFieldType::Int);
+        }
+
+        static inline void read_scalar(const std::byte*& buf, PacketFieldType::UInt64& value)
+        {
+            value = _byteswap_uint64(*reinterpret_cast<const PacketFieldType::UInt64*>(buf));
+            buf += sizeof(PacketFieldType::UInt64);
         }
 
         static void read_string(const std::byte*& buf, PacketFieldType::String& value);

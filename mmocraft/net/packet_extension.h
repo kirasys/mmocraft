@@ -78,4 +78,33 @@ namespace net
 
         bool serialize(io::IoEventData&) const;
     };
+
+    struct PacketExtPing : Packet
+    {
+        PacketFieldType::UInt64 request_time = 0;
+        PacketFieldType::UInt64 response_time = 0;
+
+        static constexpr PacketID packet_id = PacketID::ExtPing;
+        static constexpr std::size_t packet_size = 17;
+
+        PacketExtPing(const std::byte* data)
+            : Packet{ packet_id }
+        {
+            parse(data);
+        }
+
+        void set_request_time(PacketFieldType::UInt64 req_time)
+        {
+            request_time = req_time;
+        }
+
+        void set_response_time(PacketFieldType::UInt64 res_time)
+        {
+            response_time = res_time;
+        }
+
+        void parse(const std::byte* buf_start);
+
+        bool serialize(io::IoEventData&) const;
+    };
 }
