@@ -25,6 +25,7 @@ namespace
         arr[PacketID::ChatMessage] = { PacketChatMessage::packet_size };
         arr[PacketID::ExtInfo] = { PacketExtInfo::packet_size };
         arr[PacketID::ExtEntry] = { PacketExtEntry::packet_size };
+        arr[PacketID::ExtPing] = { PacketExtPing::packet_size };
         return arr;
     }();
 }
