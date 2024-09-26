@@ -95,7 +95,9 @@ namespace bench
     void ClientBot::send_ping()
     {
         if (state() >= ClientState::Connected) {
-            connection_io->send_ping();
+            net::PacketExtPing ping_packet;
+            ping_packet.set_request_time();
+            connection_io->send_packet(ping_packet);
 
             post_send_event();
         }
@@ -251,6 +253,13 @@ namespace bench
             case net::PacketID::SetPlayerID:
             {
                 CONSUME_PACKET_SIZE(net::PacketSetPlayerID::packet_size);
+            }
+            break;
+            case net::PacketID::ExtPing:
+            {
+                on_ping_packet_receive(data_begin);
+
+                CONSUME_PACKET_SIZE(net::PacketExtPing::packet_size);
             }
             break;
             default:

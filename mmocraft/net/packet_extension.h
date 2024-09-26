@@ -50,6 +50,12 @@ namespace net
         void parse(const std::byte* buf_start);
     };
 
+    struct PacketTwoWayPing : Packet
+    {
+        static constexpr PacketID packet_id = PacketID::TwoWayPing;
+        static constexpr std::size_t packet_size = 4;
+    };
+
     enum MessageType
     {
         Chat = 0,
@@ -75,6 +81,36 @@ namespace net
             , msg_type{ type }
             , message{ msg, std::strlen(msg) }
         { }
+
+        bool serialize(io::IoEventData&) const;
+    };
+
+    struct PacketExtPing : Packet
+    {
+        PacketFieldType::UInt64 request_time = 0;
+
+        static constexpr PacketID packet_id = PacketID::ExtPing;
+        static constexpr std::size_t packet_size = 9;
+
+        PacketExtPing() = default;
+
+        PacketExtPing(const std::byte* data)
+            : Packet{ packet_id }
+        {
+            parse(data);
+        }
+
+        void set_request_time()
+        {
+            request_time = util::current_time_ns();
+        }
+
+        std::size_t get_rtt_ns() const
+        {
+            return util::current_time_ns() - request_time;
+        }
+
+        void parse(const std::byte* buf_start);
 
         bool serialize(io::IoEventData&) const;
     };

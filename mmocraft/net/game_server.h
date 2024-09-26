@@ -47,6 +47,10 @@ namespace net
 
         error::ResultCode handle_ping_packet(net::Connection&, const std::byte*, std::size_t);
 
+        error::ResultCode handle_two_way_ping_packet(net::Connection&, const std::byte*, std::size_t);
+
+        error::ResultCode handle_ext_ping_packet(net::Connection&, const std::byte*, std::size_t);
+
         error::ResultCode handle_set_block_packet(net::Connection&, const std::byte*, std::size_t);
 
         error::ResultCode handle_player_position_packet(net::Connection&, const std::byte*, std::size_t);
