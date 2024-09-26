@@ -14,7 +14,8 @@ namespace
     };
 
     const std::unordered_map<std::string_view, CpeInfo> supported_cpe_map = {
-        {"MessageTypes", {net::PacketID::ExtMessage, 1}}
+        {"MessageTypes", {net::PacketID::ExtMessage, 1}},
+        {"TwoWayPing",   {net::PacketID::TwoWayPing, 1}}
     };
 }
 

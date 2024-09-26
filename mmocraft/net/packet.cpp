@@ -24,6 +24,7 @@ namespace
         arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::packet_size };
         arr[PacketID::ChatMessage] = { PacketChatMessage::packet_size };
         arr[PacketID::ExtInfo] = { PacketExtInfo::packet_size };
+        arr[PacketID::TwoWayPing] = { PacketTwoWayPing::packet_size };
         arr[PacketID::ExtEntry] = { PacketExtEntry::packet_size };
         arr[PacketID::ExtPing] = { PacketExtPing::packet_size };
         return arr;

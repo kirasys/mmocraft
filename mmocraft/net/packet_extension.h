@@ -50,6 +50,12 @@ namespace net
         void parse(const std::byte* buf_start);
     };
 
+    struct PacketTwoWayPing : Packet
+    {
+        static constexpr PacketID packet_id = PacketID::TwoWayPing;
+        static constexpr std::size_t packet_size = 4;
+    };
+
     enum MessageType
     {
         Chat = 0,
