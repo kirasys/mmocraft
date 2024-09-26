@@ -87,6 +87,8 @@ namespace net
         static constexpr PacketID packet_id = PacketID::ExtPing;
         static constexpr std::size_t packet_size = 17;
 
+        PacketExtPing() = default;
+
         PacketExtPing(const std::byte* data)
             : Packet{ packet_id }
         {

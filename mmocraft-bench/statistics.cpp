@@ -3,6 +3,7 @@
 #include <atomic>
 #include <iostream>
 
+#include "net/packet_extension.h"
 #include "util/time_util.h"
 
 namespace
@@ -14,6 +15,9 @@ namespace
 
     std::atomic<std::size_t> total_packet_data_sended{ 0 };
     std::atomic<std::size_t> total_packet_data_received{ 0 };
+
+    std::atomic<std::size_t> total_ping_received{ 0 };
+    std::atomic<std::size_t> total_ping_latency{ 0 };
 }
 
 namespace bench
@@ -35,6 +39,14 @@ namespace bench
         total_packet_data_received.fetch_add(data_size, std::memory_order_relaxed);
     }
 
+    void on_ping_packet_receive(const std::byte* packet_data)
+    {
+        net::PacketExtPing packet(packet_data);
+
+        total_ping_latency.fetch_add(packet.response_time - packet.request_time, std::memory_order_relaxed);
+        total_ping_received.fetch_add(1, std::memory_order_relaxed);
+    }
+
     void print_statistics()
     {
         double elapesd_seconds = (util::current_monotonic_tick() - bench_start_tick) / 1000.0;
@@ -49,5 +61,10 @@ namespace bench
 
         std::cout << "Total received packet bytes : " << total_packet_data_received.load(std::memory_order_relaxed) << '\n';
         std::cout << " - Throughput per second (MB) : " << total_packet_data_received.load(std::memory_order_relaxed) / elapesd_seconds / 1024 / 1024 << '\n';
+    
+        if (auto ping_count = total_ping_received.load(std::memory_order_relaxed)) {
+            std::cout << "Average ping latency : "
+                << total_ping_latency.load(std::memory_order_relaxed) / ping_count << '\n';
+        }
     }
 }
