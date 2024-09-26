@@ -82,10 +82,9 @@ namespace net
     struct PacketExtPing : Packet
     {
         PacketFieldType::UInt64 request_time = 0;
-        PacketFieldType::UInt64 response_time = 0;
 
         static constexpr PacketID packet_id = PacketID::ExtPing;
-        static constexpr std::size_t packet_size = 17;
+        static constexpr std::size_t packet_size = 9;
 
         PacketExtPing() = default;
 
@@ -100,14 +99,9 @@ namespace net
             request_time = util::current_time_ns();
         }
 
-        void set_response_time()
+        std::size_t get_rtt_ns() const
         {
-            response_time = util::current_time_ns();
-        }
-
-        std::size_t latency_ns() const
-        {
-            return response_time - request_time;
+            return util::current_time_ns() - request_time;
         }
 
         void parse(const std::byte* buf_start);

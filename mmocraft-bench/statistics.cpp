@@ -17,7 +17,7 @@ namespace
     std::atomic<std::size_t> total_packet_data_received{ 0 };
 
     std::atomic<std::size_t> total_ping_received{ 0 };
-    std::atomic<std::size_t> total_ping_latency{ 0 };
+    std::atomic<std::size_t> total_ping_rtt{ 0 };
 }
 
 namespace bench
@@ -43,7 +43,7 @@ namespace bench
     {
         net::PacketExtPing packet(packet_data);
 
-        total_ping_latency.fetch_add(packet.latency_ns(), std::memory_order_relaxed);
+        total_ping_rtt.fetch_add(packet.get_rtt_ns(), std::memory_order_relaxed);
         total_ping_received.fetch_add(1, std::memory_order_relaxed);
     }
 
@@ -63,8 +63,8 @@ namespace bench
         std::cout << " - Throughput per second (MB) : " << total_packet_data_received.load(std::memory_order_relaxed) / elapesd_seconds / 1024 / 1024 << '\n';
     
         if (auto ping_count = total_ping_received.load(std::memory_order_relaxed)) {
-            std::cout << "Average ping latency (ns): "
-                << total_ping_latency.load(std::memory_order_relaxed) / ping_count << '\n';
+            std::cout << "Average ping RTT (ns): "
+                << total_ping_rtt.load(std::memory_order_relaxed) / ping_count << '\n';
         }
     }
 }
