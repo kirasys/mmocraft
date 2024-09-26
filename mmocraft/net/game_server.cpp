@@ -96,7 +96,7 @@ namespace net
     {
         net::PacketExtPing packet(data);
 
-        packet.set_response_time(util::current_timestmap());
+        packet.set_response_time();
         conn.io()->send_packet(packet);
 
         return error::SUCCESS;

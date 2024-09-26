@@ -43,7 +43,7 @@ namespace bench
     {
         net::PacketExtPing packet(packet_data);
 
-        total_ping_latency.fetch_add(packet.response_time - packet.request_time, std::memory_order_relaxed);
+        total_ping_latency.fetch_add(packet.latency_ns(), std::memory_order_relaxed);
         total_ping_received.fetch_add(1, std::memory_order_relaxed);
     }
 
@@ -63,7 +63,7 @@ namespace bench
         std::cout << " - Throughput per second (MB) : " << total_packet_data_received.load(std::memory_order_relaxed) / elapesd_seconds / 1024 / 1024 << '\n';
     
         if (auto ping_count = total_ping_received.load(std::memory_order_relaxed)) {
-            std::cout << "Average ping latency : "
+            std::cout << "Average ping latency (ns): "
                 << total_ping_latency.load(std::memory_order_relaxed) / ping_count << '\n';
         }
     }

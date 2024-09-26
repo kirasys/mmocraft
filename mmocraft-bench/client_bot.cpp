@@ -96,7 +96,7 @@ namespace bench
     {
         if (state() >= ClientState::Connected) {
             net::PacketExtPing ping_packet;
-            ping_packet.set_request_time(util::current_timestmap());
+            ping_packet.set_request_time();
             connection_io->send_packet(ping_packet);
 
             post_send_event();

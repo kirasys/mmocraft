@@ -95,14 +95,19 @@ namespace net
             parse(data);
         }
 
-        void set_request_time(PacketFieldType::UInt64 req_time)
+        void set_request_time()
         {
-            request_time = req_time;
+            request_time = util::current_time_ns();
         }
 
-        void set_response_time(PacketFieldType::UInt64 res_time)
+        void set_response_time()
         {
-            response_time = res_time;
+            response_time = util::current_time_ns();
+        }
+
+        std::size_t latency_ns() const
+        {
+            return response_time - request_time;
         }
 
         void parse(const std::byte* buf_start);
