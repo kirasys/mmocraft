@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <MongoCXXPath>C:\mongo-cxx-driver\</MongoCXXPath>
     <MongoCPath>C:\mongo-c-driver\</MongoCPath>
     <ProtocPath>C:\Users\kirasys0\source\repos\mmocraft\vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc.exe</ProtocPath>
   </PropertyGroup>
@@ -12,16 +11,13 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableSpecificWarnings>26495;4251;4267</DisableSpecificWarnings>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)mmocraft;$(MongoCXXPath)\include\mongocxx\v_noabi;$(MongoCXXPath)\include\bsoncxx\v_noabi;$(MongoCXXPath)\include\libmongoc-1.0;$(MongoCXXPath)\include\libbson-1.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)mmocraft;$(MongoCPath)\include\libmongoc-1.0;$(MongoCPath)\include\libbson-1.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;$(OutDir)mmocraft.exe.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(OutDir)mmocraft.exe.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <BuildMacro Include="MongoCXXPath">
-      <Value>$(MongoCXXPath)</Value>
-    </BuildMacro>
     <BuildMacro Include="MongoCPath">
       <Value>$(MongoCPath)</Value>
     </BuildMacro>
