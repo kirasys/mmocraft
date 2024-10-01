@@ -8,8 +8,8 @@
 #include "config/config.h"
 #include "net/socket.h"
 #include "net/server_communicator.h"
+#include "database/couchbase_core.h"
 #include "logging/logger.h"
-#include "database/database_core.h"
 
 namespace
 {
@@ -55,7 +55,7 @@ namespace setup
 
         logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
 
-        database::DatabaseCore::connect_server_with_login(conf.player_database());
+        database::CouchbaseCore::connect_server_with_login(conf.player_database());
     }
 
     void add_termination_handler(std::terminate_handler handler)

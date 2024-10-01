@@ -8,7 +8,6 @@
 #include <logging/logger.h>
 
 #include "../config/config.h"
-#include "../database/query.h"
 
 namespace
 {
@@ -111,8 +110,6 @@ namespace net
 
         auto& conf = login::config::get_config();
         logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
-        
-        ::database::DatabaseCore::connect_server_with_login(conf.player_database());
     
         ::database::CouchbaseCore::connect_server_with_login(conf.session_database());
 

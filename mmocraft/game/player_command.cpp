@@ -63,11 +63,11 @@ namespace game
         auto username = tokens[1];
         auto mode = tokens[2];
         
-        database::PlayerSearchSQL player_search;
-        player_search.search(username);
+        //database::PlayerSearchSQL player_search;
+        //player_search.search(username);
 
-        if (!std::strcmp("write", mode))
-            execute_mail_write(player_search.player_identity(), tokens);
+        //if (!std::strcmp("write", mode))
+        //    execute_mail_write(player_search.player_identity(), tokens);
     }
 
     void PlayerCommand::execute_mail_write(unsigned player_id, const std::vector<const char*>& tokens)

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "database/database_core.h"
-
 #include "game/world.h"
 
 #include "net/connection.h"
@@ -81,8 +79,6 @@ namespace net
 
         net::TcpServer tcp_server;
         net::UdpServer<GameServer> udp_server;
-
-        database::DatabaseCore database_core;
 
         game::World world;
 

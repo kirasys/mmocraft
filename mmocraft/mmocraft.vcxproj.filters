@@ -20,7 +20,7 @@
     <ClCompile Include="net\connection.cpp" />
     <ClCompile Include="net\game_server.cpp" />
     <ClCompile Include="net\packet.cpp" />
-    <ClCompile Include="database\database_core.cpp" />
+    <ClCompile Include="database\mssql_core.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="system_initializer.cpp" />
@@ -70,7 +70,7 @@
     <ClInclude Include="io\io_event_pool.h" />
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\player.h" />
-    <ClInclude Include="database\database_core.h" />
+    <ClInclude Include="database\mssql_core.h" />
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="util\string_util.h" />
     <ClInclude Include="net\deferred_packet.h" />
@@ -121,7 +121,6 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="proto\config.proto" />
-    <CustomBuild Include="proto\player_gamedata.proto" />
     <CustomBuild Include="proto\world_metadata.proto" />
     <CustomBuild Include="proto\protocol.proto" />
   </ItemGroup>

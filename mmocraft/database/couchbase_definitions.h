@@ -15,22 +15,26 @@ namespace database
     constexpr const char* player_login_collection_name = "player_login";
     constexpr const char* player_login_session_collection_name = "player_login_session";
 
-    // Note: assigned value should never be changed without a migration.
+    
     enum CollectionPath
     {
         // standard_bucket._default
-        player_login = 0,
+        player_login,
+        player_gamedata,
 
         // cached_bucket._default
-        player_login_session = 1,
+        player_login_session,
+
 
         SIZE,
     };
 
     constexpr std::string to_string(CollectionPath path)
     {
+        // Warning: associated string should never be changed without a migration.
         constexpr const char* collection_path_strs[] = {
             "player_login",
+            "player_gamedata",
             "player_login_session"
         };
         return collection_path_strs[path];
@@ -49,6 +53,14 @@ namespace database
         struct PlayerLoginSession
         {
             std::uint64_t connection_key = 0;
+        };
+
+        struct PlayerGamedata
+        {
+            std::uint64_t latest_pos = 0;
+            std::uint64_t spawn_pos = 0;
+            std::uint32_t level = 0;
+            std::uint32_t exp = 0;
         };
     }
 }
@@ -90,5 +102,28 @@ struct tao::json::traits<database::collection::PlayerLoginSession> {
     static void to(const tao::json::basic_value<Traits>& v, database::collection::PlayerLoginSession& p)
     {
         v.at("connection_key").to(p.connection_key);
+    }
+};
+
+template<>
+struct tao::json::traits<database::collection::PlayerGamedata> {
+    template<template<typename...> class Traits>
+    static void assign(tao::json::basic_value<Traits>& v, const database::collection::PlayerGamedata& p)
+    {
+        v = {
+            { "latest_pos", p.latest_pos },
+            { "spawn_pos", p.spawn_pos },
+            { "level", p.level },
+            { "exp", p.exp }
+        };
+    }
+
+    template<template<typename...> class Traits>
+    static void to(const tao::json::basic_value<Traits>& v, database::collection::PlayerGamedata& p)
+    {
+        v.at("latest_pos").to(p.latest_pos);
+        v.at("spawn_pos").to(p.spawn_pos);
+        v.at("level").to(p.level);
+        v.at("exp").to(p.exp);
     }
 };

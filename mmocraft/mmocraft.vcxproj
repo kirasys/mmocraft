@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="config\config.cpp" />
-    <ClCompile Include="database\database_core.cpp" />
+    <ClCompile Include="database\mssql_core.cpp" />
     <ClCompile Include="database\couchbase_core.cpp" />
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
@@ -91,7 +91,7 @@
     <ClInclude Include="config\argparse.h" />
     <ClInclude Include="config\config.h" />
     <ClInclude Include="config\constants.h" />
-    <ClInclude Include="database\database_core.h" />
+    <ClInclude Include="database\mssql_core.h" />
     <ClInclude Include="database\couchbase_core.h" />
     <ClInclude Include="database\couchbase_definitions.h" />
     <ClInclude Include="database\query.h" />
@@ -166,9 +166,6 @@
     <None Include="database\sql\routines\create_tables.sql" />
     <None Include="database\sql\parameters.sql" />
     <CustomBuild Include="proto\config.proto">
-      <FileType>Document</FileType>
-    </CustomBuild>
-    <CustomBuild Include="proto\player_gamedata.proto">
       <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Include="proto\world_metadata.proto">

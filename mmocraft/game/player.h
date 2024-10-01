@@ -3,6 +3,8 @@
 #include <bitset>
 #include <string.h>
 
+#include "database/couchbase_definitions.h"
+
 #include "net/packet_id.h"
 #include "net/connection_key.h"
 #include "util/common_util.h"
@@ -39,9 +41,17 @@ namespace game
 
         Initialized,
 
-        Extention_Wait,
+        Handshake_Wait,
 
         Handshake_Completed,
+
+        ExHandshake_Wait,
+
+        ExHandshake_Completed,
+
+        Extention_Wait,
+
+        Extention_Completed,
 
         Level_Wait,
 
@@ -159,14 +169,14 @@ namespace game
             return _connection_key;
         }
 
-        unsigned identity() const
+        const std::string& uuid() const
         {
-            return _identity;
+            return _uuid;
         }
 
-        void set_identity(unsigned id)
+        void set_uuid(const std::string& uuid)
         {
-            _identity = id;
+            _uuid = uuid;
         }
 
         PlayerType player_type() const
@@ -191,46 +201,46 @@ namespace game
 
         PlayerPosition spawn_position() const
         {
-            return _gamedata.spawn_pos();
+            return _gamedata.spawn_pos;
         }
 
         auto spawn_yaw() const
         {
-            PlayerPosition pos(_gamedata.spawn_pos());
+            PlayerPosition pos(spawn_position());
             return pos.view.yaw;
         }
 
         auto spawn_pitch() const
         {
-            PlayerPosition pos(_gamedata.spawn_pos());
+            PlayerPosition pos(spawn_position());
             return pos.view.pitch;
         }
 
         void set_position(PlayerPosition pos)
         {
-            _gamedata.set_latest_pos(pos.raw);
+            _gamedata.latest_pos = pos.raw;
         }
 
         void set_spawn_position(PlayerPosition pos)
         {
-            _gamedata.set_spawn_pos(pos.raw);
+            _gamedata.spawn_pos = pos.raw;
         }
 
         void set_spawn_coordinate(int x, int y, int z, bool force = true)
         {
-            PlayerPosition pos(_gamedata.spawn_pos());
-            if (force || not pos.raw_coordinate()) {
-                pos.set_raw_coordinate(x * 32, y * 32 + 51, z * 32);
-                _gamedata.set_spawn_pos(pos.raw);
+            PlayerPosition spawn_pos(spawn_position());
+            if (force || spawn_pos.raw_coordinate() == 0) {
+                spawn_pos.set_raw_coordinate(x * 32, y * 32 + 51, z * 32);
+                _gamedata.spawn_pos = spawn_pos.raw;
             }
         }
 
         void set_spawn_orientation(unsigned yaw, unsigned pitch, bool force = true)
         {
-            PlayerPosition pos(_gamedata.spawn_pos());
-            if (force || not pos.raw_orientation()) {
-                pos.set_raw_orientation(yaw, pitch);
-                _gamedata.set_spawn_pos(pos.raw);
+            PlayerPosition spawn_pos(spawn_position());
+            if (force || spawn_pos.raw_orientation() == 0) {
+                spawn_pos.set_raw_orientation(yaw, pitch);
+                _gamedata.spawn_pos = spawn_pos.raw;
             }
         }
 
@@ -246,7 +256,7 @@ namespace game
 
         PlayerPosition last_position() const
         {
-            return _gamedata.latest_pos();
+            return _gamedata.latest_pos;
         }
 
         PlayerPosition last_transferred_position() const
@@ -264,6 +274,11 @@ namespace game
             _last_ping_time = util::current_monotonic_tick();
         }
 
+        void set_extension_mode()
+        {
+            extension_mode = true;
+        }
+
         void set_extension_count(unsigned count)
         {
             pending_extension_count = count;
@@ -279,38 +294,42 @@ namespace game
             supported_extensions.set(ext);
         }
 
-        bool is_supported_extension(net::PacketID ext)
+        bool is_support_extension() const
+        {
+            return extension_mode;
+        }
+
+        bool is_supported_extension(net::PacketID ext) const
         {
             return supported_extensions.test(ext);
         }
 
-        void load_gamedata(std::byte* data, std::size_t data_size)
+        void set_gamedata(const database::collection::PlayerGamedata& gamedata)
         {
-            _gamedata.ParseFromArray(data, int(data_size));
+            _gamedata = gamedata;
         }
 
-        void copy_gamedata(std::byte* data, std::size_t data_size) const
+        const database::collection::PlayerGamedata& get_gamedata() const
         {
-            assert(_gamedata.ByteSizeLong() <= data_size);
-            _gamedata.SerializeToArray(data, int(data_size));
+            return _gamedata;
         }
 
     private:
         PlayerState _state = PlayerState::Initialized;
 
         net::ConnectionKey _connection_key;
-        
-        unsigned pending_extension_count = 0;
-        std::bitset<64> supported_extensions;
-
-        // Row number of the player table (so always greater than 0)
-        // it's used to verify that no same (identity) users already logged in.
-        unsigned _identity;
 
         PlayerType _player_type;
 
         char _username[16 + 1];
-        game::PlayerGamedata _gamedata;
+
+        database::collection::PlayerGamedata _gamedata;
+
+        std::string _uuid;
+
+        bool extension_mode = false;
+        unsigned pending_extension_count = 0;
+        std::bitset<64> supported_extensions;
 
         PlayerPosition _last_transferred_pos;
         PlayerPosition _last_transferred_pos_tmp;

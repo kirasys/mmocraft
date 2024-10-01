@@ -2,7 +2,6 @@
 
 #include <cstddef>
 
-#include <database/database_core.h>
 #include <database/couchbase_core.h>
 #include <net/connection_key.h>
 #include <net/udp_server.h>
@@ -37,8 +36,6 @@ namespace login
 
         private:
             ::net::UdpServer<LoginServer> server_core;
-            ::database::DatabaseCore player_db;
-            ::database::CouchbaseCore session_db;
 
             ::util::IntervalTaskScheduler<LoginServer> interval_tasks;
         };

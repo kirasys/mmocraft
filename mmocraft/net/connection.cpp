@@ -130,24 +130,15 @@ namespace net
             conf.tcp_server().server_name(), conf.tcp_server().motd(),
             _player->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
         };
+
+        net::PacketSetPlayerID set_player_id_packet(_player->game_id());
+
         net::PacketLevelInit level_init_packet;
 
         connection_io->send_packet(handshake_packet);
+        connection_io->send_packet(set_player_id_packet);
         connection_io->send_packet(level_init_packet);
-
-        _player->set_state(game::PlayerState::Handshake_Completed);
     }
-
-
-    void Connection::send_supported_cpe_list()
-    {
-        net::PacketExtInfo ext_info_packet;
-        connection_io->send_packet(ext_info_packet);
-
-        net::PacketExtEntry ext_entry_packet;
-        connection_io->send_packet(ext_entry_packet);
-    }
-
 
     /**
      *  Event Handler Interface

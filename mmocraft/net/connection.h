@@ -170,8 +170,6 @@ namespace net
 
         void on_handshake_success();
 
-        void send_supported_cpe_list();
-
         /**
          *  Event Handler Interface
          */
