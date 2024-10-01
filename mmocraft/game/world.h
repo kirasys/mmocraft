@@ -40,7 +40,7 @@ namespace game
 
         void broadcast_to_world_player(net::MessageType, const char* message);
 
-        template <game::PlayerState T> 
+        template <game::PlayerState::State T> 
         void send_to_specific_players(const std::byte* data, std::size_t data_size,
                         void(*successed)(game::Player*) = nullptr, void(*failed)(game::Player*) = nullptr)
         {
@@ -54,7 +54,7 @@ namespace game
             send_to_players(players, data, data_size, successed, failed);
         }
 
-        template <game::PlayerState T>
+        template <game::PlayerState::State T>
         void multicast_to_specific_players(io::MulticastDataEntry& entry)
         {
             std::vector<game::Player*> players;

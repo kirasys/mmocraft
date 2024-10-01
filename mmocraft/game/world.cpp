@@ -35,7 +35,7 @@ namespace game
         world_players.reserve(connection_env.size_of_max_connections());
 
         connection_env.select_players([](const game::Player* player)
-            { return player->state() >= PlayerState::Spawned; },
+            { return player->state() >= PlayerState::spawned; },
             world_players);
 
         net::PacketExtMessage message_packet(message_type, message);
@@ -90,7 +90,7 @@ namespace game
 
         auto& data_entry = multicast_manager.set_data(io::MulticastTag::Level_Data, std::move(level_packet_data), data_size);
         multicast_to_players(level_wait_players, data_entry, [](game::Player* player) {
-            player->set_state(game::PlayerState::Level_Initialized);
+            player->transit_state();
         });
         
         last_level_data_submission_at = util::current_monotonic_tick();
@@ -103,7 +103,7 @@ namespace game
         old_players.reserve(connection_env.size_of_max_connections());
 
         connection_env.select_players([](const game::Player* player)
-            { return player->state() >= PlayerState::Spawned; },
+            { return player->state() >= PlayerState::spawned; },
             old_players);
 
         // create spawn packet of all players.
@@ -113,7 +113,7 @@ namespace game
         // spawn all players to the new players.
         send_to_players(spawn_wait_players, spawn_packet_data.get(), spawn_packet_data_size,
             [](game::Player* player) {
-                player->set_state(game::PlayerState::Spawned);
+                player->transit_state();
             });
 
         // spawn new player to the old players. 
@@ -127,7 +127,7 @@ namespace game
         std::unique_ptr<std::byte[]> despawn_packet_data;
         auto data_size = net::PacketDespawnPlayer::serialize(despawn_wait_players, despawn_packet_data);
 
-        send_to_specific_players<PlayerState::Spawned>(despawn_packet_data.get(), data_size);
+        send_to_specific_players<PlayerState::spawned>(despawn_packet_data.get(), data_size);
     }
 
     void World::disconnect_player(const std::vector<game::Player*>& disconnect_wait_players)
@@ -173,7 +173,7 @@ namespace game
             commit_block_changes(block_history_data.get(), data_size);
 
             auto& data_entry = multicast_manager.set_data(io::MulticastTag::Sync_Block_Data, std::move(block_history_data), data_size);
-            multicast_to_specific_players< PlayerState::Level_Initialized>(data_entry);
+            multicast_to_specific_players<PlayerState::level_initialized>(data_entry);
         }
         
         // submit level data to handshaked players.
@@ -190,7 +190,7 @@ namespace game
         world_players.reserve(connection_env.size_of_max_connections());
 
         connection_env.select_players([](const game::Player* player)
-            { return player->state() >= PlayerState::Spawned; },
+            { return player->state() >= PlayerState::spawned; },
             world_players);
 
         // create set player position packets.
@@ -212,34 +212,34 @@ namespace game
     {
         auto transit_player_state = [this](net::Connection& conn, game::Player& player) {
             switch (player.state()) {
-            case game::PlayerState::ExHandshake_Completed:
+            case game::PlayerState::ex_handshaked:
             {
                 net::PacketExtInfo ext_info_packet;
                 net::PacketExtEntry ext_entry_packet;
 
                 if (conn.io()->send_packet(ext_info_packet) && conn.io()->send_packet(ext_entry_packet))
-                    player.set_state(game::PlayerState::Extention_Wait);
+                    player.prepare_state_transition(game::PlayerState::extension_syncing, game::PlayerState::extension_synced);
             }
             break;
-            case game::PlayerState::Handshake_Completed:
-            case game::PlayerState::Extention_Completed:
+            case game::PlayerState::handshaked:
+            case game::PlayerState::extension_synced:
             {
                 conn.on_handshake_success();
 
-                player.set_state(game::PlayerState::Level_Wait);
+                player.prepare_state_transition(game::PlayerState::level_initializing, game::PlayerState::level_initialized);
                 sync_block_task.push(&player);
             }
             break;
-            case game::PlayerState::Level_Initialized:
+            case game::PlayerState::level_initialized:
             {
                 player.set_spawn_coordinate(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z(), false);
                 player.set_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch(), false);
 
-                player.set_state(PlayerState::Spawn_Wait);
+                player.prepare_state_transition(game::PlayerState::spawning, game::PlayerState::spawned);
                 spawn_player_task.push(&player);
             }
             break;
-            case game::PlayerState::Spawned:
+            case game::PlayerState::spawned:
             {
                 if (player.last_ping_time() + ping_interval < util::current_monotonic_tick()) {
                     conn.io()->send_ping();
@@ -247,10 +247,10 @@ namespace game
                 }
             }
             break;
-            case game::PlayerState::Disconnect_Wait:
+            case game::PlayerState::disconnecting:
             {
                 disconnect_player_task.push(&player);
-                player.set_state(PlayerState::Disconnect_Completed);
+                player.transit_state();
             }
             break;
             }

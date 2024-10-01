@@ -21,12 +21,18 @@ namespace database
             // Note: don't use player_unsafe after resume().
             else if (auto player = conn->associated_player()) {
                 player->set_gamedata(result.content_as<::database::collection::PlayerGamedata>());
-                player->set_state(game::PlayerState::ExHandshake_Completed);
+                player->transit_state();
             }
         }
 
         co_return;
-            
+    }
+
+    database::AsyncTask PlayerGamedata::get(const game::Player& player_unsafe, std::function<void(std::error_code, database::collection::PlayerGamedata)> callback)
+    {
+        auto [err, result] = co_await ::database::CouchbaseCore::get_document(::database::CollectionPath::player_gamedata, player_unsafe.uuid());
+
+        callback(err.ec(), result.content_as<::database::collection::PlayerGamedata>());
     }
 
     database::AsyncTask PlayerGamedata::save(const game::Player& player_unsafe)

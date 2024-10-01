@@ -74,10 +74,12 @@ namespace net
         ));
 
         if (auto player = conn.associated_player()) {
-            if (packet.cpe_magic == 0x42) // is CPE supported
+            if (packet.cpe_magic == 0x42) { // is CPE supported
                 player->set_extension_mode();
-
-            player->set_state(game::PlayerState::Handshake_Wait);
+                player->prepare_state_transition(game::PlayerState::ex_handshaking, game::PlayerState::ex_handshaked);
+            }
+            else
+                player->prepare_state_transition(game::PlayerState::handshaking, game::PlayerState::handshaked);
         }
 
         udp_server.communicator().forward_packet(
@@ -182,7 +184,7 @@ namespace net
                 player->register_extension(net::cpe_index_of(packet.extenstion_name));
 
             if (player->decrease_pending_extension_count() == 0)
-                conn.on_handshake_success();
+                player->transit_state();
         }
 
         return error::SUCCESS;
@@ -220,7 +222,7 @@ namespace net
 
         // Fetch other UDP server.
         comm.fetch_server(protocol::ServerType::Login);
-        comm.fetch_server(protocol::ServerType::Chat);
+        //comm.fetch_server(protocol::ServerType::Chat);
 
         // Create working directories
         if (not std::filesystem::exists(conf.world().save_dir()))
@@ -273,7 +275,7 @@ namespace net
     {
         if (auto player = conn.associated_player()) {
             // notify logout event to the login server.
-            if (player->state() >= game::PlayerState::Handshake_Completed) {
+            if (player->state() >= game::PlayerState::handshaked) {
                 protocol::PlayerLogoutRequest logout_request;
                 logout_request.mutable_username()->append(player->username());
                 udp_server.communicator().send_message(protocol::ServerType::Login, net::MessageID::Login_PlayerLogout, logout_request);
@@ -291,14 +293,16 @@ namespace net
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
             return false;
 
-        if (auto conn = connection_env.try_acquire_connection(msg.connection_key())) {
+        auto connection_key = msg.connection_key();
+
+        if (auto conn = connection_env.try_acquire_connection(connection_key)) {
             auto& player = *conn->associated_player();
 
             switch (msg.error_code()) {
             case error::PACKET_HANDLE_SUCCESS:
             {
                 // Disconnect already logged in player.
-                if (msg.connection_key() != msg.prev_connection_key())
+                if (connection_key != msg.prev_connection_key())
                     if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
                         prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
 
@@ -306,12 +310,23 @@ namespace net
                 player.set_player_type(game::PlayerType(msg.player_type()));
 
                 // Load player game data.
-                database::PlayerGamedata::load(connection_env, player);
+                database::PlayerGamedata::get(player, [this, connection_key](std::error_code err, database::collection::PlayerGamedata gamedata) {
+                    if (auto conn = connection_env.try_acquire_connection(connection_key)) {
+                        if (err && err != couchbase::errc::key_value::document_not_found)
+                            conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
+
+                        else if (auto player = conn->associated_player()) {
+                            player->set_gamedata(gamedata);
+                            player->transit_state();
+                        }
+                    }
+                });
+
                 break;
             }
             case error::PACKET_RESULT_NOT_EXIST_LOGIN:
                 player.set_player_type(game::PlayerType::GUEST);
-                player.set_state(game::PlayerState::ExHandshake_Completed); // todo: state transition
+                player.transit_state();
                 break;
             default:
                 conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
