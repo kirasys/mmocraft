@@ -3,7 +3,7 @@
 #include <cstddef>
 
 #include <database/database_core.h>
-#include <database/mongodb_core.h>
+#include <database/couchbase_core.h>
 #include <net/connection_key.h>
 #include <net/udp_server.h>
 #include <net/server_communicator.h>
@@ -25,6 +25,8 @@ namespace login
 
             bool handle_handshake_packet(const ::net::MessageRequest&, ::net::MessageResponse&);
 
+            ::database::AsyncTask handle_handshake_packet(::net::MessageRequest);
+
             bool handle_player_logout_message(const ::net::MessageRequest&, ::net::MessageResponse&);
 
             bool initialize(const char* router_ip, int port);
@@ -36,7 +38,7 @@ namespace login
         private:
             ::net::UdpServer<LoginServer> server_core;
             ::database::DatabaseCore player_db;
-            ::database::MongoDBCore session_db;
+            ::database::CouchbaseCore session_db;
 
             ::util::IntervalTaskScheduler<LoginServer> interval_tasks;
         };

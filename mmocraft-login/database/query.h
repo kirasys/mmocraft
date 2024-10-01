@@ -1,7 +1,9 @@
 #pragma once
 
+#include <net/connection_key.h>
 #include <net/packet.h>
 #include <database/sql_statement.h>
+#include <database/couchbase_core.h>
 
 namespace login
 {
@@ -34,6 +36,35 @@ namespace login
 
             SQLUINTEGER _player_identity = 0;
             SQLUINTEGER _player_type = 0;
+        };
+
+        class PlayerSession
+        {
+        public:
+            static constexpr const char* collection_name = "player_session";
+
+            PlayerSession(std::string_view username);
+
+            bool exists() const
+            {
+                //return _cursor.has_value();
+                return true;
+            }
+
+            auto connection_key() const
+            {
+                //return net::ConnectionKey((*_cursor)["connection_key"].get_int64());
+                return 1;
+            }
+
+            bool update(::net::ConnectionKey, game::PlayerType, unsigned);
+
+            bool revoke();
+
+        private:
+            bool find();
+
+            std::string _username;
         };
     }
 }

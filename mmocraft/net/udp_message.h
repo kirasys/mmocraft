@@ -5,6 +5,7 @@
 #include "net/connection_key.h"
 #include "win/win_type.h"
 #include "proto/generated/protocol.pb.h"
+#include "logging/logger.h"
 
 namespace net
 {
@@ -19,6 +20,8 @@ namespace net
         {
             reset(msg_id);
         }
+
+        MessageRequest(const MessageRequest&) = default;
 
         consteval static std::size_t size_of_header()
         {
@@ -102,7 +105,7 @@ namespace net
         }
 
         template <typename MessageType>
-        void set_message(MessageType& msg)
+        void set_message(const MessageType& msg)
         {
             msg.SerializeToArray(begin_message(), int(message_capacity()));
             set_message_size(msg.ByteSizeLong());
@@ -110,14 +113,36 @@ namespace net
 
         bool read_message(win::Socket sock);
 
-        void send_reply(win::Socket sender_sock, const MessageRequest& response);
+        void send_reply(const MessageRequest& response);
+
+        template <typename MessageType>
+        void send_reply(const MessageType& msg)
+        {
+            set_message(msg);
+
+            auto transferred_bytes = ::sendto(
+                reply_address.sender,
+                cbegin(), int(size()),
+                0,
+                reinterpret_cast<SOCKADDR*>(&reply_address.recipient_addr),
+                reply_address.recipient_addr_size
+            );
+
+            LOG_IF(error, transferred_bytes == SOCKET_ERROR)
+                << "sendto() failed with " << ::WSAGetLastError();
+            LOG_IF(error, transferred_bytes != SOCKET_ERROR && transferred_bytes < size())
+                << "sendto() successed partially";
+        }
 
     private:
         std::size_t _size;
         char _buf[REQUEST_MESSAGE_SIZE];
 
-        struct sockaddr_in requester_addr;
-        int requester_addr_size = sizeof(requester_addr);
+        struct ReplyAddress {
+            win::Socket sender;
+            struct sockaddr_in recipient_addr;
+            int recipient_addr_size = sizeof(recipient_addr);
+        } reply_address;
     };
 
     using MessageResponse = MessageRequest;

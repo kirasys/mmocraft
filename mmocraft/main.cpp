@@ -10,6 +10,9 @@
 #include "net/deferred_packet.h"
 #include "system_initializer.h"
 
+#include <couchbase/cluster.hxx>
+#include <couchbase/fmt/error.hxx>
+
 int main(int argc, char* argv[])
 {
 	if (argc != 3) {
@@ -23,17 +26,7 @@ int main(int argc, char* argv[])
 	setup::initialize_system(router_ip, router_port);
 
 	try {
-		/*
-		database::MongoDBCore::connect_server("mongodb://localhost:27017/");
 
-		database::PlayerSession player_session("username");
-		std::cout << player_session.exists();
-		
-		player_session.update(net::ConnectionKey(12), game::PlayerType::AUTHENTICATED_USER, 3);
-		//player_session.revoke();
-		*/
-		
-		
 		auto& conf = config::get_config();
 		auto server = net::GameServer(conf.tcp_server().max_client());
 		server.serve_forever(router_ip, router_port);

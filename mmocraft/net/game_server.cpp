@@ -288,26 +288,33 @@ namespace net
             return false;
 
         if (auto conn = connection_env.try_acquire_connection(msg.connection_key())) {
-            if (msg.error_code() != error::PACKET_HANDLE_SUCCESS) {
-                conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
-                return true;
-            }
-
-            // Disconnect already logged in player.
-            if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
-                prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
-
             auto& player = *conn->associated_player();
-            player.set_identity(msg.player_identity());
-            player.set_player_type(game::PlayerType(msg.player_type()));
 
-            // Load player game data.
-            if (player.player_type() != game::PlayerType::GUEST) {
+            switch (msg.error_code()) {
+            case error::PACKET_HANDLE_SUCCESS:
+            {
+                // Disconnect already logged in player.
+                if (msg.connection_key() != msg.prev_connection_key())
+                    if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
+                        prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
+
+                player.set_identity(msg.player_identity());
+                player.set_player_type(game::PlayerType(msg.player_type()));
+
+                // Load player game data.
                 database::PlayerLoadSQL player_load;
                 if (not player_load.is_valid() || not player_load.load(player)) {
                     conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
                     return true;
                 }
+                break;
+            }
+            case error::PACKET_RESULT_NOT_EXIST_LOGIN:
+                player.set_player_type(game::PlayerType::GUEST);
+                break;
+            default:
+                conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
+                return true;
             }
 
             if (player.state() == game::PlayerState::Extention_Wait)

@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="config\config.cpp" />
     <ClCompile Include="database\database_core.cpp" />
-    <ClCompile Include="database\mongodb_core.cpp" />
+    <ClCompile Include="database\couchbase_core.cpp" />
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
@@ -92,7 +92,8 @@
     <ClInclude Include="config\config.h" />
     <ClInclude Include="config\constants.h" />
     <ClInclude Include="database\database_core.h" />
-    <ClInclude Include="database\mongodb_core.h" />
+    <ClInclude Include="database\couchbase_core.h" />
+    <ClInclude Include="database\couchbase_definitions.h" />
     <ClInclude Include="database\query.h" />
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="game\block.h" />
@@ -267,7 +268,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
-      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -310,7 +310,6 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
-      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -349,7 +348,6 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
-      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -392,7 +390,6 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
-      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"

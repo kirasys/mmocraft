@@ -58,6 +58,7 @@ namespace error
         // Deferred packet result
         PACKET_RESULT_SUCCESS_LOGIN,
         PACKET_RESULT_FAIL_LOGIN,
+        PACKET_RESULT_NOT_EXIST_LOGIN,
         PACKET_RESULT_ALREADY_LOGIN,
 
         // Indicate size of the enum class.
