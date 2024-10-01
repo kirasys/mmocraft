@@ -64,13 +64,13 @@ namespace net
     void Connection::disconnect()
     {
         // already disconencted.
-        if (not is_online() || (_player && _player->state() == game::PlayerState::Disconnect_Wait))
+        if (not is_online() || (_player && _player->state() == game::PlayerState::disconnecting))
            return;
 
         // Spawned players need some teardown operations before going offline.
         // Delegate to the world by updating player state to Disconnect_Wait.
-        if (_player && _player->state() >= game::PlayerState::Spawned) {
-            _player->set_state(game::PlayerState::Disconnect_Wait);
+        if (_player && _player->state() >= game::PlayerState::spawned) {
+            _player->prepare_state_transition(game::PlayerState::disconnecting, game::PlayerState::disconnected);
             return;
         }
         

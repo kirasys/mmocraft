@@ -33,33 +33,71 @@ namespace game
         ADMIN,
     };
 
-    enum PlayerState
+    class PlayerState
     {
-        Disconnect_Completed,
+    public:
+        enum State
+        {
+            // Error states
+            disconnecting,
 
-        Disconnect_Wait,
+            disconnected,
 
-        Initialized,
+            // Sequential states
+            initialized,
 
-        Handshake_Wait,
+            handshaking,
 
-        Handshake_Completed,
+            ex_handshaking,
 
-        ExHandshake_Wait,
+            handshaked,
 
-        ExHandshake_Completed,
+            ex_handshaked,
 
-        Extention_Wait,
+            extension_syncing,
 
-        Extention_Completed,
+            extension_synced,
 
-        Level_Wait,
+            level_initializing,
 
-        Level_Initialized,
+            level_initialized,
 
-        Spawn_Wait,
+            spawning,
 
-        Spawned,
+            spawned,
+        };
+
+        auto state() const
+        {
+            return _cur;
+        }
+
+        auto prev_state() const
+        {
+            return _prev;
+        }
+
+        auto next_state() const
+        {
+            return _next;
+        }
+
+        void transit_state()
+        {
+            _prev = _cur;
+            _cur = _next;
+        }
+
+        void prepare_state_transition(State cur, State next)
+        {
+            _cur = cur;
+            _next = next;
+        }
+
+    private:
+        State _prev = State::initialized;
+        State _cur = State::initialized;
+        State _next = State::initialized;
     };
 
     union PlayerPosition {
@@ -143,26 +181,10 @@ namespace game
         }
     };
 
-    class Player : util::NonCopyable
+    class Player : public PlayerState, util::NonCopyable
     {
     public:
         Player(net::ConnectionKey, std::string_view username);
-
-        PlayerState state() const
-        {
-            return _state;
-        }
-
-        void set_state(PlayerState state)
-        {
-            _state = state;
-        }
-
-        bool transit_state(PlayerState old_state, PlayerState new_state)
-        {
-            _state = _state == old_state ? new_state : old_state;
-            return _state == new_state;
-        }
 
         net::ConnectionKey connection_key() const
         {
@@ -314,8 +336,12 @@ namespace game
             return _gamedata;
         }
 
+        // Player state transition handlers;
+
+        void on_handshake_completed();
+
     private:
-        PlayerState _state = PlayerState::Initialized;
+        PlayerState _state;
 
         net::ConnectionKey _connection_key;
 
