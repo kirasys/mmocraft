@@ -20,7 +20,7 @@
     <ClCompile Include="net\connection.cpp" />
     <ClCompile Include="net\game_server.cpp" />
     <ClCompile Include="net\packet.cpp" />
-    <ClCompile Include="database\database_core.cpp" />
+    <ClCompile Include="database\mssql_core.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="system_initializer.cpp" />
@@ -35,7 +35,7 @@
     <ClCompile Include="net\packet_extension.cpp" />
     <ClCompile Include="game\player_command.cpp" />
     <ClCompile Include="util\time_util.cpp" />
-    <ClCompile Include="database\mongodb_core.cpp" />
+    <ClCompile Include="database\couchbase_core.cpp" />
     <ClCompile Include="net\udp_server.cpp" />
     <ClCompile Include="proto\generated\world_metadata.pb.cc" />
     <ClCompile Include="proto\generated\config.pb.cc" />
@@ -70,7 +70,7 @@
     <ClInclude Include="io\io_event_pool.h" />
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\player.h" />
-    <ClInclude Include="database\database_core.h" />
+    <ClInclude Include="database\mssql_core.h" />
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="util\string_util.h" />
     <ClInclude Include="net\deferred_packet.h" />
@@ -93,7 +93,7 @@
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="game\player_command.h" />
-    <ClInclude Include="database\mongodb_core.h" />
+    <ClInclude Include="database\couchbase_core.h" />
     <ClInclude Include="config\argparse.h" />
     <ClInclude Include="net\udp_server.h" />
     <ClInclude Include="net\server_core.h" />
@@ -106,6 +106,7 @@
     <ClInclude Include="net\udp_message.h" />
     <ClInclude Include="win\registered_io.h" />
     <ClInclude Include="config\constants.h" />
+    <ClInclude Include="database\couchbase_definitions.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />
@@ -120,7 +121,6 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="proto\config.proto" />
-    <CustomBuild Include="proto\player_gamedata.proto" />
     <CustomBuild Include="proto\world_metadata.proto" />
     <CustomBuild Include="proto\protocol.proto" />
   </ItemGroup>

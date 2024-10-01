@@ -2,9 +2,8 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <MongoCXXPath>C:\mongo-cxx-driver\</MongoCXXPath>
-    <MongoCPath>C:\mongo-c-driver\</MongoCPath>
     <ProtocPath>C:\Users\kirasys0\source\repos\mmocraft\vcpkg_installed\x64-windows\x64-windows\tools\protobuf\protoc.exe</ProtocPath>
+    <CouchbaseSDKPath>C:\Users\kirasys0\Downloads\couchbase-cxx-client-1.0.2\couchbase-cxx-client-1.0.2\</CouchbaseSDKPath>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup>
@@ -12,21 +11,18 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableSpecificWarnings>26495;4251;4267</DisableSpecificWarnings>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)mmocraft;$(MongoCXXPath)\include\mongocxx\v_noabi;$(MongoCXXPath)\include\bsoncxx\v_noabi;$(MongoCXXPath)\include\libmongoc-1.0;$(MongoCXXPath)\include\libbson-1.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)mmocraft;$(CouchbaseSDKPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(MongoCPath)\lib\bson-1.0.lib;$(MongoCPath)\lib\mongoc-1.0.lib;$(MongoCXXPath)\lib\*.lib;$(OutDir)mmocraft.exe.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(CouchbaseSDKPath)\build\$(Configuration)\asio.lib;$(CouchbaseSDKPath)\build\$(Configuration)\couchbase_cxx_client_static.lib;$(CouchbaseSDKPath)\build\core\platform\couchbase_backtrace.dir\Debug\couchbase_backtrace.lib;$(CouchbaseSDKPath)\build\_deps\fmt-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\spdlog-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\boringssl-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\llhttp-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\snappy-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\hdr_histogram-build\src\$(Configuration)\*.lib;iphlpapi.lib;$(OutDir)mmocraft.exe.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <BuildMacro Include="MongoCXXPath">
-      <Value>$(MongoCXXPath)</Value>
-    </BuildMacro>
-    <BuildMacro Include="MongoCPath">
-      <Value>$(MongoCPath)</Value>
-    </BuildMacro>
     <BuildMacro Include="ProtocPath">
       <Value>$(ProtocPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CouchbaseSDKPath">
+      <Value>$(CouchbaseSDKPath)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

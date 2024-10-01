@@ -7,11 +7,14 @@ namespace net
 {
     bool MessageRequest::read_message(win::Socket sock)
     {
+        reply_address.sender = sock;
+
         auto transferred_bytes = ::recvfrom(
             sock,
             begin(), int(capacity()),
             0,
-            (SOCKADDR*)&requester_addr, &requester_addr_size
+            reinterpret_cast<SOCKADDR*>(&reply_address.recipient_addr),
+            &reply_address.recipient_addr_size
         );
 
         if (transferred_bytes == SOCKET_ERROR || transferred_bytes == 0) {
@@ -25,12 +28,15 @@ namespace net
         return true;
     }
 
-    void MessageRequest::send_reply(win::Socket sender_sock, const MessageRequest& response)
+    void MessageRequest::send_reply(const MessageRequest& response)
     {
-        auto transferred_bytes = ::sendto(sender_sock,
+        auto transferred_bytes = ::sendto(
+            reply_address.sender,
             response.cbegin(), int(response.size()),
             0,
-            (SOCKADDR*)&requester_addr, requester_addr_size);
+            reinterpret_cast<SOCKADDR*>(&reply_address.recipient_addr),
+            reply_address.recipient_addr_size
+        );
 
         LOG_IF(error, transferred_bytes == SOCKET_ERROR)
             << "sendto() failed with " << ::WSAGetLastError();

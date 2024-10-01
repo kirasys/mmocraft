@@ -80,9 +80,6 @@ namespace net
             net::MessageRequest request;
             net::MessageResponse response;
 
-            struct sockaddr_in sender_addr;
-            int sender_addr_size = sizeof(sender_addr);
-
             while (not is_terminated) {
                 if (not request.read_message(listen_sock.get_handle()))
                     continue;
@@ -91,7 +88,7 @@ namespace net
 
                 // handle message and send reply.
                 if (handle_message(request, response) && response.message_size()) {
-                    request.send_reply(listen_sock.get_handle(), response);
+                    request.send_reply(response);
                     response.reset();
                 }
             }

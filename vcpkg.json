@@ -1,6 +1,9 @@
 {
   "dependencies": [
     "zlib",
-    "protobuf"
+    "protobuf",
+    "fmt",
+    "pegtl",
+    "taocpp-json"
   ]
 }

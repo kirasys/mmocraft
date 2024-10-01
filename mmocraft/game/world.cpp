@@ -6,7 +6,6 @@
 #include <cstring>
 #include <iostream>
 
-#include "database/database_core.h"
 #include "database/query.h"
 #include "net/packet_extension.h"
 #include "net/connection.h"
@@ -22,9 +21,8 @@ namespace fs = std::filesystem;
 
 namespace game
 {
-    World::World(net::ConnectionEnvironment& a_connection_env, database::DatabaseCore& db_core)
+    World::World(net::ConnectionEnvironment& a_connection_env)
         : connection_env{ a_connection_env }
-        , database_core{ db_core }
         , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
         , disconnect_player_task{ &World::disconnect_player, this, despawn_player_task_interval }
         , sync_block_task{ &World::sync_block, this, sync_block_data_task_interval }
@@ -137,13 +135,9 @@ namespace game
         despawn_player(disconnect_wait_players);
 
         // Update player game data then set offline.
-        database::PlayerUpdateSQL player_update_sql;
-
         for (auto player : disconnect_wait_players) {
-            if (not player_update_sql.update(*player))
-                CONSOLE_LOG(error) << "Fail to update player data.";
-
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
+                database::PlayerGamedata::save(*player);
                 conn->disconnect();
             }
         }
@@ -218,21 +212,30 @@ namespace game
     {
         auto transit_player_state = [this](net::Connection& conn, game::Player& player) {
             switch (player.state()) {
-            case game::PlayerState::Handshake_Completed:
+            case game::PlayerState::ExHandshake_Completed:
             {
-                net::PacketSetPlayerID set_player_id_packet(player.game_id());
-                if (conn.io()->send_packet(set_player_id_packet)) {
-                    sync_block_task.push(&player);
-                    player.set_state(PlayerState::Level_Wait);
-                }
+                net::PacketExtInfo ext_info_packet;
+                net::PacketExtEntry ext_entry_packet;
+
+                if (conn.io()->send_packet(ext_info_packet) && conn.io()->send_packet(ext_entry_packet))
+                    player.set_state(game::PlayerState::Extention_Wait);
+            }
+            break;
+            case game::PlayerState::Handshake_Completed:
+            case game::PlayerState::Extention_Completed:
+            {
+                conn.on_handshake_success();
+
+                player.set_state(game::PlayerState::Level_Wait);
+                sync_block_task.push(&player);
             }
             break;
             case game::PlayerState::Level_Initialized:
             {
                 player.set_spawn_coordinate(_metadata.spawn_x(), _metadata.spawn_y(), _metadata.spawn_z(), false);
                 player.set_spawn_orientation(_metadata.spawn_yaw(), _metadata.spawn_pitch(), false);
-                player.set_state(PlayerState::Spawn_Wait);
 
+                player.set_state(PlayerState::Spawn_Wait);
                 spawn_player_task.push(&player);
             }
             break;

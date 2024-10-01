@@ -41,7 +41,7 @@ namespace net
         , tcp_server{ *this, connection_env, io_service }
         , udp_server{ this, &message_handler_table }
 
-        , world{ connection_env, database_core }
+        , world{ connection_env }
         
         , deferred_chat_message_packet_task{ &GameServer::handle_deferred_chat_message_packet, this, chat_message_task_interval }
 
@@ -73,8 +73,12 @@ namespace net
             packet.username
         ));
 
-        if (packet.cpe_magic == 0x42) // is CPE supported
-            conn.associated_player()->set_state(game::PlayerState::Extention_Wait);
+        if (auto player = conn.associated_player()) {
+            if (packet.cpe_magic == 0x42) // is CPE supported
+                player->set_extension_mode();
+
+            player->set_state(game::PlayerState::Handshake_Wait);
+        }
 
         udp_server.communicator().forward_packet(
             protocol::ServerType::Login,
@@ -288,32 +292,31 @@ namespace net
             return false;
 
         if (auto conn = connection_env.try_acquire_connection(msg.connection_key())) {
-            if (msg.error_code() != error::PACKET_HANDLE_SUCCESS) {
+            auto& player = *conn->associated_player();
+
+            switch (msg.error_code()) {
+            case error::PACKET_HANDLE_SUCCESS:
+            {
+                // Disconnect already logged in player.
+                if (msg.connection_key() != msg.prev_connection_key())
+                    if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
+                        prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
+
+                player.set_uuid(msg.player_uuid());
+                player.set_player_type(game::PlayerType(msg.player_type()));
+
+                // Load player game data.
+                database::PlayerGamedata::load(connection_env, player);
+                break;
+            }
+            case error::PACKET_RESULT_NOT_EXIST_LOGIN:
+                player.set_player_type(game::PlayerType::GUEST);
+                player.set_state(game::PlayerState::ExHandshake_Completed); // todo: state transition
+                break;
+            default:
                 conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
                 return true;
             }
-
-            // Disconnect already logged in player.
-            if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
-                prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
-
-            auto& player = *conn->associated_player();
-            player.set_identity(msg.player_identity());
-            player.set_player_type(game::PlayerType(msg.player_type()));
-
-            // Load player game data.
-            if (player.player_type() != game::PlayerType::GUEST) {
-                database::PlayerLoadSQL player_load;
-                if (not player_load.is_valid() || not player_load.load(player)) {
-                    conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
-                    return true;
-                }
-            }
-
-            if (player.state() == game::PlayerState::Extention_Wait)
-                conn->send_supported_cpe_list();
-            else
-                conn->on_handshake_success();
         }
 
         return true;

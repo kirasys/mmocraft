@@ -58,5 +58,5 @@ message PacketHandshakeResponse {
     uint32 error_code = 3;
 
     uint32 player_type = 4;
-    uint32 player_identity = 5;
+    string player_uuid = 5;
 }

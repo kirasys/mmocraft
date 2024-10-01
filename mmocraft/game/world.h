@@ -36,7 +36,7 @@ namespace game
     class World final : util::NonCopyable, util::NonMovable
     {
     public:
-        World(net::ConnectionEnvironment&, database::DatabaseCore&);
+        World(net::ConnectionEnvironment&);
 
         void broadcast_to_world_player(net::MessageType, const char* message);
 
@@ -100,7 +100,6 @@ namespace game
         std::size_t coordinate_to_block_map_index(int x, int y, int z);
 
         net::ConnectionEnvironment& connection_env;
-        database::DatabaseCore& database_core;
 
         io::MulticastManager multicast_manager;
 
