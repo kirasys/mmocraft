@@ -10,11 +10,6 @@ namespace database
     // Bucket names
     constexpr const char* standard_bucket_name = "standard_bucket";
     constexpr const char* cached_bucket_name = "cached_bucket";
-
-    // Collection names
-    constexpr const char* player_login_collection_name = "player_login";
-    constexpr const char* player_login_session_collection_name = "player_login_session";
-
     
     enum CollectionPath
     {
@@ -33,8 +28,11 @@ namespace database
     {
         // Warning: associated string should never be changed without a migration.
         constexpr const char* collection_path_strs[] = {
+            // standard_bucket._default
             "player_login",
             "player_gamedata",
+
+            // cached_bucket._default
             "player_login_session"
         };
         return collection_path_strs[path];

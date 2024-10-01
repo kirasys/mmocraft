@@ -118,9 +118,12 @@ namespace database
         }
 
     private:
-        static couchbase::cluster _global_cluster;
 
         static void connect_collections();
+
+        static void connect_collection(const char* bucket_name, database::CollectionPath path);
+
+        static couchbase::cluster _global_cluster;
 
         static std::map<database::CollectionPath, couchbase::collection> collection_mapping;
     };

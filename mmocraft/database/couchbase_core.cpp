@@ -41,15 +41,17 @@ namespace database
 
     void CouchbaseCore::connect_collections()
     {
-        collection_mapping.emplace(CollectionPath::player_login, _global_cluster
-            .bucket(database::standard_bucket_name)
-            .default_scope()
-            .collection(database::player_login_collection_name));
+        connect_collection(database::standard_bucket_name, CollectionPath::player_login);
+        connect_collection(database::standard_bucket_name, CollectionPath::player_gamedata);
+        connect_collection(database::cached_bucket_name, CollectionPath::player_login_session);
+    }
 
-        collection_mapping.emplace(CollectionPath::player_login_session, _global_cluster
-            .bucket(database::cached_bucket_name)
+    void CouchbaseCore::connect_collection(const char* bucket_name, database::CollectionPath path)
+    {
+        collection_mapping.emplace(path, _global_cluster
+            .bucket(bucket_name)
             .default_scope()
-            .collection(database::player_login_session_collection_name));
+            .collection(to_string(path)));
     }
 
     couchbase::cluster& CouchbaseCore::get_cluster()
