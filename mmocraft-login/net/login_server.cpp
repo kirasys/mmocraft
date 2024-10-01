@@ -69,7 +69,7 @@ namespace net
 
             packet_response.set_error_code(error::PACKET_HANDLE_SUCCESS);
             packet_response.set_player_type(player_login.player_type);
-         //packet_response.set_player_identity(player_login.identity);
+            packet_response.set_player_uuid(player_login.identity);
         }
         
         { // Update login session
