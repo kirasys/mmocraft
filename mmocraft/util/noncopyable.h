@@ -4,8 +4,8 @@ namespace util
     struct NonCopyable
     {
         NonCopyable() = default;
-        NonCopyable(NonCopyable&&) = default;
-        NonCopyable& operator=(NonCopyable&&) = default;
+        NonCopyable(NonCopyable&) = delete;
+        NonCopyable& operator=(NonCopyable&) = delete;
     };
 
     struct NonMovable
