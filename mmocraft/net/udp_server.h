@@ -12,9 +12,6 @@
 
 namespace net
 {
-    constexpr int SOCKET_RCV_BUFFER_SIZE = 1024 * 1024 * 4; // 4MB
-    constexpr int SOCKET_SND_BUFFER_SIZE = 1024 * 1024 * 4; // 4MB
-
     class MessageHandler
     {
     public:
@@ -25,15 +22,7 @@ namespace net
     {
     public:
 
-        UdpServer(MessageHandler& server_inst)
-            : listen_sock{ net::SocketProtocol::UDPv4 }
-            , app_server{ server_inst }
-            , _communicator{ listen_sock }
-        {
-            if (not listen_sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) ||
-                not listen_sock.set_socket_option(SO_SNDBUF, SOCKET_SND_BUFFER_SIZE))
-                throw error::SOCKET_SETOPT;
-        }
+        UdpServer(MessageHandler& server_inst);
 
         ~UdpServer()
         {
@@ -45,71 +34,15 @@ namespace net
             return _communicator;
         }
 
-        void reset()
-        {
-            listen_sock.reset(net::SocketProtocol::UDPv4);
-            is_terminated = true;
+        void reset();
 
-            for (auto& event_thread : event_threads)
-                event_thread.join();
+        void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override;
 
-            event_threads.clear();
-        }
+        std::thread spawn_event_loop_thread();
 
-        void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override
-        {
-            if (not listen_sock.bind(ip, port)) {
-                CONSOLE_LOG(fatal) << "Couldn't bind server " << ip << ':' << port;
-                return;
-            }
+        void run_event_loop_forever(DWORD);
 
-            CONSOLE_LOG(info) << "Listening to " << ip << ':' << port << "...";
-
-            for (unsigned i = 0; i < num_of_event_threads; i++)
-                event_threads.emplace_back(spawn_event_loop_thread());
-
-        }
-
-        std::thread spawn_event_loop_thread()
-        {
-            return std::thread([](UdpServer* udp_server) {
-                udp_server->run_event_loop_forever(0);
-                }, this);
-        }
-
-        void run_event_loop_forever(DWORD)
-        {
-            net::MessageRequest request;
-            request.set_requester(listen_sock.get_handle());
-
-            while (not is_terminated) {
-                if (not request.read_message())
-                    continue;
-
-                // handle message and send reply.
-                handle_message(request);
-            }
-        }
-
-        bool handle_message(MessageRequest& request)
-        {
-            // invoke common message handlers first.
-
-            auto common_handler_success = _communicator.handle_common_message(request);
-
-            if (not common_handler_success.value_or(true)) {
-                CONSOLE_LOG(error) << "Common handler failed" << request.message_id();
-                return false;
-            }
-
-            // invoke user-defined handlers if exists
-
-            if (app_server.handle_message(request) || common_handler_success.value_or(false))
-                return true;
-
-            CONSOLE_LOG(error) << "Fail to handle message: " << request.message_id();
-            return false;
-        }
+        bool handle_message(MessageRequest& request);
 
     private:
         net::Socket listen_sock;

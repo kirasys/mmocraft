@@ -12,28 +12,32 @@
 
 namespace util
 {
-    enum TaskTag
+    namespace interval_task_tag_id
     {
-        INVALID,
+        enum value
+        {
+            invalid,
 
-        // Tcp server task
-        CLEAN_CONNECTION,
-        CLEAN_PLAYER,
+            // Tcp server task
+            clean_connection,
+            clean_player,
 
-        // Interval server task
-        ANNOUNCE_SERVER,
+            // Interval server task
+            announce_server,
 
-        // Chat server task
-        HANDLE_COMMON_CHAT_PACKET,
+            // Chat server task
+            handle_common_chat_packet,
 
-        // Size of enum.
-        SIZE
-    };
+            // Size of enum.
+            count
+        };
+    }
+    
 
     template <typename T>
     struct IntervalTask
     {
-        TaskTag tag;
+        interval_task_tag_id::value tag;
         std::size_t period;
         std::size_t expired_at;
 
@@ -44,7 +48,7 @@ namespace util
     template <>
     struct IntervalTask<void>
     {
-        TaskTag tag;
+        interval_task_tag_id::value tag;
         std::size_t period;
         std::size_t expired_at;
 
@@ -65,7 +69,7 @@ namespace util
                 assert(("static scheduler must not have instance.", instance == nullptr));
         }
 
-        void schedule(TaskTag tag, IntervalTask<T>::func_type func, MilliSecond period)
+        void schedule(util::interval_task_tag_id::value tag, IntervalTask<T>::func_type func, MilliSecond period)
         {
             interval_tasks.push_back({
                 .tag {tag},
@@ -83,7 +87,7 @@ namespace util
             }
         }
 
-        void process_task(TaskTag tag)
+        void process_task(util::interval_task_tag_id::value tag)
         {
             for (IntervalTask<T>& task : interval_tasks)
             {

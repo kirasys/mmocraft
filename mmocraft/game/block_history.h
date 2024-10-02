@@ -8,6 +8,7 @@
 #include "net/packet.h"
 #include "game/block.h"
 #include "util/math.h"
+#include "config/constants.h"
 
 namespace game
 {
@@ -26,14 +27,11 @@ namespace game
     class BlockHistory
     {
     public:
-        static constexpr std::size_t max_block_history_size = 1024;
-        static constexpr std::size_t history_data_unit_size = 8;
+        static constexpr std::size_t history_data_unit_size = sizeof(BlockHistoryRecord);
 
         BlockHistory()
-            : _data{ new std::byte[max_block_history_size * history_data_unit_size] }
-        {
-            static_assert(sizeof(BlockHistoryRecord) == history_data_unit_size);
-        };
+            : _data{ new std::byte[config::memory::block_history_max_count * history_data_unit_size] }
+        { }
 
         ~BlockHistory()
         {
@@ -43,7 +41,7 @@ namespace game
 
         std::size_t count() const
         {
-            return std::min(max_block_history_size, _size.load(std::memory_order_relaxed));
+            return std::min(config::memory::block_history_max_count, _size.load(std::memory_order_relaxed));
         }
 
         void clear()
@@ -53,53 +51,22 @@ namespace game
 
         static const BlockHistoryRecord& get_record(const std::byte* data, std::size_t index)
         {
-            assert(index < max_block_history_size);
+            assert(index < config::memory::block_history_max_count);
 
             return *reinterpret_cast<const BlockHistoryRecord*>(
                 &data[index * history_data_unit_size]
                 );
         }
 
-        bool add_record(util::Coordinate3D pos, game::BlockID block_id)
-        {
-            if (auto history_data_ptr = _data.load(std::memory_order_relaxed)) {
-                auto index = _size.fetch_add(1, std::memory_order_relaxed);
-                if (index >= max_block_history_size) {
-                    _size.fetch_sub(1, std::memory_order_relaxed);
-                    return false;
-                }
+        bool add_record(util::Coordinate3D pos, game::BlockID block_id);
 
-                auto& record = get_record(history_data_ptr, index);
-
-                // Note: store coordinates as bin-endian in order to optimize serialization operation.
-                record.packet_id = std::byte(net::PacketID::SetBlockServer);
-                record.x = _byteswap_ushort(pos.x);
-                record.y = _byteswap_ushort(pos.y);
-                record.z = _byteswap_ushort(pos.z);
-                record.block_id = std::byte(block_id);
-
-                return true;
-            }
-
-            return false;
-        }
-
-        std::size_t serialize(std::unique_ptr<std::byte[]>& history_data) const
-        {
-            if (auto history_count = count()) {
-                auto serialized_size = history_count * history_data_unit_size;
-                history_data.reset(new std::byte[serialized_size]);
-                std::memcpy(history_data.get(), _data.load(std::memory_order_relaxed), serialized_size);
-                return serialized_size;
-            }
-            return 0;
-        }
+        std::size_t serialize(std::unique_ptr<std::byte[]>& history_data) const;
 
     private:
 
         static BlockHistoryRecord& get_record(std::byte* data, std::size_t index)
         {
-            assert(index < max_block_history_size);
+            assert(index < config::memory::block_history_max_count);
 
             return *reinterpret_cast<BlockHistoryRecord*>(
                 &data[index * history_data_unit_size]

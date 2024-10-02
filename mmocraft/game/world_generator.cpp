@@ -69,9 +69,9 @@ namespace game
         auto blocks = new BlockID[plain_size * map_size.y]();
 
         auto num_of_dirt_block = plain_size * (map_size.y / 2);
-        std::memset(blocks, BLOCK_DIRT, num_of_dirt_block);
-        std::memset(blocks + num_of_dirt_block, BLOCK_GRASS, plain_size);
-        std::memset(blocks, BLOCK_BEDROCK, plain_size);
+        std::memset(blocks, game::block_id::dirt, num_of_dirt_block);
+        std::memset(blocks + num_of_dirt_block, game::block_id::grass, plain_size);
+        std::memset(blocks, game::block_id::bedrock, plain_size);
 
         return std::unique_ptr<BlockID[]>(blocks);
     }

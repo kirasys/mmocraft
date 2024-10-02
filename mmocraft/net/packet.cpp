@@ -18,15 +18,15 @@ namespace
     constinit const std::array<PacketStaticData, 0x100> protocol_db = [] {
         using namespace net;
         std::array<PacketStaticData, 0x100> arr{};
-        arr[PacketID::Handshake] = { PacketHandshake::packet_size };
-        arr[PacketID::Ping] = { PacketPing::packet_size};
-        arr[PacketID::SetBlockClient] = { PacketSetBlockClient::packet_size };
-        arr[PacketID::SetPlayerPosition] = { PacketSetPlayerPosition::packet_size };
-        arr[PacketID::ChatMessage] = { PacketChatMessage::packet_size };
-        arr[PacketID::ExtInfo] = { PacketExtInfo::packet_size };
-        arr[PacketID::TwoWayPing] = { PacketTwoWayPing::packet_size };
-        arr[PacketID::ExtEntry] = { PacketExtEntry::packet_size };
-        arr[PacketID::ExtPing] = { PacketExtPing::packet_size };
+        arr[packet_type_id::handshake] = { PacketHandshake::packet_size };
+        arr[packet_type_id::ping] = { PacketPing::packet_size};
+        arr[packet_type_id::set_block_client] = { PacketSetBlockClient::packet_size };
+        arr[packet_type_id::set_player_position] = { PacketSetPlayerPosition::packet_size };
+        arr[packet_type_id::chat_message] = { PacketChatMessage::packet_size };
+        arr[packet_type_id::ext_info] = { PacketExtInfo::packet_size };
+        arr[packet_type_id::two_way_ping] = { PacketTwoWayPing::packet_size };
+        arr[packet_type_id::ext_entry] = { PacketExtEntry::packet_size };
+        arr[packet_type_id::ext_ping] = { PacketExtPing::packet_size };
         return arr;
     }();
 }
@@ -63,11 +63,11 @@ namespace net
     }
     */
 
-    std::pair<net::PacketID, int> PacketStructure::parse_packet(const std::byte* buf_start)
+    std::pair<net::packet_type_id::value, int> PacketStructure::parse_packet(const std::byte* buf_start)
     {
         auto packet_id = decltype(Packet::id)(*buf_start);
         auto packet_size = int(protocol_db[packet_id].size);
-        return { packet_size ? net::PacketID(packet_id) : net::PacketID::INVALID, packet_size };
+        return { packet_size ? net::packet_type_id::value(packet_id) : net::packet_type_id::invalid, packet_size };
     }
 
     void PacketStructure::read_string(const std::byte*& buf, PacketFieldType::String& value)
@@ -123,18 +123,18 @@ namespace net
     error::ErrorCode PacketHandshake::validate()
     {
         if (protocol_version != 7)
-            return error::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION;
+            return error::code::packet::invalid_protocol_version;
 
         if (username.size() == 0 || username.size() > PacketFieldConstraint::max_username_length)
-            return error::PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH;
+            return error::code::packet::improper_username_length;
 
         if (not util::is_alphanumeric(username))
-            return error::PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT;
+            return error::code::packet::improper_username_format;
 
         if (password.size() > PacketFieldConstraint::max_password_length)
-            return error::PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH;
+            return error::code::packet::improper_password_length;
 
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     void PacketHandshake::parse(const std::byte* buf_start)
@@ -228,7 +228,7 @@ namespace net
         std::memset(buf_start - remain_bytes - 1, 0, remain_bytes != chunk_size ? remain_bytes : 0);
 
         // write level finalize information.
-        PacketStructure::write_byte(buf_start, PacketID::LevelFinalize);
+        PacketStructure::write_byte(buf_start, packet_type_id::level_finalize);
         PacketStructure::write_short(buf_start, x);
         PacketStructure::write_short(buf_start, y);
         PacketStructure::write_short(buf_start, z);
@@ -282,7 +282,7 @@ namespace net
 
             // absolute move position
             if (std::abs(diff.view.x) > 32 || std::abs(diff.view.y) > 32 || std::abs(diff.view.y) > 32) {
-                *buf_start++ = std::byte(net::PacketID::SetPlayerPosition);
+                *buf_start++ = std::byte(net::packet_type_id::set_player_position);
                 *buf_start++ = std::byte(player->game_id());
                 net::PacketStructure::write_short(buf_start, latest_pos.view.x);
                 net::PacketStructure::write_short(buf_start, latest_pos.view.y);
@@ -292,7 +292,7 @@ namespace net
             }
             // relative move position
             else if (diff.raw_coordinate() && diff.raw_orientation()) {
-                *buf_start++ = std::byte(net::PacketID::UpdatePlayerPosition);
+                *buf_start++ = std::byte(net::packet_type_id::update_player_position);
                 *buf_start++ = std::byte(player->game_id());
                 *buf_start++ = std::byte(diff.view.x);
                 *buf_start++ = std::byte(diff.view.y);
@@ -302,7 +302,7 @@ namespace net
             }
             // relative move coordinate
             else if (diff.raw_coordinate()) {
-                *buf_start++ = std::byte(net::PacketID::UpdatePlayerCoordinate);
+                *buf_start++ = std::byte(net::packet_type_id::update_player_coordinate);
                 *buf_start++ = std::byte(player->game_id());
                 *buf_start++ = std::byte(diff.view.x);
                 *buf_start++ = std::byte(diff.view.y);
@@ -310,7 +310,7 @@ namespace net
             }
             // relative move orientation
             else if (diff.raw_orientation()) {
-                *buf_start++ = std::byte(net::PacketID::UpdatePlayerOrientation);
+                *buf_start++ = std::byte(net::packet_type_id::update_player_orientation);
                 *buf_start++ = std::byte(player->game_id());
                 *buf_start++ = std::byte(latest_pos.view.yaw);
                 *buf_start++ = std::byte(latest_pos.view.pitch);
@@ -330,7 +330,7 @@ namespace net
 
         auto serialize_position_packet = [&buf_start](const std::vector<game::Player*>& players) {
             for (const auto* player : players) {
-                PacketStructure::write_byte(buf_start, PacketFieldType::Byte(PacketID::SpawnPlayer));
+                PacketStructure::write_byte(buf_start, PacketFieldType::Byte(packet_type_id::spawn_player));
                 PacketStructure::write_byte(buf_start, player->game_id());
                 PacketStructure::write_string(buf_start, player->username());
                 
@@ -397,7 +397,7 @@ namespace net
 
     PacketLevelDataChunk::PacketLevelDataChunk
         (std::byte* block_data, unsigned block_data_size, PacketFieldType::Short width, PacketFieldType::Short height, PacketFieldType::Short length)
-        : Packet{ PacketID::LevelDataChunk }
+        : Packet{ packet_type_id::level_datachunk }
         , compressor{ block_data, block_data_size }
         , x{ width }, y{ height }, z{ length }
     {

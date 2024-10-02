@@ -3,6 +3,8 @@
 
 #include <array>
 
+#include "config/constants.h"
+
 #include "net/udp_message.h"
 #include "proto/generated/protocol.pb.h"
 #include "logging/logger.h"
@@ -130,8 +132,8 @@ namespace net
         -> std::pair<bool, net::MessageRequest>
     {
         // set ephemeral requester.
-        net::Socket ephemeral_sock{ net::SocketProtocol::UDPv4 };
-        ephemeral_sock.set_socket_option(SO_RCVTIMEO, UDP_MESSAGE_RETRANSMISSION_PERIOD);
+        net::Socket ephemeral_sock{ net::socket_protocol_id::udp_v4 };
+        ephemeral_sock.set_socket_option(SO_RCVTIMEO, config::network::udp_message_retransmission_period);
 
         net::MessageRequest request(orig_request);
         request.set_requester(ephemeral_sock.get_handle());
@@ -144,8 +146,8 @@ namespace net
             if (request.flush_send() && response.read_message())
                 return { true, response };
 
-            if (i > 0 && util::current_monotonic_tick() - sended_tick < UDP_MESSAGE_RETRANSMISSION_PERIOD)
-                util::sleep_ms(UDP_MESSAGE_RETRANSMISSION_PERIOD);
+            if (i > 0 && util::current_monotonic_tick() - sended_tick < config::network::udp_message_retransmission_period)
+                util::sleep_ms(config::network::udp_message_retransmission_period);
         }
 
         return { false, {} };

@@ -23,16 +23,19 @@
 
 namespace logging
 {
-    enum LogLevel
+    namespace log_level
     {
-        Debug,
-        Info,
-        Warn,
-        Error,
-        Fatal,
+        enum value
+        {
+            debug,
+            info,
+            warn,
+            error,
+            fatal,
 
-        SIZE,
-    };
+            count,
+        };
+    }
 
     struct LogLevelDescriptor
     {
@@ -41,14 +44,14 @@ namespace logging
         std::mutex flush_mutex;
     };
 
-    LogLevel to_log_level(std::string log_level);
+    log_level::value to_log_level(std::string log_level);
 
     void initialize_system(std::string_view log_dir, std::string_view log_filename);
 
     class Logger : util::NonCopyable, util::NonMovable
     {
     public:
-        Logger(LogLevel, const std::source_location&);
+        Logger(log_level::value, const std::source_location&);
 
         virtual ~Logger();
         
@@ -77,7 +80,7 @@ namespace logging
             _buffer.clear();
         }
 
-        LogLevel log_level() const
+        log_level::value log_level() const
         {
             return _level;
         }
@@ -87,14 +90,14 @@ namespace logging
     private:
         void set_line_prefix(const std::source_location&);
 
-        LogLevel _level;
+        log_level::value _level;
         std::stringstream _buffer;
     };
 
     class ConsoleLogger : public Logger
     {
     public:
-        ConsoleLogger(LogLevel, const std::source_location&);
+        ConsoleLogger(log_level::value, const std::source_location&);
 
         ~ConsoleLogger();
 
@@ -104,7 +107,7 @@ namespace logging
     class FileLogger : public Logger
     {
     public:
-        FileLogger(LogLevel, const std::source_location&);
+        FileLogger(log_level::value, const std::source_location&);
 
         ~FileLogger();
 

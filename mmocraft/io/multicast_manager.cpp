@@ -3,9 +3,11 @@
 
 #include <algorithm>
 
+#include "config/constants.h"
+
 namespace io
 {
-    MulticastDataEntry& MulticastManager::set_data(MulticastTag tag, std::unique_ptr<std::byte[]>&& data, std::size_t data_size)
+    MulticastDataEntry& MulticastManager::set_data(io::multicast_tag_id::value tag, std::unique_ptr<std::byte[]>&& data, std::size_t data_size)
     {
         if (gc_timeouts[tag] < util::current_monotonic_tick())
             gc(tag);
@@ -19,12 +21,12 @@ namespace io
         return data_entry;
     }
 
-    void MulticastManager::reset_data(MulticastTag tag)
+    void MulticastManager::reset_data(io::multicast_tag_id::value tag)
     {
         active_data[tag] = nullptr;
     }
 
-    void MulticastManager::gc(MulticastTag tag)
+    void MulticastManager::gc(io::multicast_tag_id::value tag)
     {
         auto& data_queue = data_queues[tag];
 
@@ -36,6 +38,6 @@ namespace io
             num_of_deleted++;
         }
 
-        gc_timeouts[tag] = util::current_monotonic_tick() + gc_period;
+        gc_timeouts[tag] = util::current_monotonic_tick() + config::memory::multicast_data_gc_period_ms;
     }
 }

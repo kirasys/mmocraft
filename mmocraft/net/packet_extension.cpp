@@ -9,13 +9,13 @@ namespace
 
     struct CpeInfo
     {
-        net::PacketID index;
+        net::packet_type_id::value index;
         int version;
     };
 
     const std::unordered_map<std::string_view, CpeInfo> supported_cpe_map = {
-        {"MessageTypes", {net::PacketID::ExtMessage, 1}},
-        {"TwoWayPing",   {net::PacketID::TwoWayPing, 1}}
+        {"MessageTypes", {net::packet_type_id::ext_message, 1}},
+        {"TwoWayPing",   {net::packet_type_id::two_way_ping, 1}}
     };
 }
 
@@ -27,7 +27,7 @@ namespace net
             && supported_cpe_map.at(ext_name).version == version;
     }
 
-    net::PacketID cpe_index_of(std::string_view ext_name)
+    net::packet_type_id::value cpe_index_of(std::string_view ext_name)
     {
         return supported_cpe_map.at(ext_name).index;
     }

@@ -21,8 +21,10 @@ namespace net
         , _is_online{ true }
         , connection_io { new ConnectionIO(connection_id(), io_service, std::move(sock))}
     {
-        if (not is_valid())
-            throw error::ErrorCode::CLIENT_CONNECTION_CREATE;
+        if (not is_valid()) {
+            CONSOLE_LOG(error) << "Fail to create connection";
+            return;
+        }
 
         connection_io->register_event_handler(this);
 
@@ -98,13 +100,13 @@ namespace net
         while (data_cur < data_end) {
             auto [packet_id, packet_size] = PacketStructure::parse_packet(data_cur);
 
-            if (packet_id == net::PacketID::INVALID) {
-                last_error_code = error::PACKET_INVALID_ID;
+            if (packet_id == net::packet_type_id::invalid) {
+                last_error_code = error::code::packet::invalid_packet_id;
                 break;
             }
 
             if (packet_size > data_end - data_cur) {
-                last_error_code = error::PACKET_INSUFFIENT_DATA;
+                last_error_code = error::code::packet::insuffient_packet_data;
                 break;
             }
 
@@ -128,7 +130,7 @@ namespace net
 
         net::PacketHandshake handshake_packet{
             conf.tcp_server().server_name(), conf.tcp_server().motd(),
-            _player->player_type() == game::PlayerType::ADMIN ? net::UserType::OP : net::UserType::NORMAL
+            _player->player_type() == game::player_type_id::admin ? 64 : 0
         };
 
         net::PacketSetPlayerID set_player_id_packet(_player->game_id());
@@ -266,7 +268,7 @@ namespace net
 
     bool ConnectionIO::send_ping() const
     {
-        auto packet = std::byte(net::PacketID::Ping);
+        auto packet = std::byte(net::packet_type_id::ping);
         return io_send_event->event_data()->push(&packet, net::PacketPing::packet_size);
     }
 

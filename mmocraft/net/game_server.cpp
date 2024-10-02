@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "config/config.h"
+#include "config/constants.h"
 #include "logging/error.h"
 #include "database/query.h"
 #include "game/player_command.h"
@@ -14,15 +15,15 @@ namespace
 {
     const std::array<net::GameServer::packet_handler_type, 0x100> packet_handler_db = [] {
         std::array<net::GameServer::packet_handler_type, 0x100> arr{};
-        arr[net::PacketID::Handshake] = &net::GameServer::handle_handshake_packet;
-        arr[net::PacketID::Ping] = &net::GameServer::handle_ping_packet;
-        arr[net::PacketID::SetBlockClient] = &net::GameServer::handle_set_block_packet;
-        arr[net::PacketID::SetPlayerPosition] = &net::GameServer::handle_player_position_packet;
-        arr[net::PacketID::ChatMessage] = &net::GameServer::handle_chat_message_packet;
-        arr[net::PacketID::ExtInfo] = &net::GameServer::handle_ext_info_packet;
-        arr[net::PacketID::ExtEntry] = &net::GameServer::handle_ext_entry_packet;
-        arr[net::PacketID::TwoWayPing] = &net::GameServer::handle_two_way_ping_packet;
-        arr[net::PacketID::ExtPing] = &net::GameServer::handle_ext_ping_packet;
+        arr[net::packet_type_id::handshake] = &net::GameServer::handle_handshake_packet;
+        arr[net::packet_type_id::ping] = &net::GameServer::handle_ping_packet;
+        arr[net::packet_type_id::set_block_client] = &net::GameServer::handle_set_block_packet;
+        arr[net::packet_type_id::set_player_position] = &net::GameServer::handle_player_position_packet;
+        arr[net::packet_type_id::chat_message] = &net::GameServer::handle_chat_message_packet;
+        arr[net::packet_type_id::ext_info] = &net::GameServer::handle_ext_info_packet;
+        arr[net::packet_type_id::ext_entry] = &net::GameServer::handle_ext_entry_packet;
+        arr[net::packet_type_id::two_way_ping] = &net::GameServer::handle_two_way_ping_packet;
+        arr[net::packet_type_id::ext_ping] = &net::GameServer::handle_ext_ping_packet;
         return arr;
     }();
 
@@ -43,13 +44,13 @@ namespace net
 
         , world{ connection_env }
         
-        , deferred_chat_message_packet_task{ &GameServer::handle_deferred_chat_message_packet, this, chat_message_task_interval }
+        , deferred_chat_message_packet_task{ &GameServer::handle_deferred_chat_message_packet, this, game_server_task_interval::chat_message }
 
         , interval_tasks{ this }
     {
-        interval_tasks.schedule(util::TaskTag::ANNOUNCE_SERVER, 
+        interval_tasks.schedule(util::interval_task_tag_id::announce_server,
             &GameServer::announce_server,
-            util::MilliSecond(config::announce_server_period_ms)
+            util::MilliSecond(config::task::announce_server_period)
         );
     }
 
@@ -61,7 +62,7 @@ namespace net
             return (this->*handler)(conn, packet_data, std::size_t(packet_size));
 
         CONSOLE_LOG(error) << "Unimplemented packetd id : " << packet_id;
-        return error::PACKET_UNIMPLEMENTED_ID;
+        return error::code::packet::unimplemented_packet_id;
     }
 
     error::ResultCode GameServer::handle_handshake_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
@@ -89,20 +90,20 @@ namespace net
             data, data_size
         );
 
-        return error::PACKET_HANDLE_DEFERRED;
+        return error::code::packet::handle_deferred;
     }
 
     error::ResultCode GameServer::handle_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         // send pong.
         conn.io()->send_ping();
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     error::ResultCode GameServer::handle_two_way_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         conn.io()->send_raw_data(data, data_size);
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     error::ResultCode GameServer::handle_ext_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
@@ -110,26 +111,26 @@ namespace net
         net::PacketExtPing packet(data);
         conn.io()->send_packet(packet);
 
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     error::ResultCode GameServer::handle_set_block_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
         net::PacketSetBlockClient packet(data);
 
-        auto block_id = packet.mode == game::BlockMode::SET ? packet.block_id : game::BLOCK_AIR;
+        auto block_id = packet.block_creation_mode() == game::block_creation_mode::set ? packet.block_id : game::block_id::air;
         if (not world.try_change_block({ packet.x, packet.y, packet.z }, block_id))
             goto REVERT_BLOCK;
 
-        return error::SUCCESS;
+        return error::code::success;
 
     REVERT_BLOCK:
-        block_id = packet.mode == game::BlockMode::SET ? game::BLOCK_AIR : packet.block_id;
+        block_id = packet.block_creation_mode() == game::block_creation_mode::set ? game::block_id::air : packet.block_id;
         net::PacketSetBlockServer revert_block_packet({ packet.x, packet.y, packet.z }, block_id);
 
         conn.io()->send_packet(revert_block_packet);
 
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     error::ResultCode GameServer::handle_player_position_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
@@ -139,7 +140,7 @@ namespace net
         if (auto player = conn.associated_player())
             player->set_position(packet.player_pos);
         
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     error::ResultCode GameServer::handle_chat_message_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
@@ -158,10 +159,10 @@ namespace net
 ;            }
             else {
                 deferred_chat_message_packet_task.push_packet(conn.connection_key(), packet);
-                return error::PACKET_HANDLE_DEFERRED;
+                return error::code::packet::handle_deferred;
             }
         }
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     error::ResultCode GameServer::handle_ext_info_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
@@ -172,7 +173,7 @@ namespace net
             player->set_extension_count(packet.extension_count);
         }
 
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     error::ResultCode GameServer::handle_ext_entry_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
@@ -187,7 +188,7 @@ namespace net
                 player->transit_state();
         }
 
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     /**
@@ -215,23 +216,23 @@ namespace net
         if (auto conn = connection_env.try_acquire_connection(connection_key)) {
             auto player = conn->associated_player();
 
-            if (msg.error_code() == error::PACKET_RESULT_NOT_EXIST_LOGIN) {
-                player->set_player_type(game::PlayerType::GUEST);
+            if (msg.error_code() == error::code::packet::player_not_exist) {
+                player->set_player_type(game::player_type_id::guest);
                 player->transit_state();
                 co_return;
             }
-            else if (msg.error_code() != error::PACKET_HANDLE_SUCCESS) {
-                conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
+            else if (msg.error_code() != error::code::success) {
+                conn->kick(error::code::packet::player_login_fail);
                 co_return;
             }
 
-            player->set_player_type(game::PlayerType(msg.player_type()));
+            player->set_player_type(game::player_type_id(msg.player_type()));
             player->set_uuid(msg.player_uuid());
 
             // Disconnect already logged in player.
             if (connection_key != msg.prev_connection_key())
                 if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
-                    prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
+                    prev_conn->kick(error::code::packet::player_already_login);
         }
 
         // Load player game data.
@@ -239,7 +240,7 @@ namespace net
 
         if (auto conn = connection_env.try_acquire_connection(connection_key)) {
             if (err && err.ec() != couchbase::errc::key_value::document_not_found) {
-                conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
+                conn->kick(error::code::packet::player_login_fail);
                 co_return;
             }
 

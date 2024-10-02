@@ -18,19 +18,19 @@ namespace game
 
     // Warning: PlayerLogin procedure uses these enum as raw value.
     //          we must reflect modification to the procedure.
-    enum PlayerType
+    enum class player_type_id
     {
-        INVALID,
+        invalid,
 
         // Users logged in without password.
         // destory all information after disconnecting.
-        GUEST,
+        guest,
 
         // Users logged in successfully.
-        AUTHENTICATED_USER,
+        authenticated_user,
 
         // Users with administrator privileges.
-        ADMIN,
+        admin,
     };
 
     class PlayerState
@@ -201,12 +201,12 @@ namespace game
             _uuid = uuid;
         }
 
-        PlayerType player_type() const
+        game::player_type_id player_type() const
         {
             return _player_type;
         }
 
-        void set_player_type(PlayerType type)
+        void set_player_type(player_type_id type)
         {
             _player_type = type;
         }
@@ -311,7 +311,7 @@ namespace game
             return --pending_extension_count;
         }
 
-        void register_extension(net::PacketID ext)
+        void register_extension(net::packet_type_id::value ext)
         {
             supported_extensions.set(ext);
         }
@@ -321,7 +321,7 @@ namespace game
             return extension_mode;
         }
 
-        bool is_supported_extension(net::PacketID ext) const
+        bool is_supported_extension(net::packet_type_id::value ext) const
         {
             return supported_extensions.test(ext);
         }
@@ -336,16 +336,12 @@ namespace game
             return _gamedata;
         }
 
-        // Player state transition handlers;
-
-        void on_handshake_completed();
-
     private:
         PlayerState _state;
 
         net::ConnectionKey _connection_key;
 
-        PlayerType _player_type;
+        game::player_type_id _player_type;
 
         char _username[16 + 1];
 

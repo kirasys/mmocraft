@@ -79,7 +79,7 @@ namespace io
                 auto transferred_bytes_or_signal = event_results[i].dwNumberOfBytesTransferred;
 
                 try {
-                    if (transferred_bytes_or_signal == IO_TASK_SIGNAL) {
+                    if (transferred_bytes_or_signal == io::iocp_signal::task) {
                         auto task = reinterpret_cast<io::Task*>(event_results[i].lpOverlapped);
 
                         //task->invoke_handler(event_results[i].lpCompletionKey);
@@ -113,8 +113,8 @@ namespace io
         : _max_connections{ max_connections }
         , completion_queue{ 2 * max_connections, num_of_concurrent_threads, &_event.overlapped, this }
         , request_queues{ max_connections, RIO_INVALID_RQ }
-        , recv_buffer_pool{ max_connections, io::RECV_BUFFER_SIZE }
-        , send_buffer_pool{ max_connections, io::SEND_BUFFER_SIZE }
+        , recv_buffer_pool{ max_connections, config::memory::tcp_recv_buffer_size }
+        , send_buffer_pool{ max_connections, config::memory::tcp_send_buffer_size }
     {
         CONSOLE_LOG_IF(fatal, not completion_queue.is_valid()) << "Fail to create completion queue.";
         CONSOLE_LOG_IF(fatal, not recv_buffer_pool.is_valid()) << "Fail to allocate recv buffer.";

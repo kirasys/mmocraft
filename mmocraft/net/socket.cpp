@@ -29,11 +29,13 @@ net::Socket::Socket() noexcept
     : _handle{ }
 { }
 
-net::Socket::Socket(SocketProtocol protocol)
+net::Socket::Socket(net::socket_protocol_id protocol)
     : _handle{ create_windows_socket(protocol) }
 {
-    if (not is_valid())
-        throw error::SOCKET_CREATE;
+    if (not is_valid()) {
+        CONSOLE_LOG(error) << "Fail to create socket";
+        return;
+    }
 }
 
 net::Socket::Socket(win::Socket sock)
@@ -49,7 +51,7 @@ void net::Socket::close() noexcept
     _handle.reset();
 }
 
-void net::Socket::reset(SocketProtocol protocol)
+void net::Socket::reset(net::socket_protocol_id protocol)
 {
     _handle.reset(create_windows_socket(protocol));
 }
@@ -65,7 +67,7 @@ void net::Socket::initialize_system()
             ::WSACleanup();
         });
         
-        win::UniqueSocket sock{ create_windows_socket(SocketProtocol::TCPv4Rio) };
+        win::UniqueSocket sock{ create_windows_socket(net::socket_protocol_id::tcp_rio_v4) };
 
         {
             GUID guid = WSAID_ACCEPTEX;
@@ -269,18 +271,18 @@ bool net::Socket::set_nonblocking_mode(bool mode)
     return ret != SOCKET_ERROR;
 }
 
-win::Socket net::create_windows_socket(SocketProtocol protocol)
+win::Socket net::create_windows_socket(net::socket_protocol_id protocol)
 {
     switch (protocol) {
-    case SocketProtocol::TCPv4:
+    case net::socket_protocol_id::tcp_v4:
         return ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    case SocketProtocol::TCPv4Overlapped:
+    case net::socket_protocol_id::tcp_overlapped_v4:
         return ::WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
-    case SocketProtocol::UDPv4:
+    case net::socket_protocol_id::udp_v4:
         return ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    case SocketProtocol::UDPv4Overlapped:
+    case net::socket_protocol_id::udp_overlapped_v4:
         return ::WSASocketW(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_OVERLAPPED);
-    case SocketProtocol::TCPv4Rio:
+    case net::socket_protocol_id::tcp_rio_v4:
         return ::WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_REGISTERED_IO | WSA_FLAG_OVERLAPPED);
     default:
         return INVALID_SOCKET;

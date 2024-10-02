@@ -15,12 +15,12 @@ namespace database
 	class DatabaseCore : util::NonCopyable, util::NonMovable
 	{
 	public:
-		enum State
+		enum class State
 		{
-			Uninitialized,
-			Initialized,
-			Connected,
-			Disconnected,
+			uninitialized,
+			initialized,
+			connected,
+			disconnected,
 		};
 
 		State status() const
@@ -46,7 +46,7 @@ namespace database
 		static void logging_current_connection_error(RETCODE);
 
 	private:
-		State _state = Uninitialized;
+		State _state = State::uninitialized;
 
 		SQLHENV environment_handle;
 		static SQLHDBC connection_handle;

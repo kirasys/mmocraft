@@ -31,7 +31,7 @@ namespace bench
 {
     ClientBot::ClientBot(io::IoService& io_service)
         : _id{ client_counter.fetch_add(1, std::memory_order_relaxed) }
-        , _sock{ net::create_windows_socket(net::SocketProtocol::TCPv4Rio) }
+        , _sock{ net::create_windows_socket(net::socket_protocol_id::tcp_rio_v4) }
         , last_interactin_at{util::current_monotonic_tick()}
     {
         // Create socket for client
@@ -86,7 +86,7 @@ namespace bench
     {
         char username[64];
         ::snprintf(username, sizeof(username), "user%d", _id);
-        net::PacketHandshake packet(username, "password", net::UserType::NORMAL);
+        net::PacketHandshake packet(username, "password", 0);
         connection_io->send_packet(packet);
 
         post_send_event();
@@ -174,88 +174,88 @@ namespace bench
         }
 
         while (remain_packet_size == 0 && data_begin < data_end) {
-            auto packet_id = net::PacketID(data_begin[0]);
+            auto packet_id = net::packet_type_id::value(data_begin[0]);
 
             switch (packet_id) {
-            case net::PacketID::Handshake:
+            case net::packet_type_id::handshake:
             {
                 CONSUME_PACKET_SIZE(net::PacketHandshake::packet_size);
                 _state = ClientState::Handshake_Completed;
             }
             break;
-            case net::PacketID::Ping:
+            case net::packet_type_id::ping:
             {
                 CONSUME_PACKET_SIZE(net::PacketPing::packet_size);
             }
             break;
-            case net::PacketID::LevelInitialize:
+            case net::packet_type_id::level_initialize:
             {
                 CONSUME_PACKET_SIZE(net::PacketLevelInit::packet_size);
             }
             break;
-            case net::PacketID::LevelDataChunk:
+            case net::packet_type_id::level_datachunk:
             {
                 CONSUME_PACKET_SIZE(net::PacketLevelDataChunk::packet_size);
             }
             break;
-            case net::PacketID::LevelFinalize:
+            case net::packet_type_id::level_finalize:
             {
                 CONSUME_PACKET_SIZE(std::size_t(7));
                 _state = ClientState::Level_Initialized;
             }
             break;
-            case net::PacketID::SetBlockServer:
+            case net::packet_type_id::set_block_server:
             {
                 CONSUME_PACKET_SIZE(net::PacketSetBlockServer::packet_size);
             }
             break;
-            case net::PacketID::SpawnPlayer:
+            case net::packet_type_id::spawn_player:
             {
                 CONSUME_PACKET_SIZE(net::PacketSpawnPlayer::packet_size);
             }
             break;
-            case net::PacketID::SetPlayerPosition:
+            case net::packet_type_id::set_player_position:
             {
                 CONSUME_PACKET_SIZE(net::PacketSetPlayerPosition::packet_size);
             }
             break;
-            case net::PacketID::UpdatePlayerPosition:
+            case net::packet_type_id::update_player_position:
             {
                 CONSUME_PACKET_SIZE(std::size_t(7));
             }
             break;
-            case net::PacketID::UpdatePlayerCoordinate:
+            case net::packet_type_id::update_player_coordinate:
             {
                 CONSUME_PACKET_SIZE(std::size_t(5));
             }
             break;
-            case net::PacketID::UpdatePlayerOrientation:
+            case net::packet_type_id::update_player_orientation:
             {
                 CONSUME_PACKET_SIZE(std::size_t(4));
             }
             break;
-            case net::PacketID::DespawnPlayer:
+            case net::packet_type_id::despawn_player:
             {
                 CONSUME_PACKET_SIZE(net::PacketDespawnPlayer::packet_size);
             }
             break;
-            case net::PacketID::ChatMessage:
+            case net::packet_type_id::chat_message:
             {
                 CONSUME_PACKET_SIZE(net::PacketChatMessage::packet_size);
             }
             break;
-            case net::PacketID::DisconnectPlayer:
+            case net::packet_type_id::disconnect_player:
             {
                 CONSUME_PACKET_SIZE(net::PacketDisconnectPlayer::packet_size);
                 _state = ClientState::Error;
             }
             break;
-            case net::PacketID::SetPlayerID:
+            case net::packet_type_id::set_playerid:
             {
                 CONSUME_PACKET_SIZE(net::PacketSetPlayerID::packet_size);
             }
             break;
-            case net::PacketID::ExtPing:
+            case net::packet_type_id::ext_ping:
             {
                 on_ping_packet_receive(data_begin);
 

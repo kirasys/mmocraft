@@ -11,8 +11,6 @@
 
 namespace net
 {
-    constexpr int UDP_MESSAGE_RETRANSMISSION_PERIOD = 3000;
-
     class ServerCommunicator
     {
     public:

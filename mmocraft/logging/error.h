@@ -7,105 +7,87 @@
 
 namespace error
 {
-    enum ErrorCode
+    using ErrorCode = int;
+
+    namespace code
     {
-        SUCCESS,
+        constexpr ErrorCode success = 0;
+        constexpr ErrorCode invaild = 1;
 
-        // Socket
-        SOCKET_CREATE,
-        SOCKET_BIND,
-        SOCKET_LISTEN,
-        SOCKET_ACCEPTEX_LOAD,
-        SOCKET_ACCEPTEX,
-        SOCKET_SEND,
-        SOCKET_RECV,
-        SOCKET_SETOPT,
-        SOCKET_IOCTL,
+        namespace network {
+            constexpr ErrorCode client_connection_limit = 1000;
+        };
 
-        // IO Service
-        IO_SERVICE_CREATE_COMPLETION_PORT,
+        namespace database {
+            constexpr ErrorCode alloc_environment_handle = 2001;
+            constexpr ErrorCode alloc_connection_handle = 2002;
+            constexpr ErrorCode alloc_statement_handle = 2003;
+            constexpr ErrorCode set_attribute_version = 2004;
+            constexpr ErrorCode connect_server = 2005;
+        };
 
-        // Client Connection
-        CLIENT_CONNECTION_CREATE,
-        CLIENT_CONNECTION_FULL,
+        namespace packet
+        {
+            constexpr ErrorCode invalid_packet_id = 3001;
+            constexpr ErrorCode unimplemented_packet_id = 3002;
+            constexpr ErrorCode insuffient_packet_data = 3003;
 
-        // Database
-        DATABASE_ALLOC_ENVIRONMENT_HANDLE,
-        DATABASE_ALLOC_CONNECTION_HANDLE,
-        DATABASE_ALLOC_STATEMENT_HANDLE,
-        DATABASE_SET_ATTRIBUTE_VERSION,
-        DATABASE_CONNECT,
+            constexpr ErrorCode invalid_protocol_version = 3101;
+            constexpr ErrorCode improper_username_length = 3102;
+            constexpr ErrorCode improper_username_format = 3103;
+            constexpr ErrorCode improper_password_length = 3104;
 
-        // Packet parsing
-        PACKET_INVALID_ID,
-        PACKET_UNIMPLEMENTED_ID,
-        PACKET_INSUFFIENT_DATA,
+            constexpr ErrorCode handle_error = 3201;
+            constexpr ErrorCode handle_suucess = 3202;
+            constexpr ErrorCode handle_deferred = 3203;
 
-        // Pakcet validation
-        PACKET_INVALID_DATA,
-        PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION,
-        PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH,
-        PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT,
-        PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH,
+            constexpr ErrorCode handle_chat_message_error = 3204;
 
-        // Packet handling
-        PACKET_HANDLE_ERROR,
-        PACKET_HANDLE_SUCCESS,
-        PACKET_HANDLE_DEFERRED,
-
-        PACKET_CHAT_MESSAGE_HANDLE_ERROR,
-
-        // Deferred packet result
-        PACKET_RESULT_SUCCESS_LOGIN,
-        PACKET_RESULT_FAIL_LOGIN,
-        PACKET_RESULT_NOT_EXIST_LOGIN,
-        PACKET_RESULT_ALREADY_LOGIN,
-
-        // Indicate size of the enum class.
-        SIZE,
-    };
+            constexpr ErrorCode player_login_fail = 3301;
+            constexpr ErrorCode player_not_exist = 3302;
+            constexpr ErrorCode player_already_login = 3303;;
+        };
+    }
 
     const char* get_error_message(error::ErrorCode);
 
     class ResultCode
     {
     public:
-        inline ResultCode(error::ErrorCode code = error::SUCCESS)
-            : error_code{ code }
+        inline ResultCode(error::ErrorCode err = error::code::success)
+            : code{ err }
         { }
 
         inline void reset()
         {
-            error_code = error::SUCCESS;
+            code = error::code::success;
         }
 
         inline bool is_success() const
         {
-            return error_code == error::SUCCESS;
+            return code == error::code::success;
         }
 
         inline bool is_packet_handle_success() const
         {
-            return error_code == error::SUCCESS
-                || error_code == error::PACKET_INSUFFIENT_DATA
-                || error_code == error::PACKET_HANDLE_DEFERRED;
+            return code == error::code::success
+                || code == error::code::packet::insuffient_packet_data
+                || code == error::code::packet::handle_deferred;
         }
 
         inline const char* to_string() const
         {
-            return get_error_message(error_code);
+            return get_error_message(code);
         }
 
-        inline const ErrorCode to_error_code() const
+        inline const error::ErrorCode to_error_code() const
         {
-            return error_code;
+            return code;
         }
 
     private:
-        error::ErrorCode error_code;
+        error::ErrorCode code;
     };
 
-    std::ostream& operator<<(std::ostream&, ErrorCode);
-
-    std::ostream& operator<<(std::ostream&, ResultCode);
+    std::ostream& operator<<(std::ostream&, error::ResultCode);
 }

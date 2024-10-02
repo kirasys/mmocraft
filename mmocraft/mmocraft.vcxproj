@@ -24,6 +24,7 @@
     <ClCompile Include="database\couchbase_core.cpp" />
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
+    <ClCompile Include="game\block_history.cpp" />
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="game\player_command.cpp" />
     <ClCompile Include="game\world.cpp" />

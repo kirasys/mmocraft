@@ -32,7 +32,7 @@ namespace net
     {
         error::ResultCode handle_packet(net::Connection&, const std::byte*) override
         {
-            return error::SUCCESS;
+            return error::code::success;
         }
 
         void on_disconnect(net::Connection&) override

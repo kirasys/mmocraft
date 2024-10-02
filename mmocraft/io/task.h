@@ -10,11 +10,11 @@ namespace io
     class Task : public io::Event
     {
     public:
-        enum State
+        enum class State
         {
-            Unused,
-            Processing,
-            Failed,
+            unused,
+            processing,
+            failed,
         };
 
         Task(std::size_t interval) : interval_ms{ interval }
@@ -29,12 +29,12 @@ namespace io
 
         virtual bool ready() const
         {
-            return _state == State::Unused && cooldown_at < util::current_monotonic_tick();
+            return _state == State::unused && cooldown_at < util::current_monotonic_tick();
         }
 
         void set_state(State state)
         {
-            if (state == State::Processing)
+            if (state == State::processing)
                 cooldown_at = interval_ms + util::current_monotonic_tick();
 
             _state = state;
@@ -48,11 +48,11 @@ namespace io
 
         virtual void before_scheduling()
         {
-            set_state(State::Processing);
+            set_state(State::processing);
         }
 
     private:
-        State _state = Unused;
+        State _state = State::unused;
         std::size_t interval_ms = 0;
         std::size_t cooldown_at = 0;
     };
@@ -75,7 +75,7 @@ namespace io
                 _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(completion_key)
             );
 
-            set_state(State::Unused);
+            set_state(State::unused);
         }
 
     private:

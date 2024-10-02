@@ -5,58 +5,41 @@
 
 namespace
 {
-    constinit const std::array<const char*, error::ErrorCode::SIZE> error_messages = [] {
+    constinit const std::array<const char*, 0x1000> error_messages = [] {
         using namespace error;
-        std::array<const char*, error::ErrorCode::SIZE> arr{};
+        std::array<const char*, 0x1000> arr{};
 
-        // Socket
-        arr[ErrorCode::SOCKET_CREATE] = "SOCKET_CREATE";
-        arr[ErrorCode::SOCKET_BIND] = "SOCKET_BIND";
-        arr[ErrorCode::SOCKET_LISTEN] = "SOCKET_LISTEN";
-        arr[ErrorCode::SOCKET_ACCEPTEX_LOAD] = "SOCKET_ACCEPTEX_LOAD";
-        arr[ErrorCode::SOCKET_ACCEPTEX] = "SOCKET_ACCEPTEX";
-        arr[ErrorCode::SOCKET_SEND] = "SOCKET_SEND";
-        arr[ErrorCode::SOCKET_RECV] = "SOCKET_RECV";
-        arr[ErrorCode::SOCKET_SETOPT] = "SOCKET_SETOPT";
-        arr[ErrorCode::SOCKET_IOCTL] = "SOCKET_IOCTL";
-
-        // Io Service
-        arr[ErrorCode::IO_SERVICE_CREATE_COMPLETION_PORT] = "IO_SERVICE_CREATE_COMPLETION_PORT";
-
-        // Connection
-        arr[ErrorCode::CLIENT_CONNECTION_CREATE] = "CLIENT_CONNECTION_CREATE";
-        arr[ErrorCode::CLIENT_CONNECTION_FULL]   = "CLIENT_CONNECTION_FULL";
+        // Network
+        arr[error::code::network::client_connection_limit]   = "client_connection_limit";
 
         // Database
-        arr[ErrorCode::DATABASE_ALLOC_ENVIRONMENT_HANDLE] = "DATABASE_ALLOC_ENVIRONMENT_HANDLE";
-        arr[ErrorCode::DATABASE_ALLOC_CONNECTION_HANDLE]  = "DATABASE_ALLOC_CONNECTION_HANDLE";
-        arr[ErrorCode::DATABASE_ALLOC_STATEMENT_HANDLE]   = "DATABASE_ALLOC_STATEMENT_HANDLE";
-        arr[ErrorCode::DATABASE_SET_ATTRIBUTE_VERSION]	  = "DATABASE_SET_ATTRIBUTE_VERSION";
-        arr[ErrorCode::DATABASE_CONNECT] = "DATABASE_CONNECT";
+        arr[error::code::database::alloc_environment_handle] = "alloc_environment_handle";
+        arr[error::code::database::alloc_connection_handle]  = "alloc_connection_handle";
+        arr[error::code::database::alloc_statement_handle]   = "alloc_statement_handle";
+        arr[error::code::database::set_attribute_version]	 = "set_attribute_version";
+        arr[error::code::database::connect_server]           = "connect_server";
 
         // Packet parsing
-        arr[ErrorCode::PACKET_INVALID_ID]       = "Unsupported Packet ID";
-        arr[ErrorCode::PACKET_UNIMPLEMENTED_ID] = "Unimplemented Packet ID";
-        arr[ErrorCode::PACKET_INSUFFIENT_DATA]  = "PACKET_INSUFFIENT_DATA";
+        arr[error::code::packet::invalid_packet_id]        = "Unsupported Packet ID";
+        arr[error::code::packet::unimplemented_packet_id]  = "Unimplemented Packet ID";
+        arr[error::code::packet::insuffient_packet_data]   = "insuffient_packet_data";
 
         // Packet validation
-        arr[ErrorCode::PACKET_INVALID_DATA]                      = "Invalid packet data received";
-        arr[ErrorCode::PACKET_HANSHAKE_INVALID_PROTOCOL_VERSION] = "Unsupported protocol version";
-        arr[ErrorCode::PACKET_HANSHAKE_IMPROPER_USERNAME_LENGTH] = "Username must be 1 to 16 characters";
-        arr[ErrorCode::PACKET_HANSHAKE_IMPROPER_USERNAME_FORMAT] = "Username must be alphanumeric characters";
-        arr[ErrorCode::PACKET_HANSHAKE_IMPROPER_PASSWORD_LENGTH] = "Password must be 1 to 32 characters";
+        arr[error::code::packet::invalid_protocol_version] = "Unsupported protocol version";
+        arr[error::code::packet::improper_username_length] = "Username must be 1 to 16 characters";
+        arr[error::code::packet::improper_username_format] = "Username must be alphanumeric characters";
+        arr[error::code::packet::improper_password_length] = "Password must be 1 to 32 characters";
 
         // Packet handling
-        arr[ErrorCode::PACKET_HANDLE_ERROR]    = "PACKET_HANDLE_ERROR";
-        arr[ErrorCode::PACKET_HANDLE_SUCCESS]  = "PACKET_HANDLE_SUCCESS";
-        arr[ErrorCode::PACKET_HANDLE_DEFERRED] = "PACKET_HANDLE_DEFERRED";
+        arr[error::code::packet::handle_error]    = "handle_error";
+        arr[error::code::packet::handle_deferred] = "handle_deferred";
 
-        arr[ErrorCode::PACKET_CHAT_MESSAGE_HANDLE_ERROR] = "Couldn't handle chat message. Please try reconnect.";
+        arr[error::code::packet::handle_chat_message_error] = "Couldn't handle chat message. Please try reconnect.";
 
         // Packet result
-        arr[ErrorCode::PACKET_RESULT_SUCCESS_LOGIN] = "PACKET_RESULT_SUCCESS_LOGIN";
-        arr[ErrorCode::PACKET_RESULT_FAIL_LOGIN] = "Incorrect username or password";
-        arr[ErrorCode::PACKET_RESULT_ALREADY_LOGIN] = "Already logged in";
+        arr[error::code::packet::player_login_fail] = "Incorrect username or password";
+        arr[error::code::packet::player_already_login] = "Already logged in";
+        arr[error::code::packet::player_not_exist] = "player_not_exist";
 
         return arr;
     }();
@@ -69,14 +52,7 @@ namespace error
         return error_messages[code];
     }
 
-    std::ostream& operator<<(std::ostream& os, ErrorCode code)
-    {
-        if (auto msg = error_messages[code])
-            return os << msg;
-        return os << int(code);
-    }
-
-    std::ostream& operator<<(std::ostream& os, ResultCode code)
+    std::ostream& operator<<(std::ostream& os, error::ResultCode code)
     {
         if (auto msg = code.to_string())
             return os << msg;

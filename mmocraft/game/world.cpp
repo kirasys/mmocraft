@@ -23,13 +23,13 @@ namespace game
 {
     World::World(net::ConnectionEnvironment& a_connection_env)
         : connection_env{ a_connection_env }
-        , spawn_player_task{ &World::spawn_player, this, spawn_player_task_interval }
-        , disconnect_player_task{ &World::disconnect_player, this, despawn_player_task_interval }
-        , sync_block_task{ &World::sync_block, this, sync_block_data_task_interval }
-        , sync_player_position_task{ &World::sync_player_position, this, sync_player_position_task_interval }
+        , spawn_player_task{ &World::spawn_player, this, game::world_task_interval::spawn_player }
+        , disconnect_player_task{ &World::disconnect_player, this, game::world_task_interval::despawn_player }
+        , sync_block_task{ &World::sync_block, this, game::world_task_interval::sync_block }
+        , sync_player_position_task{ &World::sync_player_position, this, game::world_task_interval::sync_player_position }
     { }
 
-    void World::broadcast_to_world_player(net::MessageType message_type, const char* message)
+    void World::broadcast_to_world_player(net::chat_message_type_id message_type, const char* message)
     {
         std::vector<game::Player*> world_players;
         world_players.reserve(connection_env.size_of_max_connections());
@@ -75,7 +75,7 @@ namespace game
 
     void World::process_level_wait_player(const std::vector<game::Player*>& level_wait_players)
     {
-        if (last_level_data_submission_at + level_data_submission_interval > util::current_monotonic_tick())
+        if (last_level_data_submission_at + game::world_task_interval::level_data_submission > util::current_monotonic_tick())
             return;
 
         // compress and serialize block datas.
@@ -88,7 +88,7 @@ namespace game
         std::unique_ptr<std::byte[]> level_packet_data;
         auto data_size = level_packet.serialize(level_packet_data);
 
-        auto& data_entry = multicast_manager.set_data(io::MulticastTag::Level_Data, std::move(level_packet_data), data_size);
+        auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::level_data, std::move(level_packet_data), data_size);
         multicast_to_players(level_wait_players, data_entry, [](game::Player* player) {
             player->transit_state();
         });
@@ -172,7 +172,7 @@ namespace game
         if (std::size_t data_size = block_history.serialize(block_history_data)) {
             commit_block_changes(block_history_data.get(), data_size);
 
-            auto& data_entry = multicast_manager.set_data(io::MulticastTag::Sync_Block_Data, std::move(block_history_data), data_size);
+            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_block, std::move(block_history_data), data_size);
             multicast_to_specific_players<PlayerState::level_initialized>(data_entry);
         }
         
@@ -196,7 +196,7 @@ namespace game
         // create set player position packets.
         std::unique_ptr<std::byte[]> position_packet_data;
         if (auto data_size = net::PacketSetPlayerPosition::serialize(world_players, position_packet_data)) {
-            auto& data_entry = multicast_manager.set_data(io::MulticastTag::Sync_Player_Position, std::move(position_packet_data), data_size);
+            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_Player_position, std::move(position_packet_data), data_size);
             multicast_to_players(world_players, data_entry, [](game::Player* player) {
                 player->commit_last_transferrd_position();
             });
@@ -241,7 +241,7 @@ namespace game
             break;
             case game::PlayerState::spawned:
             {
-                if (player.last_ping_time() + ping_interval < util::current_monotonic_tick()) {
+                if (player.last_ping_time() + game::world_task_interval::ping < util::current_monotonic_tick()) {
                     conn.io()->send_ping();
                     player.update_ping_time();
                 }

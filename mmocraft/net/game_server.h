@@ -15,8 +15,9 @@
 
 namespace net
 {
-    constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
-    constexpr std::size_t chat_message_task_interval = 1 * 1000; // 1 seconds.
+    namespace game_server_task_interval {
+        constexpr std::size_t chat_message        = 1 * 1000; // 1 seconds.
+    }
 
     class GameServer : public net::PacketHandler, net::MessageHandler
     {

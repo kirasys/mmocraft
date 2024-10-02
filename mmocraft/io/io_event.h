@@ -12,17 +12,16 @@
 #include "logging/error.h"
 #include "win/win_type.h"
 #include "win/smart_handle.h"
+#include "config/constants.h"
 
 namespace io
 {
-    constexpr DWORD EOF_SIGNAL = 0;
-    constexpr DWORD RETRY_SIGNAL = std::numeric_limits<DWORD>::max();
-    constexpr DWORD IO_TASK_SIGNAL = RETRY_SIGNAL - 1;
-
-    constexpr int RECV_BUFFER_SIZE = 4096;
-    constexpr int SEND_BUFFER_SIZE = 8192;
-    constexpr int CONCURRENT_SEND_BUFFER_SIZE = 4096;
-    constexpr int SEND_SMALL_BUFFER_SIZE = 256;
+    namespace iocp_signal
+    {
+        constexpr DWORD eof = 0;
+        constexpr DWORD retry = std::numeric_limits<DWORD>::max();
+        constexpr DWORD task = retry - 1;
+    }
 
     using IoEventResult = OVERLAPPED_ENTRY;
 
@@ -119,7 +118,7 @@ namespace io
         { }
 
     private:
-        std::byte buffer[RECV_BUFFER_SIZE];
+        std::byte buffer[config::memory::tcp_recv_buffer_size];
     };
 
     class IoRecvEventRawData : public IoRecvEventDataImpl
@@ -221,7 +220,7 @@ namespace io
         { }
 
     private:
-        std::byte buffer[SEND_BUFFER_SIZE];
+        std::byte buffer[config::memory::tcp_send_buffer_size];
     };
 
     class IoSendEventRawData : public IoSendEventDataImpl
@@ -329,7 +328,7 @@ namespace io
         { }
 
     private:
-        std::byte buffer[CONCURRENT_SEND_BUFFER_SIZE];
+        std::byte buffer[config::memory::tcp_send_buffer_size];
     };
 
     class IoSendEventLockFreeRawData : public IoSendEventLockFreeDataImpl

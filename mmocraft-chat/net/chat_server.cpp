@@ -57,7 +57,7 @@ namespace net
             }
         }
         */
-        return error::SUCCESS;
+        return error::code::success;
     }
 
     bool ChatServer::initialize(const char* router_ip, int router_port)

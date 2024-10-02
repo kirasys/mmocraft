@@ -14,7 +14,7 @@ namespace net
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }
-        , _listen_sock{ net::SocketProtocol::TCPv4Rio }
+        , _listen_sock{ net::socket_protocol_id::tcp_rio_v4 }
         , io_service{ a_io_service }
     {	
         io_service.register_event_source(_listen_sock.get_handle(), /*.event_handler = */ this);
@@ -22,11 +22,11 @@ namespace net
         /// Schedule interval tasks.
 
         connection_env_task.schedule(
-            util::TaskTag::CLEAN_CONNECTION,
+            util::interval_task_tag_id::clean_connection,
             &ConnectionEnvironment::cleanup_expired_connection,
             util::MilliSecond(2000));
 
-        set_state(State::Initialized);
+        set_state(State::initialized);
     }
 
     net::ConnectionKey TcpServer::new_connection(win::UniqueSocket &&client_sock)
@@ -59,11 +59,11 @@ namespace net
 
     void TcpServer::start_accept()
     {
-        set_state(State::Running);
+        set_state(State::running);
 
         if (not io_accept_event.post_overlapped_io(_listen_sock.get_handle())) {
             LOG(error) << "Fail to request accept";
-            set_state(State::Stopped);
+            set_state(State::stop);
         }
     }
 
@@ -73,7 +73,7 @@ namespace net
 
     void TcpServer::on_error()
     {
-        set_state(State::Stopped);
+        set_state(State::stop);
     }
 
     void TcpServer::on_complete(io::IoAcceptEvent* event)
@@ -86,13 +86,13 @@ namespace net
 
     std::size_t TcpServer::handle_io_event(io::IoAcceptEvent* event)
     {
-        connection_env_task.process_task(util::TaskTag::CLEAN_CONNECTION);
+        connection_env_task.process_task(util::interval_task_tag_id::clean_connection);
 
         // creates unique accept socket first to avoid resource leak.
         auto client_socket = win::UniqueSocket(event->accepted_socket);
 
         if (connection_env.size_of_connections() >= connection_env.size_of_max_connections()) {
-            set_last_error(error::CLIENT_CONNECTION_FULL);
+            set_last_error(error::code::network::client_connection_limit);
             return 0;
         }
         
@@ -106,7 +106,7 @@ namespace net
         
         // add a client to the server.
         new_connection(std::move(client_socket));
-        set_last_error(error::SUCCESS);
+        set_last_error(error::code::success);
         return 0;
     }
 }

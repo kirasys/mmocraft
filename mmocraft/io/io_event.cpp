@@ -11,7 +11,7 @@ namespace io
 {
     bool IoAcceptEvent::post_overlapped_io(win::Socket sock)
     {
-        accepted_socket = net::create_windows_socket(net::SocketProtocol::TCPv4Rio);
+        accepted_socket = net::create_windows_socket(net::socket_protocol_id::tcp_rio_v4);
         if (accepted_socket == INVALID_SOCKET)
             return false;
 
@@ -44,12 +44,12 @@ namespace io
         auto event_handler = static_cast<IoEventHandler*>(completion_key);
 
         // pre-processing
-        if (transferred_bytes_or_signal == EOF_SIGNAL) {
+        if (transferred_bytes_or_signal == io::iocp_signal::eof) {
             event_handler->on_error();
             return;
         }
 
-        if (transferred_bytes_or_signal != RETRY_SIGNAL)
+        if (transferred_bytes_or_signal != io::iocp_signal::retry)
             event_data()->push(nullptr, transferred_bytes_or_signal); // pass nullptr because data was already appended by I/O. just update size only.
 
         // deliver events to the owner.
@@ -80,7 +80,7 @@ namespace io
         auto event_handler = static_cast<IoEventHandler*>(completion_key);
 
         // pre-processing
-        if (transferred_bytes_or_signal == EOF_SIGNAL) {
+        if (transferred_bytes_or_signal == io::iocp_signal::eof) {
             event_handler->on_error();
             return;
         }
@@ -127,7 +127,7 @@ namespace io
         auto event_handler = static_cast<IoEventHandler*>(completion_key);
 
         // pre-processing
-        if (transferred_bytes_or_signal == EOF_SIGNAL) {
+        if (transferred_bytes_or_signal == io::iocp_signal::eof) {
             event_handler->on_error();
             return;
         }

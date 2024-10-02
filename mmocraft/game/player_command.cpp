@@ -105,12 +105,12 @@ namespace game
             return;
         }
 
-        if (_player.player_type() != game::PlayerType::ADMIN) {
+        if (_player.player_type() != game::player_type_id::admin) {
             set_response(ERROR_COLOR "Permission denied");
             return;
         }
 
-        world.broadcast_to_world_player(net::MessageType::Announcement, tokens[1]);
+        world.broadcast_to_world_player(net::chat_message_type_id::announcement, tokens[1]);
     }
 
     std::vector<const char*> PlayerCommand::parse_tokens(char* command)

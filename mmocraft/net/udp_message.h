@@ -6,13 +6,10 @@
 #include "win/win_type.h"
 #include "proto/generated/protocol.pb.h"
 #include "logging/logger.h"
+#include "config/constants.h"
 
 namespace net
 {
-
-    constexpr std::size_t REQUEST_MESSAGE_SIZE = 2048;
-    constexpr std::size_t RESPONSE_MESSAGE_SIZE = 2048;
-
     struct IPAddress
     {
         std::string ip = "";
@@ -150,7 +147,7 @@ namespace net
 
     private:
         std::size_t _size;
-        char _buf[REQUEST_MESSAGE_SIZE];
+        char _buf[config::memory::udp_buffer_size];
 
         win::Socket _requester;
 
@@ -170,9 +167,9 @@ namespace net
             _message.ParseFromArray(request.begin_message(), int(request.message_size()));
         }
 
-        net::PacketID packet_id() const
+        auto packet_id() const
         {
-            return net::PacketID(_message.packet_data()[0]);
+            return net::packet_type_id::value(_message.packet_data()[0]);
         }
 
         const std::byte* packet_data() const

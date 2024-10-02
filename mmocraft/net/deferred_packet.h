@@ -95,7 +95,7 @@ namespace net
                 head_ptr.get()
             );
 
-            set_state(io::Task::Unused);
+            set_state(State::unused);
         }
 
         virtual bool ready() const override

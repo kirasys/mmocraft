@@ -66,12 +66,12 @@ bool net::Socket::listen(int backlog) {
 }
 
 error::ErrorCode net::Socket::accept(io::IoAcceptEvent& event) {
-    return error::SUCCESS;
+    return error::code::success;
 }
 
 bool net::Socket::connect(std::string_view ip, int port, WSAOVERLAPPED* overlapped)
 {
-    return error::SUCCESS;
+    return error::code::success;
 }
 
 bool net::Socket::send(WSAOVERLAPPED* overlapped, WSABUF* wsa_buf) {

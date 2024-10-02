@@ -2,78 +2,79 @@
 
 namespace net
 {
-    enum PacketID
-    {
-        // Client <-> Server
-        Handshake = 0,
-        SetPlayerPosition = 8,
-        ChatMessage = 0xD,
+    namespace packet_type_id {
+        enum value
+        {
+            // Client <-> Server
+            handshake = 0,
+            set_player_position = 8,
+            chat_message = 0xD,
 
-        // Client -> Server
-        SetBlockClient = 5,
+            // Client -> Server
+            set_block_client = 5,
 
-        // Server -> Client
-        Ping = 1,
-        LevelInitialize = 2,
-        LevelDataChunk = 3,
-        LevelFinalize = 4,
-        SetBlockServer = 6,
-        SpawnPlayer = 7,
-        UpdatePlayerPosition = 9,
-        UpdatePlayerCoordinate = 0xA,
-        UpdatePlayerOrientation = 0xB,
-        DespawnPlayer = 0xC,
-        DisconnectPlayer = 0xE,
-        UpdateUserType = 0xF,
+            // Server -> Client
+            ping = 1,
+            level_initialize = 2,
+            level_datachunk = 3,
+            level_finalize = 4,
+            set_block_server = 6,
+            spawn_player = 7,
+            update_player_position = 9,
+            update_player_coordinate = 0xA,
+            update_player_orientation = 0xB,
+            despawn_player = 0xC,
+            disconnect_player = 0xE,
+            update_usertype = 0xF,
 
-        // CPE
-        ExtInfo = 0x10,
-        ExtEntry = 0x11,
-        ClickDistance = 0x12,
-        CustomBlocks = 0x13,
-        HeldBlock = 0x14,
-        TextHotKey = 0x15,
-        ExtAddPlayerName = 0x16,
-        ExtAddEntity2 = 0x21,
-        ExtRemovePlayerName = 0x18,
-        EvnSetColor = 0x19,
-        MakeSelection = 0x1A,
-        RemoveSelection = 0x1B,
-        BlockPermissions = 0x1C,
-        ChangeModel = 0x1D,
-        EnvSetWeatherType = 0x1F,
-        HackControl = 0x20,
-        PlayerClicked = 0x22,
-        DefineBlock = 0x23,
-        RemoveBlockDefinition = 0x24,
-        DefineBlockExt = 0x25,
-        BulkBlockUpdate = 0x26,
-        SetTextColor = 0x27,
-        SetMapEnvUrl = 0x28,
-        SetMapEnvProperty = 0x29,
-        SetEntityProperty = 0x2A,
-        TwoWayPing = 0x2B,
-        SetInventoryOrder = 0x2C,
-        SetHotbar = 0x2D,
-        SetSpawnpoint = 0x2E,
-        VelocityControl = 0x2F,
-        DefineEffect = 0x30,
-        SpawnEffect = 0x31,
-        DefineModel = 0x32,
-        DefineModelPart = 0x33,
-        UndefineModel = 0x34,
-        ExtEntityTeleport = 0x36,
+            // CPE
+            ext_info = 0x10,
+            ext_entry = 0x11,
+            click_distance = 0x12,
+            custom_blocks = 0x13,
+            held_block = 0x14,
+            text_hotkey = 0x15,
+            ext_add_playername = 0x16,
+            ext_add_entity2 = 0x21,
+            ext_remove_playername = 0x18,
+            env_set_color = 0x19,
+            make_selection = 0x1A,
+            remove_selection = 0x1B,
+            block_permissions = 0x1C,
+            change_model = 0x1D,
+            env_set_weathertype = 0x1F,
+            hack_control = 0x20,
+            player_clicked = 0x22,
+            define_block = 0x23,
+            remove_block_definition = 0x24,
+            define_blockext = 0x25,
+            bulk_block_update = 0x26,
+            set_text_color = 0x27,
+            set_map_env_url = 0x28,
+            set_map_env_property = 0x29,
+            set_entity_property = 0x2A,
+            two_way_ping = 0x2B,
+            set_inventory_order = 0x2C,
+            set_hotbar = 0x2D,
+            set_spawnpoint = 0x2E,
+            velocity_control = 0x2F,
+            define_effect = 0x30,
+            spawn_effect = 0x31,
+            define_model = 0x32,
+            define_modelpart = 0x33,
+            undefine_model = 0x34,
+            ext_entity_teleport = 0x36,
 
-        /* Custom Protocol */
-        SetPlayerID = 0x37,
-        ExtMessage = 0x38,
-        ExtPing = 0x39,
+            /* Custom Protocol */
+            set_playerid = 0x37,
+            ext_message = 0x38,
+            ext_ping = 0x39,
 
-        // Indicate size of the enum class.
-        SIZE,
+            // Indicate size of the enum class.
+            size,
 
-        // Invalid packet ID.
-        INVALID = 0xFF,
-
-    };
+            // Invalid packet ID.
+            invalid = 0xFF,
+        };
+    }
 }

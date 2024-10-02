@@ -16,14 +16,14 @@ namespace io
 
 namespace net
 {
-    enum SocketProtocol
+    enum class socket_protocol_id
     {
-        None,
-        TCPv4,
-        TCPv4Overlapped,
-        UDPv4,
-        UDPv4Overlapped,
-        TCPv4Rio,
+        none,
+        tcp_v4,
+        tcp_overlapped_v4,
+        udp_v4,
+        udp_overlapped_v4,
+        tcp_rio_v4,
     };
 
     class Socket : public win::WinBaseObject<win::Socket>, util::NonCopyable
@@ -31,7 +31,7 @@ namespace net
     public:
         // constructor
         Socket() noexcept;
-        Socket(SocketProtocol);
+        Socket(net::socket_protocol_id);
         Socket(win::Socket);
         Socket(win::UniqueSocket&&);
 
@@ -58,7 +58,7 @@ namespace net
 
         void close() noexcept;
 
-        void reset(SocketProtocol);
+        void reset(net::socket_protocol_id);
 
         bool bind(std::string_view, int);
 
@@ -94,7 +94,7 @@ namespace net
         RIO_RQ request_queue;
     };
 
-    win::Socket create_windows_socket(SocketProtocol);
+    win::Socket create_windows_socket(net::socket_protocol_id);
 
     const RIO_EXTENSION_FUNCTION_TABLE& rio_api();
 }

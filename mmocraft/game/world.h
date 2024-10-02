@@ -26,19 +26,21 @@ namespace game
     constexpr const char* block_data_filename = "blocks.bin";
     constexpr const char* world_metadata_filename = "metadata.json";
 
-    constexpr std::size_t level_data_submission_interval     = 3 * 1000; // 3 seconds
-    constexpr std::size_t spawn_player_task_interval         = 2 * 1000; // 2 seconds.
-    constexpr std::size_t despawn_player_task_interval       = 2 * 1000; // 2 seconds.
-    constexpr std::size_t sync_block_data_task_interval      = 200;      // 200 milliseconds.
-    constexpr std::size_t sync_player_position_task_interval = 100;      // 100 milliseconds.
-    constexpr std::size_t ping_interval                      = 5 * 1000; // 5 seconds.
-
+    namespace world_task_interval {
+        constexpr std::size_t level_data_submission = 3 * 1000; // 3 seconds
+        constexpr std::size_t spawn_player = 2 * 1000; // 2 seconds.
+        constexpr std::size_t despawn_player = 2 * 1000; // 2 seconds.
+        constexpr std::size_t sync_block = 200;      // 200 milliseconds.
+        constexpr std::size_t sync_player_position = 100;      // 100 milliseconds.
+        constexpr std::size_t ping = 5 * 1000; // 5 seconds.
+    }
+    
     class World final : util::NonCopyable, util::NonMovable
     {
     public:
         World(net::ConnectionEnvironment&);
 
-        void broadcast_to_world_player(net::MessageType, const char* message);
+        void broadcast_to_world_player(net::chat_message_type_id, const char* message);
 
         template <game::PlayerState::State T> 
         void send_to_specific_players(const std::byte* data, std::size_t data_size,

@@ -8,22 +8,26 @@
 
 namespace io
 {
-    enum MulticastTag
+    namespace multicast_tag_id
     {
-        Level_Data,
+        enum value
+        {
+            level_data,
 
-        Spawn_Player,
+            spawn_player,
 
-        Despawn_Player,
+            despawn_player,
 
-        Sync_Block_Data,
+            sync_block,
 
-        Sync_Player_Position,
+            sync_Player_position,
 
-        Chat_Message,
+            chat_message,
 
-        MuticastTag_Count,
-    };
+            count,
+        };
+    }
+    
 
     class MulticastDataEntry : util::NonCopyable
     {
@@ -96,19 +100,17 @@ namespace io
         MulticastManager()
         { }
 
-        MulticastDataEntry& set_data(MulticastTag, std::unique_ptr<std::byte[]>&& data, std::size_t data_size);
+        MulticastDataEntry& set_data(io::multicast_tag_id::value, std::unique_ptr<std::byte[]>&& data, std::size_t data_size);
 
-        void reset_data(MulticastTag);
+        void reset_data(io::multicast_tag_id::value);
 
-        void gc(MulticastTag);
+        void gc(io::multicast_tag_id::value);
 
     private:
-        std::queue<MulticastDataEntry> data_queues[MulticastTag::MuticastTag_Count];
+        std::queue<MulticastDataEntry> data_queues[io::multicast_tag_id::count];
 
-        MulticastDataEntry* active_data[MulticastTag::MuticastTag_Count];
+        MulticastDataEntry* active_data[io::multicast_tag_id::count];
 
-        std::size_t gc_timeouts[MulticastTag::MuticastTag_Count];
-
-        static constexpr std::size_t gc_period = 6 * 1000; // 6 seconds
+        std::size_t gc_timeouts[io::multicast_tag_id::count];
     };
 }

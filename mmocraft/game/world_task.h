@@ -29,7 +29,7 @@ namespace game
 
         virtual void before_scheduling() override
         {
-            set_state(State::Processing);
+            set_state(State::processing);
             _players_queue.swap(_players_target);
         }
 
@@ -43,7 +43,7 @@ namespace game
             std::invoke(_handler, _world_inst, _players_target);
 
             _players_target.clear();
-            set_state(State::Unused);
+            set_state(State::unused);
         }
 
     private:
@@ -75,7 +75,7 @@ namespace game
             _level_wait_player_queue.swap(_level_wait_players);
             block_history.flush();
 
-            set_state(State::Processing);
+            set_state(State::processing);
         }
 
         void push(game::Player* task_data)
@@ -94,7 +94,7 @@ namespace game
 
             _level_wait_players.clear();
             block_history.clear();
-            set_state(State::Unused);
+            set_state(State::unused);
         }
 
     private:

@@ -8,12 +8,12 @@ namespace net
     class ServerCore
     {
     public:
-        enum State
+        enum class State
         {
-            Uninitialized,
-            Initialized,
-            Running,
-            Stopped,
+            uninitialized,
+            initialized,
+            running,
+            stop,
         };
 
         State state() const
@@ -28,7 +28,7 @@ namespace net
 
         bool is_stopped() const
         {
-            return _state == State::Stopped;
+            return _state == State::stop;
         }
 
         error::ResultCode last_error() const
@@ -46,7 +46,7 @@ namespace net
         virtual void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) = 0;
 
     private:
-        State _state = Uninitialized;
+        State _state = State::uninitialized;
         error::ResultCode last_error_code;
     };
 }

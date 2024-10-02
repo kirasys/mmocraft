@@ -18,9 +18,9 @@ namespace net
         , interval_tasks{ this }
     {
         interval_tasks.schedule(
-            ::util::TaskTag::ANNOUNCE_SERVER,
+            ::util::interval_task_tag_id::announce_server,
             &LoginServer::announce_server,
-            ::util::MilliSecond(::config::announce_server_period_ms)
+            ::util::MilliSecond(::config::task::announce_server_period)
         );
     }
 
@@ -44,7 +44,7 @@ namespace net
         ::net::PacketHandshake packet(packet_request.packet_data());
 
         protocol::PacketHandshakeResponse packet_response;
-        packet_response.set_error_code(error::PACKET_RESULT_FAIL_LOGIN);
+        packet_response.set_error_code(error::code::packet::player_login_fail);
         packet_response.set_connection_key(packet_request.connection_key().raw());
 
         util::defer send_response = [&request, &packet_response]() {
@@ -54,7 +54,7 @@ namespace net
         { // Authenticate
             auto [err, result] = co_await database::CouchbaseCore::get_document(database::CollectionPath::player_login, packet.username);
             if (err.ec() == couchbase::errc::key_value::document_exists) {
-                packet_response.set_error_code(error::PACKET_RESULT_NOT_EXIST_LOGIN);
+                packet_response.set_error_code(error::code::packet::player_not_exist);
                 co_return;
             }
             else if (err)
@@ -64,7 +64,7 @@ namespace net
             if (player_login.password != packet.password)
                 co_return;
 
-            packet_response.set_error_code(error::PACKET_HANDLE_SUCCESS);
+            packet_response.set_error_code(error::code::success);
             packet_response.set_player_type(player_login.player_type);
             packet_response.set_player_uuid(player_login.identity);
         }

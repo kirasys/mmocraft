@@ -2,7 +2,6 @@
 
 #include <string_view>
 
-#include "config/constants.h"
 #include "proto/generated/config.pb.h"
 
 namespace config {
