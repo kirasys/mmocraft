@@ -185,7 +185,7 @@ namespace net
                 player->register_extension(net::cpe_index_of(packet.extenstion_name));
 
             if (player->decrease_pending_extension_count() == 0)
-                player->transit_state();
+                player->transit_state(game::PlayerState::extension_synced);
         }
 
         return error::code::success;

@@ -90,7 +90,7 @@ namespace game
 
         auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::level_data, std::move(level_packet_data), data_size);
         multicast_to_players(level_wait_players, data_entry, [](game::Player* player) {
-            player->transit_state();
+            player->transit_state(game::PlayerState::level_initialized);
         });
         
         last_level_data_submission_at = util::current_monotonic_tick();
@@ -113,7 +113,7 @@ namespace game
         // spawn all players to the new players.
         send_to_players(spawn_wait_players, spawn_packet_data.get(), spawn_packet_data_size,
             [](game::Player* player) {
-                player->transit_state();
+                player->transit_state(game::PlayerState::spawned);
             });
 
         // spawn new player to the old players. 
@@ -145,10 +145,8 @@ namespace game
         // Update player game data then set offline.
         for (auto player : disconnect_wait_players) {
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
-                if (player->prev_state() >= game::PlayerState::spawned)
-                    database::PlayerGamedata::save(*player);
-
-                player->transit_state();
+                database::PlayerGamedata::save(*player);
+                player->transit_state(game::PlayerState::disconnected);
             }
         }
     }

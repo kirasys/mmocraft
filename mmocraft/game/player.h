@@ -39,6 +39,8 @@ namespace game
         enum State
         {
             // Error states
+            invaild,
+
             disconnecting,
 
             disconnected,
@@ -82,8 +84,9 @@ namespace game
             return _next;
         }
 
-        void transit_state()
+        void transit_state(State hint = State::invaild)
         {
+            assert(hint == State::invaild || _next == hint);
             _prev = _cur;
             _cur = _next;
         }
@@ -325,6 +328,12 @@ namespace game
         bool is_supported_extension(net::packet_type_id::value ext) const
         {
             return supported_extensions.test(ext);
+        }
+
+        bool is_support_gamedata_saving() const
+        {
+            return player_type() >= game::player_type_id::authenticated_user ||
+                (state() >= game::PlayerState::handshaked || prev_state() >= game::PlayerState::handshaked);
         }
 
         void set_gamedata(const database::collection::PlayerGamedata& gamedata)
