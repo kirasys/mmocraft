@@ -292,7 +292,7 @@ namespace net
     bool GameServer::handle_handshake_response_message(MessageRequest& request)
     {
         protocol::PacketHandshakeResponse msg;
-        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
+        if (not request.parse_message(msg))
             return false;
 
         auto connection_key = msg.connection_key();

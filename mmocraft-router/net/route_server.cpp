@@ -55,7 +55,7 @@ namespace net {
     bool RouteServer::handle_fetch_server(::net::MessageRequest& request)
     {
         protocol::FetchServerRequest msg;
-        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
+        if (not request.parse_message(msg))
             return false;
 
         auto requested_server_info = server_core.communicator().get_server(msg.server_type());
