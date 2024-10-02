@@ -9,23 +9,12 @@
 
 #include "../config/config.h"
 
-namespace
-{
-
-    std::array<login::net::LoginServer::handler_type, 0x100> message_handler_table = [] {
-        std::array<login::net::LoginServer::handler_type, 0x100> arr{};
-        arr[::net::MessageID::Login_PacketHandshake] = &login::net::LoginServer::handle_handshake_packet;
-        arr[::net::MessageID::Login_PlayerLogout] = &login::net::LoginServer::handle_player_logout_message;
-        return arr;
-    }();
-}
-
 namespace login
 {
 namespace net
 {
     LoginServer::LoginServer()
-        : server_core{ this, &message_handler_table }
+        : server_core{ *this }
         , interval_tasks{ this }
     {
         interval_tasks.schedule(
@@ -35,13 +24,21 @@ namespace net
         );
     }
 
-    bool LoginServer::handle_handshake_packet(::net::MessageRequest& request)
+    bool LoginServer::handle_message(::net::MessageRequest& request)
     {
-        handle_handshake_packet_async(request);
-        return true;
+        switch (request.message_id()) {
+        case ::net::MessageID::Login_PacketHandshake:
+            handle_handshake_packet(request);
+            return true;
+        case ::net::MessageID::Login_PlayerLogout:
+            handle_player_logout_message(request);
+            return true;
+        default:
+            return false;
+        }
     }
 
-    ::database::AsyncTask LoginServer::handle_handshake_packet_async(::net::MessageRequest request)
+    database::AsyncTask LoginServer::handle_handshake_packet(::net::MessageRequest request)
     {
         ::net::PacketRequest packet_request(request);
         ::net::PacketHandshake packet(packet_request.packet_data());
@@ -55,7 +52,7 @@ namespace net
         };
 
         { // Authenticate
-            auto [err, result] = co_await ::database::CouchbaseCore::get_document(::database::CollectionPath::player_login, packet.username);
+            auto [err, result] = co_await database::CouchbaseCore::get_document(database::CollectionPath::player_login, packet.username);
             if (err.ec() == couchbase::errc::key_value::document_exists) {
                 packet_response.set_error_code(error::PACKET_RESULT_NOT_EXIST_LOGIN);
                 co_return;
@@ -63,7 +60,7 @@ namespace net
             else if (err)
                 co_return;
 
-            auto player_login = result.content_as<::database::collection::PlayerLogin>();
+            auto player_login = result.content_as<database::collection::PlayerLogin>();
             if (player_login.password != packet.password)
                 co_return;
 
@@ -73,31 +70,31 @@ namespace net
         }
         
         { // Update login session
-            auto [err, result] = co_await ::database::CouchbaseCore::get_document(::database::CollectionPath::player_login_session, packet.username);
+            auto [err, result] = co_await database::CouchbaseCore::get_document(::database::CollectionPath::player_login_session, packet.username);
             if (err && err.ec() != couchbase::errc::key_value::document_not_found)
                 co_return;
 
             auto login_session = err.ec() != couchbase::errc::key_value::document_not_found
-                ? result.content_as<::database::collection::PlayerLoginSession>() 
-                : ::database::collection::PlayerLoginSession{ .connection_key = packet_request.connection_key().raw() };
+                ? result.content_as<database::collection::PlayerLoginSession>() 
+                : database::collection::PlayerLoginSession{ .connection_key = packet_request.connection_key().raw() };
 
             packet_response.set_prev_connection_key(login_session.connection_key);
 
-            std::tie(err, std::ignore) = co_await ::database::CouchbaseCore::upsert_document(::database::CollectionPath::player_login_session, packet.username, login_session);
+            std::tie(err, std::ignore) = co_await database::CouchbaseCore::upsert_document(database::CollectionPath::player_login_session, packet.username, login_session);
             if (err) {
                 CONSOLE_LOG(error) << "Fail to update login session(" << packet.username << ')';
             }
         }
     }
 
-    bool LoginServer::handle_player_logout_message(::net::MessageRequest& request)
+    database::AsyncTask LoginServer::handle_player_logout_message(::net::MessageRequest& request)
     {
         protocol::PlayerLogoutRequest msg;
         if (not request.parse_message(msg))
-            return false;
+            co_return;
 
        // ::database::PlayerSession player_session(msg.username());
-        return true; // player_session.revoke();
+       // player_session.revoke();
     }
 
     bool LoginServer::initialize(const char* router_ip, int router_port)
@@ -111,7 +108,7 @@ namespace net
         auto& conf = login::config::get_config();
         logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
     
-        ::database::CouchbaseCore::connect_server_with_login(conf.session_database());
+        database::CouchbaseCore::connect_server_with_login(conf.session_database());
 
         return true;
     }

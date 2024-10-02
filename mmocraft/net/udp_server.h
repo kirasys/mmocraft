@@ -18,20 +18,16 @@ namespace net
     class MessageHandler
     {
     public:
-        virtual bool handle_message() = 0;
+        virtual bool handle_message(net::MessageRequest&) = 0;
     };
 
-    template <typename ServerType>
     class UdpServer : public net::ServerCore
     {
     public:
 
-        using handler_type = bool (ServerType::*)(net::MessageRequest&);
-
-        UdpServer(ServerType* server_inst, std::array<handler_type, 0x100>* msg_handler_table)
+        UdpServer(MessageHandler& server_inst)
             : listen_sock{ net::SocketProtocol::UDPv4 }
             , app_server{ server_inst }
-            , message_handler_table{ msg_handler_table }
             , _communicator{ listen_sock }
         {
             if (not listen_sock.set_socket_option(SO_RCVBUF, SOCKET_RCV_BUFFER_SIZE) ||
@@ -97,20 +93,22 @@ namespace net
 
         bool handle_message(MessageRequest& request)
         {
-            // invoke user-defined handlers if exists.
-            bool success = false;
+            // invoke common message handlers first.
 
-            if (auto handler = (*message_handler_table)[request.message_id()]) {
-                if (success = (app_server->*handler)(request); not success)
-                    return false;
+            auto common_handler_success = _communicator.handle_common_message(request);
+
+            if (not common_handler_success.value_or(true)) {
+                CONSOLE_LOG(error) << "Common handler failed" << request.message_id();
+                return false;
             }
 
-            // invoke common message handlers.
-            auto common_handler_success = _communicator.handle_common_message(request);
-            CONSOLE_LOG_IF(error, not success && not common_handler_success.has_value()) 
-                << "Unimplemented message id : " << request.message_id();
+            // invoke user-defined handlers if exists
 
-            return success || common_handler_success.value_or(false);
+            if (app_server.handle_message(request) || common_handler_success.value_or(false))
+                return true;
+
+            CONSOLE_LOG(error) << "Fail to handle message: " << request.message_id();
+            return false;
         }
 
     private:
@@ -119,8 +117,7 @@ namespace net
         bool is_terminated = false;
         std::vector<std::thread> event_threads;
 
-        ServerType* const app_server = nullptr;
-        std::array<handler_type, 0x100>* const message_handler_table = nullptr;
+        MessageHandler& app_server;
 
         net::ServerCommunicator _communicator;
     };

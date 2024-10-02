@@ -9,8 +9,8 @@
 
 namespace
 {
-    std::array<router::net::RouteServer::handler_type, 0x100> message_handler_table = [] {
-        std::array<router::net::RouteServer::handler_type, 0x100> arr{};
+    std::array<bool (router::net::RouteServer::*)(net::MessageRequest&), 0x100> message_handler_table = [] {
+        std::array<bool (router::net::RouteServer::*)(net::MessageRequest&), 0x100> arr{};
         arr[::net::MessageID::Router_GetConfig] = &router::net::RouteServer::handle_fetch_config;
         arr[::net::MessageID::Router_FetchServer] = &router::net::RouteServer::handle_fetch_server;
         return arr;
@@ -21,7 +21,7 @@ namespace
 namespace router {
 namespace net {
     RouteServer::RouteServer()
-        : server_core{ this, &message_handler_table }
+        : server_core{ *this }
     {
         
     }
@@ -36,6 +36,14 @@ namespace net {
         while (true) {
             util::sleep_ms(3000);
         }
+    }
+
+    bool RouteServer::handle_message(::net::MessageRequest& request)
+    {
+        if (auto handler = message_handler_table[request.message_id()])
+            return (this->*handler)(request);
+
+        return false;
     }
 
     bool RouteServer::handle_fetch_config(::net::MessageRequest& request)

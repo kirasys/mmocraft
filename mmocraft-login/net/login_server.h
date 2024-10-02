@@ -3,6 +3,7 @@
 #include <cstddef>
 
 #include <database/couchbase_core.h>
+
 #include <net/connection_key.h>
 #include <net/udp_server.h>
 #include <net/server_communicator.h>
@@ -13,20 +14,18 @@ namespace login
 {
     namespace net
     {
-        class LoginServer
+        class LoginServer : public ::net::MessageHandler
         {
         public:
             static constexpr protocol::ServerType server_type = protocol::ServerType::Login;
 
-            using handler_type = ::net::UdpServer<LoginServer>::handler_type;
-
             LoginServer();
 
-            bool handle_handshake_packet(::net::MessageRequest&);
+            virtual bool handle_message(::net::MessageRequest&) override;
 
-            ::database::AsyncTask handle_handshake_packet_async(::net::MessageRequest);
+            database::AsyncTask handle_handshake_packet(::net::MessageRequest);
 
-            bool handle_player_logout_message(::net::MessageRequest&);
+            database::AsyncTask handle_player_logout_message(::net::MessageRequest&);
 
             bool initialize(const char* router_ip, int port);
 
@@ -35,7 +34,7 @@ namespace login
             void announce_server();
 
         private:
-            ::net::UdpServer<LoginServer> server_core;
+            ::net::UdpServer server_core;
 
             ::util::IntervalTaskScheduler<LoginServer> interval_tasks;
         };
