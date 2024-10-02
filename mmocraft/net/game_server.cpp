@@ -276,9 +276,11 @@ namespace net
         if (auto player = conn.associated_player()) {
             // notify logout event to the login server.
             if (player->state() >= game::PlayerState::handshaked) {
-                protocol::PlayerLogoutRequest logout_request;
-                logout_request.mutable_username()->append(player->username());
-                udp_server.communicator().send_message(protocol::ServerType::Login, net::MessageID::Login_PlayerLogout, logout_request);
+                protocol::PlayerLogoutRequest logout_msg;
+                logout_msg.mutable_username()->append(player->username());
+
+                net::MessageRequest request(net::MessageID::Login_PlayerLogout);
+                udp_server.communicator().send_to(request, protocol::ServerType::Login, logout_msg);
             }
         }
     }

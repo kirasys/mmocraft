@@ -5,12 +5,19 @@
 
 namespace net
 {
-    bool MessageRequest::read_message(win::Socket sock)
+    void MessageRequest::set_request_address(const net::IPAddress& addr)
     {
-        reply_address.sender = sock;
+        req_address.recipient_addr.sin_family = AF_INET;
+        req_address.recipient_addr.sin_port = ::htons(addr.port);
+        ::inet_pton(AF_INET, addr.ip.data(), &req_address.recipient_addr.sin_addr);
+        
+        req_address.recipient_addr_size = sizeof(req_address.recipient_addr);
+    }
 
+    bool MessageRequest::read_message()
+    {
         auto transferred_bytes = ::recvfrom(
-            sock,
+            _requester,
             begin(), int(capacity()),
             0,
             reinterpret_cast<SOCKADDR*>(&reply_address.recipient_addr),
@@ -28,19 +35,26 @@ namespace net
         return true;
     }
 
-    void MessageRequest::send_reply(const MessageRequest& response)
+    bool MessageRequest::flush_send(bool is_reply) const
     {
+        auto& addr = is_reply ? reply_address : req_address;
+
         auto transferred_bytes = ::sendto(
-            reply_address.sender,
-            response.cbegin(), int(response.size()),
+            _requester,
+            cbegin(), int(size()),
             0,
-            reinterpret_cast<SOCKADDR*>(&reply_address.recipient_addr),
-            reply_address.recipient_addr_size
+            reinterpret_cast<const SOCKADDR*>(&addr.recipient_addr),
+            addr.recipient_addr_size
         );
 
-        LOG_IF(error, transferred_bytes == SOCKET_ERROR)
-            << "sendto() failed with " << ::WSAGetLastError();
-        LOG_IF(error, transferred_bytes != SOCKET_ERROR && transferred_bytes < response.size())
+        if (transferred_bytes == SOCKET_ERROR) {
+            LOG(error) << "sendto() failed with " << ::WSAGetLastError();
+            return false;
+        }
+
+        LOG_IF(error, transferred_bytes != SOCKET_ERROR && transferred_bytes < size())
             << "sendto() successed partially";
+
+        return true;
     }
 }

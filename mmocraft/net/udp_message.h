@@ -13,6 +13,12 @@ namespace net
     constexpr std::size_t REQUEST_MESSAGE_SIZE = 2048;
     constexpr std::size_t RESPONSE_MESSAGE_SIZE = 2048;
 
+    struct IPAddress
+    {
+        std::string ip = "";
+        int port = 0;
+    };
+
     class MessageRequest
     {
     public:
@@ -46,6 +52,13 @@ namespace net
         void set_message_size(std::size_t msg_size)
         {
             _size = std::min(msg_size + size_of_header(), capacity());
+        }
+
+        void set_request_address(const net::IPAddress&);
+
+        void set_requester(win::Socket s)
+        {
+            _requester = s;
         }
 
         std::size_t size() const
@@ -111,38 +124,40 @@ namespace net
             set_message_size(msg.ByteSizeLong());
         }
 
-        bool read_message(win::Socket sock);
+        template <typename MessageType>
+        bool parse_message(MessageType& msg)
+        {
+            return msg.ParseFromArray(begin_message(), int(message_size()));
+        }
 
-        void send_reply(const MessageRequest& response);
+        bool read_message();
+
+        bool flush_send(bool is_reply = false) const;
 
         template <typename MessageType>
-        void send_reply(const MessageType& msg)
+        bool send_message(const MessageType& msg)
         {
             set_message(msg);
+            return flush_send();
+        }
 
-            auto transferred_bytes = ::sendto(
-                reply_address.sender,
-                cbegin(), int(size()),
-                0,
-                reinterpret_cast<SOCKADDR*>(&reply_address.recipient_addr),
-                reply_address.recipient_addr_size
-            );
-
-            LOG_IF(error, transferred_bytes == SOCKET_ERROR)
-                << "sendto() failed with " << ::WSAGetLastError();
-            LOG_IF(error, transferred_bytes != SOCKET_ERROR && transferred_bytes < size())
-                << "sendto() successed partially";
+        template <typename MessageType>
+        bool send_reply(const MessageType& msg)
+        {
+            set_message(msg);
+            return flush_send(true);
         }
 
     private:
         std::size_t _size;
         char _buf[REQUEST_MESSAGE_SIZE];
 
-        struct ReplyAddress {
-            win::Socket sender;
+        win::Socket _requester;
+
+        struct SocketAddress {
             struct sockaddr_in recipient_addr;
             int recipient_addr_size = sizeof(recipient_addr);
-        } reply_address;
+        } req_address, reply_address;
     };
 
     using MessageResponse = MessageRequest;

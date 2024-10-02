@@ -41,14 +41,14 @@ namespace net {
     bool RouteServer::handle_fetch_config(::net::MessageRequest& request)
     {
         protocol::FetchConfigRequest msg;
-        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
+        if (not request.parse_message(msg))
             return false;
 
-        protocol::FetchConfigResponse result_msg;
-        if (not router::config::load_server_config(msg.server_type(), &result_msg))
+        protocol::FetchConfigResponse config_msg;
+        if (not router::config::load_server_config(msg.server_type(), &config_msg))
             return false;
 
-        request.send_reply(result_msg);
+        request.send_reply(config_msg);
         return true;
     }
 
