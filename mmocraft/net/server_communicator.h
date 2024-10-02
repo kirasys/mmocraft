@@ -22,17 +22,17 @@ namespace net
     class ServerCommunicator
     {
     public:
-        using common_handler_type = bool (ServerCommunicator::*)(const net::MessageRequest&, net::MessageResponse&);
+        using common_handler_type = bool (ServerCommunicator::*)(net::MessageRequest&);
 
         ServerCommunicator(net::Socket& src)
             : _source{ src }
         { }
 
-        std::optional<bool> handle_common_message(const ::net::MessageRequest&, ::net::MessageResponse&);
+        std::optional<bool> handle_common_message(::net::MessageRequest&);
 
         net::ServerInfo get_server(protocol::ServerType);
 
-        bool handle_server_announcement(const ::net::MessageRequest&, ::net::MessageResponse&);
+        bool handle_server_announcement(::net::MessageRequest&);
 
         void register_server(protocol::ServerType, const net::ServerInfo&);
 

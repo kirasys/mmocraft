@@ -22,11 +22,11 @@ namespace login
 
             LoginServer();
 
-            bool handle_handshake_packet(const ::net::MessageRequest&, ::net::MessageResponse&);
+            bool handle_handshake_packet(::net::MessageRequest&);
 
-            ::database::AsyncTask handle_handshake_packet(::net::MessageRequest);
+            ::database::AsyncTask handle_handshake_packet_async(::net::MessageRequest);
 
-            bool handle_player_logout_message(const ::net::MessageRequest&, ::net::MessageResponse&);
+            bool handle_player_logout_message(::net::MessageRequest&);
 
             bool initialize(const char* router_ip, int port);
 

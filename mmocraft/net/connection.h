@@ -21,7 +21,7 @@
 
 namespace net
 {
-    class PacketHandleServer;
+    class PacketHandler;
 
     class ConnectionEnvironment;
 
@@ -98,7 +98,7 @@ namespace net
         static constexpr unsigned REQUIRED_MILLISECONDS_FOR_SECURE_DELETION = 5 * 1000;
 
     public:
-        Connection(PacketHandleServer&, ConnectionKey, ConnectionEnvironment&, win::UniqueSocket&&, io::RegisteredIO&);
+        Connection(net::PacketHandler&, net::ConnectionKey, net::ConnectionEnvironment&, win::UniqueSocket&&, io::RegisteredIO&);
 
         ~Connection();
 
@@ -187,7 +187,7 @@ namespace net
     private:
         error::ResultCode last_error_code;
 
-        net::PacketHandleServer& packet_handle_server;
+        net::PacketHandler& packet_handle_server;
 
         net::ConnectionKey _connection_key;
         net::ConnectionEnvironment& connection_env;
@@ -201,26 +201,5 @@ namespace net
         std::size_t last_interaction_tick = 0;
 
         std::unique_ptr<game::Player> _player;
-    };
-
-    class PacketHandleServer
-    {
-    public:
-        virtual error::ResultCode handle_packet(net::Connection&, const std::byte*) = 0;
-
-        virtual void on_disconnect(net::Connection&) = 0;
-    };
-
-    class PacketHandleServerStub : public PacketHandleServer
-    {
-        error::ResultCode handle_packet(net::Connection&, const std::byte*) override
-        {
-            return error::SUCCESS;
-        }
-
-        void on_disconnect(net::Connection&) override
-        {
-            return;
-        }
     };
 }

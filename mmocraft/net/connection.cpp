@@ -10,7 +10,7 @@
 
 namespace net
 {
-    Connection::Connection(net::PacketHandleServer& a_packet_handle_server,
+    Connection::Connection(net::PacketHandler& a_packet_handle_server,
                                 net::ConnectionKey a_connection_key,
                                 net::ConnectionEnvironment& a_connection_env,
                                 win::UniqueSocket&& sock,

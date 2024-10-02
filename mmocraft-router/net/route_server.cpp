@@ -38,7 +38,7 @@ namespace net {
         }
     }
 
-    bool RouteServer::handle_fetch_config(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    bool RouteServer::handle_fetch_config(::net::MessageRequest& request)
     {
         protocol::FetchConfigRequest msg;
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
@@ -48,11 +48,11 @@ namespace net {
         if (not router::config::load_server_config(msg.server_type(), &result_msg))
             return false;
 
-        response.set_message(result_msg);
+        request.send_reply(result_msg);
         return true;
     }
 
-    bool RouteServer::handle_fetch_server(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    bool RouteServer::handle_fetch_server(::net::MessageRequest& request)
     {
         protocol::FetchServerRequest msg;
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
@@ -66,8 +66,8 @@ namespace net {
         result_msg.set_server_type(msg.server_type());
         result_msg.mutable_server_info()->set_ip(requested_server_info.ip);
         result_msg.mutable_server_info()->set_port(requested_server_info.port);
-        response.set_message(result_msg);
         
+        request.send_reply(result_msg);
         return true;
     }
 }

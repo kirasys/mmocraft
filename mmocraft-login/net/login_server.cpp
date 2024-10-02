@@ -35,13 +35,13 @@ namespace net
         );
     }
 
-    bool LoginServer::handle_handshake_packet(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    bool LoginServer::handle_handshake_packet(::net::MessageRequest& request)
     {
-        handle_handshake_packet(request);
+        handle_handshake_packet_async(request);
         return true;
     }
 
-    ::database::AsyncTask LoginServer::handle_handshake_packet(::net::MessageRequest request)
+    ::database::AsyncTask LoginServer::handle_handshake_packet_async(::net::MessageRequest request)
     {
         ::net::PacketRequest packet_request(request);
         ::net::PacketHandshake packet(packet_request.packet_data());
@@ -90,7 +90,7 @@ namespace net
         }
     }
 
-    bool LoginServer::handle_player_logout_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    bool LoginServer::handle_player_logout_message(::net::MessageRequest& request)
     {
         protocol::PlayerLogoutRequest msg;
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
