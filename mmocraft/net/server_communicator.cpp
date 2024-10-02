@@ -26,32 +26,34 @@ namespace net
             return std::nullopt;
     }
 
-    net::ServerInfo ServerCommunicator::get_server(protocol::ServerType server_type)
+    net::IPAddress ServerCommunicator::get_server(protocol::ServerType server_type)
     {
         std::shared_lock lock(server_table_mutex);
         return _servers[server_type];
     }
 
-    void ServerCommunicator::register_server(protocol::ServerType server_type, const net::ServerInfo& server_info)
+    void ServerCommunicator::register_server(protocol::ServerType server_type, const net::IPAddress& server_info)
     {
         std::unique_lock lock(server_table_mutex);
         _servers[server_type] = server_info;
     }
 
-    bool ServerCommunicator::announce_server(protocol::ServerType server_type, const net::ServerInfo& server_info)
+    bool ServerCommunicator::announce_server(protocol::ServerType target_server_type, const net::IPAddress& target_server_addr)
     {
         protocol::ServerAnnouncement announce_msg;
-        announce_msg.set_server_type(server_type);
-        announce_msg.mutable_server_info()->set_ip(server_info.ip);
-        announce_msg.mutable_server_info()->set_port(server_info.port);
+        announce_msg.set_server_type(target_server_type);
+        announce_msg.mutable_server_info()->set_ip(target_server_addr.ip);
+        announce_msg.mutable_server_info()->set_port(target_server_addr.port);
 
-        return send_message(protocol::ServerType::Router, net::MessageID::Common_ServerAnnouncement, announce_msg);
+        // Send the announcement message to the router.
+        net::MessageRequest req(net::MessageID::Common_ServerAnnouncement);
+        return send_to(req, protocol::ServerType::Router, announce_msg);
     }
 
     bool ServerCommunicator::handle_server_announcement(::net::MessageRequest& request)
     {
         protocol::ServerAnnouncement msg;
-        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
+        if (not request.parse_message(msg))
             return false;
 
         register_server(msg.server_type(), {
@@ -67,20 +69,18 @@ namespace net
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
+        // Send the get config message to the router.
         net::MessageRequest request(net::MessageID::Router_FetchServer);
         request.set_message(fetch_server_msg);
-
-        // Send the get config message to the router.
-        net::MessageResponse response;
-        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
+        request.set_request_address(get_server(protocol::ServerType::Router));
 
         CONSOLE_LOG(info) << "Wait to fetch server("<< server_type << ") info...";
-        send_message_reliably(router_ip, router_port, request, response);
+        auto [_, response] = send_message_reliably(request);
         CONSOLE_LOG(info) << "Done.";
 
         // Register fetched server.
         protocol::FetchServerResponse fetch_server_res;
-        if (not fetch_server_res.ParseFromArray(response.begin_message(), int(response.message_size()))) {
+        if (not response.parse_message(fetch_server_res)) {
             CONSOLE_LOG(error) << "Fail to parse FetchServerResponse";
             return false;
         }
@@ -94,56 +94,60 @@ namespace net
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
-        return send_message(protocol::ServerType::Router, net::MessageID::Router_FetchServer, fetch_server_msg);
+        net::MessageRequest request(net::MessageID::Router_FetchServer);
+        return send_to(request, protocol::ServerType::Router, fetch_server_msg);
     }
 
-    bool ServerCommunicator::fetch_config(protocol::ServerType target, net::MessageResponse& response)
-    {
-        auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
-        return fetch_config(router_ip.c_str(), router_port, target, response);
-    }
-
-    bool ServerCommunicator::fetch_config(const char* router_ip, int router_port, protocol::ServerType target, net::MessageResponse& response)
+    auto ServerCommunicator::fetch_config(const char* router_ip, int router_port, protocol::ServerType target)
+        -> std::pair<bool, net::MessageRequest>
     {
         protocol::FetchConfigRequest fetch_config_msg;
         fetch_config_msg.set_server_type(target);
 
         net::MessageRequest request(net::MessageID::Router_GetConfig);
         request.set_message(fetch_config_msg);
+        request.set_request_address({ router_ip , router_port});
 
         // Send the get config message to the router.
         CONSOLE_LOG(info) << "Wait to fetch config...";
-        send_message_reliably(router_ip, router_port, request, response);
+        auto&& res = send_message_reliably(request);
         CONSOLE_LOG(info) << "Done.";
 
-        return true;
+        return res;
     }
 
     bool ServerCommunicator::forward_packet(protocol::ServerType server_type, net::MessageID packet_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
     {
-        protocol::PacketHandleRequest packet_handle_req;
-        packet_handle_req.set_connection_key(source.raw());
-        packet_handle_req.set_packet_data(std::string{ reinterpret_cast<const char*>(data), data_size});
+        protocol::PacketHandleRequest packet_handle_msg;
+        packet_handle_msg.set_connection_key(source.raw());
+        packet_handle_msg.set_packet_data(std::string{ reinterpret_cast<const char*>(data), data_size});
 
-        return send_message(server_type, packet_type, packet_handle_req);
+        net::MessageRequest request(packet_type);
+        return send_to(request, server_type, packet_handle_msg);
     }
 
-    bool ServerCommunicator::send_message_reliably(const std::string& ip, int port, const net::MessageRequest& request, net::MessageResponse& response, int retry_count)
+    auto ServerCommunicator::send_message_reliably(const net::MessageRequest& orig_request, int retry_count)
+        -> std::pair<bool, net::MessageRequest>
     {
-        net::Socket sock{ net::SocketProtocol::UDPv4 };
-        sock.set_socket_option(SO_RCVTIMEO, UDP_MESSAGE_RETRANSMISSION_PERIOD);
-        
+        // set ephemeral requester.
+        net::Socket ephemeral_sock{ net::SocketProtocol::UDPv4 };
+        ephemeral_sock.set_socket_option(SO_RCVTIMEO, UDP_MESSAGE_RETRANSMISSION_PERIOD);
+
+        net::MessageRequest request(orig_request);
+        request.set_requester(ephemeral_sock.get_handle());
+        net::MessageRequest response(request);
+
         for (int i = retry_count; i >= 0 ; i--) {
             auto sended_tick = util::current_monotonic_tick();
-            sock.send_to(ip.c_str(), port, request.cbegin(), request.size());
 
-            if (response.read_message(sock.get_handle()))
-                return true;
+            // wait a reply.
+            if (request.flush_send() && response.read_message())
+                return { true, response };
 
             if (i > 0 && util::current_monotonic_tick() - sended_tick < UDP_MESSAGE_RETRANSMISSION_PERIOD)
                 util::sleep_ms(UDP_MESSAGE_RETRANSMISSION_PERIOD);
         }
 
-        return false;
+        return { false, {} };
     }
 }

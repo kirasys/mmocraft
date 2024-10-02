@@ -84,9 +84,10 @@ namespace net
         void run_event_loop_forever(DWORD)
         {
             net::MessageRequest request;
+            request.set_requester(listen_sock.get_handle());
 
             while (not is_terminated) {
-                if (not request.read_message(listen_sock.get_handle()))
+                if (not request.read_message())
                     continue;
 
                 // handle message and send reply.
