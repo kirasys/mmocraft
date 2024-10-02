@@ -26,19 +26,19 @@ namespace net
             return std::nullopt;
     }
 
-    net::IPAddress ServerCommunicator::get_server(protocol::ServerType server_type)
+    net::IPAddress ServerCommunicator::get_server(protocol::server_type_id server_type)
     {
         std::shared_lock lock(server_table_mutex);
         return _servers[server_type];
     }
 
-    void ServerCommunicator::register_server(protocol::ServerType server_type, const net::IPAddress& server_info)
+    void ServerCommunicator::register_server(protocol::server_type_id server_type, const net::IPAddress& server_info)
     {
         std::unique_lock lock(server_table_mutex);
         _servers[server_type] = server_info;
     }
 
-    bool ServerCommunicator::announce_server(protocol::ServerType target_server_type, const net::IPAddress& target_server_addr)
+    bool ServerCommunicator::announce_server(protocol::server_type_id target_server_type, const net::IPAddress& target_server_addr)
     {
         protocol::ServerAnnouncement announce_msg;
         announce_msg.set_server_type(target_server_type);
@@ -47,7 +47,7 @@ namespace net
 
         // Send the announcement message to the router.
         net::MessageRequest req(net::message_id::server_announcement);
-        return send_to(req, protocol::ServerType::Router, announce_msg);
+        return send_to(req, protocol::server_type_id::router, announce_msg);
     }
 
     bool ServerCommunicator::handle_server_announcement(::net::MessageRequest& request)
@@ -64,7 +64,7 @@ namespace net
         return true;
     }
 
-    bool ServerCommunicator::fetch_server_address(protocol::ServerType server_type)
+    bool ServerCommunicator::fetch_server_address(protocol::server_type_id server_type)
     {
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
@@ -72,7 +72,7 @@ namespace net
         // Send the get config message to the router.
         net::MessageRequest request(net::message_id::fetch_server_address);
         request.set_message(fetch_server_msg);
-        request.set_request_address(get_server(protocol::ServerType::Router));
+        request.set_request_address(get_server(protocol::server_type_id::router));
 
         CONSOLE_LOG(info) << "Wait to fetch server("<< server_type << ") info...";
         auto [_, response] = send_message_reliably(request);
@@ -89,16 +89,16 @@ namespace net
         return true;
     }
 
-    bool ServerCommunicator::fetch_server_address_async(protocol::ServerType server_type)
+    bool ServerCommunicator::fetch_server_address_async(protocol::server_type_id server_type)
     {
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
         net::MessageRequest request(net::message_id::fetch_server_address);
-        return send_to(request, protocol::ServerType::Router, fetch_server_msg);
+        return send_to(request, protocol::server_type_id::router, fetch_server_msg);
     }
 
-    auto ServerCommunicator::fetch_config(const char* router_ip, int router_port, protocol::ServerType target)
+    auto ServerCommunicator::fetch_config(const char* router_ip, int router_port, protocol::server_type_id target)
         -> std::pair<bool, net::MessageRequest>
     {
         protocol::FetchConfigRequest fetch_config_msg;
@@ -116,7 +116,7 @@ namespace net
         return res;
     }
 
-    bool ServerCommunicator::forward_packet(protocol::ServerType server_type, net::message_id::value packet_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
+    bool ServerCommunicator::forward_packet(protocol::server_type_id server_type, net::message_id::value packet_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
     {
         protocol::PacketHandleRequest packet_handle_msg;
         packet_handle_msg.set_connection_key(source.raw());

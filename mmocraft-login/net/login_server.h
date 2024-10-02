@@ -17,7 +17,7 @@ namespace login
         class LoginServer : public ::net::MessageHandler
         {
         public:
-            static constexpr protocol::ServerType server_type = protocol::ServerType::Login;
+            static constexpr protocol::server_type_id server_type = protocol::server_type_id::login;
 
             LoginServer();
 

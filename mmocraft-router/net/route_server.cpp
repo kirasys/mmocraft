@@ -31,7 +31,7 @@ namespace net {
         auto& server_conf = config::get_server_config();
         server_core.start_network_io_service(server_conf.ip(), server_conf.port(), 1);
 
-        server_core.communicator().register_server(protocol::ServerType::Router, {server_conf.ip(), server_conf.port()});
+        server_core.communicator().register_server(protocol::server_type_id::router, {server_conf.ip(), server_conf.port()});
 
         while (true) {
             util::sleep_ms(3000);

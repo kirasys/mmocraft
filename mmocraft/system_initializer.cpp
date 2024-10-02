@@ -47,7 +47,7 @@ namespace setup
         net::Socket::initialize_system();
 
         // Load config from the route server.
-        if (not net::ServerCommunicator::load_remote_config(router_ip, router_port, protocol::ServerType::Game, config::get_config()))
+        if (not net::ServerCommunicator::load_remote_config(router_ip, router_port, protocol::server_type_id::game, config::get_config()))
             return;
 
         auto& conf = config::get_config();

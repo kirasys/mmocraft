@@ -24,25 +24,25 @@ namespace net
 
         std::optional<bool> handle_common_message(::net::MessageRequest&);
 
-        net::IPAddress get_server(protocol::ServerType);
+        net::IPAddress get_server(protocol::server_type_id);
 
         bool handle_server_announcement(::net::MessageRequest&);
 
-        void register_server(protocol::ServerType, const net::IPAddress&);
+        void register_server(protocol::server_type_id, const net::IPAddress&);
 
-        bool announce_server(protocol::ServerType, const net::IPAddress&);
+        bool announce_server(protocol::server_type_id, const net::IPAddress&);
 
-        bool fetch_server_address_async(protocol::ServerType);
+        bool fetch_server_address_async(protocol::server_type_id);
 
-        bool fetch_server_address(protocol::ServerType);
+        bool fetch_server_address(protocol::server_type_id);
 
-        static auto fetch_config(const char* router_ip, int router_port, protocol::ServerType target)
+        static auto fetch_config(const char* router_ip, int router_port, protocol::server_type_id)
             -> std::pair<bool, net::MessageRequest>;
 
-        bool forward_packet(protocol::ServerType, net::message_id::value, net::ConnectionKey, const std::byte*, std::size_t);
+        bool forward_packet(protocol::server_type_id, net::message_id::value, net::ConnectionKey, const std::byte*, std::size_t);
 
         template <typename ConfigType>
-        static bool load_remote_config(const char* router_ip, int router_port, protocol::ServerType server_type, ConfigType& config)
+        static bool load_remote_config(const char* router_ip, int router_port, protocol::server_type_id server_type, ConfigType& config)
         {
             auto [success, response] = net::ServerCommunicator::fetch_config(router_ip, router_port, server_type);
             if (not success) {
@@ -65,14 +65,14 @@ namespace net
         }
 
         template <typename ConfigType>
-        bool load_remote_config(protocol::ServerType server_type, ConfigType& config)
+        bool load_remote_config(protocol::server_type_id server_type, ConfigType& config)
         {
-            auto [router_ip, router_port] = get_server(protocol::ServerType::Router);
+            auto [router_ip, router_port] = get_server(protocol::server_type_id::router);
             return load_remote_config(router_ip.c_str(), router_port, server_type, config);
         }
 
         template <typename MessageType>
-        bool send_to(net::MessageRequest& request, protocol::ServerType server_type, MessageType msg)
+        bool send_to(net::MessageRequest& request, protocol::server_type_id server_type, MessageType msg)
         {
             request.set_requester(_source.get_handle());
             request.set_request_address(get_server(server_type));
@@ -87,6 +87,6 @@ namespace net
         net::Socket& _source;
 
         std::shared_mutex server_table_mutex;
-        net::IPAddress _servers[protocol::ServerType::SIZE];
+        net::IPAddress _servers[protocol::server_type_id::total_count];
     };
 }

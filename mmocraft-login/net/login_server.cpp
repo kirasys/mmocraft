@@ -100,9 +100,9 @@ namespace net
     bool LoginServer::initialize(const char* router_ip, int router_port)
     {
         auto& comm = server_core.communicator();
-        comm.register_server(protocol::ServerType::Router, { router_ip, router_port });
+        comm.register_server(protocol::server_type_id::router, { router_ip, router_port });
 
-        if (not comm.load_remote_config(protocol::ServerType::Login, login::config::get_config()))
+        if (not comm.load_remote_config(protocol::server_type_id::login, login::config::get_config()))
             return false;
 
         auto& conf = login::config::get_config();

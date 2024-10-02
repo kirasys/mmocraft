@@ -83,7 +83,7 @@ namespace net
         }
 
         udp_server.communicator().forward_packet(
-            protocol::ServerType::Login,
+            protocol::server_type_id::login,
             net::message_id::packet_handshake,
             conn.connection_key(),
             data, data_size
@@ -280,13 +280,13 @@ namespace net
     bool GameServer::initialize(const char* router_ip, int router_port)
     {
         auto& comm = udp_server.communicator();
-        comm.register_server(protocol::ServerType::Router, { router_ip, router_port });
+        comm.register_server(protocol::server_type_id::router, { router_ip, router_port });
 
         auto& conf = config::get_config();
 
         // Fetch other UDP server.
-        comm.fetch_server_address(protocol::ServerType::Login);
-        //comm.fetch_server_address(protocol::ServerType::Chat);
+        comm.fetch_server_address(protocol::server_type_id::login);
+        //comm.fetch_server_address(protocol::server_type_id::chat);
 
         // Create working directories
         if (not std::filesystem::exists(conf.world().save_dir()))
@@ -344,7 +344,7 @@ namespace net
                 logout_msg.mutable_username()->append(player->username());
 
                 net::MessageRequest request(net::message_id::player_logout);
-                udp_server.communicator().send_to(request, protocol::ServerType::Login, logout_msg);
+                udp_server.communicator().send_to(request, protocol::server_type_id::login, logout_msg);
             }
         }
     }

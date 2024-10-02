@@ -21,7 +21,7 @@ namespace net
     class GameServer : public net::PacketHandler, net::MessageHandler
     {
     public:
-        static constexpr protocol::ServerType server_type = protocol::ServerType::Game;
+        static constexpr protocol::server_type_id server_type = protocol::server_type_id::game;
 
         using packet_handler_type = error::ResultCode (GameServer::*)(net::Connection&, const std::byte*, std::size_t);
 

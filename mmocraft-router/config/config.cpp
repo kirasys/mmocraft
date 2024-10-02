@@ -17,43 +17,43 @@ namespace
 
     struct ConfigEntry
     {
-        protocol::ServerType server_type;
+        protocol::server_type_id server_type;
         const char* config_path = nullptr;
         google::protobuf::Message* config_msg = nullptr;
     };
 
     constinit const std::array<ConfigEntry, 0xff> config_path_db = [] {
         std::array<ConfigEntry, 0xff> arr{};
-        arr[protocol::ServerType::Game] = { protocol::ServerType::Game, "config/game_config.json", &g_game_server_config };
-        arr[protocol::ServerType::Router] = { protocol::ServerType::Router, "config/router_config.json", &g_route_server_config };
-        arr[protocol::ServerType::Chat] = { protocol::ServerType::Chat, "config/chat_config.json", &g_chat_server_config };
-        arr[protocol::ServerType::Login] = { protocol::ServerType::Login, "config/login_config.json", &g_login_server_config };
+        arr[protocol::server_type_id::game] = { protocol::server_type_id::game, "config/game_config.json", &g_game_server_config };
+        arr[protocol::server_type_id::router] = { protocol::server_type_id::router, "config/router_config.json", &g_route_server_config };
+        arr[protocol::server_type_id::chat] = { protocol::server_type_id::chat, "config/chat_config.json", &g_chat_server_config };
+        arr[protocol::server_type_id::login] = { protocol::server_type_id::login, "config/login_config.json", &g_login_server_config };
         return arr;
     }();
 
     // Note: proto3 does not print default-initialized fields.
     //       To print all fields, we invoke mutable method explicitly.
-    void set_default_configuration(protocol::ServerType server_type)
+    void set_default_configuration(protocol::server_type_id server_type)
     {
         switch (server_type) {
-        case protocol::ServerType::Game:
+        case protocol::server_type_id::game:
             g_game_server_config.mutable_tcp_server();
             g_game_server_config.mutable_udp_server();
             g_game_server_config.mutable_player_database();
             g_game_server_config.mutable_world();
             g_game_server_config.mutable_log();
             return;
-        case protocol::ServerType::Router:
+        case protocol::server_type_id::router:
             g_route_server_config.mutable_server();
             g_route_server_config.mutable_log();
             return;
-        case protocol::ServerType::Chat:
+        case protocol::server_type_id::chat:
             g_chat_server_config.mutable_server();
             g_chat_server_config.mutable_player_database();
             g_chat_server_config.mutable_chat_database();
             g_chat_server_config.mutable_log();
             return;
-        case protocol::ServerType::Login:
+        case protocol::server_type_id::login:
             g_login_server_config.mutable_server();
             g_login_server_config.mutable_player_database();
             g_login_server_config.mutable_log();
@@ -94,7 +94,7 @@ namespace config {
         generate_all_config();
 
         // Load route server config.
-        load_server_config(protocol::ServerType::Router);
+        load_server_config(protocol::server_type_id::router);
     }
 
     ::config::Configuration_Server& get_server_config()
@@ -107,7 +107,7 @@ namespace config {
         return *g_route_server_config.mutable_log();
     }
 
-    bool load_server_config(protocol::ServerType server_type, protocol::FetchConfigResponse* msg)
+    bool load_server_config(protocol::server_type_id server_type, protocol::FetchConfigResponse* msg)
     {
         auto [_, config_path, config_msg] = config_path_db[server_type];
         if (config_path == nullptr) {

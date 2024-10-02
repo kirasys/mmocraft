@@ -2,13 +2,13 @@ syntax = "proto3";
 
 package protocol;
 
-enum ServerType {
-    Game = 0;
-    Router = 1;
-    Chat = 2;
-    Login = 3;
-
-    SIZE = 4;
+enum server_type_id {
+    game = 0;
+    router = 1;
+    chat = 2;
+    login = 3;
+    
+    total_count = 4;
 }
 
 message ServerInfo {
@@ -17,7 +17,7 @@ message ServerInfo {
 }
 
 message FetchConfigRequest {
-    ServerType server_type = 1;
+    server_type_id server_type = 1;
 }
 
 message FetchConfigResponse {
@@ -25,16 +25,16 @@ message FetchConfigResponse {
 }
 
 message FetchServerRequest {
-    ServerType server_type = 1;
+    server_type_id server_type = 1;
 }
 
 message FetchServerResponse {
-    ServerType server_type = 1;
+    server_type_id server_type = 1;
     ServerInfo server_info = 2;
 }
 
 message ServerAnnouncement {
-    ServerType server_type = 1;
+    server_type_id server_type = 1;
     ServerInfo server_info = 2;
 }
 
