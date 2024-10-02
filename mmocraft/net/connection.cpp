@@ -66,12 +66,12 @@ namespace net
     void Connection::disconnect()
     {
         // already disconencted.
-        if (not is_online() || (_player && _player->state() == game::PlayerState::disconnecting))
+        if (not is_online())
            return;
 
-        // Spawned players need some teardown operations before going offline.
-        // Delegate to the world by updating player state to Disconnect_Wait.
-        if (_player && _player->state() >= game::PlayerState::spawned) {
+        // players need some teardown operations before going offline.
+        // Delegate to the world by updating player state to disconnecting.
+        if (_player && _player->state() >= game::PlayerState::handshaking) {
             _player->prepare_state_transition(game::PlayerState::disconnecting, game::PlayerState::disconnected);
             return;
         }
@@ -85,7 +85,7 @@ namespace net
         net::PacketDisconnectPlayer disconnect_packet{ message };
         connection_io->send_packet(disconnect_packet);
 
-        _is_kicked = true;
+        disconnect();
     }
 
     void Connection::kick(error::ResultCode result)
@@ -281,10 +281,6 @@ namespace net
                 connection_io->post_send_event();
 
             connection_io->flush_multicast_send();
-
-            // Disconnect if a kick message has been sent.
-            if (conn.is_kicked())
-                conn.disconnect();
         };
 
         connection_env.for_each_connection(flush_message);

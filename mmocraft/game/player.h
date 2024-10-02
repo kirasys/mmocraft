@@ -90,6 +90,7 @@ namespace game
 
         void prepare_state_transition(State cur, State next)
         {
+            _prev = _cur;
             _cur = cur;
             _next = next;
         }
@@ -337,7 +338,6 @@ namespace game
         }
 
     private:
-        PlayerState _state;
 
         net::ConnectionKey _connection_key;
 

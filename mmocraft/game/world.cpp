@@ -121,24 +121,34 @@ namespace game
         send_to_players(old_players, new_players_spawn_packet_data, spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size);
     }
 
-    void World::despawn_player(const std::vector<game::Player*>& despawn_wait_players)
+    void World::despawn_player(const std::vector<game::Player*>& spawned_players)
     {
         // create despawn packets
         std::unique_ptr<std::byte[]> despawn_packet_data;
-        auto data_size = net::PacketDespawnPlayer::serialize(despawn_wait_players, despawn_packet_data);
+        auto data_size = net::PacketDespawnPlayer::serialize(spawned_players, despawn_packet_data);
 
         send_to_specific_players<PlayerState::spawned>(despawn_packet_data.get(), data_size);
     }
 
     void World::disconnect_player(const std::vector<game::Player*>& disconnect_wait_players)
     {
-        despawn_player(disconnect_wait_players);
+        // Send despawn packet to world players.
+        std::vector<game::Player*> spawned_players;
+        for (auto player : disconnect_wait_players) {
+            if (player->prev_state() >= game::PlayerState::spawned) {
+                spawned_players.push_back(player);
+            }
+        }
+
+        despawn_player(spawned_players);
 
         // Update player game data then set offline.
         for (auto player : disconnect_wait_players) {
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
-                database::PlayerGamedata::save(*player);
-                conn->disconnect();
+                if (player->prev_state() >= game::PlayerState::spawned)
+                    database::PlayerGamedata::save(*player);
+
+                player->transit_state();
             }
         }
     }
@@ -250,7 +260,11 @@ namespace game
             case game::PlayerState::disconnecting:
             {
                 disconnect_player_task.push(&player);
-                player.transit_state();
+            }
+            break;
+            case game::PlayerState::disconnected:
+            {
+                conn.disconnect();
             }
             break;
             }
