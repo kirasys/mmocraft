@@ -39,7 +39,7 @@ namespace net
         static auto fetch_config(const char* router_ip, int router_port, protocol::ServerType target)
             -> std::pair<bool, net::MessageRequest>;
 
-        bool forward_packet(protocol::ServerType, net::MessageID, net::ConnectionKey, const std::byte*, std::size_t);
+        bool forward_packet(protocol::ServerType, net::message_id::value, net::ConnectionKey, const std::byte*, std::size_t);
 
         template <typename ConfigType>
         static bool load_remote_config(const char* router_ip, int router_port, protocol::ServerType server_type, ConfigType& config)

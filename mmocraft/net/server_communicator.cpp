@@ -11,7 +11,7 @@ namespace
 {
     std::array<net::ServerCommunicator::common_handler_type, 0x100> common_message_handler_table = [] {
         std::array<net::ServerCommunicator::common_handler_type, 0x100> arr{};
-        arr[net::MessageID::Common_ServerAnnouncement] = &net::ServerCommunicator::handle_server_announcement;
+        arr[net::message_id::server_announcement] = &net::ServerCommunicator::handle_server_announcement;
         return arr;
     }();
 }
@@ -46,7 +46,7 @@ namespace net
         announce_msg.mutable_server_info()->set_port(target_server_addr.port);
 
         // Send the announcement message to the router.
-        net::MessageRequest req(net::MessageID::Common_ServerAnnouncement);
+        net::MessageRequest req(net::message_id::server_announcement);
         return send_to(req, protocol::ServerType::Router, announce_msg);
     }
 
@@ -70,7 +70,7 @@ namespace net
         fetch_server_msg.set_server_type(server_type);
 
         // Send the get config message to the router.
-        net::MessageRequest request(net::MessageID::Router_FetchServer);
+        net::MessageRequest request(net::message_id::get_server_address);
         request.set_message(fetch_server_msg);
         request.set_request_address(get_server(protocol::ServerType::Router));
 
@@ -94,7 +94,7 @@ namespace net
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
-        net::MessageRequest request(net::MessageID::Router_FetchServer);
+        net::MessageRequest request(net::message_id::get_server_address);
         return send_to(request, protocol::ServerType::Router, fetch_server_msg);
     }
 
@@ -104,7 +104,7 @@ namespace net
         protocol::FetchConfigRequest fetch_config_msg;
         fetch_config_msg.set_server_type(target);
 
-        net::MessageRequest request(net::MessageID::Router_GetConfig);
+        net::MessageRequest request(net::message_id::get_config);
         request.set_message(fetch_config_msg);
         request.set_request_address({ router_ip , router_port});
 
@@ -116,7 +116,7 @@ namespace net
         return res;
     }
 
-    bool ServerCommunicator::forward_packet(protocol::ServerType server_type, net::MessageID packet_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
+    bool ServerCommunicator::forward_packet(protocol::ServerType server_type, net::message_id::value packet_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
     {
         protocol::PacketHandleRequest packet_handle_msg;
         packet_handle_msg.set_connection_key(source.raw());

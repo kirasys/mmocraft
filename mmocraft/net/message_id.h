@@ -2,23 +2,26 @@
 
 namespace net
 {
-    enum MessageID
-    {
-        Invalid_MessageID,
+    namespace message_id {
+        enum value {
+            invalid = 0,
 
-        Common_ServerAnnouncement,
+            // Common message
+            ping,
+            server_announcement,
 
-        Chat_Ping,
-        Chat_PacketMessage,
+            // Chat server message
+            packet_chat_message,
 
-        Router_Pong,
-        Router_GetConfig,
-        Router_FetchServer,
+            // Router server message
+            get_config,
+            get_server_address,
 
-        Login_PacketHandshake,
-        Login_PlayerLogout,
+            // Login server message
+            packet_handshake,
+            player_logout,
 
-        // Indicate size of the enum class.
-        Size_of_MessageID,
-    };
+            size,
+        };
+    }
 }

@@ -27,10 +27,10 @@ namespace net
     bool LoginServer::handle_message(::net::MessageRequest& request)
     {
         switch (request.message_id()) {
-        case ::net::MessageID::Login_PacketHandshake:
+        case ::net::message_id::packet_handshake:
             handle_handshake_packet(request);
             return true;
-        case ::net::MessageID::Login_PlayerLogout:
+        case ::net::message_id::player_logout:
             handle_player_logout_message(request);
             return true;
         default:

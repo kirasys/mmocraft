@@ -28,7 +28,7 @@ namespace
 
     std::array<database::AsyncTask(net::GameServer::*)(net::MessageRequest&), 0x100> message_handler_table = [] {
         std::array<database::AsyncTask(net::GameServer::*)(net::MessageRequest&), 0x100> arr{};
-        arr[net::MessageID::Login_PacketHandshake] = &net::GameServer::handle_handshake_response_message;
+        arr[net::message_id::packet_handshake] = &net::GameServer::handle_handshake_response_message;
         return arr;
     }();
 }
@@ -84,7 +84,7 @@ namespace net
 
         udp_server.communicator().forward_packet(
             protocol::ServerType::Login,
-            net::MessageID::Login_PacketHandshake,
+            net::message_id::packet_handshake,
             conn.connection_key(),
             data, data_size
         );
@@ -343,7 +343,7 @@ namespace net
                 protocol::PlayerLogoutRequest logout_msg;
                 logout_msg.mutable_username()->append(player->username());
 
-                net::MessageRequest request(net::MessageID::Login_PlayerLogout);
+                net::MessageRequest request(net::message_id::player_logout);
                 udp_server.communicator().send_to(request, protocol::ServerType::Login, logout_msg);
             }
         }

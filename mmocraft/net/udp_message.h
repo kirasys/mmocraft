@@ -22,7 +22,7 @@ namespace net
     class MessageRequest
     {
     public:
-        MessageRequest(::net::MessageID msg_id = ::net::MessageID::Invalid_MessageID)
+        MessageRequest(::net::message_id::value msg_id = ::net::message_id::invalid)
         {
             reset(msg_id);
         }
@@ -34,12 +34,12 @@ namespace net
             return 1;
         }
 
-        ::net::MessageID message_id() const
+        ::net::message_id::value message_id() const
         {
-            return ::net::MessageID(_buf[0]);
+            return ::net::message_id::value(_buf[0]);
         }
 
-        void set_message_id(::net::MessageID msg_id)
+        void set_message_id(::net::message_id::value msg_id)
         {
             _buf[0] = char(msg_id);
         }
@@ -81,7 +81,7 @@ namespace net
             return capacity() - size_of_header();
         }
 
-        void reset(::net::MessageID msg_id = ::net::MessageID::Invalid_MessageID)
+        void reset(::net::message_id::value msg_id = ::net::message_id::invalid)
         {
             _size = size_of_header();
             _buf[0] = msg_id;

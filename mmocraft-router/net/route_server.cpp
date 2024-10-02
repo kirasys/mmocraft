@@ -11,8 +11,8 @@ namespace
 {
     std::array<bool (router::net::RouteServer::*)(net::MessageRequest&), 0x100> message_handler_table = [] {
         std::array<bool (router::net::RouteServer::*)(net::MessageRequest&), 0x100> arr{};
-        arr[::net::MessageID::Router_GetConfig] = &router::net::RouteServer::handle_fetch_config;
-        arr[::net::MessageID::Router_FetchServer] = &router::net::RouteServer::handle_fetch_server;
+        arr[::net::message_id::get_config] = &router::net::RouteServer::handle_fetch_config;
+        arr[::net::message_id::get_server_address] = &router::net::RouteServer::handle_fetch_server;
         return arr;
     }();
 
