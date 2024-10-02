@@ -93,7 +93,7 @@ namespace net
     bool LoginServer::handle_player_logout_message(::net::MessageRequest& request)
     {
         protocol::PlayerLogoutRequest msg;
-        if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
+        if (not request.parse_message(msg))
             return false;
 
        // ::database::PlayerSession player_session(msg.username());
