@@ -53,7 +53,7 @@ namespace net
 
         { // Authenticate
             auto [err, result] = co_await database::CouchbaseCore::get_document(database::CollectionPath::player_login, packet.username);
-            if (err.ec() == couchbase::errc::key_value::document_exists) {
+            if (err.ec() == couchbase::errc::key_value::document_not_found) {
                 packet_response.set_error_code(error::code::packet::player_not_exist);
                 co_return;
             }
