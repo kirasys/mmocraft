@@ -9,6 +9,8 @@
 #include "net/udp_server.h"
 #include "net/packet_extension.h"
 
+#include "database/couchbase_core.h"
+
 #include "util/interval_task.h"
 
 namespace net
@@ -16,14 +18,12 @@ namespace net
     constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
     constexpr std::size_t chat_message_task_interval = 1 * 1000; // 1 seconds.
 
-    class GameServer : public net::PacketHandler
+    class GameServer : public net::PacketHandler, net::MessageHandler
     {
     public:
         static constexpr protocol::ServerType server_type = protocol::ServerType::Game;
 
         using packet_handler_type = error::ResultCode (GameServer::*)(net::Connection&, const std::byte*, std::size_t);
-
-        using message_handler_type = ::net::UdpServer<GameServer>::handler_type;
 
         GameServer(unsigned max_clients, int num_of_event_threads = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
@@ -61,7 +61,9 @@ namespace net
 
         /* Message handlers */
 
-        bool handle_handshake_response_message(MessageRequest&);
+        virtual bool handle_message(net::MessageRequest&) override;
+
+        database::AsyncTask handle_handshake_response_message(MessageRequest&);
 
         /**
          *  Deferred packet handler methods.
@@ -78,7 +80,7 @@ namespace net
         io::RegisteredIO io_service;
 
         net::TcpServer tcp_server;
-        net::UdpServer<GameServer> udp_server;
+        net::UdpServer udp_server;
 
         game::World world;
 

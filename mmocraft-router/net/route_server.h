@@ -7,21 +7,22 @@ namespace router
 {
     namespace net
     {
-        class RouteServer
+        class RouteServer : ::net::MessageHandler
         {
         public:
-            using handler_type = ::net::UdpServer<RouteServer>::handler_type;
 
             RouteServer();
 
             void serve_forever();
+
+            virtual bool handle_message(::net::MessageRequest&) override;
 
             bool handle_fetch_config(::net::MessageRequest&);
 
             bool handle_fetch_server(::net::MessageRequest&);
 
         private:
-            ::net::UdpServer<RouteServer> server_core;
+            ::net::UdpServer server_core;
         };
     }
 }

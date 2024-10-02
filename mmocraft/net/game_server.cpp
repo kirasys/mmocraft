@@ -26,8 +26,8 @@ namespace
         return arr;
     }();
 
-    std::array<net::GameServer::message_handler_type, 0x100> message_handler_table = [] {
-        std::array<net::GameServer::message_handler_type, 0x100> arr{};
+    std::array<database::AsyncTask(net::GameServer::*)(net::MessageRequest&), 0x100> message_handler_table = [] {
+        std::array<database::AsyncTask(net::GameServer::*)(net::MessageRequest&), 0x100> arr{};
         arr[net::MessageID::Login_PacketHandshake] = &net::GameServer::handle_handshake_response_message;
         return arr;
     }();
@@ -39,7 +39,7 @@ namespace net
         : connection_env{ max_clients }
         , io_service { max_clients, num_of_event_threads }
         , tcp_server{ *this, connection_env, io_service }
-        , udp_server{ this, &message_handler_table }
+        , udp_server{ *this }
 
         , world{ connection_env }
         
@@ -190,6 +190,70 @@ namespace net
         return error::SUCCESS;
     }
 
+    /**
+     *  Message handlers.
+     */
+
+    bool GameServer::handle_message(net::MessageRequest& request)
+    {
+        if (auto handler = message_handler_table[request.message_id()]) {
+            (this->*handler)(request);
+            return true;
+        }
+
+        return false;
+    }
+
+    database::AsyncTask GameServer::handle_handshake_response_message(MessageRequest& request)
+    {
+        protocol::PacketHandshakeResponse msg;
+        if (not request.parse_message(msg))
+            co_return;
+
+        auto connection_key = msg.connection_key();
+
+        if (auto conn = connection_env.try_acquire_connection(connection_key)) {
+            auto player = conn->associated_player();
+
+            if (msg.error_code() == error::PACKET_RESULT_NOT_EXIST_LOGIN) {
+                player->set_player_type(game::PlayerType::GUEST);
+                player->transit_state();
+                co_return;
+            }
+            else if (msg.error_code() != error::PACKET_HANDLE_SUCCESS) {
+                conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
+                co_return;
+            }
+
+            player->set_player_type(game::PlayerType(msg.player_type()));
+            player->set_uuid(msg.player_uuid());
+
+            // Disconnect already logged in player.
+            if (connection_key != msg.prev_connection_key())
+                if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
+                    prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
+        }
+
+        // Load player game data.
+        auto [err, result] = co_await ::database::CouchbaseCore::get_document(::database::CollectionPath::player_gamedata, msg.player_uuid());
+
+        if (auto conn = connection_env.try_acquire_connection(connection_key)) {
+            if (err && err.ec() != couchbase::errc::key_value::document_not_found) {
+                conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
+                co_return;
+            }
+
+            auto player = conn->associated_player();
+
+            if (err.ec() != couchbase::errc::key_value::document_not_found) {
+                auto gamedata = result.content_as<::database::collection::PlayerGamedata>();
+                player->set_gamedata(gamedata);
+            }
+
+            player->transit_state();
+        }
+    }
+
     void GameServer::tick()
     {
         ConnectionIO::flush_send(connection_env);
@@ -283,60 +347,6 @@ namespace net
                 udp_server.communicator().send_to(request, protocol::ServerType::Login, logout_msg);
             }
         }
-    }
-
-    /**
-     *  Message handlers.
-     */
-
-    bool GameServer::handle_handshake_response_message(MessageRequest& request)
-    {
-        protocol::PacketHandshakeResponse msg;
-        if (not request.parse_message(msg))
-            return false;
-
-        auto connection_key = msg.connection_key();
-
-        if (auto conn = connection_env.try_acquire_connection(connection_key)) {
-            auto& player = *conn->associated_player();
-
-            switch (msg.error_code()) {
-            case error::PACKET_HANDLE_SUCCESS:
-            {
-                // Disconnect already logged in player.
-                if (connection_key != msg.prev_connection_key())
-                    if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
-                        prev_conn->kick(error::PACKET_RESULT_ALREADY_LOGIN);
-
-                player.set_uuid(msg.player_uuid());
-                player.set_player_type(game::PlayerType(msg.player_type()));
-
-                // Load player game data.
-                database::PlayerGamedata::get(player, [this, connection_key](std::error_code err, database::collection::PlayerGamedata gamedata) {
-                    if (auto conn = connection_env.try_acquire_connection(connection_key)) {
-                        if (err && err != couchbase::errc::key_value::document_not_found)
-                            conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
-
-                        else if (auto player = conn->associated_player()) {
-                            player->set_gamedata(gamedata);
-                            player->transit_state();
-                        }
-                    }
-                });
-
-                break;
-            }
-            case error::PACKET_RESULT_NOT_EXIST_LOGIN:
-                player.set_player_type(game::PlayerType::GUEST);
-                player.transit_state();
-                break;
-            default:
-                conn->kick(error::PACKET_RESULT_FAIL_LOGIN);
-                return true;
-            }
-        }
-
-        return true;
     }
 
     /**
