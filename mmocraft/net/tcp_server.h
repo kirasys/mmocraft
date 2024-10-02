@@ -20,10 +20,31 @@ namespace net
 {
     class ConnectionEnvironment;
 
+    class PacketHandler
+    {
+    public:
+        virtual error::ResultCode handle_packet(net::Connection&, const std::byte*) = 0;
+
+        virtual void on_disconnect(net::Connection&) = 0;
+    };
+
+    class PacketHandleServerStub : public PacketHandler
+    {
+        error::ResultCode handle_packet(net::Connection&, const std::byte*) override
+        {
+            return error::SUCCESS;
+        }
+
+        void on_disconnect(net::Connection&) override
+        {
+            return;
+        }
+    };
+
     class TcpServer final : public net::ServerCore, public io::IoEventHandler
     {
     public:
-        TcpServer(net::PacketHandleServer&, net::ConnectionEnvironment&, io::RegisteredIO&);
+        TcpServer(net::PacketHandler&, net::ConnectionEnvironment&, io::RegisteredIO&);
 
         void start_network_io_service(std::string_view ip, int port, std::size_t num_of_event_threads) override;
 
@@ -42,7 +63,7 @@ namespace net
         virtual std::size_t handle_io_event(io::IoAcceptEvent*) override;
         
     private:
-        PacketHandleServer& packet_handle_server;
+        net::PacketHandler& packet_handle_server;
 
         ConnectionEnvironment& connection_env;
         util::IntervalTaskScheduler<ConnectionEnvironment> connection_env_task;

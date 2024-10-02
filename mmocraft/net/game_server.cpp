@@ -287,7 +287,7 @@ namespace net
      *  Message handlers.
      */
 
-    bool GameServer::handle_handshake_response_message(const MessageRequest& request, MessageResponse& response)
+    bool GameServer::handle_handshake_response_message(MessageRequest& request)
     {
         protocol::PacketHandshakeResponse msg;
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))

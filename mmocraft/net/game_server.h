@@ -16,14 +16,14 @@ namespace net
     constexpr std::size_t user_authentication_task_interval = 3 * 1000; // 3 seconds.
     constexpr std::size_t chat_message_task_interval = 1 * 1000; // 1 seconds.
 
-    class GameServer : public net::PacketHandleServer
+    class GameServer : public net::PacketHandler
     {
     public:
         static constexpr protocol::ServerType server_type = protocol::ServerType::Game;
 
         using packet_handler_type = error::ResultCode (GameServer::*)(net::Connection&, const std::byte*, std::size_t);
 
-        using message_handler_type = bool(GameServer::*)(const MessageRequest&, MessageResponse&);
+        using message_handler_type = ::net::UdpServer<GameServer>::handler_type;
 
         GameServer(unsigned max_clients, int num_of_event_threads = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
 
@@ -61,7 +61,7 @@ namespace net
 
         /* Message handlers */
 
-        bool handle_handshake_response_message(const MessageRequest&, MessageResponse&);
+        bool handle_handshake_response_message(MessageRequest&);
 
         /**
          *  Deferred packet handler methods.

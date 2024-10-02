@@ -10,7 +10,7 @@
 namespace net
 {
     TcpServer::TcpServer
-        (net::PacketHandleServer& a_packet_handle_server, net::ConnectionEnvironment& a_connection_env, io::RegisteredIO& a_io_service)
+        (net::PacketHandler& a_packet_handle_server, net::ConnectionEnvironment& a_connection_env, io::RegisteredIO& a_io_service)
         : packet_handle_server{ a_packet_handle_server }
         , connection_env{ a_connection_env }
         , connection_env_task{ &connection_env }

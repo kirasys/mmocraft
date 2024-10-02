@@ -16,9 +16,9 @@ namespace router
 
             void serve_forever();
 
-            bool handle_fetch_config(const ::net::MessageRequest&, ::net::MessageResponse&);
+            bool handle_fetch_config(::net::MessageRequest&);
 
-            bool handle_fetch_server(const ::net::MessageRequest&, ::net::MessageResponse&);
+            bool handle_fetch_server(::net::MessageRequest&);
 
         private:
             ::net::UdpServer<RouteServer> server_core;

@@ -18,10 +18,10 @@ namespace
 
 namespace net
 {
-    std::optional<bool> ServerCommunicator::handle_common_message(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    std::optional<bool> ServerCommunicator::handle_common_message(::net::MessageRequest& request)
     {
         if (auto handler = common_message_handler_table[request.message_id()])
-            return (this->*handler)(request, response);
+            return (this->*handler)(request);
         else
             return std::nullopt;
     }
@@ -48,7 +48,7 @@ namespace net
         return send_message(protocol::ServerType::Router, net::MessageID::Common_ServerAnnouncement, announce_msg);
     }
 
-    bool ServerCommunicator::handle_server_announcement(const ::net::MessageRequest& request, ::net::MessageResponse& response)
+    bool ServerCommunicator::handle_server_announcement(::net::MessageRequest& request)
     {
         protocol::ServerAnnouncement msg;
         if (not msg.ParseFromArray(request.begin_message(), int(request.message_size())))
