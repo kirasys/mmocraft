@@ -27,7 +27,6 @@ namespace game
     constexpr const char* world_metadata_filename = "metadata.json";
 
     namespace world_task_interval {
-        constexpr std::size_t level_data_submission = 3 * 1000; // 3 seconds
         constexpr std::size_t spawn_player = 2 * 1000; // 2 seconds.
         constexpr std::size_t despawn_player = 2 * 1000; // 2 seconds.
         constexpr std::size_t sync_block = 200;      // 200 milliseconds.
@@ -122,7 +121,6 @@ namespace game
         win::FileMapping block_mapping;
 
         std::size_t last_save_map_at = 0;
-        std::size_t last_level_data_submission_at = 0;
 
         std::filesystem::path save_dir;
         std::filesystem::path block_data_path;

@@ -75,9 +75,6 @@ namespace game
 
     void World::process_level_wait_player(const std::vector<game::Player*>& level_wait_players)
     {
-        if (last_level_data_submission_at + game::world_task_interval::level_data_submission > util::current_monotonic_tick())
-            return;
-
         // compress and serialize block datas.
         net::PacketLevelDataChunk level_packet(block_mapping.data(), _metadata.volume(),
             net::PacketFieldType::Short(_metadata.width()),
@@ -92,8 +89,6 @@ namespace game
         multicast_to_players(level_wait_players, data_entry, [](game::Player* player) {
             player->transit_state(game::PlayerState::level_initialized);
         });
-        
-        last_level_data_submission_at = util::current_monotonic_tick();
     }
 
     void World::spawn_player(const std::vector<game::Player*>& spawn_wait_players)
