@@ -57,7 +57,7 @@ namespace game
     class BlockSyncTask : public io::Task
     {
     public:
-        using handler_type = void (game::World::* const)(const std::vector<game::Player*>&, game::BlockHistory<>&);
+        using handler_type = void (game::World::* const)(const std::vector<game::Player*>&, const game::BlockHistory&);
 
         BlockSyncTask(handler_type handler, game::World* world, std::size_t interval_ms = 0)
             : io::Task{ interval_ms }
@@ -67,13 +67,14 @@ namespace game
 
         virtual bool ready() const override
         {
-            return io::Task::ready() && (block_histories[inbound_block_history_index].size() || not _level_wait_player_queue.empty());
+            return io::Task::ready() && (block_history.count() || not _level_wait_player_queue.empty());
         }
 
         virtual void before_scheduling() override
         {
             _level_wait_player_queue.swap(_level_wait_players);
-            outbound_block_history_index = inbound_block_history_index.exchange(outbound_block_history_index, std::memory_order_relaxed);
+            block_history.flush();
+
             set_state(State::Processing);
         }
 
@@ -84,14 +85,15 @@ namespace game
 
         bool push(util::Coordinate3D pos, game::BlockID block_id)
         {
-            return block_histories[inbound_block_history_index].add_record(pos, block_id);
+            return block_history.add_record(pos, block_id);
         }
 
         virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
         {
-            std::invoke(_handler, _world, _level_wait_players, block_histories[outbound_block_history_index]);
+            std::invoke(_handler, _world, _level_wait_players, block_history.get());
 
             _level_wait_players.clear();
+            block_history.clear();
             set_state(State::Unused);
         }
 
@@ -99,9 +101,7 @@ namespace game
         handler_type _handler;
         game::World* _world = nullptr;
 
-        std::atomic<unsigned> inbound_block_history_index = 0;
-        unsigned outbound_block_history_index = 1;
-        game::BlockHistory<> block_histories[2];
+        game::BlockHistoryBuffer block_history;
 
         std::vector<game::Player*> _level_wait_players;
         std::vector<game::Player*> _level_wait_player_queue;
