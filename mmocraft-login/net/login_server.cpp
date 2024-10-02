@@ -75,10 +75,12 @@ namespace net
                 co_return;
 
             auto login_session = err.ec() != couchbase::errc::key_value::document_not_found
-                ? result.content_as<database::collection::PlayerLoginSession>() 
-                : database::collection::PlayerLoginSession{ .connection_key = packet_request.connection_key().raw() };
+                ? result.content_as<database::collection::PlayerLoginSession>() : database::collection::PlayerLoginSession();
 
-            packet_response.set_prev_connection_key(login_session.connection_key);
+            if (err.ec() != couchbase::errc::key_value::document_not_found)
+                packet_response.set_prev_connection_key(login_session.connection_key);
+
+            login_session.connection_key = packet_request.connection_key().raw();
 
             std::tie(err, std::ignore) = co_await database::CouchbaseCore::upsert_document(database::CollectionPath::player_login_session, packet.username, login_session);
             if (err) {

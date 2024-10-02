@@ -230,9 +230,8 @@ namespace net
             player->set_uuid(msg.player_uuid());
 
             // Disconnect already logged in player.
-            if (connection_key != msg.prev_connection_key())
-                if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
-                    prev_conn->kick(error::code::packet::player_already_login);
+            if (auto prev_conn = connection_env.try_acquire_connection(msg.prev_connection_key()))
+                prev_conn->kick(error::code::packet::player_already_login);
         }
 
         // Load player game data.
