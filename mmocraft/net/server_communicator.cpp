@@ -64,13 +64,13 @@ namespace net
         return true;
     }
 
-    bool ServerCommunicator::fetch_server(protocol::ServerType server_type)
+    bool ServerCommunicator::fetch_server_address(protocol::ServerType server_type)
     {
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
         // Send the get config message to the router.
-        net::MessageRequest request(net::message_id::get_server_address);
+        net::MessageRequest request(net::message_id::fetch_server_address);
         request.set_message(fetch_server_msg);
         request.set_request_address(get_server(protocol::ServerType::Router));
 
@@ -89,12 +89,12 @@ namespace net
         return true;
     }
 
-    bool ServerCommunicator::fetch_server_async(protocol::ServerType server_type)
+    bool ServerCommunicator::fetch_server_address_async(protocol::ServerType server_type)
     {
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
-        net::MessageRequest request(net::message_id::get_server_address);
+        net::MessageRequest request(net::message_id::fetch_server_address);
         return send_to(request, protocol::ServerType::Router, fetch_server_msg);
     }
 
@@ -104,7 +104,7 @@ namespace net
         protocol::FetchConfigRequest fetch_config_msg;
         fetch_config_msg.set_server_type(target);
 
-        net::MessageRequest request(net::message_id::get_config);
+        net::MessageRequest request(net::message_id::fetch_config);
         request.set_message(fetch_config_msg);
         request.set_request_address({ router_ip , router_port});
 

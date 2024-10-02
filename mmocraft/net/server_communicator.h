@@ -32,9 +32,9 @@ namespace net
 
         bool announce_server(protocol::ServerType, const net::IPAddress&);
 
-        bool fetch_server_async(protocol::ServerType);
+        bool fetch_server_address_async(protocol::ServerType);
 
-        bool fetch_server(protocol::ServerType);
+        bool fetch_server_address(protocol::ServerType);
 
         static auto fetch_config(const char* router_ip, int router_port, protocol::ServerType target)
             -> std::pair<bool, net::MessageRequest>;

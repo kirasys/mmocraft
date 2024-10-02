@@ -285,8 +285,8 @@ namespace net
         auto& conf = config::get_config();
 
         // Fetch other UDP server.
-        comm.fetch_server(protocol::ServerType::Login);
-        //comm.fetch_server(protocol::ServerType::Chat);
+        comm.fetch_server_address(protocol::ServerType::Login);
+        //comm.fetch_server_address(protocol::ServerType::Chat);
 
         // Create working directories
         if (not std::filesystem::exists(conf.world().save_dir()))

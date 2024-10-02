@@ -19,7 +19,7 @@ namespace router
 
             bool handle_fetch_config(::net::MessageRequest&);
 
-            bool handle_fetch_server(::net::MessageRequest&);
+            bool handle_fetch_server_address(::net::MessageRequest&);
 
         private:
             ::net::UdpServer server_core;

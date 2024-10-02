@@ -14,8 +14,8 @@ namespace net
             packet_chat_message,
 
             // Router server message
-            get_config,
-            get_server_address,
+            fetch_config,
+            fetch_server_address,
 
             // Login server message
             packet_handshake,
