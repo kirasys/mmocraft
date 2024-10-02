@@ -32,7 +32,7 @@ namespace database
     {
         auto [err, result] = co_await ::database::CouchbaseCore::get_document(::database::CollectionPath::player_gamedata, player_unsafe.uuid());
 
-        callback(err.ec(), result.content_as<::database::collection::PlayerGamedata>());
+        callback(err.ec(), not err ? result.content_as<::database::collection::PlayerGamedata>() : ::database::collection::PlayerGamedata());
     }
 
     database::AsyncTask PlayerGamedata::save(const game::Player& player_unsafe)
