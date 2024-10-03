@@ -19,8 +19,9 @@ namespace io
     namespace iocp_signal
     {
         constexpr DWORD eof = 0;
-        constexpr DWORD retry = std::numeric_limits<DWORD>::max();
-        constexpr DWORD task = retry - 1;
+        constexpr DWORD event_failed = std::numeric_limits<DWORD>::max();
+        constexpr DWORD retry_packet_process = event_failed - 1;
+        constexpr DWORD task_completed = event_failed - 2;
     }
 
     using IoEventResult = OVERLAPPED_ENTRY;

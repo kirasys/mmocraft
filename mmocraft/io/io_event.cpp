@@ -21,7 +21,10 @@ namespace io
     void IoAcceptEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
         auto connection = static_cast<IoEventHandler*>(completion_key);
-        connection->handle_io_event(this);
+
+        if (transferred_bytes_or_signal != io::iocp_signal::event_failed)
+            connection->handle_io_event(this);
+        
         connection->on_complete(this);
     }
 
@@ -35,7 +38,10 @@ namespace io
     void IoConnectEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
         auto connection = static_cast<IoEventHandler*>(completion_key);
-        connection->handle_io_event(this);
+
+        if (transferred_bytes_or_signal != io::iocp_signal::event_failed)
+            connection->handle_io_event(this);
+
         connection->on_complete(this);
     }
 
@@ -49,7 +55,12 @@ namespace io
             return;
         }
 
-        if (transferred_bytes_or_signal != io::iocp_signal::retry)
+        else if (transferred_bytes_or_signal == io::iocp_signal::event_failed) {
+            connection->on_complete(this);
+            return;
+        }
+
+        else if (transferred_bytes_or_signal != io::iocp_signal::retry_packet_process)
             event_data()->push(nullptr, transferred_bytes_or_signal); // pass nullptr because data was already appended by I/O. just update size only.
 
         // deliver events to the owner.
@@ -82,6 +93,11 @@ namespace io
         // pre-processing
         if (transferred_bytes_or_signal == io::iocp_signal::eof) {
             connection->on_error();
+            return;
+        }
+
+        else if (transferred_bytes_or_signal == io::iocp_signal::event_failed) {
+            connection->on_complete(this, 0);
             return;
         }
 
@@ -153,8 +169,8 @@ namespace io
             auto io_event = reinterpret_cast<io::IoEvent*>(event_results[i].RequestContext);
             auto connection = reinterpret_cast<IoEventHandler*>(event_results[i].SocketContext);
 
-            if (event_results[i].Status == S_OK)
-                io_event->on_event_complete(connection, event_results[i].BytesTransferred);
+            io_event->on_event_complete(connection, event_results[i].Status == S_OK ?
+                event_results[i].BytesTransferred : io::iocp_signal::event_failed);
         }
     }
 

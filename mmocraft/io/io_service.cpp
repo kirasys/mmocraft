@@ -79,7 +79,7 @@ namespace io
                 auto transferred_bytes_or_signal = event_results[i].dwNumberOfBytesTransferred;
 
                 try {
-                    if (transferred_bytes_or_signal == io::iocp_signal::task) {
+                    if (transferred_bytes_or_signal == io::iocp_signal::task_completed) {
                         auto task = reinterpret_cast<io::Task*>(event_results[i].lpOverlapped);
 
                         //task->invoke_handler(event_results[i].lpCompletionKey);
