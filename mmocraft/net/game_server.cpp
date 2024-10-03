@@ -75,10 +75,8 @@ namespace net
         ));
 
         if (auto player = conn.associated_player()) {
-            if (packet.cpe_magic == 0x42) { // is CPE supported
-                player->set_extension_mode();
+            if (packet.cpe_magic == 0x42) // is CPE supported
                 player->prepare_state_transition(game::PlayerState::ex_handshaking, game::PlayerState::ex_handshaked);
-            }
             else
                 player->prepare_state_transition(game::PlayerState::handshaking, game::PlayerState::handshaked);
         }
@@ -108,6 +106,8 @@ namespace net
 
     error::ResultCode GameServer::handle_ext_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
+        
+
         net::PacketExtPing packet(data);
         conn.io()->send_packet(packet);
 

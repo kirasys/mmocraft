@@ -300,11 +300,6 @@ namespace game
             _last_ping_time = util::current_monotonic_tick();
         }
 
-        void set_extension_mode()
-        {
-            extension_mode = true;
-        }
-
         void set_extension_count(unsigned count)
         {
             pending_extension_count = count;
@@ -318,11 +313,6 @@ namespace game
         void register_extension(net::packet_type_id::value ext)
         {
             supported_extensions.set(ext);
-        }
-
-        bool is_support_extension() const
-        {
-            return extension_mode;
         }
 
         bool is_supported_extension(net::packet_type_id::value ext) const
@@ -358,7 +348,6 @@ namespace game
 
         std::string _uuid;
 
-        bool extension_mode = false;
         unsigned pending_extension_count = 0;
         std::bitset<64> supported_extensions;
 
