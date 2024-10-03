@@ -20,9 +20,9 @@ namespace io
 
     void IoAcceptEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
-        auto event_handler = static_cast<IoEventHandler*>(completion_key);
-        event_handler->handle_io_event(this);
-        event_handler->on_complete(this);
+        auto connection = static_cast<IoEventHandler*>(completion_key);
+        connection->handle_io_event(this);
+        connection->on_complete(this);
     }
 
     bool IoConnectEvent::post_overlapped_io(win::Socket sock, std::string_view ip, int port)
@@ -34,18 +34,18 @@ namespace io
 
     void IoConnectEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
-        auto event_handler = static_cast<IoEventHandler*>(completion_key);
-        event_handler->handle_io_event(this);
-        event_handler->on_complete(this);
+        auto connection = static_cast<IoEventHandler*>(completion_key);
+        connection->handle_io_event(this);
+        connection->on_complete(this);
     }
 
     void IoRecvEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
-        auto event_handler = static_cast<IoEventHandler*>(completion_key);
+        auto connection = static_cast<IoEventHandler*>(completion_key);
 
         // pre-processing
         if (transferred_bytes_or_signal == io::iocp_signal::eof) {
-            event_handler->on_error();
+            connection->on_error();
             return;
         }
 
@@ -53,13 +53,13 @@ namespace io
             event_data()->push(nullptr, transferred_bytes_or_signal); // pass nullptr because data was already appended by I/O. just update size only.
 
         // deliver events to the owner.
-        auto processed_bytes = event_handler->handle_io_event(this);
+        auto processed_bytes = connection->handle_io_event(this);
 
         // post-processing
         if (processed_bytes)
             event_data()->pop(processed_bytes);
 
-        event_handler->on_complete(this);
+        connection->on_complete(this);
     }
 
     bool IoRecvEvent::post_rio_event(io::RegisteredIO& rio, unsigned connection_id)
@@ -77,17 +77,17 @@ namespace io
 
     void IoSendEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
-        auto event_handler = static_cast<IoEventHandler*>(completion_key);
+        auto connection = static_cast<IoEventHandler*>(completion_key);
 
         // pre-processing
         if (transferred_bytes_or_signal == io::iocp_signal::eof) {
-            event_handler->on_error();
+            connection->on_error();
             return;
         }
 
         event_data()->pop(transferred_bytes_or_signal);
 
-        event_handler->on_complete(this, transferred_bytes_or_signal);
+        connection->on_complete(this, transferred_bytes_or_signal);
     }
 
     bool IoSendEvent::post_overlapped_io(win::Socket sock)
@@ -124,15 +124,15 @@ namespace io
 
     void IoMulticastSendEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
-        auto event_handler = static_cast<IoEventHandler*>(completion_key);
+        auto connection = static_cast<IoEventHandler*>(completion_key);
 
         // pre-processing
         if (transferred_bytes_or_signal == io::iocp_signal::eof) {
-            event_handler->on_error();
+            connection->on_error();
             return;
         }
 
-        event_handler->on_complete(this, transferred_bytes_or_signal);
+        connection->on_complete(this, transferred_bytes_or_signal);
     }
 
     void RioEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
@@ -151,7 +151,7 @@ namespace io
 
         for (int i = 0; i < num_dequeued_results; i++) {
             auto io_event = reinterpret_cast<io::IoEvent*>(event_results[i].RequestContext);
-            auto completion_key = reinterpret_cast<IoEventHandler*>(event_results[i].SocketContext);
+            auto connection = reinterpret_cast<IoEventHandler*>(event_results[i].SocketContext);
 
             if (event_results[i].Status == S_OK)
                 io_event->on_event_complete(connection, event_results[i].BytesTransferred);

@@ -108,6 +108,8 @@ namespace net
 
     error::ResultCode GameServer::handle_ext_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
+        util::busy_wait(1);
+
         net::PacketExtPing packet(data);
         conn.io()->send_packet(packet);
 

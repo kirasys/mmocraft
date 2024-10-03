@@ -158,23 +158,23 @@ namespace io
         return new io::IoSendEvent(io_event_data);
     }
 
-    void RegisteredIO::register_event_source(unsigned connection_id, win::Socket event_source, IoEventHandler* event_handler)
+    void RegisteredIO::register_event_source(unsigned connection_id, win::Socket client_sock, IoEventHandler* client_connection)
     {
         request_queues[connection_id] = net::rio_api().RIOCreateRequestQueue(
-            event_source,
+            client_sock,
             /* MaxOutstandingReceive =*/ 1,
             /* MaxReceiveDataBuffers =*/ 1,
             /* MaxOutstandingSend =*/ 1,
             /* MaxSendDataBuffers =*/ 1,
             completion_queue.rio_handle(),
             completion_queue.rio_handle(),
-            event_handler
+            client_connection
         );
 
         CONSOLE_LOG_IF(error, request_queues[connection_id] == RIO_INVALID_RQ)
             << "Fail to create request queue with " << ::WSAGetLastError();
 
-        register_event_source(event_source, event_handler);
+        register_event_source(client_sock, client_connection);
     }
 
     void RegisteredIO::register_event_source(win::Handle event_source, IoEventHandler* event_handler)
@@ -214,7 +214,7 @@ namespace io
         return num_results != RIO_CORRUPT_CQ ? int(num_results) : -1;
     }
 
-    bool RegisteredIO::recv(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* context)
+    bool RegisteredIO::recv(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* io_recv_event)
     {
         RIO_BUF rbuf{
             .BufferId = recv_buffer_pool.id(),
@@ -224,7 +224,7 @@ namespace io
 
         DWORD flags = 0;
 
-        if (net::rio_api().RIOReceive(request_queues[connection_id], &rbuf, 1, flags, context) != TRUE) {
+        if (net::rio_api().RIOReceive(request_queues[connection_id], &rbuf, 1, flags, io_recv_event) != TRUE) {
             CONSOLE_LOG(error) << "RIOReceive failed with " << ::WSAGetLastError();
             return false;
         }
@@ -232,7 +232,7 @@ namespace io
         return true;
     }
 
-    bool RegisteredIO::send(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* context)
+    bool RegisteredIO::send(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* io_send_event)
     {
         RIO_BUF rbuf{
             .BufferId = send_buffer_pool.id(),
@@ -242,7 +242,7 @@ namespace io
 
         DWORD flags = 0;
 
-        if (net::rio_api().RIOSend(request_queues[connection_id], &rbuf, 1, flags, context) != TRUE) {
+        if (net::rio_api().RIOSend(request_queues[connection_id], &rbuf, 1, flags, io_send_event) != TRUE) {
             CONSOLE_LOG(error) << "RIOSend failed with " << ::WSAGetLastError();
             return false;
         }
@@ -250,7 +250,7 @@ namespace io
         return true;
     }
 
-    bool RegisteredIO::multicast_send(unsigned connection_id, RIO_BUFFERID buffer_id, std::size_t buf_size, void* context)
+    bool RegisteredIO::multicast_send(unsigned connection_id, RIO_BUFFERID buffer_id, std::size_t buf_size, void* io_send_event)
     {
         RIO_BUF rbuf{
             .BufferId = buffer_id,
@@ -260,7 +260,7 @@ namespace io
 
         DWORD flags = 0;
 
-        if (net::rio_api().RIOSend(request_queues[connection_id], &rbuf, 1, flags, context) != TRUE) {
+        if (net::rio_api().RIOSend(request_queues[connection_id], &rbuf, 1, flags, io_send_event) != TRUE) {
             CONSOLE_LOG(error) << "RIOSend failed with " << ::WSAGetLastError();
             return false;
         }
@@ -268,14 +268,14 @@ namespace io
         return true;
     }
 
-    bool RegisteredIO::schedule_task(io::Task* task, void* task_handler_inst)
+    bool RegisteredIO::schedule_task(io::Task* task, void* task_handler)
     {
         task->before_scheduling();
 
         return ::PostQueuedCompletionStatus(
             completion_queue.iocp_handle(),
             0, 
-            ULONG_PTR(task_handler_inst), 
+            ULONG_PTR(task_handler),
             &task->overlapped) != 0;
     }
 

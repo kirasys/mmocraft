@@ -87,7 +87,7 @@ namespace io
 
         io::IoSendEvent* create_send_io_event(unsigned connection_id);
 
-        void register_event_source(unsigned connection_id, win::Socket event_source, io::IoEventHandler* event_handler);
+        void register_event_source(unsigned connection_id, win::Socket client_sock, io::IoEventHandler* client_connection);
 
         void register_event_source(win::Handle event_source, IoEventHandler* event_handler);
 
