@@ -132,7 +132,7 @@ namespace io
         is_processing = true;
 
         assert(multicast_data != nullptr);
-        if (not rio.multicast_send(connection_id, multicast_data->buffer_id(), event_data()->size(), this))
+        if (not rio.multicast_send(connection_id, multicast_data->registered_buffer_id(), event_data()->size(), this))
             return is_processing = false;
 
         return true;
@@ -153,7 +153,7 @@ namespace io
 
     void RioEvent::on_event_complete(void* completion_key, DWORD transferred_bytes_or_signal)
     {
-        thread_local io::RioEventResult event_results[io::RegisteredIO::MAX_RIO_EVENT_RESULTS];
+        thread_local io::RioEventResult event_results[io::RegisteredIO::max_dequeuing_rio_event_results];
 
         auto rio = static_cast<io::RegisteredIO*>(completion_key);
 

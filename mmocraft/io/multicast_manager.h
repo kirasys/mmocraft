@@ -37,7 +37,7 @@ namespace io
         MulticastDataEntry(std::unique_ptr<std::byte[]>&& data, std::size_t data_size)
             : _data{ std::move(data) }
             , _data_size{ data_size }
-            , _rio_buffer{ _data.get(), data_size }
+            , registered_buffer{ _data.get(), data_size }
         {
             update_lifetime();
         }
@@ -49,7 +49,7 @@ namespace io
 
         bool is_safe_delete() const
         {
-            return (is_ref_count_mode && _ref_count.load() == 0) ||
+            return (ref_count_mode && ref_count.load() == 0) ||
                 expire_at < util::current_monotonic_tick();
         }
 
@@ -63,34 +63,34 @@ namespace io
             return _data_size;
         }
 
-        RIO_BUFFERID buffer_id() const
+        RIO_BUFFERID registered_buffer_id() const
         {
-            return _rio_buffer.id();
+            return registered_buffer.id();
         }
 
         void set_reference_count_mode(bool flag)
         {
-            is_ref_count_mode = flag;
+            ref_count_mode = flag;
         }
 
         void increase_ref()
         {
-            _ref_count.fetch_add(1);
+            ref_count.fetch_add(1);
         }
 
         void decrease_ref()
         {
-            _ref_count.fetch_add(-1);
+            ref_count.fetch_add(-1);
         }
 
     private:
         std::unique_ptr<std::byte[]> _data;
         std::size_t _data_size = 0;
 
-        win::RioBufferPool _rio_buffer;
+        win::RioBufferPool registered_buffer;
 
-        bool is_ref_count_mode = false;
-        std::atomic<int> _ref_count;
+        bool ref_count_mode = false;
+        std::atomic<int> ref_count;
         std::size_t expire_at = 0;
     };
 

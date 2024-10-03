@@ -14,7 +14,7 @@
 
 namespace io
 {
-    const int DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS = 0;
+    constexpr int default_num_of_concurrent_event_threads = 0;
     // 0 means the number of threads concurrently running threads as many processors.
     
     class IoServiceModel
@@ -35,7 +35,7 @@ namespace io
     {
     public:
 
-        IoCompletionPort(int num_of_concurrent_threads = DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
+        IoCompletionPort(int num_of_concurrent_threads = default_num_of_concurrent_event_threads);
 
         ~IoCompletionPort()
         {
@@ -74,10 +74,11 @@ namespace io
     class RegisteredIO final : public util::NonCopyable
     {
     public:
-        static constexpr std::size_t MAX_IO_EVENT_RESULTS = 128;
-        static constexpr std::size_t MAX_RIO_EVENT_RESULTS = 512;
+        static constexpr std::size_t max_dequeuing_io_event_results = 128;
 
-        RegisteredIO(std::size_t max_connections, int num_of_concurrent_threads = DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
+        static constexpr std::size_t max_dequeuing_rio_event_results = 512;
+
+        RegisteredIO(std::size_t max_connections, int num_of_concurrent_threads = default_num_of_concurrent_event_threads);
 
         ~RegisteredIO();
 
@@ -91,19 +92,19 @@ namespace io
 
         void register_event_source(win::Handle event_source, IoEventHandler* event_handler);
 
-        void register_event_source(win::Socket event_source, IoEventHandler* event_handler);
+        void register_event_source(win::Socket client_sock, IoEventHandler* client_connection);
 
         int dequeue_event_results(io::IoEventResult*, std::size_t max_results);
 
         int dequeue_rio_event_result(io::RioEventResult*, std::size_t max_results);
 
-        bool recv(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* context);
+        bool recv(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* io_recv_event);
 
-        bool send(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* context);
+        bool send(unsigned connection_id, std::byte* buf, std::size_t buf_size, void* io_send_event);
 
-        bool multicast_send(unsigned connection_id, RIO_BUFFERID buffer_id, std::size_t buf_size, void* context);
+        bool multicast_send(unsigned connection_id, RIO_BUFFERID buffer_id, std::size_t buf_size, void* io_send_event);
 
-        bool schedule_task(io::Task* task, void* task_handler_inst = nullptr);
+        bool schedule_task(io::Task* task, void* task_handler = nullptr);
 
         void spawn_event_thread();
 

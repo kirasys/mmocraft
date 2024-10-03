@@ -281,7 +281,7 @@ namespace io
 
     void RegisteredIO::run_event_loop_forever()
     {
-        io::IoEventResult event_results[MAX_IO_EVENT_RESULTS];
+        io::IoEventResult event_results[max_dequeuing_io_event_results];
 
         auto& rio_api = net::rio_api();
 

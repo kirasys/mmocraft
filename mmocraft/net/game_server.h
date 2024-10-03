@@ -26,7 +26,7 @@ namespace net
 
         using packet_handler_type = error::ResultCode (GameServer::*)(net::Connection&, const std::byte*, std::size_t);
 
-        GameServer(unsigned max_clients, int num_of_event_threads = io::DEFAULT_NUM_OF_CONCURRENT_EVENT_THREADS);
+        GameServer(unsigned max_clients, int num_of_event_threads = io::default_num_of_concurrent_event_threads);
 
         void tick();
 

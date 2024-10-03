@@ -27,11 +27,11 @@ namespace game
     constexpr const char* world_metadata_filename = "metadata.json";
 
     namespace world_task_interval {
-        constexpr std::size_t spawn_player = 2 * 1000; // 2 seconds.
-        constexpr std::size_t despawn_player = 2 * 1000; // 2 seconds.
-        constexpr std::size_t sync_block = 200;      // 200 milliseconds.
-        constexpr std::size_t sync_player_position = 100;      // 100 milliseconds.
-        constexpr std::size_t ping = 5 * 1000; // 5 seconds.
+        constexpr std::size_t spawn_player          = 2 * 1000; // 2 seconds.
+        constexpr std::size_t despawn_player        = 2 * 1000; // 2 seconds.
+        constexpr std::size_t sync_block            = 200;      // 200 milliseconds.
+        constexpr std::size_t sync_player_position  = 100;      // 100 milliseconds.
+        constexpr std::size_t ping                  = 5 * 1000; // 5 seconds.
     }
     
     class World final : util::NonCopyable, util::NonMovable

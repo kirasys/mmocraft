@@ -27,15 +27,6 @@ namespace net
         using UInt64 = std::uint64_t;
 
         using String = std::string_view;
-
-        /*
-        struct String
-        {
-            const char *data = nullptr;
-            std::size_t size = 0;
-            static constexpr std::size_t size_with_padding = 64;
-        };
-        */
     };
 
     namespace PacketFieldConstraint
