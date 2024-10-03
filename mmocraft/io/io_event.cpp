@@ -153,7 +153,8 @@ namespace io
             auto io_event = reinterpret_cast<io::IoEvent*>(event_results[i].RequestContext);
             auto completion_key = reinterpret_cast<IoEventHandler*>(event_results[i].SocketContext);
 
-            io_event->on_event_complete(completion_key, event_results[i].BytesTransferred);
+            if (event_results[i].Status == S_OK)
+                io_event->on_event_complete(connection, event_results[i].BytesTransferred);
         }
     }
 
