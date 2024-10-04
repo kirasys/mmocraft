@@ -25,11 +25,7 @@ namespace database
     {
         CONSOLE_LOG(info) << "Connecting couchbase server...";
         auto [err, cluster] = couchbase::cluster::connect(conf.server_address(), get_cluster_option(conf.userid(), conf.password())).get();
-
-        if (err) {
-            CONSOLE_LOG(error) << "Fail to connect to the cluster";
-            return false;
-        }
+        CONSOLE_LOG_IF(fatal, err) << "Fail to connect to the cluster";
 
         _global_cluster = std::move(cluster);
         
