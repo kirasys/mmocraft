@@ -104,9 +104,57 @@ namespace net
         return error::code::success;
     }
 
+#define WAITFREE 1
+    
+    std::atomic<std::size_t> counter;
+    
+    std::size_t count = 0;
+    std::mutex counter_mutex;
+
+    constexpr int num_of_iterations = 10;
+
+
+    std::size_t test_data_size = 0x100;
+    char test_buf[0x1000];
+    auto simulate_memcpy = []()
+    {
+        for (int i = 0; i < test_data_size; i++)
+            test_buf[i] = i;
+    };
+
     error::ResultCode GameServer::handle_ext_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
-        
+#ifdef WAITFREE
+        auto iteration = []() {
+            counter.fetch_add(test_data_size);
+
+            simulate_memcpy();
+        };
+#elif MUTEX
+        auto iteration = []() {
+            {
+                std::lock_guard lock(counter_mutex);
+                if (count + test_data_size == 0x123456789)
+                    return;
+
+                count += test_data_size;
+                simulate_memcpy();
+            }
+        };
+#elif LOCKFREE
+        auto iteration = []() {
+            auto old = counter.load(std::memory_order_relaxed);
+            do {
+                if (old + test_data_size == 0x123456789)
+                    return;
+            } while (!counter.compare_exchange_weak(old, old + test_data_size, std::memory_order_relaxed, std::memory_order_relaxed));
+
+            simulate_memcpy();
+        };
+#endif
+
+        for (int i = 0; i < num_of_iterations; i++)
+            iteration();
 
         net::PacketExtPing packet(data);
         conn.io()->send_packet(packet);
@@ -285,7 +333,7 @@ namespace net
         auto& conf = config::get_config();
 
         // Fetch other UDP server.
-        comm.fetch_server_address(protocol::server_type_id::login);
+        //comm.fetch_server_address(protocol::server_type_id::login);
         //comm.fetch_server_address(protocol::server_type_id::chat);
 
         // Create working directories
