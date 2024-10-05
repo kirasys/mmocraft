@@ -156,7 +156,7 @@ namespace game
 
     void World::commit_block_changes(const std::byte* block_history_data, std::size_t data_size)
     {
-        auto history_size = data_size / game::BlockHistory::history_data_unit_size;
+        auto history_size = game::BlockHistory::size(data_size);
         auto block_array = block_mapping.data();
         
         for (std::size_t index = 0; index < history_size; index++) {
@@ -168,14 +168,15 @@ namespace game
         }
     }
 
-    void World::sync_block(const std::vector<game::Player*>& level_wait_players, const game::BlockHistory& block_history)
+    void World::sync_block(const std::vector<game::Player*>& level_wait_players, util::byte_view block_history_data)
     {
-        // serialize and fetch block histories.
-        std::unique_ptr<std::byte[]> block_history_data;
-        if (std::size_t data_size = block_history.serialize(block_history_data)) {
-            commit_block_changes(block_history_data.get(), data_size);
+        // copy block histories.
+        std::unique_ptr<std::byte[]> copyed_block_history_data(block_history_data.clone());
 
-            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_block, std::move(block_history_data), data_size);
+        if (std::size_t data_size = block_history_data.size()) {
+            commit_block_changes(copyed_block_history_data.get(), data_size);
+
+            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_block, std::move(copyed_block_history_data), data_size);
             multicast_to_specific_players<PlayerState::level_initialized>(data_entry);
         }
         

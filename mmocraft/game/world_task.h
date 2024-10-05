@@ -57,7 +57,7 @@ namespace game
     class BlockSyncTask : public io::Task
     {
     public:
-        using handler_type = void (game::World::* const)(const std::vector<game::Player*>&, const game::BlockHistory&);
+        using handler_type = void (game::World::* const)(const std::vector<game::Player*>&, util::byte_view);
 
         BlockSyncTask(handler_type handler, game::World* world, std::size_t interval_ms = 0)
             : io::Task{ interval_ms }
@@ -67,13 +67,13 @@ namespace game
 
         virtual bool ready() const override
         {
-            return io::Task::ready() && (block_history.count() || not _level_wait_player_queue.empty());
+            return io::Task::ready() && (block_history.has_live_data() || not _level_wait_player_queue.empty());
         }
 
         virtual void before_scheduling() override
         {
             _level_wait_player_queue.swap(_level_wait_players);
-            block_history.flush();
+            block_history.snapshot();
 
             set_state(State::processing);
         }
@@ -90,10 +90,10 @@ namespace game
 
         virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
         {
-            std::invoke(_handler, _world, _level_wait_players, block_history.get());
+            std::invoke(_handler, _world, _level_wait_players, block_history.get_snapshot_data());
 
             _level_wait_players.clear();
-            block_history.clear();
+            block_history.clear_snapshot();
             set_state(State::unused);
         }
 
@@ -101,7 +101,7 @@ namespace game
         handler_type _handler;
         game::World* _world = nullptr;
 
-        game::BlockHistoryBuffer block_history;
+        game::BlockHistory block_history;
 
         std::vector<game::Player*> _level_wait_players;
         std::vector<game::Player*> _level_wait_player_queue;

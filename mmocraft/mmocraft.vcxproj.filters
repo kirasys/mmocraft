@@ -108,6 +108,7 @@
     <ClInclude Include="win\registered_io.h" />
     <ClInclude Include="config\constants.h" />
     <ClInclude Include="database\couchbase_definitions.h" />
+    <ClInclude Include="util\double_buffering.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="database\sql\clean.sql" />

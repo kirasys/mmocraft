@@ -142,6 +142,7 @@
     <ClInclude Include="util\compressor.h" />
     <ClInclude Include="util\custom_unique_ptr.h" />
     <ClInclude Include="util\deferred_call.h" />
+    <ClInclude Include="util\double_buffering.h" />
     <ClInclude Include="util\interval_task.h" />
     <ClInclude Include="util\lockfree_stack.h" />
     <ClInclude Include="util\math.h" />

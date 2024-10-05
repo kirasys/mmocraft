@@ -7,7 +7,6 @@
 
 #include "game/block.h"
 #include "game/player.h"
-#include "game/block_history.h"
 #include "game/world_task.h"
 #include "io/multicast_manager.h"
 #include "proto/generated/world_metadata.pb.h"
@@ -76,7 +75,7 @@ namespace game
 
         void despawn_player(const std::vector<game::Player*>&);
 
-        void sync_block(const std::vector<game::Player*>&, const game::BlockHistory&);
+        void sync_block(const std::vector<game::Player*>&, util::byte_view block_history_data);
 
         void sync_player_position();
 
