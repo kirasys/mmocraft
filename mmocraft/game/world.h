@@ -40,33 +40,6 @@ namespace game
 
         void broadcast_to_world_player(net::chat_message_type_id, const char* message);
 
-        template <game::PlayerState::State T> 
-        void send_to_specific_players(const std::byte* data, std::size_t data_size,
-                        void(*successed)(game::Player*) = nullptr, void(*failed)(game::Player*) = nullptr)
-        {
-            std::vector<game::Player*> players;
-            players.reserve(connection_env.size_of_max_connections());
-
-            connection_env.select_players([](const game::Player* player)
-                { return player->state() >= T; },
-                players);
-
-            send_to_players(players, data, data_size, successed, failed);
-        }
-
-        template <game::PlayerState::State T>
-        void multicast_to_specific_players(io::MulticastDataEntry& entry)
-        {
-            std::vector<game::Player*> players;
-            players.reserve(connection_env.size_of_max_connections());
-
-            connection_env.select_players([](const game::Player* player)
-                { return player->state() >= T; },
-                players);
-
-            multicast_to_players(players, entry);
-        }
-
         void process_level_wait_player(const std::vector<game::Player*>&);
 
         void spawn_player(const std::vector<game::Player*>&);
@@ -86,12 +59,39 @@ namespace game
         bool load_filesystem_world(std::string_view);
 
     private:
-        void send_to_players(const std::vector<game::Player*>&, const std::byte*, std::size_t,
+        void send_to_players(const std::vector<game::Player*>&, util::byte_view ,
                 void(*successed)(game::Player*) = nullptr, void(*failed)(game::Player*) = nullptr);
+
+       template <game::PlayerState::State T>
+        void send_to_specific_players(util::byte_view data,
+            void(*successed)(game::Player*) = nullptr, void(*failed)(game::Player*) = nullptr)
+        {
+            std::vector<game::Player*> players;
+            players.reserve(connection_env.size_of_max_connections());
+
+            connection_env.select_players([](const game::Player* player)
+                { return player->state() >= T; },
+                players);
+
+            send_to_players(players, data, successed, failed);
+        }
 
         void multicast_to_players(const std::vector<game::Player*>&, io::MulticastDataEntry&, void(*successed)(game::Player*) = nullptr);
 
-        void commit_block_changes(const std::byte* block_history_data, std::size_t);
+        template <game::PlayerState::State T>
+        void multicast_to_specific_players(io::MulticastDataEntry& entry)
+        {
+            std::vector<game::Player*> players;
+            players.reserve(connection_env.size_of_max_connections());
+
+            connection_env.select_players([](const game::Player* player)
+                { return player->state() >= T; },
+                players);
+
+            multicast_to_players(players, entry);
+        }
+        
+        void commit_block_changes(util::byte_view block_history_data);
 
         void load_metadata();
 

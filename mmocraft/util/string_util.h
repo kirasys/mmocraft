@@ -53,6 +53,10 @@ namespace util
             , _data_size{ data_size }
         { }
 
+        byte_view(const byte_view&) = default;
+        byte_view& operator=(const byte_view&) = default;
+
+
         auto data() const
         {
             return _data;

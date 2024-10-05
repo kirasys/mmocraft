@@ -47,12 +47,12 @@ namespace game
         }
     }
 
-    void World::send_to_players(const std::vector<game::Player*>& players, const std::byte* data, std::size_t data_size,
+    void World::send_to_players(const std::vector<game::Player*>& players, util::byte_view data,
                                 void(*successed)(game::Player*), void(*failed)(game::Player*))
     {
         for (auto player : players) {
             if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
-                if (connection_io->send_raw_data(data, data_size))
+                if (connection_io->send_raw_data(data.data(), data.size()))
                     if (successed) successed(player);
                 else
                     if (failed) failed(player);
@@ -106,14 +106,14 @@ namespace game
         auto spawn_packet_data_size = net::PacketSpawnPlayer::serialize(old_players, spawn_wait_players, spawn_packet_data);
 
         // spawn all players to the new players.
-        send_to_players(spawn_wait_players, spawn_packet_data.get(), spawn_packet_data_size,
+        send_to_players(spawn_wait_players, { spawn_packet_data.get(), spawn_packet_data_size },
             [](game::Player* player) {
                 player->transit_state(game::PlayerState::spawned);
             });
 
         // spawn new player to the old players. 
         auto new_players_spawn_packet_data = spawn_packet_data.get() + old_players.size() * net::PacketSpawnPlayer::packet_size;
-        send_to_players(old_players, new_players_spawn_packet_data, spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size);
+        send_to_players(old_players, { new_players_spawn_packet_data, spawn_wait_players.size() * net::PacketSpawnPlayer::packet_size });
     }
 
     void World::despawn_player(const std::vector<game::Player*>& spawned_players)
@@ -122,7 +122,7 @@ namespace game
         std::unique_ptr<std::byte[]> despawn_packet_data;
         auto data_size = net::PacketDespawnPlayer::serialize(spawned_players, despawn_packet_data);
 
-        send_to_specific_players<PlayerState::spawned>(despawn_packet_data.get(), data_size);
+        send_to_specific_players<PlayerState::spawned>({ despawn_packet_data.get(), data_size });
     }
 
     void World::disconnect_player(const std::vector<game::Player*>& disconnect_wait_players)
@@ -154,13 +154,13 @@ namespace game
                 + _metadata.width() * _metadata.length() * _byteswap_ushort(y);
     }
 
-    void World::commit_block_changes(const std::byte* block_history_data, std::size_t data_size)
+    void World::commit_block_changes(util::byte_view block_history_data)
     {
-        auto history_size = game::BlockHistory::size(data_size);
+        auto history_size = game::BlockHistory::size(block_history_data.size());
         auto block_array = block_mapping.data();
         
         for (std::size_t index = 0; index < history_size; index++) {
-            auto& record = game::BlockHistory::get_record(block_history_data, index);
+            auto& record = game::BlockHistory::get_record(block_history_data.data(), index);
             std::size_t block_map_index = coordinate_to_block_map_index(record.x, record.y, record.z);
 
             if (block_map_index < _metadata.volume())
@@ -171,10 +171,10 @@ namespace game
     void World::sync_block(const std::vector<game::Player*>& level_wait_players, util::byte_view block_history_data)
     {
         // copy block histories.
-        std::unique_ptr<std::byte[]> copyed_block_history_data(block_history_data.clone());
-
         if (std::size_t data_size = block_history_data.size()) {
-            commit_block_changes(copyed_block_history_data.get(), data_size);
+            commit_block_changes(block_history_data);
+
+            std::unique_ptr<std::byte[]> copyed_block_history_data(block_history_data.clone());
 
             auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_block, std::move(copyed_block_history_data), data_size);
             multicast_to_specific_players<PlayerState::level_initialized>(data_entry);
