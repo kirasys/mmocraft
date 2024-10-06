@@ -40,19 +40,18 @@ namespace net
 
     database::AsyncTask LoginServer::handle_handshake_packet(::net::MessageRequest request)
     {
-        ::net::PacketRequest packet_request(request);
-        ::net::PacketHandshake packet(packet_request.packet_data());
+        ::net::PacketMessage<::net::PacketHandshake> packet_msg(request);
 
         protocol::PacketHandshakeResponse packet_response;
         packet_response.set_error_code(error::code::packet::player_login_fail);
-        packet_response.set_connection_key(packet_request.connection_key().raw());
+        packet_response.set_connection_key(packet_msg.connection_key().raw());
 
         util::defer send_response = [&request, &packet_response]() {
             request.send_reply(packet_response);
         };
 
         { // Authenticate
-            auto [err, result] = co_await database::CouchbaseCore::get_document(database::CollectionPath::player_login, packet.username);
+            auto [err, result] = co_await database::CouchbaseCore::get_document(database::CollectionPath::player_login, packet_msg.packet().username);
             if (err.ec() == couchbase::errc::key_value::document_not_found) {
                 packet_response.set_error_code(error::code::packet::player_not_exist);
                 co_return;
@@ -61,7 +60,7 @@ namespace net
                 co_return;
 
             auto player_login = result.content_as<database::collection::PlayerLogin>();
-            if (player_login.password != packet.password)
+            if (player_login.password != packet_msg.packet().password)
                 co_return;
 
             packet_response.set_error_code(error::code::success);
@@ -70,7 +69,7 @@ namespace net
         }
         
         { // Update login session
-            auto [err, result] = co_await database::CouchbaseCore::get_document(::database::CollectionPath::player_login_session, packet.username);
+            auto [err, result] = co_await database::CouchbaseCore::get_document(::database::CollectionPath::player_login_session, packet_msg.packet().username);
             if (err && err.ec() != couchbase::errc::key_value::document_not_found)
                 co_return;
 
@@ -80,11 +79,11 @@ namespace net
             if (err.ec() != couchbase::errc::key_value::document_not_found)
                 packet_response.set_prev_connection_key(login_session.connection_key);
 
-            login_session.connection_key = packet_request.connection_key().raw();
+            login_session.connection_key = packet_msg.connection_key().raw();
 
-            std::tie(err, std::ignore) = co_await database::CouchbaseCore::upsert_document(database::CollectionPath::player_login_session, packet.username, login_session);
+            std::tie(err, std::ignore) = co_await database::CouchbaseCore::upsert_document(database::CollectionPath::player_login_session, packet_msg.packet().username, login_session);
             if (err) {
-                CONSOLE_LOG(error) << "Fail to update login session(" << packet.username << ')';
+                CONSOLE_LOG(error) << "Fail to update login session(" << packet_msg.packet().username << ')';
             }
         }
     }

@@ -159,12 +159,20 @@ namespace net
 
     using MessageResponse = MessageRequest;
 
-    class PacketRequest
+    template <typename PacketType>
+    class PacketMessage
     {
     public:
-        PacketRequest(const net::MessageRequest& request)
+        PacketMessage(const net::MessageRequest& request)
+            : _valid{ _message.ParseFromArray(request.begin_message(), int(request.message_size())) }
+            , _packet{ packet_data() }
         {
-            _message.ParseFromArray(request.begin_message(), int(request.message_size()));
+            
+        }
+
+        bool is_valid() const
+        {
+            return _valid;
         }
 
         auto packet_id() const
@@ -172,9 +180,9 @@ namespace net
             return net::packet_type_id::value(_message.packet_data()[0]);
         }
 
-        const std::byte* packet_data() const
+        const auto& packet() const
         {
-            return reinterpret_cast<const std::byte*>(_message.packet_data().data());
+            return _packet;
         }
 
         auto clone_packet_data()
@@ -191,12 +199,16 @@ namespace net
         }
 
     private:
+
+        const std::byte* packet_data() const
+        {
+            return reinterpret_cast<const std::byte*>(_message.packet_data().data());
+        }
+
+        bool _valid = false;
+
         protocol::PacketHandleRequest _message;
-    };
 
-    class PacketResponse
-    {
-    public:
-
+        PacketType _packet;
     };
 }
