@@ -23,6 +23,7 @@ namespace login
 
             virtual bool handle_message(::net::MessageRequest&) override;
 
+            // it need to copy MessageRequest to reply handshake results;
             database::AsyncTask handle_handshake_packet(::net::MessageRequest);
 
             database::AsyncTask handle_player_logout_message(::net::MessageRequest&);

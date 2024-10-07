@@ -83,7 +83,7 @@ namespace net
 
             std::tie(err, std::ignore) = co_await database::CouchbaseCore::upsert_document(database::CollectionPath::player_login_session, packet_msg.packet().username, login_session);
             if (err) {
-                CONSOLE_LOG(error) << "Fail to update login session(" << packet_msg.packet().username << ')';
+                CONSOLE_LOG(error) << "Fail to update login session: " << packet_msg.packet().username;
             }
         }
     }
@@ -94,8 +94,8 @@ namespace net
         if (not request.parse_message(msg))
             co_return;
 
-       // ::database::PlayerSession player_session(msg.username());
-       // player_session.revoke();
+        auto [err, _] = co_await database::CouchbaseCore::remove_document(database::CollectionPath::player_login_session, msg.username());
+        CONSOLE_LOG_IF(error, err) << "Fail to remove login session: " << msg.username();
     }
 
     bool LoginServer::initialize(const char* router_ip, int router_port)
