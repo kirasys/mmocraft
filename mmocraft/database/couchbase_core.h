@@ -106,6 +106,20 @@ namespace database
             }
         };
 
+        struct DeleteOperationAwaiter : DataOperationAwaiter
+        {
+            using DataOperationAwaiter::DataOperationAwaiter;
+
+            void await_suspend(std::coroutine_handle<> coro)
+            {
+                auto& coll = CouchbaseCore::get_collection(collection_path);
+                coll.remove(document_id(), {}, [this, coro](auto err, auto&& res) {
+                    error = std::move(err);
+                    coro.resume();
+                });
+            }
+        };
+
         static GetOperationAwaiter get_document(database::CollectionPath path, std::string_view name)
         {
             return { path, name };
@@ -115,6 +129,11 @@ namespace database
         static UpsertOperationAwaiter upsert_document(database::CollectionPath path, std::string_view name, const Document& document)
         {
             return { path, name, Transcoder::encode(document) };
+        }
+
+        static DeleteOperationAwaiter remove_document(database::CollectionPath path, std::string_view name)
+        {
+            return { path, name };
         }
 
     private:
