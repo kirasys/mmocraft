@@ -44,7 +44,7 @@
     <ClCompile Include="net\server_communicator.cpp" />
     <ClCompile Include="win\registered_io.cpp" />
     <ClCompile Include="net\udp_message.cpp" />
-    <ClCompile Include="game\block_history.cpp" />
+    <ClCompile Include="game\history_buffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
@@ -74,7 +74,6 @@
     <ClInclude Include="database\mssql_core.h" />
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="util\string_util.h" />
-    <ClInclude Include="net\deferred_packet.h" />
     <ClInclude Include="system_initializer.h" />
     <ClInclude Include="util\lockfree_stack.h" />
     <ClInclude Include="net\connection_environment.h" />
@@ -89,7 +88,7 @@
     <ClInclude Include="io\multicast_manager.h" />
     <ClInclude Include="util\math.h" />
     <ClInclude Include="game\world_generator.h" />
-    <ClInclude Include="game\block_history.h" />
+    <ClInclude Include="game\history_buffer.h" />
     <ClInclude Include="game\world_task.h" />
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\packet_extension.h" />

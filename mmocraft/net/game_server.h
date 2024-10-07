@@ -4,7 +4,6 @@
 
 #include "net/connection.h"
 #include "net/connection_environment.h"
-#include "net/deferred_packet.h"
 #include "net/tcp_server.h"
 #include "net/udp_server.h"
 #include "net/packet_extension.h"
@@ -66,15 +65,7 @@ namespace net
 
         database::AsyncTask handle_handshake_response_message(MessageRequest&);
 
-        /**
-         *  Deferred packet handler methods.
-         */
-
-        void handle_deferred_chat_message_packet(io::Task*, const DeferredPacket<net::PacketChatMessage>*);
-
     private:
-
-        void flush_deferred_packet();
 
         net::ConnectionEnvironment connection_env;
 
@@ -84,12 +75,6 @@ namespace net
         net::UdpServer udp_server;
 
         game::World world;
-
-        DeferredPacketTask<net::PacketChatMessage, GameServer> deferred_chat_message_packet_task;
-
-        io::Task *deferred_packet_tasks[1] = {
-            &deferred_chat_message_packet_task
-        };
 
         util::IntervalTaskScheduler<GameServer> interval_tasks;
     };

@@ -7,7 +7,6 @@
 #include "net/game_server.h"
 #include "database/query.h"
 #include "logging/error.h"
-#include "net/deferred_packet.h"
 #include "system_initializer.h"
 
 #include <couchbase/cluster.hxx>

@@ -31,6 +31,7 @@ namespace game
         constexpr std::size_t sync_block            = 200;      // 200 milliseconds.
         constexpr std::size_t sync_player_position  = 100;      // 100 milliseconds.
         constexpr std::size_t ping                  = 5 * 1000; // 5 seconds.
+        constexpr std::size_t common_chat_transfer  = 1 * 1000; // 1 seconds
     }
     
     class World final : util::NonCopyable, util::NonMovable
@@ -39,6 +40,8 @@ namespace game
         World(net::ConnectionEnvironment&);
 
         void broadcast_to_world_player(net::chat_message_type_id, const char* message);
+
+        /* World task */
 
         void process_level_wait_player(const std::vector<game::Player*>&);
 
@@ -52,7 +55,13 @@ namespace game
 
         void sync_player_position();
 
+        void common_chat_transfer(util::byte_view chat_history_data);
+        
+        /* end */
+
         bool try_change_block(util::Coordinate3D, BlockID);
+
+        bool try_add_common_chat(util::byte_view chat_packet_data);
 
         void tick(io::RegisteredIO&);
 
@@ -107,12 +116,14 @@ namespace game
         game::WorldPlayerTask disconnect_player_task;
         game::BlockSyncTask sync_block_task;
         io::SimpleTask<game::World> sync_player_position_task;
+        game::CommonChatTask common_chat_transfer_task;
 
-        io::Task* world_tasks[4] = {
+        io::Task* world_tasks[5] = {
             &spawn_player_task,
             &disconnect_player_task,
             &sync_block_task,
             &sync_player_position_task,
+            &common_chat_transfer_task
         };
 
         WorldMetadata _metadata;

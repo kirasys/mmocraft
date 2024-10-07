@@ -44,8 +44,6 @@ namespace net
 
         , world{ connection_env }
         
-        , deferred_chat_message_packet_task{ &GameServer::handle_deferred_chat_message_packet, this, game_server_task_interval::chat_message }
-
         , interval_tasks{ this }
     {
         interval_tasks.schedule(util::interval_task_tag_id::announce_server,
@@ -88,7 +86,7 @@ namespace net
             data, data_size
         );
 
-        return error::code::packet::handle_deferred;
+        return error::code::success;
     }
 
     error::ResultCode GameServer::handle_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
@@ -106,8 +104,6 @@ namespace net
 
     error::ResultCode GameServer::handle_ext_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
     {
-        
-
         net::PacketExtPing packet(data);
         conn.io()->send_packet(packet);
 
@@ -148,7 +144,7 @@ namespace net
         net::PacketChatMessage packet(data);
 
         if (auto player = conn.associated_player()) {
-            packet.player_id = player->game_id(); // client always sends 0xff(SELF ID).
+            packet.player_id = player->game_id(); // client may sends 0xff(SELF ID).
 
             if (packet.message[0] == '/') { // if command message
                 game::PlayerCommand command(player);
@@ -158,8 +154,8 @@ namespace net
                 conn.io()->send_packet(msg_packet);
 ;            }
             else {
-                deferred_chat_message_packet_task.push_packet(conn.connection_key(), packet);
-                return error::code::packet::handle_deferred;
+                world.try_add_common_chat({ data, data_size });
+                return error::code::success;
             }
         }
         return error::code::success;
@@ -259,8 +255,6 @@ namespace net
         ConnectionIO::flush_send(connection_env);
         ConnectionIO::flush_receive(connection_env);
 
-        flush_deferred_packet();
-
         if (tcp_server.is_stopped())
             tcp_server.start_accept();
     }
@@ -326,15 +320,6 @@ namespace net
         }
     }
 
-    void GameServer::flush_deferred_packet()
-    {
-        for (auto task : deferred_packet_tasks) {
-            if (task->ready()) {
-                io_service.schedule_task(task);
-            }
-        }
-    }
-
     void GameServer::on_disconnect(net::Connection& conn)
     {
         if (auto player = conn.associated_player()) {
@@ -346,22 +331,6 @@ namespace net
                 net::MessageRequest request(net::message_id::player_logout);
                 udp_server.communicator().send_to(request, protocol::server_type_id::login, logout_msg);
             }
-        }
-    }
-
-    /**
-     *  Deferred packet handlers.
-     */
-
-    void GameServer::handle_deferred_chat_message_packet(io::Task* task, const DeferredPacket<net::PacketChatMessage>* packet_head)
-    {
-        std::vector<const DeferredPacket<net::PacketChatMessage>*> packets;
-        for (auto packet = packet_head; packet; packet = packet->next)
-            packets.push_back(packet);
-
-        std::unique_ptr<std::byte[]> packet_data;
-        if (auto data_size = DeferredPacket<net::PacketChatMessage>::serialize(packets, packet_data)) {
-            //world.multicast_to_world_player(net::MuticastTag::Chat_Message, std::move(packet_data), data_size);
         }
     }
 }

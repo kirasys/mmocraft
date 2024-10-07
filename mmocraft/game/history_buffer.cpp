@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "block_history.h"
+#include "history_buffer.h"
 
 #include "net/packet.h"
 

@@ -46,4 +46,17 @@ namespace game
             return history_data_size / history_data_unit_size;
         }
     };
+
+    class CommonChatHistory : public ::util::DoubleBuffering
+    {
+    public:
+
+        bool add_record(util::byte_view packet_data)
+        {
+            return input_buffer().push(packet_data.data(), packet_data.size());
+        }
+
+    private:
+
+    };
 }

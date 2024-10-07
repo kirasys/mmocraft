@@ -6,6 +6,7 @@ namespace config
 
     namespace task {
         constexpr int announce_server_period = 5000; // 5s
+        constexpr int flush_common_chat_period = 500; // 0.5s
     }
 
     namespace network {

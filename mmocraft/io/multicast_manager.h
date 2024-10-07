@@ -22,7 +22,7 @@ namespace io
 
             sync_Player_position,
 
-            chat_message,
+            common_chat_message,
 
             count,
         };

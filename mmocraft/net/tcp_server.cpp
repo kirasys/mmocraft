@@ -86,7 +86,7 @@ namespace net
 
     std::size_t TcpServer::handle_io_event(io::IoAcceptEvent* event)
     {
-        connection_env_task.process_task(util::interval_task_tag_id::clean_connection);
+        connection_env_task.process_tasks(util::interval_task_tag_id::clean_connection);
 
         // creates unique accept socket first to avoid resource leak.
         auto client_socket = win::UniqueSocket(event->accepted_socket);

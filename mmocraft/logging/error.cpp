@@ -32,8 +32,6 @@ namespace
 
         // Packet handling
         arr[error::code::packet::handle_error]    = "handle_error";
-        arr[error::code::packet::handle_deferred] = "handle_deferred";
-
         arr[error::code::packet::handle_chat_message_error] = "Couldn't handle chat message. Please try reconnect.";
 
         // Packet result

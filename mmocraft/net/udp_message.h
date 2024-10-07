@@ -163,6 +163,7 @@ namespace net
     class PacketMessage
     {
     public:
+
         PacketMessage(const net::MessageRequest& request)
             : _valid{ _message.ParseFromArray(request.begin_message(), int(request.message_size())) }
             , _packet{ packet_data() }
@@ -175,22 +176,14 @@ namespace net
             return _valid;
         }
 
-        auto packet_id() const
-        {
-            return net::packet_type_id::value(_message.packet_data()[0]);
-        }
-
         const auto& packet() const
         {
             return _packet;
         }
 
-        auto clone_packet_data()
+        const std::byte* packet_data() const
         {
-            auto data_size = _message.packet_data().size();
-            auto data = new std::byte[data_size];
-            std::memcpy(data, packet_data(), data_size);
-            return std::unique_ptr<std::byte[]>(data);
+            return reinterpret_cast<const std::byte*>(_message.packet_data().data());
         }
 
         auto connection_key() const
@@ -200,14 +193,10 @@ namespace net
 
     private:
 
-        const std::byte* packet_data() const
-        {
-            return reinterpret_cast<const std::byte*>(_message.packet_data().data());
-        }
-
-        bool _valid = false;
-
         protocol::PacketHandleRequest _message;
+
+        // Warning: _valid should be located after _message.
+        bool _valid = false;
 
         PacketType _packet;
     };

@@ -39,9 +39,7 @@ namespace error
 
             constexpr ErrorCode handle_error = 3201;
             constexpr ErrorCode handle_suucess = 3202;
-            constexpr ErrorCode handle_deferred = 3203;
-
-            constexpr ErrorCode handle_chat_message_error = 3204;
+            constexpr ErrorCode handle_chat_message_error = 3203;
 
             constexpr ErrorCode player_login_fail = 3301;
             constexpr ErrorCode player_not_exist = 3302;
@@ -71,8 +69,7 @@ namespace error
         inline bool is_packet_handle_success() const
         {
             return code == error::code::success
-                || code == error::code::packet::insuffient_packet_data
-                || code == error::code::packet::handle_deferred;
+                || code == error::code::packet::insuffient_packet_data;
         }
 
         inline const char* to_string() const

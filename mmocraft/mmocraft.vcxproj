@@ -24,7 +24,7 @@
     <ClCompile Include="database\couchbase_core.cpp" />
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="database\sql_statement.cpp" />
-    <ClCompile Include="game\block_history.cpp" />
+    <ClCompile Include="game\history_buffer.cpp" />
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="game\player_command.cpp" />
     <ClCompile Include="game\world.cpp" />
@@ -98,7 +98,7 @@
     <ClInclude Include="database\query.h" />
     <ClInclude Include="database\sql_statement.h" />
     <ClInclude Include="game\block.h" />
-    <ClInclude Include="game\block_history.h" />
+    <ClInclude Include="game\history_buffer.h" />
     <ClInclude Include="game\entity.h" />
     <ClInclude Include="game\player_command.h" />
     <ClInclude Include="game\world.h" />
@@ -131,7 +131,6 @@
     <ClInclude Include="io\io_service.h" />
     <ClInclude Include="logging\error.h" />
     <ClInclude Include="logging\logger.h" />
-    <ClInclude Include="net\deferred_packet.h" />
     <ClInclude Include="net\packet.h" />
     <ClInclude Include="net\connection.h" />
     <ClInclude Include="net\game_server.h" />

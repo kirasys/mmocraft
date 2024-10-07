@@ -27,6 +27,7 @@ namespace game
         , disconnect_player_task{ &World::disconnect_player, this, game::world_task_interval::despawn_player }
         , sync_block_task{ &World::sync_block, this, game::world_task_interval::sync_block }
         , sync_player_position_task{ &World::sync_player_position, this, game::world_task_interval::sync_player_position }
+        , common_chat_transfer_task{ &World::common_chat_transfer, this, game::world_task_interval::common_chat_transfer }
     { }
 
     void World::broadcast_to_world_player(net::chat_message_type_id message_type, const char* message)
@@ -72,6 +73,8 @@ namespace game
 
         entry.set_reference_count_mode(true);
     }
+
+    /* World task start */
 
     void World::process_level_wait_player(const std::vector<game::Player*>& level_wait_players)
     {
@@ -207,9 +210,26 @@ namespace game
         }
     }
 
+    void World::common_chat_transfer(util::byte_view chat_history_data)
+    {
+        if (std::size_t data_size = chat_history_data.size()) {
+            std::unique_ptr<std::byte[]> copyed_chat_history_data(chat_history_data.clone());
+
+            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::common_chat_message, std::move(copyed_chat_history_data), data_size);
+            multicast_to_specific_players<PlayerState::spawned>(data_entry);
+        }
+    }
+
+    /* World task end */
+
     bool World::try_change_block(util::Coordinate3D pos, BlockID block_id)
     {
         return sync_block_task.push(pos, block_id);
+    }
+
+    bool World::try_add_common_chat(util::byte_view chat_packet_data)
+    {
+        return common_chat_transfer_task.push(chat_packet_data);
     }
 
     void World::tick(io::RegisteredIO& task_scheduler)
