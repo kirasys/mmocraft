@@ -23,6 +23,7 @@ namespace config
 
         constexpr int multicast_data_gc_period_ms = 6 * 1000;
 
-        constexpr std::size_t block_history_max_count = 1024;
+        constexpr std::size_t block_history_capacity = 1024 * 8;
+        constexpr std::size_t common_chat_history_capacity = 8192;
     }
 }

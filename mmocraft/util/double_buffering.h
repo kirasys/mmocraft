@@ -8,6 +8,7 @@
 
 namespace util
 {
+    template <std::size_t SIZE>
     class DoubleBuffering
     {
     public:
@@ -48,7 +49,7 @@ namespace util
 
         private:
             std::atomic<std::size_t> buf_size;
-            std::byte buf[0x2000];
+            std::byte buf[SIZE];
         };
 
         void snapshot()

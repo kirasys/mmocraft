@@ -24,7 +24,7 @@ namespace game
     };
     #pragma pack(pop)
 
-    class BlockHistory : public util::DoubleBuffering
+    class BlockHistory : public util::DoubleBuffering<config::memory::block_history_capacity>
     {
     public:
         
@@ -34,7 +34,7 @@ namespace game
 
         static const BlockHistoryRecord& get_record(const std::byte* history_data, std::size_t index)
         {
-            assert(index < config::memory::block_history_max_count);
+            assert(index < config::memory::block_history_capacity / history_data_unit_size);
 
             return *reinterpret_cast<const BlockHistoryRecord*>(
                 &history_data[index * history_data_unit_size]
@@ -47,7 +47,7 @@ namespace game
         }
     };
 
-    class CommonChatHistory : public ::util::DoubleBuffering
+    class CommonChatHistory : public util::DoubleBuffering<config::memory::common_chat_history_capacity>
     {
     public:
 

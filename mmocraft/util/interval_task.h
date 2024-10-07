@@ -25,9 +25,6 @@ namespace util
             // Interval server task
             announce_server,
 
-            // Chat server task
-            handle_common_chat_packet,
-
             // Size of enum.
             count
         };
@@ -79,19 +76,14 @@ namespace util
             });
         }
 
-        void process_tasks()
+        void process_tasks(util::interval_task_tag_id::value tag = interval_task_tag_id::invalid)
         {
             for (IntervalTask<T>& task : interval_tasks)
             {
-                invoke_task(task);
-            }
-        }
+                if (task.tag != interval_task_tag_id::invalid && task.tag != tag)
+                    continue;
 
-        void process_task(util::interval_task_tag_id::value tag)
-        {
-            for (IntervalTask<T>& task : interval_tasks)
-            {
-                if (task.tag != tag)
+                if (util::current_monotonic_tick() < task.expired_at)
                     continue;
 
                 invoke_task(task);
@@ -102,11 +94,6 @@ namespace util
 
         void invoke_task(IntervalTask<T>& task)
         {
-            auto current_tick = util::current_monotonic_tick();
-
-            if (current_tick < task.expired_at)
-                return;
-
             try {
                 if constexpr (std::is_class_v<T>)
                     std::invoke(task.func, *_instance);
