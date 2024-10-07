@@ -69,13 +69,12 @@ namespace net
             return load_remote_config(router_ip.c_str(), router_port, server_type, config);
         }
 
-        template <typename MessageType>
-        bool send_to(net::MessageRequest& request, protocol::server_type_id server_type, MessageType msg)
+        bool send_to(net::MessageRequest& request, protocol::server_type_id server_type)
         {
             request.set_requester(_source.get_handle());
             request.set_request_address(get_server(server_type));
 
-            return request.send_message(msg);
+            return request.flush_send();
         }
 
         static auto send_message_reliably(const net::MessageRequest&, int retry_count = std::numeric_limits<int>::max())

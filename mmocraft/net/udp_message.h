@@ -24,6 +24,13 @@ namespace net
             reset(msg_id);
         }
 
+        template <typename MessageType>
+        MessageRequest(::net::message_id::value msg_id, const MessageType& msg)
+        {
+            reset(msg_id);
+            set_message(msg);
+        }
+
         MessageRequest(const MessageRequest&) = default;
 
         consteval static std::size_t size_of_header()

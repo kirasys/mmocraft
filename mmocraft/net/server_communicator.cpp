@@ -48,8 +48,8 @@ namespace net
         announce_msg.mutable_server_info()->set_port(target_server_addr.port);
 
         // Send the announcement message to the router.
-        net::MessageRequest req(net::message_id::server_announcement);
-        return send_to(req, protocol::server_type_id::router, announce_msg);
+        net::MessageRequest req(net::message_id::server_announcement, announce_msg);
+        return send_to(req, protocol::server_type_id::router);
     }
 
     bool ServerCommunicator::handle_server_announcement(::net::MessageRequest& request)
@@ -96,8 +96,8 @@ namespace net
         protocol::FetchServerRequest fetch_server_msg;
         fetch_server_msg.set_server_type(server_type);
 
-        net::MessageRequest request(net::message_id::fetch_server_address);
-        return send_to(request, protocol::server_type_id::router, fetch_server_msg);
+        net::MessageRequest request(net::message_id::fetch_server_address, fetch_server_msg);
+        return send_to(request, protocol::server_type_id::router);
     }
 
     auto ServerCommunicator::fetch_config(const char* router_ip, int router_port, protocol::server_type_id target)
@@ -124,8 +124,8 @@ namespace net
         packet_handle_msg.set_connection_key(source.raw());
         packet_handle_msg.mutable_packet_data()->append(reinterpret_cast<const char*>(packet_data.data()), packet_data.size());
 
-        net::MessageRequest request(packet_type);
-        return send_to(request, server_type, packet_handle_msg);
+        net::MessageRequest request(packet_type, packet_handle_msg);
+        return send_to(request, server_type);
     }
 
     auto ServerCommunicator::send_message_reliably(const net::MessageRequest& orig_request, int retry_count)

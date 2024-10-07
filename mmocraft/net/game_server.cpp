@@ -328,8 +328,8 @@ namespace net
                 protocol::PlayerLogoutRequest logout_msg;
                 logout_msg.mutable_username()->append(player->username());
 
-                net::MessageRequest request(net::message_id::player_logout);
-                udp_server.communicator().send_to(request, protocol::server_type_id::login, logout_msg);
+                net::MessageRequest request(net::message_id::player_logout, logout_msg);
+                udp_server.communicator().send_to(request, protocol::server_type_id::login);
             }
         }
     }
