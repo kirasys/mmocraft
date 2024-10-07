@@ -118,11 +118,11 @@ namespace net
         return res;
     }
 
-    bool ServerCommunicator::forward_packet(protocol::server_type_id server_type, net::message_id::value packet_type, net::ConnectionKey source, const std::byte* data, std::size_t data_size)
+    bool ServerCommunicator::forward_packet(protocol::server_type_id server_type, net::message_id::value packet_type, net::ConnectionKey source, util::byte_view packet_data)
     {
         protocol::PacketHandleRequest packet_handle_msg;
         packet_handle_msg.set_connection_key(source.raw());
-        packet_handle_msg.set_packet_data(std::string{ reinterpret_cast<const char*>(data), data_size});
+        packet_handle_msg.mutable_packet_data()->append(reinterpret_cast<const char*>(packet_data.data()), packet_data.size());
 
         net::MessageRequest request(packet_type);
         return send_to(request, server_type, packet_handle_msg);

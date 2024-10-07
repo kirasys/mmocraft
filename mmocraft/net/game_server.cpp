@@ -57,15 +57,15 @@ namespace net
         auto [packet_id, packet_size] = PacketStructure::parse_packet(packet_data);
 
         if (auto handler = packet_handler_db[packet_id])
-            return (this->*handler)(conn, packet_data, std::size_t(packet_size));
+            return (this->*handler)(conn, { packet_data, std::size_t(packet_size) });
 
         CONSOLE_LOG(error) << "Unimplemented packetd id : " << packet_id;
         return error::code::packet::unimplemented_packet_id;
     }
 
-    error::ResultCode GameServer::handle_handshake_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_handshake_packet(net::Connection& conn, util::byte_view packet_data)
     {
-        net::PacketHandshake packet(data);
+        net::PacketHandshake packet(packet_data.data());
 
         conn.set_player(std::make_unique<game::Player>(
             conn.connection_key(),
@@ -83,36 +83,36 @@ namespace net
             protocol::server_type_id::login,
             net::message_id::packet_handshake,
             conn.connection_key(),
-            data, data_size
+            packet_data
         );
 
         return error::code::success;
     }
 
-    error::ResultCode GameServer::handle_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_ping_packet(net::Connection& conn, util::byte_view packet_data)
     {
         // send pong.
         conn.io()->send_ping();
         return error::code::success;
     }
 
-    error::ResultCode GameServer::handle_two_way_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_two_way_ping_packet(net::Connection& conn, util::byte_view packet_data)
     {
-        conn.io()->send_raw_data(data, data_size);
+        conn.io()->send_raw_data(packet_data.data(), packet_data.size());
         return error::code::success;
     }
 
-    error::ResultCode GameServer::handle_ext_ping_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_ext_ping_packet(net::Connection& conn, util::byte_view packet_data)
     {
-        net::PacketExtPing packet(data);
+        net::PacketExtPing packet(packet_data.data());
         conn.io()->send_packet(packet);
 
         return error::code::success;
     }
 
-    error::ResultCode GameServer::handle_set_block_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_set_block_packet(net::Connection& conn, util::byte_view packet_data)
     {
-        net::PacketSetBlockClient packet(data);
+        net::PacketSetBlockClient packet(packet_data.data());
 
         auto block_id = packet.block_creation_mode() == game::block_creation_mode::set ? packet.block_id : game::block_id::air;
         if (not world.try_change_block({ packet.x, packet.y, packet.z }, block_id))
@@ -129,9 +129,9 @@ namespace net
         return error::code::success;
     }
 
-    error::ResultCode GameServer::handle_player_position_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_player_position_packet(net::Connection& conn, util::byte_view packet_data)
     {
-        net::PacketSetPlayerPosition packet(data);
+        net::PacketSetPlayerPosition packet(packet_data.data());
 
         if (auto player = conn.associated_player())
             player->set_position(packet.player_pos);
@@ -139,9 +139,9 @@ namespace net
         return error::code::success;
     }
 
-    error::ResultCode GameServer::handle_chat_message_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_chat_message_packet(net::Connection& conn, util::byte_view packet_data)
     {
-        net::PacketChatMessage packet(data);
+        net::PacketChatMessage packet(packet_data.data());
 
         if (auto player = conn.associated_player()) {
             packet.player_id = player->game_id(); // client may sends 0xff(SELF ID).
@@ -154,16 +154,16 @@ namespace net
                 conn.io()->send_packet(msg_packet);
 ;            }
             else {
-                world.try_add_common_chat({ data, data_size });
+                world.try_add_common_chat(packet_data);
                 return error::code::success;
             }
         }
         return error::code::success;
     }
 
-    error::ResultCode GameServer::handle_ext_info_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_ext_info_packet(net::Connection& conn, util::byte_view packet_data)
     {
-        net::PacketExtInfo packet(data);
+        net::PacketExtInfo packet(packet_data.data());
 
         if (auto player = conn.associated_player()) {
             player->set_extension_count(packet.extension_count);
@@ -172,9 +172,9 @@ namespace net
         return error::code::success;
     }
 
-    error::ResultCode GameServer::handle_ext_entry_packet(net::Connection& conn, const std::byte* data, std::size_t data_size)
+    error::ResultCode GameServer::handle_ext_entry_packet(net::Connection& conn, util::byte_view packet_data)
     {
-        net::PacketExtEntry packet(data);
+        net::PacketExtEntry packet(packet_data.data());
 
         if (auto player = conn.associated_player()) {
             if (net::is_cpe_support(packet.extenstion_name, packet.version))

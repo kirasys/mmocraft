@@ -23,7 +23,7 @@ namespace net
     public:
         static constexpr protocol::server_type_id server_type = protocol::server_type_id::game;
 
-        using packet_handler_type = error::ResultCode (GameServer::*)(net::Connection&, const std::byte*, std::size_t);
+        using packet_handler_type = error::ResultCode (GameServer::*)(net::Connection&, util::byte_view packet_data);
 
         GameServer(unsigned max_clients, int num_of_event_threads = io::default_num_of_concurrent_event_threads);
 
@@ -41,23 +41,23 @@ namespace net
 
         error::ResultCode handle_packet(net::Connection&, const std::byte*) override;
         
-        error::ResultCode handle_handshake_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_handshake_packet(net::Connection&, util::byte_view packet_data);
 
-        error::ResultCode handle_ping_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_ping_packet(net::Connection&, util::byte_view packet_data);
 
-        error::ResultCode handle_two_way_ping_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_two_way_ping_packet(net::Connection&, util::byte_view packet_data);
 
-        error::ResultCode handle_ext_ping_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_ext_ping_packet(net::Connection&, util::byte_view packet_data);
 
-        error::ResultCode handle_set_block_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_set_block_packet(net::Connection&, util::byte_view packet_data);
 
-        error::ResultCode handle_player_position_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_player_position_packet(net::Connection&, util::byte_view packet_data);
 
-        error::ResultCode handle_chat_message_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_chat_message_packet(net::Connection&, util::byte_view packet_data);
 
-        error::ResultCode handle_ext_info_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_ext_info_packet(net::Connection&, util::byte_view packet_data);
 
-        error::ResultCode handle_ext_entry_packet(net::Connection&, const std::byte*, std::size_t);
+        error::ResultCode handle_ext_entry_packet(net::Connection&, util::byte_view packet_data);
 
         /* Message handlers */
 
