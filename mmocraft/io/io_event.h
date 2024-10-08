@@ -430,7 +430,7 @@ namespace io
         {
             is_processing = false;
 
-            if (_is_non_owning_event_data)
+            if (non_owning_mode)
                 _event_data.release();
 
             _event_data.reset(other);
@@ -441,13 +441,13 @@ namespace io
             return _event_data.get();
         }
 
-        void set_non_owning_event_data()
+        void set_non_owning_mode()
         {
-            _is_non_owning_event_data = true;
+            non_owning_mode = true;
         }
 
     private:
-        bool _is_non_owning_event_data = false;
+        bool non_owning_mode = false;
 
         std::unique_ptr<IoEventData> _event_data;
     };
@@ -505,7 +505,7 @@ namespace io
         IoMulticastSendEvent()
             : IoEvent{ &_event_data }
         {
-            set_non_owning_event_data();
+            IoEvent::set_non_owning_mode();
         }
 
         ~IoMulticastSendEvent()
