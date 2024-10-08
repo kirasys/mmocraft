@@ -406,17 +406,6 @@ namespace io
         std::size_t _data_size = 0;
     };
 
-    enum class EventType
-    {
-        NONE,
-
-        ACCPET,
-
-        RECV,
-
-        SEND,
-    };
-
     struct Event : util::NonCopyable
     {
         WSAOVERLAPPED overlapped = {};
