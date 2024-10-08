@@ -61,14 +61,14 @@ namespace io
         }
 
     private:
-        win::ObjectPool<IoAcceptEvent> accept_event_pool;
+        win::ObjectGlobalPool<IoAcceptEvent> accept_event_pool;
 
-        win::ObjectPool<IoRecvEvent> recv_event_pool;
-        win::ObjectPool<IoRecvEventData> recv_event_data_pool;
+        win::ObjectGlobalPool<IoRecvEvent> recv_event_pool;
+        win::ObjectGlobalPool<IoRecvEventData> recv_event_data_pool;
 
-        win::ObjectPool<IoSendEvent> send_event_pool;
-        win::ObjectPool<IoSendEventData> send_event_data_pool;
-        win::ObjectPool<IoSendEventLockFreeData> send_event_lockfree_data_pool;
+        win::ObjectGlobalPool<IoSendEvent> send_event_pool;
+        win::ObjectGlobalPool<IoSendEventData> send_event_data_pool;
+        win::ObjectGlobalPool<IoSendEventLockFreeData> send_event_lockfree_data_pool;
     };
 
     using IoEventPool = IoEventObjectPool;
