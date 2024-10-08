@@ -11,7 +11,7 @@ namespace net
             server_announcement,
 
             // Chat server message
-            packet_chat_message,
+            chat_command,
 
             // Router server message
             fetch_config,

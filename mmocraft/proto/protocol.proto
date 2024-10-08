@@ -60,3 +60,12 @@ message PacketHandshakeResponse {
     uint32 player_type = 4;
     string player_uuid = 5;
 }
+
+message ChatCommandRequest {
+    string sender_player_name = 1;
+    string message = 3;
+}
+
+message ChatCommandResponse {
+
+}

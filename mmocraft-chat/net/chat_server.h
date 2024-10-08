@@ -5,7 +5,7 @@
 #include <net/udp_server.h>
 #include <net/server_communicator.h>
 
-#include <util/lockfree_stack.h>
+#include <util/double_buffering.h>
 #include <util/interval_task.h>
 
 namespace chat
@@ -15,13 +15,14 @@ namespace chat
         class ChatServer : public ::net::MessageHandler
         {
         public:
-            using handler_type = ::net::UdpServer<ChatServer>::handler_type;
-
-            using packet_handler_type = ::net::UdpServer<ChatServer>::packet_handler_type;
+            
+            static constexpr protocol::server_type_id server_type = protocol::server_type_id::chat;
 
             ChatServer();
 
-            bool handle_chat_packet(const ::net::PacketRequest&, ::net::MessageResponse&);
+            virtual bool handle_message(::net::MessageRequest&) override;
+
+            database::AsyncTask handle_chat_command(::net::MessageRequest&);
 
             bool initialize(const char* router_ip, int router_port);
 
@@ -30,11 +31,9 @@ namespace chat
             void announce_server();
 
         private:
-            ::net::UdpServer<ChatServer> server_core;
+            ::net::UdpServer server_core;
 
             ::util::IntervalTaskScheduler<ChatServer> interval_tasks;
-
-            ::util::LockfreeStack<std::unique_ptr<std::byte[]>> common_chat_packet_data_stack;
         };
     }
 }

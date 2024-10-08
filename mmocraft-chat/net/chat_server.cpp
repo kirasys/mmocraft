@@ -1,43 +1,55 @@
 #include "chat_server.h"
 
-#include <config/config.h>
+#include <database/couchbase_core.h>
 #include <net/packet.h>
+
+#include <config/config.h>
 #include <util/time_util.h>
 #include <logging/logger.h>
 
 #include "../config/config.h"
-namespace
-{
-    std::array<chat::net::ChatServer::handler_type, 0x100> message_handler_table = [] {
-        std::array<chat::net::ChatServer::handler_type, 0x100> arr{};
-        return arr;
-    }();
-
-    std::array<chat::net::ChatServer::packet_handler_type, 0x100> packet_handler_table = [] {
-        std::array<chat::net::ChatServer::packet_handler_type, 0x100> arr{};
-        arr[::net::PacketID::ChatMessage] = &chat::net::ChatServer::handle_chat_packet;
-        return arr;
-    }();
-}
 
 namespace chat
 {
 namespace net
 {
     ChatServer::ChatServer()
-        : server_core{ this, &message_handler_table }
+        : server_core{ *this }
         , interval_tasks{ this }
     {
         interval_tasks.schedule(
-            ::util::TaskTag::ANNOUNCE_SERVER, 
+            ::util::interval_task_tag_id::announce_server, 
             &ChatServer::announce_server, 
-            ::util::MilliSecond(::config::announce_server_period_ms)
+            ::util::MilliSecond(::config::task::announce_server_period)
         );
     }
 
-    bool ChatServer::handle_chat_packet(const ::net::PacketRequest& request, ::net::MessageResponse& response)
+    bool ChatServer::handle_message(::net::MessageRequest& request)
     {
-        ::net::PacketChatMessage packet(request.packet_data());
+        switch (request.message_id()) {
+        case ::net::message_id::chat_command:
+            handle_chat_command(request);
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    database::AsyncTask ChatServer::handle_chat_command(::net::MessageRequest& request)
+    {
+        protocol::ChatCommandRequest msg;
+        if (not request.parse_message(msg))
+            co_return;
+
+        if (msg.message()[0] != '/') { // if common chat just logging.
+            database::collection::ChatMessage chat_msg;
+            chat_msg.message = msg.message();
+            chat_msg.sender_name = msg.sender_player_name();
+
+            co_await database::CouchbaseCore::insert_document(database::CollectionPath::chat_message_common, chat_msg);
+            co_return;
+        }
+
 
         /*
         if (auto player = conn.associated_player()) {
@@ -57,15 +69,14 @@ namespace net
             }
         }
         */
-        return error::code::success;
     }
 
     bool ChatServer::initialize(const char* router_ip, int router_port)
     {
         auto& comm = server_core.communicator();
-        comm.register_server(protocol::ServerType::Router, { router_ip, router_port });
+        comm.register_server(protocol::server_type_id::router, { router_ip, router_port });
 
-        if (not comm.load_remote_config(protocol::ServerType::Chat, chat::config::get_config()))
+        if (not comm.load_remote_config(protocol::server_type_id::chat, chat::config::get_config()))
             return false;
 
         
@@ -75,6 +86,18 @@ namespace net
         logging::initialize_system(conf.log().log_dir(), conf.log().log_filename());
 
         return true;
+    }
+
+    void ChatServer::announce_server()
+    {
+        auto& conf = config::get_config();
+
+        if (not server_core.communicator().announce_server(server_type, {
+            .ip = conf.server().ip(),
+            .port = conf.server().port()
+            })) {
+            CONSOLE_LOG(error) << "Fail to announce chat server";
+        }
     }
 
     void ChatServer::serve_forever(int argc, char* argv[])

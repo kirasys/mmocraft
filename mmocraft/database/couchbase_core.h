@@ -10,6 +10,7 @@
 #include "database/couchbase_definitions.h"
 #include "proto/generated/config.pb.h"
 #include "util/common_util.h"
+#include "util/uuid_v4.h"
 
 namespace database
 {
@@ -120,6 +121,20 @@ namespace database
             }
         };
 
+        struct InsertOperationAwaiter : DataOperationAwaiter
+        {
+            using DataOperationAwaiter::DataOperationAwaiter;
+
+            void await_suspend(std::coroutine_handle<> coro)
+            {
+                auto& coll = CouchbaseCore::get_collection(collection_path);
+                coll.insert(util::uuid(), std::move(document_body), {}, [this, coro](auto err, auto&& res) {
+                    error = std::move(err);
+                    coro.resume();
+                });
+            }
+        };
+
         static GetOperationAwaiter get_document(database::CollectionPath path, std::string_view name)
         {
             return { path, name };
@@ -134,6 +149,12 @@ namespace database
         static DeleteOperationAwaiter remove_document(database::CollectionPath path, std::string_view name)
         {
             return { path, name };
+        }
+
+        template<typename Transcoder = couchbase::codec::default_json_transcoder, typename Document>
+        static InsertOperationAwaiter insert_document(database::CollectionPath path, const Document& document)
+        {
+            return { path, "", Transcoder::encode(document) };
         }
 
     private:

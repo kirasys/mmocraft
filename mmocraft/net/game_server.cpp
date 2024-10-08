@@ -143,21 +143,18 @@ namespace net
     {
         net::PacketChatMessage packet(packet_data.data());
 
-        if (auto player = conn.associated_player()) {
-            packet.player_id = player->game_id(); // client may sends 0xff(SELF ID).
+        if (packet.message[0] != '/') // if common chat
+            world.try_add_common_chat(packet_data);
 
-            if (packet.message[0] == '/') { // if command message
-                game::PlayerCommand command(player);
-                command.execute(world, packet.message);
+        // send chat message to the login server.
+        protocol::ChatCommandRequest chat_command_msg;
+        chat_command_msg.mutable_message()->append(packet.message);
+        if (auto player = conn.associated_player())
+            chat_command_msg.mutable_sender_player_name()->append(player->username());
 
-                net::PacketChatMessage msg_packet(command.get_response());
-                conn.io()->send_packet(msg_packet);
-;            }
-            else {
-                world.try_add_common_chat(packet_data);
-                return error::code::success;
-            }
-        }
+        net::MessageRequest request(net::message_id::chat_command, chat_command_msg);
+        udp_server.communicator().send_to(request, protocol::server_type_id::chat);
+
         return error::code::success;
     }
 

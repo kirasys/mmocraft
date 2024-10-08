@@ -17,9 +17,12 @@ namespace database
         player_login,
         player_gamedata,
 
+        chat_message_common,
+        chat_message_private,
+        chat_message_permanent,
+
         // cached_bucket._default
         player_login_session,
-
 
         SIZE,
     };
@@ -32,9 +35,16 @@ namespace database
             "player_login",
             "player_gamedata",
 
+            "chat_message_common",
+            "chat_message_private",
+            "chat_message_permanent",
+
             // cached_bucket._default
             "player_login_session"
         };
+
+        static_assert(CollectionPath::SIZE == std::size(collection_path_strs));
+
         return collection_path_strs[path];
     }
 
@@ -59,6 +69,13 @@ namespace database
             std::uint64_t spawn_pos = 0;
             std::uint32_t level = 0;
             std::uint32_t exp = 0;
+        };
+
+        struct ChatMessage
+        {
+            std::string sender_name;
+            std::string receiver_name;
+            std::string message;
         };
     }
 }

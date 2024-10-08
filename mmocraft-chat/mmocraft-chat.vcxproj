@@ -145,11 +145,13 @@
     <ClCompile Include="config\config.cpp" />
     <ClCompile Include="database\query.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="net\chat_command.cpp" />
     <ClCompile Include="net\chat_server.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />
     <ClInclude Include="database\query.h" />
+    <ClInclude Include="net\chat_command.h" />
     <ClInclude Include="net\chat_server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
