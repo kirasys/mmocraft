@@ -245,9 +245,10 @@ namespace net
         {
             std::lock_guard<std::mutex> lock(multicast_event_lock);
 
-            auto io_multicast_event = multicast_event_pool.new_object_raw();
-            io_multicast_event->set_multicast_data(&entry);
-            ready_multicast_events.push_back(io_multicast_event);
+            if (auto io_multicast_event = multicast_event_pool.new_object_raw()) {
+                io_multicast_event->set_multicast_data(&entry);
+                ready_multicast_events.push_back(io_multicast_event);
+            }
         }
     }
 
