@@ -16,6 +16,7 @@
 #include "net/packet_extension.h"
 #include "net/connection_key.h"
 #include "win/smart_handle.h"
+#include "win/object_pool.h"
 #include "util/common_util.h"
 #include "util/interval_task.h"
 
@@ -55,13 +56,16 @@ namespace net
 
         bool post_send_event();
 
+        void post_multicast_event(io::MulticastDataEntry&);
+
+        void free_multicast_event(io::IoMulticastSendEvent* event)
+        {
+            multicast_event_pool.free_object(event);
+        }
+
         bool send_raw_data(const std::byte*, std::size_t) const;
 
-        void send_multicast_data(io::MulticastDataEntry&);
-
         bool send_ping() const;
-
-        void on_complete_event(io::IoMulticastSendEvent* event);
 
         template <typename PacketType>
         bool send_packet(const PacketType& packet) const
@@ -84,10 +88,10 @@ namespace net
         std::unique_ptr<io::IoRecvEvent> io_recv_event;
         std::unique_ptr<io::IoSendEvent> io_send_event;
 
-        static constexpr std::size_t max_multicast_event_count = 32;
+        static constexpr std::size_t max_multicast_event_count = 128;
         std::mutex multicast_event_lock;
         std::vector<io::IoMulticastSendEvent*> ready_multicast_events;
-        std::vector<io::IoMulticastSendEvent*> free_multicast_events;
+        win::ObjectPool<io::IoMulticastSendEvent> multicast_event_pool{ max_multicast_event_count };
     };
 
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable

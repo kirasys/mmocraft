@@ -184,10 +184,9 @@ namespace net
     void Connection::on_complete(io::IoMulticastSendEvent* event, std::size_t transferred_bytes)
     {
         event->is_processing = false;
-        event->reset_multicast_data();
 
         // connection_io manages all multicast events.
-        connection_io->on_complete_event(event);
+        connection_io->free_multicast_event(event);
     }
 
     /**
@@ -235,35 +234,26 @@ namespace net
         return io_send_event->post_rio_event(io_service, connection_id);
     }
 
-    bool ConnectionIO::send_raw_data(const std::byte* data, std::size_t data_size) const
-    {
-        return io_send_event->event_data()->push(data, data_size);
-    }
-
-    void ConnectionIO::send_multicast_data(io::MulticastDataEntry& entry)
+    void ConnectionIO::post_multicast_event(io::MulticastDataEntry& entry)
     {
         // Use send buffer if connection has suffient space.
         if (entry.data_size() < io_send_event->event_data()->unused_size() / 2 &&
             send_raw_data(entry.data(), entry.data_size())) {
             return;
         }
-
-        io::IoMulticastSendEvent* io_multicast_event = nullptr;
-
-        if (free_multicast_events.empty()) {
-            io_multicast_event = new io::IoMulticastSendEvent();
-        }
-
+        
         {
             std::lock_guard<std::mutex> lock(multicast_event_lock);
-            if (io_multicast_event == nullptr) {
-                io_multicast_event = free_multicast_events.back();
-                free_multicast_events.pop_back();
-            }
 
+            auto io_multicast_event = multicast_event_pool.new_object_raw();
             io_multicast_event->set_multicast_data(&entry);
             ready_multicast_events.push_back(io_multicast_event);
         }
+    }
+
+    bool ConnectionIO::send_raw_data(const std::byte* data, std::size_t data_size) const
+    {
+        return io_send_event->event_data()->push(data, data_size);
     }
 
     bool ConnectionIO::send_ping() const
@@ -289,7 +279,6 @@ namespace net
     void ConnectionIO::flush_multicast_send()
     {
         std::vector<io::IoMulticastSendEvent*> multicast_events;
-        multicast_events.reserve(max_multicast_event_count);
 
         {
             std::lock_guard<std::mutex> lock(multicast_event_lock);
@@ -298,7 +287,7 @@ namespace net
 
         for (auto event : multicast_events) {
             if (not event->post_rio_event(io_service, connection_id))
-                delete event;
+                free_multicast_event(event);
         }
     }
 
@@ -312,17 +301,5 @@ namespace net
         };
 
         connection_env.for_each_connection(flush_message);
-    }
-
-
-
-    void ConnectionIO::on_complete_event(io::IoMulticastSendEvent* event)
-    {
-        if (free_multicast_events.size() >= max_multicast_event_count)
-            delete event;
-        else {
-            std::lock_guard<std::mutex> lock(multicast_event_lock);
-            free_multicast_events.push_back(event);
-        }
     }
 }
