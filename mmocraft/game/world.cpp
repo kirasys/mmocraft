@@ -65,9 +65,7 @@ namespace game
     {
         for (auto player : players) {
             if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
-                connection_io->post_multicast_event(entry);
-                // multicast fails only fatal situation.
-                if (successed) successed(player);
+                if (connection_io->post_multicast_event(entry)) successed(player);
             }
         }
 
