@@ -80,7 +80,7 @@ namespace io
 
         void decrease_ref()
         {
-            ref_count.fetch_add(-1);
+            ref_count.fetch_sub(1);
         }
 
     private:

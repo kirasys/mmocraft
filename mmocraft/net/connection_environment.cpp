@@ -32,7 +32,7 @@ namespace net
 
     void ConnectionEnvironment::on_connection_create(ConnectionKey key, std::unique_ptr<net::Connection>&& connection_ptr)
     {
-        ++num_of_connections;
+        num_of_connections.fetch_add(1, std::memory_order_relaxed);
 
         auto& entry = connection_table[key.index()];
         entry.created_at = key.created_at();
@@ -46,6 +46,8 @@ namespace net
         auto& entry = connection_table[key.index()];
         entry.created_at = INVALID_TICK;
         entry.used.store(false, std::memory_order_release);
+
+        num_of_connections.fetch_sub(1, std::memory_order_relaxed);
     }
 
     void ConnectionEnvironment::on_connection_offline(ConnectionKey key)
@@ -58,7 +60,7 @@ namespace net
     {
         auto deleted_connection_count = std::count_if(connection_table.begin(), connection_table.end(),
             [](auto& entry) {
-                if (not entry.used) return false;
+                if (not entry.used.load(std::memory_order_relaxed)) return false;
 
                 auto conn = entry.connection.get();
 
@@ -73,8 +75,6 @@ namespace net
                 return false;
             }
         );
-
-        num_of_connections -= unsigned(deleted_connection_count);
     }
 
     void ConnectionEnvironment::for_each_connection(void (*func) (net::Connection&))
