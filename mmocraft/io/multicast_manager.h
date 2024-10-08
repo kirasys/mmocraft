@@ -20,7 +20,7 @@ namespace io
 
             sync_block,
 
-            sync_Player_position,
+            sync_player_position,
 
             common_chat_message,
 

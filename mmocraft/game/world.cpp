@@ -203,7 +203,7 @@ namespace game
         // create set player position packets.
         std::unique_ptr<std::byte[]> position_packet_data;
         if (auto data_size = net::PacketSetPlayerPosition::serialize(world_players, position_packet_data)) {
-            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_Player_position, std::move(position_packet_data), data_size);
+            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_player_position, std::move(position_packet_data), data_size);
             multicast_to_players(world_players, data_entry, [](game::Player* player) {
                 player->commit_last_transferrd_position();
             });
