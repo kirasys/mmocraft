@@ -104,7 +104,7 @@ namespace io
 
         void reset_data(io::multicast_tag_id::value);
 
-        void gc(io::multicast_tag_id::value);
+        int gc(io::multicast_tag_id::value);
 
     private:
         std::queue<MulticastDataEntry> data_queues[io::multicast_tag_id::count];

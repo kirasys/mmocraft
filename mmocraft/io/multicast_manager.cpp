@@ -26,7 +26,7 @@ namespace io
         active_data[tag] = nullptr;
     }
 
-    void MulticastManager::gc(io::multicast_tag_id::value tag)
+    int MulticastManager::gc(io::multicast_tag_id::value tag)
     {
         auto& data_queue = data_queues[tag];
 
@@ -39,5 +39,6 @@ namespace io
         }
 
         gc_timeouts[tag] = util::current_monotonic_tick() + config::memory::multicast_data_gc_period_ms;
+        return num_of_deleted;
     }
 }
