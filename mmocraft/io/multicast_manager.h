@@ -42,9 +42,9 @@ namespace io
             update_lifetime();
         }
 
-        void update_lifetime()
+        void update_lifetime(std::size_t cur = util::current_monotonic_tick())
         {
-            expire_at = max_expiration_period + util::current_monotonic_tick();
+            expire_at = max_expiration_period + cur;
         }
 
         bool is_safe_delete() const
