@@ -32,18 +32,18 @@ namespace game
 
         bool add_record(util::Coordinate3D pos, game::BlockID block_id);
 
-        static const BlockHistoryRecord& get_record(const std::byte* history_data, std::size_t index)
+        const BlockHistoryRecord& get_record(std::size_t index) const
         {
             assert(index < config::memory::block_history_capacity / history_data_unit_size);
 
             return *reinterpret_cast<const BlockHistoryRecord*>(
-                &history_data[index * history_data_unit_size]
+                &get_snapshot_data().data()[index * history_data_unit_size]
             );
         }
 
-        static std::size_t size(std::size_t history_data_size)
+        std::size_t size() const
         {
-            return history_data_size / history_data_unit_size;
+            return get_snapshot_data().size() / history_data_unit_size;
         }
     };
 

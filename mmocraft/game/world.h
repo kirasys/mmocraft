@@ -51,7 +51,7 @@ namespace game
 
         void despawn_player(const std::vector<game::Player*>&);
 
-        void sync_block(const std::vector<game::Player*>&, util::byte_view block_history_data);
+        void sync_block(const std::vector<game::Player*>&, const game::BlockHistory&);
 
         void sync_player_position();
 
@@ -100,7 +100,7 @@ namespace game
             multicast_to_players(players, entry);
         }
         
-        void commit_block_changes(util::byte_view block_history_data);
+        void commit_block_changes(const game::BlockHistory&);
 
         void load_metadata();
 

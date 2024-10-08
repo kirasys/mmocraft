@@ -57,7 +57,7 @@ namespace game
     class BlockSyncTask : public io::Task
     {
     public:
-        using handler_type = void (game::World::* const)(const std::vector<game::Player*>&, util::byte_view);
+        using handler_type = void (game::World::* const)(const std::vector<game::Player*>&, const game::BlockHistory&);
 
         BlockSyncTask(handler_type handler, game::World* world, std::size_t interval_ms = 0)
             : io::Task{ interval_ms }
@@ -90,7 +90,7 @@ namespace game
 
         virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
         {
-            std::invoke(_handler, _world, _level_wait_players, block_history.get_snapshot_data());
+            std::invoke(_handler, _world, _level_wait_players, block_history);
 
             _level_wait_players.clear();
             block_history.clear_snapshot();

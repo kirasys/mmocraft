@@ -155,13 +155,13 @@ namespace game
                 + _metadata.width() * _metadata.length() * _byteswap_ushort(y);
     }
 
-    void World::commit_block_changes(util::byte_view block_history_data)
+    void World::commit_block_changes(const game::BlockHistory& block_change_history)
     {
-        auto history_size = game::BlockHistory::size(block_history_data.size());
+        const auto history_size = block_change_history.size();
         auto block_array = block_mapping.data();
         
         for (std::size_t index = 0; index < history_size; index++) {
-            auto& record = game::BlockHistory::get_record(block_history_data.data(), index);
+            auto& record = block_change_history.get_record(index);
             std::size_t block_map_index = coordinate_to_block_map_index(record.x, record.y, record.z);
 
             if (block_map_index < _metadata.volume())
@@ -169,15 +169,16 @@ namespace game
         }
     }
 
-    void World::sync_block(const std::vector<game::Player*>& level_wait_players, util::byte_view block_history_data)
+    void World::sync_block(const std::vector<game::Player*>& level_wait_players, const game::BlockHistory& block_change_history)
     {
         // copy block histories.
-        if (std::size_t data_size = block_history_data.size()) {
-            commit_block_changes(block_history_data);
+        if (block_change_history.size()) {
+            commit_block_changes(block_change_history);
 
+            auto block_history_data = block_change_history.get_snapshot_data();
             std::unique_ptr<std::byte[]> copyed_block_history_data(block_history_data.clone());
 
-            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_block, std::move(copyed_block_history_data), data_size);
+            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_block, std::move(copyed_block_history_data), block_history_data.size());
             multicast_to_specific_players<PlayerState::level_initialized>(data_entry);
         }
         
