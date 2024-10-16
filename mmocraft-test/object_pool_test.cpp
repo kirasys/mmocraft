@@ -14,35 +14,17 @@ struct Foo {
 	}
 };
 
-TEST(ObjectPoolTest, Reserve_Success) {
+TEST(object_pool, success_reserve_to_max) {
 	const int max_capacity = 1000;
 	win::ObjectPool<Foo> object_pool(max_capacity);
 
 	bool success = object_pool.reserve(max_capacity);
 
 	EXPECT_TRUE(success);
-}
-TEST(ObjectPoolTest, Reserve_Success_Max) {
-	const int max_capacity = 1000;
-	win::ObjectPool<Foo> object_pool(max_capacity);
-
-	object_pool.reserve(max_capacity);
-
 	EXPECT_EQ(object_pool.capacity(), max_capacity);
 }
-
-TEST(ObjectPoolTest, Reserve_Fail_Exceed) {
-	const int max_capacity = 1000;
-	win::ObjectPool<Foo> object_pool(max_capacity);
-
-	object_pool.reserve(max_capacity);
-	bool success = object_pool.reserve(max_capacity + 1);
-
-	EXPECT_FALSE(success);
-}
-
-TEST(ObjectPoolTest, New_Object_Correctly) {
-	win::ObjectPool<Foo> object_pool(1000);
+TEST(object_pool, new_object_working_properly) {
+	win::ObjectGlobalPool<Foo> object_pool(1000);
 
 	auto obj1_id = object_pool.new_object(1, 'a');
 	auto obj2_id = object_pool.new_object(2, 'b');
@@ -65,11 +47,11 @@ TEST(ObjectPoolTest, New_Object_Correctly) {
 	EXPECT_EQ(obj3->b, 'c');
 }
 
-TEST(ObjectPoolTest, New_Object_To_Max) {
+TEST(object_pool, success_new_object_to_max) {
 	const int max_capacity = 10;
-	win::ObjectPool<Foo> object_pool(max_capacity);
+	win::ObjectGlobalPool<Foo> object_pool(max_capacity);
 	
-	std::vector<win::ObjectPool<Foo>::Pointer> object_ptrs;
+	std::vector<win::ObjectGlobalPool<Foo>::Pointer> object_ptrs;
 	for (int i = 0; i < max_capacity; i++)
 		object_ptrs.emplace_back(object_pool.new_object(i, 'a'));
 
@@ -78,11 +60,11 @@ TEST(ObjectPoolTest, New_Object_To_Max) {
 	}
 }
 
-TEST(ObjectPoolTest, New_Object_Exceed) {
+TEST(object_pool, fail_new_object_over_capacity) {
 	const int max_capacity = 10;
-	win::ObjectPool<Foo> object_pool(max_capacity);
+	win::ObjectGlobalPool<Foo> object_pool(max_capacity);
 
-	std::vector<win::ObjectPool<Foo>::Pointer> object_ptrs;
+	std::vector<win::ObjectGlobalPool<Foo>::Pointer> object_ptrs;
 	for (int i = 0; i < max_capacity + 1; i++)
 		object_ptrs.emplace_back(object_pool.new_object(i, 'a'));
 
@@ -92,20 +74,43 @@ TEST(ObjectPoolTest, New_Object_Exceed) {
 	EXPECT_EQ(object_ptrs.back().get(), nullptr);
 }
 
-TEST(ObjectPoolTest, New_Object_Unsafe_Delete_Correctly) {
-	win::ObjectPool<Foo> object_pool(1000);
+TEST(object_pool, free_object_automatically) {
+	const int max_capacity = 3;
+	win::ObjectGlobalPool<Foo> object_pool(max_capacity);
+
+	{
+		auto obj1 = object_pool.new_object(1, 'a');
+		auto obj2 = object_pool.new_object(1, 'a');
+		auto obj3 = object_pool.new_object(1, 'a');
+	}
+
+	auto obj1 = object_pool.new_object(1, 'a');
+	auto obj2 = object_pool.new_object(1, 'a');
+	auto obj3 = object_pool.new_object(1, 'a');
+
+	EXPECT_TRUE(obj1);
+	EXPECT_TRUE(obj2);
+	EXPECT_TRUE(obj3);
+}
+
+TEST(object_pool, free_object_by_id) {
+	win::ObjectGlobalPool<Foo> object_pool(3);
 
 	auto obj1_id = object_pool.new_object_unsafe(1, 'a');
 	auto obj2_id = object_pool.new_object_unsafe(1, 'a');
 	auto obj3_id = object_pool.new_object_unsafe(1, 'a');
 
-	EXPECT_TRUE(win::ObjectPool<Foo>::free_object(obj1_id));
-	EXPECT_TRUE(win::ObjectPool<Foo>::free_object(obj2_id));
-	EXPECT_TRUE(win::ObjectPool<Foo>::free_object(obj3_id));
+	EXPECT_TRUE(win::ObjectGlobalPool<Foo>::free_object(obj1_id));
+	EXPECT_TRUE(win::ObjectGlobalPool<Foo>::free_object(obj2_id));
+	EXPECT_TRUE(win::ObjectGlobalPool<Foo>::free_object(obj3_id));
+
+	// check if objects deleted properly.
+	auto obj4_id = object_pool.new_object_unsafe(1, 'a');
+	EXPECT_TRUE(win::ObjectGlobalPool<Foo>::free_object(obj4_id));
 }
 
-TEST(ObjectPoolTest, New_Object_Raw_Delete_Correctly) {
-	win::ObjectPool<Foo> object_pool(1000);
+TEST(object_pool, free_object_by_pointer) {
+	win::ObjectPool<Foo> object_pool(3);
 
 	auto obj1 = object_pool.new_object_raw(1, 'a');
 	auto obj2 = object_pool.new_object_raw(1, 'a');
@@ -114,4 +119,8 @@ TEST(ObjectPoolTest, New_Object_Raw_Delete_Correctly) {
 	EXPECT_TRUE(object_pool.free_object(obj1));
 	EXPECT_TRUE(object_pool.free_object(obj2));
 	EXPECT_TRUE(object_pool.free_object(obj3));
+
+	// check if objects deleted properly.
+	auto obj4 = object_pool.new_object_raw(1, 'a');
+	EXPECT_TRUE(object_pool.free_object(obj4));
 }

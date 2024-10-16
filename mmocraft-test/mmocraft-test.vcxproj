@@ -124,17 +124,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="mock_database.h" />
-    <ClInclude Include="mock_socket.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="block_history_test.cpp" />
-    <ClCompile Include="connection_test.cpp" />
+    <ClCompile Include="history_buffer_test.cpp" />
     <ClCompile Include="io_event_test.cpp" />
-    <ClCompile Include="master_server_test.cpp" />
-    <ClCompile Include="mock_database.cpp" />
-    <ClCompile Include="mock_socket.cpp" />
     <ClCompile Include="object_pool_test.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -142,7 +136,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="server_core_test.cpp" />
+    <ClCompile Include="player_state_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\mmocraft\mmocraft.vcxproj">

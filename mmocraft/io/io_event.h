@@ -43,6 +43,8 @@ namespace io
 
         virtual std::size_t size() const = 0;
 
+        virtual std::size_t capacity() const = 0;
+
         // buffer points to free space.
 
         virtual std::byte* begin_unused() = 0;
@@ -54,8 +56,6 @@ namespace io
         virtual bool push(const std::byte* data, std::size_t n) = 0;
 
         virtual void pop(std::size_t n) = 0;
-
-        // 
     };
 
     class IoRecvEventDataImpl : public IoEventData
@@ -82,6 +82,11 @@ namespace io
         std::size_t size() const
         {
             return _size;
+        }
+
+        std::size_t capacity() const
+        {
+            return _capacity;
         }
 
         // buffer points to free space.
@@ -167,6 +172,11 @@ namespace io
         std::size_t size() const
         {
             return std::size_t(data_tail - data_head);
+        }
+
+        std::size_t capacity() const
+        {
+            return _capacity;
         }
 
         // buffer points to free space.
@@ -272,6 +282,11 @@ namespace io
             return std::size_t(data_tail.load(std::memory_order_relaxed) - data_head);
         }
 
+        std::size_t capacity() const
+        {
+            return _capacity;
+        }
+
         // buffer points to free space.
 
         std::byte* begin_unused()
@@ -363,6 +378,11 @@ namespace io
         }
 
         std::size_t size() const
+        {
+            return _data_size;
+        }
+
+        std::size_t capacity() const
         {
             return _data_size;
         }
@@ -510,7 +530,7 @@ namespace io
 
         ~IoMulticastSendEvent()
         {
-            reset_multicast_data();
+            set_multicast_data(nullptr);
         }
 
         bool post_rio_event(RegisteredIO&, unsigned connection_id);
@@ -519,16 +539,15 @@ namespace io
 
         void set_multicast_data(io::MulticastDataEntry* data)
         {
-            data->increase_ref();
+            if (data) {
+                data->increase_ref();
+                _event_data.set_data(data->data(), data->data_size());
+            }
 
-            _event_data.set_data(data->data(), data->data_size());
+            if (multicast_data)
+                multicast_data->decrease_ref();
+
             multicast_data = data;
-        }
-
-        void reset_multicast_data()
-        {
-            multicast_data->decrease_ref();
-            multicast_data = nullptr;
         }
 
     private:

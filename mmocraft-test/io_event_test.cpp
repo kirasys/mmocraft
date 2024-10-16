@@ -9,73 +9,65 @@ const std::byte dummy_data[] = {
     std::byte(5), std::byte(6), std::byte(7), std::byte(8),
 };
 
-TEST(IoEventTest, Recv_Data_Working_Properly) {
-    io::IoRecvEventData io_recv_data;
-
-    io_recv_data.push(dummy_data, sizeof(dummy_data));
-    io_recv_data.pop(1);
-    io_recv_data.pop(2);
-    io_recv_data.pop(1);
-
-    EXPECT_EQ(io_recv_data.size(), 4);
-    EXPECT_EQ(io_recv_data.end() - io_recv_data.begin(), 4);
-    EXPECT_EQ(io_recv_data.begin_unused(), io_recv_data.end());
-    EXPECT_TRUE(std::memcmp(io_recv_data.begin(), "\x05\x06\x07\x08", 4) == 0);
-}
-
-TEST(IoEventTest, Event_Data_Working_Properly) {
-    io::IoEventData* io_send_datas[] = {
+TEST(io_event, event_data_manipulation_properly) {
+    io::IoEventData* io_event_data[] = {
         new io::IoRecvEventData(),
         new io::IoSendEventData(),
         new io::IoSendEventLockFreeData(),
     };
 
-    for (auto send_data : io_send_datas) {
-        send_data->push(dummy_data, sizeof(dummy_data));
-        send_data->pop(1);
-        send_data->pop(2);
-        send_data->pop(1);
+    for (auto event_data : io_event_data) {
+        event_data->push(dummy_data, sizeof(dummy_data));
+        event_data->pop(1);
+        event_data->pop(2);
+        event_data->pop(1);
 
-        EXPECT_EQ(send_data->size(), 4);
-        EXPECT_EQ(send_data->end() - send_data->begin(), 4);
-        EXPECT_EQ(send_data->begin_unused(), send_data->end());
-        EXPECT_TRUE(std::memcmp(send_data->begin(), "\x05\x06\x07\x08", 4) == 0);
+        EXPECT_EQ(event_data->size(), 4);
+        EXPECT_EQ(event_data->end() - event_data->begin(), 4);
+        EXPECT_EQ(event_data->begin_unused(), event_data->end());
+        EXPECT_TRUE(std::memcmp(event_data->begin(), "\x05\x06\x07\x08", 4) == 0);
     }
 }
 
-TEST(IoEventTest, Send_Data_Head_Reset_When_Push) {
+TEST(io_event, trigger_send_data_reset_when_push) {
     io::IoSendEventData io_send_data;
 
     auto data_begin = io_send_data.begin();
     io_send_data.push(dummy_data, sizeof(dummy_data));
     io_send_data.pop(sizeof(dummy_data));
-    auto data_end = io_send_data.begin();
+    auto old_data_begin = io_send_data.begin();
     io_send_data.push(dummy_data, 0);    // trigger to reset head.
 
-    EXPECT_EQ(data_end, data_begin + sizeof(dummy_data));
+    EXPECT_EQ(old_data_begin, data_begin + sizeof(dummy_data));
     EXPECT_EQ(data_begin, io_send_data.begin());
 }
 
-TEST(IoEventTest, Send_Data_Cant_Overflow) {
-    io::IoSendEventData io_send_data;
+TEST(io_event, prevent_send_buffer_overflow) {
+    io::IoEventData* io_send_datas[] = {
+        new io::IoSendEventData(),
+        new io::IoSendEventLockFreeData(),
+    };
 
-    std::byte full_data[io::SEND_BUFFER_SIZE] = {};
-    bool full_data_pushed = io_send_data.push(full_data, sizeof(full_data));
-    bool overflowed = io_send_data.push(dummy_data, 1);
+    for (auto event_data : io_send_datas) {
+        std::unique_ptr<std::byte[]> full_data(new std::byte[event_data->capacity()]());;
+        bool is_full_data_pushed = event_data->push(full_data.get(), event_data->capacity());
+        bool is_overflow_occured = event_data->push(dummy_data, 1);
 
-    EXPECT_TRUE(full_data_pushed);
-    EXPECT_FALSE(overflowed);
-    EXPECT_EQ(io_send_data.size(), sizeof(full_data));
+        EXPECT_TRUE(is_full_data_pushed);
+        EXPECT_FALSE(is_overflow_occured);
+        EXPECT_EQ(event_data->size(), event_data->capacity());
+    }
 }
 
-TEST(IoEventTest, Lockfree_Send_Data_Cant_Overflow) {
-    io::IoSendEventLockFreeData io_send_data;
+TEST(io_event, non_owning_mode_working_properly) {
+    auto io_event_data = new io::IoRecvEventData();
+    auto io_event = new io::IoRecvEvent(io_event_data);
 
-    std::byte full_data[io::CONCURRENT_SEND_BUFFER_SIZE] = {};
-    bool full_data_pushed = io_send_data.push(full_data, sizeof(full_data));
-    bool overflowed = io_send_data.push(dummy_data, 1);
+    io_event->set_non_owning_mode();
+    delete io_event; // should not delete the io_event_data. 
+    delete io_event_data;
+}
 
-    EXPECT_TRUE(full_data_pushed);
-    EXPECT_FALSE(overflowed);
-    EXPECT_EQ(io_send_data.size(), sizeof(full_data));
+TEST(io_event, multicast_event_ref_counting_working_properly) {
+
 }

@@ -27,7 +27,7 @@ namespace net
         );
 
         assert(unused_slot - connection_table.begin() < num_of_max_connections);
-        return unsigned(unused_slot - connection_table.begin());
+        return ConnectionID(unused_slot - connection_table.begin());
     }
 
     void ConnectionEnvironment::on_connection_create(ConnectionKey key, std::unique_ptr<net::Connection>&& connection_ptr)
