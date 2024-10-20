@@ -5,6 +5,8 @@
 #include <net/udp_server.h>
 #include <net/server_communicator.h>
 
+#include <database/couchbase_core.h>
+
 #include <util/double_buffering.h>
 #include <util/interval_task.h>
 

@@ -1,6 +1,5 @@
 #include "chat_server.h"
 
-#include <database/couchbase_core.h>
 #include <net/packet.h>
 
 #include <config/config.h>

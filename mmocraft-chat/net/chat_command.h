@@ -9,6 +9,7 @@ namespace chat
 {
 namespace net
 {
+    /*
     class ChatCommand
     {
     public:
@@ -56,5 +57,6 @@ namespace net
 
         char _response[128] = {};
     };
+    */
 }
 }

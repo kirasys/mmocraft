@@ -277,7 +277,7 @@ namespace net
 
         // Fetch other UDP server.
         comm.fetch_server_address(protocol::server_type_id::login);
-        //comm.fetch_server_address(protocol::server_type_id::chat);
+        comm.fetch_server_address(protocol::server_type_id::chat);
 
         // Create working directories
         if (not std::filesystem::exists(conf.world().save_dir()))

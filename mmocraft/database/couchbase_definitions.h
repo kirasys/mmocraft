@@ -142,3 +142,24 @@ struct tao::json::traits<database::collection::PlayerGamedata> {
         v.at("exp").to(p.exp);
     }
 };
+
+template<>
+struct tao::json::traits<database::collection::ChatMessage> {
+    template<template<typename...> class Traits>
+    static void assign(tao::json::basic_value<Traits>& v, const database::collection::ChatMessage& p)
+    {
+        v = {
+            { "sender_name", p.sender_name },
+            { "receiver_name", p.receiver_name },
+            { "message", p.message }
+        };
+    }
+
+    template<template<typename...> class Traits>
+    static void to(const tao::json::basic_value<Traits>& v, database::collection::ChatMessage& p)
+    {
+        v.at("sender_name").to(p.sender_name);
+        v.at("receiver_name").to(p.receiver_name);
+        v.at("message").to(p.message);
+    }
+};
