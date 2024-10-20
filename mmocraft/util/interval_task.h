@@ -80,7 +80,7 @@ namespace util
         {
             for (IntervalTask<T>& task : interval_tasks)
             {
-                if (task.tag != interval_task_tag_id::invalid && task.tag != tag)
+                if (tag != interval_task_tag_id::invalid && task.tag != tag)
                     continue;
 
                 if (util::current_monotonic_tick() < task.expired_at)
