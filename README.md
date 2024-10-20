@@ -34,7 +34,7 @@ Database driver | [Couchbase c++](https://github.com/couchbase/couchbase-cxx-cli
 1. mmocraft.exe를 실행하면 현재 config 폴더와 기본 설정 파일들이 생성됩니다.
 2. 네크워크 주소 등 설정 파일을 수정합니다.
 3. mmocraft-router.exe를 실행합니다.
-4. mmocraft-login.exe, mmocraft-chat.exe, mmocraft-login.exe를 실행합니다. 이때 인자로 라우터 서버의 주소를 전달해야 합니다.
+4. mmocraft-login.exe, mmocraft-chat.exe, mmocraft.exe를 실행합니다. 이때 인자로 라우터 서버의 주소를 전달해야 합니다.
 
 ## 데모
 
