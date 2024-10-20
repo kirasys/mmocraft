@@ -262,6 +262,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>$(CouchbaseSDKPath)\build\$(Configuration)\asio.lib;$(CouchbaseSDKPath)\build\$(Configuration)\couchbase_cxx_client_static.lib;$(CouchbaseSDKPath)\build\core\platform\couchbase_backtrace.dir\Debug\couchbase_backtrace.lib;$(CouchbaseSDKPath)\build\_deps\fmt-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\spdlog-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\boringssl-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\llhttp-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\snappy-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\hdr_histogram-build\src\$(Configuration)\*.lib;iphlpapi.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -304,6 +305,7 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>$(CouchbaseSDKPath)\build\$(Configuration)\asio.lib;$(CouchbaseSDKPath)\build\$(Configuration)\couchbase_cxx_client_static.lib;$(CouchbaseSDKPath)\build\core\platform\couchbase_backtrace.dir\Debug\couchbase_backtrace.lib;$(CouchbaseSDKPath)\build\_deps\fmt-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\spdlog-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\boringssl-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\llhttp-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\snappy-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\hdr_histogram-build\src\$(Configuration)\*.lib;iphlpapi.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -342,6 +344,7 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>$(CouchbaseSDKPath)\build\$(Configuration)\asio.lib;$(CouchbaseSDKPath)\build\$(Configuration)\couchbase_cxx_client_static.lib;$(CouchbaseSDKPath)\build\core\platform\couchbase_backtrace.dir\Debug\couchbase_backtrace.lib;$(CouchbaseSDKPath)\build\_deps\fmt-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\spdlog-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\boringssl-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\llhttp-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\snappy-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\hdr_histogram-build\src\$(Configuration)\*.lib;iphlpapi.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
@@ -384,6 +387,7 @@ lib /NOLOGO "$(TargetPath).test.lib" /REMOVE:"$(ProjectDir)$(IntDir)sql_statemen
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>$(CouchbaseSDKPath)\build\$(Configuration)\asio.lib;$(CouchbaseSDKPath)\build\$(Configuration)\couchbase_cxx_client_static.lib;$(CouchbaseSDKPath)\build\core\platform\couchbase_backtrace.dir\Debug\couchbase_backtrace.lib;$(CouchbaseSDKPath)\build\_deps\fmt-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\spdlog-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\boringssl-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\llhttp-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\snappy-build\$(Configuration)\*.lib;$(CouchbaseSDKPath)\build\_deps\hdr_histogram-build\src\$(Configuration)\*.lib;iphlpapi.lib;ws2_32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>lib /NOLOGO /OUT:"$(TargetPath).lib" "$(ProjectDir)$(IntDir)*.obj"
