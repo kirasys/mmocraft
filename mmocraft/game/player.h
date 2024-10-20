@@ -10,8 +10,6 @@
 #include "util/common_util.h"
 #include "util/math.h"
 
-#include "proto/generated/player_gamedata.pb.h"
-
 namespace game
 {
     using PlayerID = std::uint8_t;
