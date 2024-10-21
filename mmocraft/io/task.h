@@ -69,7 +69,7 @@ namespace io
             , _handler_inst{ handler_inst }
         { }
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
+        virtual void on_event_complete(io::IoEventHandler* completion_key, DWORD transferred_bytes) override
         {
             std::invoke(_handler,
                 _handler_inst ? *_handler_inst : *reinterpret_cast<HandlerClass*>(completion_key)

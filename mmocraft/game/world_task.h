@@ -38,7 +38,7 @@ namespace game
             _players_queue.push_back(task_data);
         }
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
+        virtual void on_event_complete(io::IoEventHandler* completion_key, DWORD transferred_bytes) override
         {
             std::invoke(_handler, _world_inst, _players_target);
 
@@ -88,7 +88,7 @@ namespace game
             return block_history.add_record(pos, block_id);
         }
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
+        virtual void on_event_complete(io::IoEventHandler* completion_key, DWORD transferred_bytes) override
         {
             std::invoke(_handler, _world, _level_wait_players, block_history);
 
@@ -135,7 +135,7 @@ namespace game
             return common_chat_history.add_record(chat_packet_data);
         }
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override
+        virtual void on_event_complete(io::IoEventHandler* completion_key, DWORD transferred_bytes) override
         {
             std::invoke(_handler, _world, common_chat_history.get_snapshot_data());
             

@@ -430,7 +430,7 @@ namespace io
     {
         WSAOVERLAPPED overlapped = {};
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) = 0;
+        virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) = 0;
     };
 
     struct IoEvent : Event
@@ -484,7 +484,7 @@ namespace io
 
         bool post_overlapped_io(win::Socket);
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) override;
     };
 
     struct IoConnectEvent : IoEvent
@@ -497,14 +497,14 @@ namespace io
 
         bool post_overlapped_io(win::Socket, std::string_view ip, int port);
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) override;
     };
 
     struct IoRecvEvent : IoEvent
     {
         using IoEvent::IoEvent;
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) override;
 
         bool post_rio_event(RegisteredIO&, unsigned connection_id);
     };
@@ -517,7 +517,7 @@ namespace io
 
         bool post_rio_event(RegisteredIO&, unsigned connection_id);
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) override;
     };
 
     struct IoMulticastSendEvent : IoEvent
@@ -535,7 +535,7 @@ namespace io
 
         bool post_rio_event(RegisteredIO&, unsigned connection_id);
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) override;
 
         void set_multicast_data(io::MulticastDataEntry* data)
         {
@@ -560,7 +560,7 @@ namespace io
     {
         using IoEvent::IoEvent;
 
-        virtual void on_event_complete(void* completion_key, DWORD transferred_bytes) override;
+        virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) override;
     };
 
     class IoEventHandler

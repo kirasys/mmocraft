@@ -297,7 +297,7 @@ namespace io
                 }
 
                 auto transferred_bytes_or_signal = event_results[i].dwNumberOfBytesTransferred;
-                auto completion_key = (void*)event_results[i].lpCompletionKey;
+                auto completion_key = reinterpret_cast<io::IoEventHandler*>(event_results[i].lpCompletionKey);
                 auto event = CONTAINING_RECORD(event_results[i].lpOverlapped, io::Event, overlapped);
 
                 try {
