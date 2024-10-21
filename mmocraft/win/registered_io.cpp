@@ -30,7 +30,8 @@ namespace win
         cq_type.Iocp.Overlapped = overlapped;
         cq_type.Iocp.CompletionKey = completion_key;
 
-        return net::rio_api().RIOCreateCompletionQueue(DWORD(queue_size), &cq_type);
+        return net::rio_api().RIOCreateCompletionQueue ?
+            net::rio_api().RIOCreateCompletionQueue(DWORD(queue_size), &cq_type) : RIO_INVALID_CQ;
     }
 
     RioBufferPool::RioBufferPool(std::size_t pool_size, std::size_t buffer_size)
@@ -58,6 +59,7 @@ namespace win
 
     RIO_BUFFERID RioBufferPool::create_buffer(void* buffer, std::size_t buffer_size)
     {
-        return net::rio_api().RIORegisterBuffer(reinterpret_cast<char*>(buffer), buffer_size);
+        return net::rio_api().RIORegisterBuffer ? 
+            net::rio_api().RIORegisterBuffer(reinterpret_cast<char*>(buffer), buffer_size) : RIO_INVALID_BUFFERID;
     }
 }
