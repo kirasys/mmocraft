@@ -15,4 +15,14 @@ namespace database
             CONSOLE_LOG_IF(error, err) << "Fail to save player gamedata: " << err.ec();
         }
     }
+
+    database::AsyncTask PlayerLoginSession::load(std::string_view player_name, database::collection::PlayerLoginSession& session)
+    {
+        auto [err, result] = co_await database::CouchbaseCore::get_document(::database::CollectionPath::player_login_session, player_name);
+        if (err && err.ec() != couchbase::errc::key_value::document_not_found)
+            co_return;
+
+        if (err.ec() != couchbase::errc::key_value::document_not_found)
+            session = result.content_as<database::collection::PlayerLoginSession>();
+    }
 }
