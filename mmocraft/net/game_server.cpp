@@ -9,7 +9,6 @@
 #include "config/constants.h"
 #include "logging/error.h"
 #include "database/query.h"
-#include "game/player_command.h"
 
 namespace
 {

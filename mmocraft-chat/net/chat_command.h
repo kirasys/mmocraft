@@ -4,26 +4,36 @@
 #include <vector>
 #include <cstddef>
 #include <cstdio>
+#include <net/packet.h>
+#include <util/common_util.h>
+
+#define ERROR_COLOR "&c"
+#define SUCCESS_COLOR "&2"
+#define BLUE_COLOR "&9"
 
 namespace chat
 {
 namespace net
 {
-    /*
     class ChatCommand
     {
     public:
-        ChatCommand(std::string_view sender_name)
-            : _player{ *player }
-        { }
+        ChatCommand() = default;
 
-        void execute(std::string_view);
+        void execute(std::string_view sender_player_name, std::string_view command);
 
         void set_response(const char*);
 
-        const char* get_response() const
+        void set_error(const char*);
+
+        const char* sender_response() const
         {
-            return _response;
+            return _sender_response;
+        }
+
+        const char* receiver_response() const
+        {
+            return _receiver_response;
         }
 
     private:
@@ -41,22 +51,25 @@ namespace net
             return std::max(std::snprintf(buffer, N, BLUE_COLOR "[to %s] %s", to, message), 0);
         }
 
-        void execute_mail(const std::vector<const char*>&);
+        //void execute_mail(const std::vector<const char*>&);
 
-        void execute_mail_read(const std::vector<const char*>&);
+        //void execute_mail_read(const std::vector<const char*>&);
 
-        void execute_mail_write(unsigned player_id, const std::vector<const char*>&);
+        //void execute_mail_write(unsigned player_id, const std::vector<const char*>&);
 
-        void execute_mail_delete(const std::vector<const char*>&);
+        //void execute_mail_delete(const std::vector<const char*>&);
 
         void execute_direct_message(const std::vector<const char*>&);
 
-        void execute_announcement(const std::vector<const char*>&);
+        //void execute_announcement(const std::vector<const char*>&);
 
-        char _command[128] = {};
+        char _sender_player_name[16 + 1];
 
-        char _response[128] = {};
+        char _command[::net::PacketFieldConstraint::max_string_length] = {};
+
+        char _sender_response[::net::PacketFieldConstraint::max_string_length] = {};
+
+        char _receiver_response[::net::PacketFieldConstraint::max_string_length] = {};
     };
-    */
 }
 }

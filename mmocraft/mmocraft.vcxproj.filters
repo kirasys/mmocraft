@@ -33,7 +33,6 @@
     <ClCompile Include="io\multicast_manager.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\packet_extension.cpp" />
-    <ClCompile Include="game\player_command.cpp" />
     <ClCompile Include="util\time_util.cpp" />
     <ClCompile Include="database\couchbase_core.cpp" />
     <ClCompile Include="net\udp_server.cpp" />
@@ -92,7 +91,6 @@
     <ClInclude Include="game\world_task.h" />
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\packet_extension.h" />
-    <ClInclude Include="game\player_command.h" />
     <ClInclude Include="database\couchbase_core.h" />
     <ClInclude Include="config\argparse.h" />
     <ClInclude Include="net\udp_server.h" />
