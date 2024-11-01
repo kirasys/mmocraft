@@ -26,8 +26,8 @@ namespace
         return arr;
     }();
 
-    std::array<database::AsyncTask(net::GameServer::*)(net::MessageRequest&), 0x100> message_handler_table = [] {
-        std::array<database::AsyncTask(net::GameServer::*)(net::MessageRequest&), 0x100> arr{};
+    std::array<database::AsyncTask<void>(net::GameServer::*)(net::MessageRequest&), 0x100> message_handler_table = [] {
+        std::array<database::AsyncTask<void>(net::GameServer::*)(net::MessageRequest&), 0x100> arr{};
         arr[net::message_id::packet_handshake] = &net::GameServer::handle_handshake_response_message;
         return arr;
     }();
@@ -197,7 +197,7 @@ namespace net
         return false;
     }
 
-    database::AsyncTask GameServer::handle_handshake_response_message(MessageRequest& request)
+    database::AsyncTask<void> GameServer::handle_handshake_response_message(MessageRequest& request)
     {
         protocol::PacketHandshakeResponse msg;
         if (not request.parse_message(msg))

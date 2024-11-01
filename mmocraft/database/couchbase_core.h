@@ -14,7 +14,50 @@
 
 namespace database
 {
+    template <typename T>
     struct AsyncTask
+    {
+        struct promise_type
+        {
+            AsyncTask get_return_object() { return {}; }
+            std::suspend_never initial_suspend() { return {}; }
+            std::suspend_never final_suspend() noexcept { return {}; }
+
+            void return_value(T&& value)
+            {
+                _value = std::forward(value);
+            }
+
+            T result()
+            {
+                return _value;
+            }
+
+            void unhandled_exception() {}
+
+        private:
+            T _value;
+        };
+
+        auto operator co_await()
+        {
+            struct awaitable
+            {
+                constexpr bool await_ready() const noexcept { return false; }
+
+                void await_suspend(std::coroutine_handle<> coro)
+                {
+
+                }
+
+                T await_resume() {}
+            };
+            return awaitable{};
+        }
+    };
+
+    template<>
+    struct AsyncTask<void>
     {
         struct promise_type
         {

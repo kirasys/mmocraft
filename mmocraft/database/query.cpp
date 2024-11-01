@@ -8,7 +8,7 @@
 
 namespace database
 {
-    database::AsyncTask PlayerGamedata::save(const game::Player& player_unsafe)
+    database::AsyncTask<void> PlayerGamedata::save(const game::Player& player_unsafe)
     {
         if (player_unsafe.is_support_gamedata_saving()) {
             auto [err, result] = co_await ::database::CouchbaseCore::upsert_document(::database::CollectionPath::player_gamedata, player_unsafe.uuid(), player_unsafe.get_gamedata());
@@ -16,7 +16,7 @@ namespace database
         }
     }
 
-    database::AsyncTask PlayerLoginSession::load(std::string_view player_name, database::collection::PlayerLoginSession& session)
+    database::AsyncTask<void> PlayerLoginSession::load(std::string_view player_name, database::collection::PlayerLoginSession& session)
     {
         auto [err, result] = co_await database::CouchbaseCore::get_document(::database::CollectionPath::player_login_session, player_name);
         if (err && err.ec() != couchbase::errc::key_value::document_not_found)
