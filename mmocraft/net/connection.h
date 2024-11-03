@@ -88,10 +88,9 @@ namespace net
         std::unique_ptr<io::IoRecvEvent> io_recv_event;
         std::unique_ptr<io::IoSendEvent> io_send_event;
 
-        static constexpr std::size_t max_multicast_event_count = 128;
         std::mutex multicast_event_lock;
         std::vector<io::IoMulticastSendEvent*> ready_multicast_events;
-        win::ObjectPool<io::IoMulticastSendEvent> multicast_event_pool{ max_multicast_event_count };
+        win::ObjectPool<io::IoMulticastSendEvent> multicast_event_pool{ config::network::num_of_multicast_events };
     };
 
     class Connection : public io::IoEventHandler, util::NonCopyable, util::NonMovable
