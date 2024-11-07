@@ -11,7 +11,7 @@ namespace net
 
         try {
             auto tokens = parse_tokens(_command);
-            if (tokens.size() == 0)
+            if (tokens.size() <= 0)
                 throw std::invalid_argument("");
 
             auto program = tokens[0];
@@ -33,11 +33,11 @@ namespace net
             return;
         }
 
-        auto receiver_player_name = tokens[1];
+        util::string_copy(_receiver_player_name, tokens[1]);
         auto message = tokens[2];
 
         format_from_message(_sender_response, _sender_player_name, message);
-        format_to_message(_receiver_response, receiver_player_name, message);
+        format_to_message(_receiver_response, _receiver_player_name, message);
     }
 
     std::vector<const char*> ChatCommand::parse_tokens(char* command)

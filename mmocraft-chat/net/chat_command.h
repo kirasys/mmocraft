@@ -4,8 +4,8 @@
 #include <vector>
 #include <cstddef>
 #include <cstdio>
+
 #include <net/packet.h>
-#include <util/common_util.h>
 
 #define ERROR_COLOR "&c"
 #define SUCCESS_COLOR "&2"
@@ -26,6 +26,16 @@ namespace net
 
         void set_error(const char*);
 
+        const char* sender_name() const
+        {
+            return _sender_player_name;
+        }
+
+        const char* receiver_name() const
+        {
+            return _receiver_player_name;
+        }
+
         const char* sender_response() const
         {
             return _sender_response;
@@ -34,6 +44,16 @@ namespace net
         const char* receiver_response() const
         {
             return _receiver_response;
+        }
+
+        bool has_sender_message() const
+        {
+            return sender_name()[0] || sender_response()[0];
+        }
+
+        bool has_receiver_message() const
+        {
+            return receiver_name()[0] || receiver_response()[0];
         }
 
     private:
@@ -63,7 +83,9 @@ namespace net
 
         //void execute_announcement(const std::vector<const char*>&);
 
-        char _sender_player_name[16 + 1];
+        char _sender_player_name[16 + 1] = {};
+
+        char _receiver_player_name[16 + 1] = {};
 
         char _command[::net::PacketFieldConstraint::max_string_length] = {};
 
