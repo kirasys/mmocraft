@@ -67,5 +67,6 @@ message ChatCommandRequest {
 }
 
 message ChatCommandResponse {
-
+    uint64 receiver_connection_key = 1;
+    string message = 2;
 }
