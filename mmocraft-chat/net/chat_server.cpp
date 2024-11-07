@@ -35,7 +35,7 @@ namespace net
         }
     }
 
-    database::AsyncTask ChatServer::handle_chat_command(::net::MessageRequest& request)
+    io::AsyncTask<void> ChatServer::handle_chat_command(::net::MessageRequest& request)
     {
         protocol::ChatCommandRequest msg;
         if (not request.parse_message(msg))

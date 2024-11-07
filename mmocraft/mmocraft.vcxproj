@@ -28,6 +28,7 @@
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
+    <ClCompile Include="io\async_task.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
     <ClCompile Include="io\multicast_manager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -98,6 +99,7 @@
     <ClInclude Include="game\player.h" />
     <ClInclude Include="game\world_generator.h" />
     <ClInclude Include="game\world_task.h" />
+    <ClInclude Include="io\async_task.h" />
     <ClInclude Include="io\task.h" />
     <ClInclude Include="net\connection_environment.h" />
     <ClInclude Include="net\connection_key.h" />
