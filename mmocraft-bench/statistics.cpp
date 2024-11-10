@@ -80,6 +80,8 @@ namespace bench
         if (auto ping_count = total_ping_received.load(std::memory_order_relaxed)) {
             std::cout << "Average ping RTT (ns): "
                 << total_ping_rtt.load(std::memory_order_relaxed) / ping_count << '\n';
+            std::cout << "Maximum ping RTT (ns): "
+                << max_ping_rtt.load(std::memory_order_relaxed);
         }
     }
 }
