@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <iostream>
+#include <mutex>
 
 #include "net/packet_extension.h"
 #include "util/time_util.h"
@@ -16,8 +17,11 @@ namespace
     std::atomic<std::size_t> total_packet_data_sended{ 0 };
     std::atomic<std::size_t> total_packet_data_received{ 0 };
 
-    std::atomic<std::size_t> total_ping_received{ 0 };
+    std::atomic<std::size_t> total_ping_received{ 0 };   
     std::atomic<std::size_t> total_ping_rtt{ 0 };
+
+    std::mutex max_ping_update_lock;
+    std::atomic<std::size_t> max_ping_rtt{ 0 };
 }
 
 namespace bench
@@ -41,9 +45,19 @@ namespace bench
 
     void on_ping_packet_receive(const std::byte* packet_data)
     {
+        // update ping rtt statistics
         net::PacketExtPing packet(packet_data);
+        auto ping_rtt = packet.get_rtt_ns();
+        
+        total_ping_rtt.fetch_add(ping_rtt, std::memory_order_relaxed);
+        if (max_ping_rtt.load(std::memory_order_relaxed) < ping_rtt) {
+            std::lock_guard guard(max_ping_update_lock);
+            // check if max_ping_rtt is still less than ping_rtt.
+            if (max_ping_rtt.load(std::memory_order_relaxed) < ping_rtt)
+                max_ping_rtt.store(ping_rtt, std::memory_order_relaxed);
+        }
 
-        total_ping_rtt.fetch_add(packet.get_rtt_ns(), std::memory_order_relaxed);
+        // update ping count statistics.
         total_ping_received.fetch_add(1, std::memory_order_relaxed);
     }
 
