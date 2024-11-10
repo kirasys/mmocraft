@@ -49,19 +49,20 @@ namespace bench
 
     void print_statistics()
     {
-        double elapesd_seconds = (util::current_monotonic_tick() - bench_start_tick) / 1000.0;
-        std::cout << "Total sended packet count   : " << total_packet_send_count.load(std::memory_order_relaxed) << '\n';
-        std::cout << " - Throughput per second    : " << total_packet_send_count.load(std::memory_order_relaxed) / elapesd_seconds << '\n';
-        
-        std::cout << "Total sended packet bytes   : " << total_packet_data_sended.load(std::memory_order_relaxed) << '\n';
-        std::cout << " - Throughput per second (MB)  : " << total_packet_data_sended.load(std::memory_order_relaxed) / elapesd_seconds / 1024 / 1024 << '\n';
+        if (double elapesd_seconds = (util::current_monotonic_tick() - bench_start_tick) / 1000.0) {
+            std::cout << "Total sended packet count   : " << total_packet_send_count.load(std::memory_order_relaxed) << '\n';
+            std::cout << " - Throughput per second    : " << total_packet_send_count.load(std::memory_order_relaxed) / elapesd_seconds << '\n';
 
-        std::cout << "Total received packet count : " << total_packet_receive_count.load(std::memory_order_relaxed) << '\n';
-        std::cout << " - Throughput per second    : " << total_packet_receive_count.load(std::memory_order_relaxed) / elapesd_seconds << '\n';
+            std::cout << "Total sended packet bytes   : " << total_packet_data_sended.load(std::memory_order_relaxed) << '\n';
+            std::cout << " - Throughput per second (MB)  : " << total_packet_data_sended.load(std::memory_order_relaxed) / elapesd_seconds / 1024 / 1024 << '\n';
 
-        std::cout << "Total received packet bytes : " << total_packet_data_received.load(std::memory_order_relaxed) << '\n';
-        std::cout << " - Throughput per second (MB) : " << total_packet_data_received.load(std::memory_order_relaxed) / elapesd_seconds / 1024 / 1024 << '\n';
-    
+            std::cout << "Total received packet count : " << total_packet_receive_count.load(std::memory_order_relaxed) << '\n';
+            std::cout << " - Throughput per second    : " << total_packet_receive_count.load(std::memory_order_relaxed) / elapesd_seconds << '\n';
+
+            std::cout << "Total received packet bytes : " << total_packet_data_received.load(std::memory_order_relaxed) << '\n';
+            std::cout << " - Throughput per second (MB) : " << total_packet_data_received.load(std::memory_order_relaxed) / elapesd_seconds / 1024 / 1024 << '\n';
+        }
+
         if (auto ping_count = total_ping_received.load(std::memory_order_relaxed)) {
             std::cout << "Average ping RTT (ns): "
                 << total_ping_rtt.load(std::memory_order_relaxed) / ping_count << '\n';
