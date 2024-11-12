@@ -44,7 +44,6 @@
     <ClCompile Include="net\udp_message.cpp" />
     <ClCompile Include="game\history_buffer.cpp" />
     <ClCompile Include="util\uuid_v4.cpp" />
-    <ClCompile Include="io\async_task.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\config.h" />

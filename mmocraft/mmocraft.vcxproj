@@ -28,7 +28,6 @@
     <ClCompile Include="game\player.cpp" />
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
-    <ClCompile Include="io\async_task.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
     <ClCompile Include="io\multicast_manager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>

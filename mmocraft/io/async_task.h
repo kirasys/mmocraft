@@ -56,7 +56,7 @@ namespace io
 
         void return_value(T&& value)
         {
-            _value = std::forward(value);
+            _value = std::forward<T>(value);
         }
 
         T&& result()
@@ -65,7 +65,7 @@ namespace io
         }
 
     private:
-            T _value;
+        T _value;
     };
 
     template<>
@@ -118,4 +118,15 @@ namespace io
     private:
         std::coroutine_handle<promise_type> _coroutine;
     };
+
+    template <typename T>
+    inline AsyncTask<T> TaskPromise<T>::get_return_object() noexcept
+    {
+        return { std::coroutine_handle<TaskPromise>::from_promise(*this) };
+    }
+
+    inline AsyncTask<void> TaskPromise<void>::get_return_object() noexcept
+    {
+        return { std::coroutine_handle<TaskPromise>::from_promise(*this) };
+    }
 }
