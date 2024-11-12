@@ -190,7 +190,7 @@ namespace net
     bool GameServer::handle_message(net::MessageRequest& request)
     {
         if (auto handler = message_handler_table[request.message_id()]) {
-            (this->*handler)(request);
+            (this->*handler)(request).start();
             return true;
         }
 

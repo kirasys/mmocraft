@@ -141,7 +141,7 @@ namespace game
         // Update player game data then set offline.
         for (auto player : disconnect_wait_players) {
             if (auto conn = connection_env.try_acquire_connection(player->connection_key())) {
-                database::PlayerGamedata::save(*player);
+                database::PlayerGamedata::save(*player).start();
                 player->transit_state(game::PlayerState::disconnected);
             }
         }

@@ -28,7 +28,7 @@ namespace net
     {
         switch (request.message_id()) {
         case ::net::message_id::chat_command:
-            handle_chat_command(request);
+            handle_chat_command(request).start();
             return true;
         default:
             return false;
