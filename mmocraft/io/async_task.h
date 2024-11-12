@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coroutine>
+#include <optional>
 
 namespace io
 {
@@ -8,7 +9,7 @@ namespace io
 
     struct TaskPromiseBase
     {
-        std::suspend_never initial_suspend() { return {}; }
+        std::suspend_always initial_suspend() { return {}; }
 
         struct FinalAwaitable
         {
@@ -19,10 +20,9 @@ namespace io
                 return _cont == nullptr;
             }
 
-            template <typename PromiseType>
-            bool await_suspend(std::coroutine_handle<PromiseType> cont) noexcept
+            void await_suspend(std::coroutine_handle<>) noexcept
             {
-                return cont.promise().resume();
+                _cont.resume();
             }
 
             constexpr void await_resume() noexcept {}
@@ -40,11 +40,6 @@ namespace io
             _cont = cont;
         }
 
-        bool resume() noexcept
-        {
-            return _cont != nullptr ? (_cont.resume(), true) : false;
-        }
-
     private:
         std::coroutine_handle<> _cont = nullptr;
     };
@@ -54,9 +49,10 @@ namespace io
     {
         AsyncTask<T> get_return_object() noexcept;
 
-        void return_value(T&& value)
+        template <typename Type>
+        void return_value(Type&& value)
         {
-            _value = std::forward<T>(value);
+            _value = std::forward<Type>(value);
         }
 
         T&& result()
@@ -93,7 +89,9 @@ namespace io
                 void await_suspend(std::coroutine_handle<> cont)
                 {
                     assert(_coroutine);
+
                     _coroutine.promise().set_continuation(cont);
+                    _coroutine.resume(); // Resume initial suspend.
                 }
 
                 decltype(auto) await_resume()
@@ -111,8 +109,14 @@ namespace io
 
         ~AsyncTask()
         {
+            // Destory only at final suspsend.
             if (_coroutine.done())
                 _coroutine.destroy();
+        }
+
+        void start() const
+        {
+            _coroutine.resume();
         }
 
     private:
