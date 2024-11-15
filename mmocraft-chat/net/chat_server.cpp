@@ -28,14 +28,14 @@ namespace net
     {
         switch (request.message_id()) {
         case ::net::message_id::chat_command:
-            handle_chat_command(request).start();
+            handle_chat_command(request);
             return true;
         default:
             return false;
         }
     }
 
-    io::AsyncTask<void> ChatServer::handle_chat_command(::net::MessageRequest& request)
+    io::DetachedTask ChatServer::handle_chat_command(::net::MessageRequest& request)
     {
         protocol::ChatCommandRequest msg;
         if (not request.parse_message(msg))

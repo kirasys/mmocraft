@@ -63,7 +63,7 @@ namespace net
 
         virtual bool handle_message(net::MessageRequest&) override;
 
-        io::AsyncTask<void> handle_handshake_response_message(MessageRequest&);
+        io::DetachedTask handle_handshake_response_message(MessageRequest&);
 
     private:
 

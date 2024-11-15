@@ -13,7 +13,7 @@ namespace database
     {
     public:
 
-         static io::AsyncTask<void> save(const game::Player& player_unsafe);
+         static io::DetachedTask save(const game::Player& player_unsafe);
 
     };
 
@@ -21,7 +21,7 @@ namespace database
     {
     public:
 
-        static io::AsyncTask<void> load(std::string_view player_name, database::collection::PlayerLoginSession&);
+        static io::DetachedTask load(std::string_view player_name, database::collection::PlayerLoginSession&);
 
     };
 }

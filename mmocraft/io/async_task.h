@@ -16,13 +16,13 @@ namespace io
             std::coroutine_handle<> _cont = nullptr;
 
             bool await_ready() const noexcept
-            { 
-                return _cont == nullptr;
+            {
+                return false;
             }
 
             void await_suspend(std::coroutine_handle<>) noexcept
             {
-                _cont.resume();
+                if (_cont) _cont.resume();
             }
 
             constexpr void await_resume() noexcept {}
@@ -45,7 +45,7 @@ namespace io
     };
 
     template <typename T>
-    struct TaskPromise : TaskPromiseBase
+    struct AsyncTaskPromise : TaskPromiseBase
     {
         AsyncTask<T> get_return_object() noexcept;
 
@@ -65,7 +65,7 @@ namespace io
     };
 
     template<>
-    struct TaskPromise<void> : TaskPromiseBase
+    struct AsyncTaskPromise<void> : TaskPromiseBase
     {
         AsyncTask<void> get_return_object() noexcept;
 
@@ -76,7 +76,7 @@ namespace io
     template <typename T>
     struct AsyncTask
     {
-        using promise_type = TaskPromise<T>;
+        using promise_type = AsyncTaskPromise<T>;
 
         auto operator co_await()
         {
@@ -84,14 +84,16 @@ namespace io
             {
                 std::coroutine_handle<promise_type> _coroutine;
 
-                constexpr bool await_ready() const noexcept { return false; }
+                bool await_ready() const noexcept
+                {
+                    return false;
+                }
 
                 void await_suspend(std::coroutine_handle<> cont)
                 {
                     assert(_coroutine);
-
                     _coroutine.promise().set_continuation(cont);
-                    _coroutine.resume(); // Resume initial suspend.
+                    _coroutine.resume(); // resume initial_suspend().
                 }
 
                 decltype(auto) await_resume()
@@ -109,14 +111,7 @@ namespace io
 
         ~AsyncTask()
         {
-            // Destory only at final suspsend.
-            if (_coroutine.done())
-                _coroutine.destroy();
-        }
-
-        void start() const
-        {
-            _coroutine.resume();
+            _coroutine.destroy();
         }
 
     private:
@@ -124,13 +119,25 @@ namespace io
     };
 
     template <typename T>
-    inline AsyncTask<T> TaskPromise<T>::get_return_object() noexcept
+    inline AsyncTask<T> AsyncTaskPromise<T>::get_return_object() noexcept
     {
-        return { std::coroutine_handle<TaskPromise>::from_promise(*this) };
+        return { std::coroutine_handle<AsyncTaskPromise>::from_promise(*this) };
     }
 
-    inline AsyncTask<void> TaskPromise<void>::get_return_object() noexcept
+    inline AsyncTask<void> AsyncTaskPromise<void>::get_return_object() noexcept
     {
-        return { std::coroutine_handle<TaskPromise>::from_promise(*this) };
+        return { std::coroutine_handle<AsyncTaskPromise>::from_promise(*this) };
     }
+
+    struct DetachedTask
+    {
+        struct promise_type
+        {
+            DetachedTask get_return_object() { return {}; }
+            std::suspend_never initial_suspend() { return {}; }
+            std::suspend_never final_suspend() noexcept { return {}; }
+            void return_void() {}
+            void unhandled_exception() {}
+        };
+    };
 }
