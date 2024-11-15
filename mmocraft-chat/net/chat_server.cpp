@@ -7,6 +7,7 @@
 #include <logging/logger.h>
 
 #include "../config/config.h"
+#include "../net/chat_command.h"
 
 namespace chat
 {
@@ -34,7 +35,7 @@ namespace net
         }
     }
 
-    database::AsyncTask ChatServer::handle_chat_command(::net::MessageRequest& request)
+    io::DetachedTask ChatServer::handle_chat_command(::net::MessageRequest& request)
     {
         protocol::ChatCommandRequest msg;
         if (not request.parse_message(msg))
@@ -49,6 +50,12 @@ namespace net
             co_return;
         }
 
+        net::ChatCommand chat_command;
+        chat_command.execute(msg.sender_player_name(), msg.message());
+
+        if (chat_command.has_receiver_message()) {
+            
+        }
 
         /*
         if (auto player = conn.associated_player()) {

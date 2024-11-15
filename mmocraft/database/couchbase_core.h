@@ -1,6 +1,5 @@
 #pragma once
 
-#include <coroutine>
 #include <memory>
 #include <map>
 
@@ -8,24 +7,13 @@
 #include <tao/json.hpp>
 
 #include "database/couchbase_definitions.h"
+#include "io/async_task.h"
 #include "proto/generated/config.pb.h"
 #include "util/common_util.h"
 #include "util/uuid_v4.h"
 
 namespace database
 {
-    struct AsyncTask
-    {
-        struct promise_type
-        {
-            AsyncTask get_return_object() { return {}; }
-            std::suspend_never initial_suspend() { return {}; }
-            std::suspend_never final_suspend() noexcept { return {}; }
-            void return_void() {}
-            void unhandled_exception() {}
-        };
-    };
-
     class CouchbaseCore : util::NonCopyable, util::NonMovable
     {
     public:

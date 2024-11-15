@@ -13,6 +13,15 @@ namespace database
     {
     public:
 
-         static database::AsyncTask save(const game::Player& player_unsafe);
+         static io::DetachedTask save(const game::Player& player_unsafe);
+
+    };
+
+    class PlayerLoginSession
+    {
+    public:
+
+        static io::DetachedTask load(std::string_view player_name, database::collection::PlayerLoginSession&);
+
     };
 }

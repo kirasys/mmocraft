@@ -24,7 +24,7 @@ namespace chat
 
             virtual bool handle_message(::net::MessageRequest&) override;
 
-            database::AsyncTask handle_chat_command(::net::MessageRequest&);
+            io::DetachedTask handle_chat_command(::net::MessageRequest&);
 
             bool initialize(const char* router_ip, int router_port);
 
