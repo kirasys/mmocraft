@@ -84,6 +84,7 @@ namespace win
         std::size_t _pool_size = 0;
         std::size_t _buffer_size = 0;
 
+        bool is_buffer_allocated = false;
         void* _buffer = nullptr;
         RIO_BUFFERID _buffer_id = RIO_INVALID_BUFFERID;
     };

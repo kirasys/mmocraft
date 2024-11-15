@@ -37,6 +37,8 @@ namespace win
     RioBufferPool::RioBufferPool(std::size_t pool_size, std::size_t buffer_size)
         : _pool_size{ pool_size }
         , _buffer_size{ buffer_size }
+
+        , is_buffer_allocated{ true }
         , _buffer{ ::VirtualAlloc(0, buffer_size * pool_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE) }
         , _buffer_id{ create_buffer(_buffer, buffer_size * pool_size) }
     { }
@@ -53,7 +55,7 @@ namespace win
         if (id() != RIO_INVALID_BUFFERID)
             net::rio_api().RIODeregisterBuffer(id());
 
-        if (_buffer != nullptr)
+        if (is_buffer_allocated && _buffer != nullptr)
             ::VirtualFree(_buffer, 0, MEM_RELEASE);
     }
 

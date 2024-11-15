@@ -434,7 +434,12 @@ namespace io
             , _data_size{ data_size }
             , registered_buffer{ _data.get(), data_size }
         {
+            
+        }
 
+        ~IoMulticastEventData()
+        {
+        
         }
 
         std::byte* begin()
@@ -454,6 +459,7 @@ namespace io
 
     private:
         std::unique_ptr<std::byte[]> _data;
+        std::byte* _data_temp;
         std::size_t _data_size = 0;
 
         win::RioBufferPool registered_buffer;

@@ -127,6 +127,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="async_task_test.cpp" />
     <ClCompile Include="history_buffer_test.cpp" />
     <ClCompile Include="io_event_test.cpp" />
     <ClCompile Include="multicast_test.cpp" />
