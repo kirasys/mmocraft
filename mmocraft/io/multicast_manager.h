@@ -42,6 +42,11 @@ namespace io
             update_lifetime();
         }
 
+        ~MulticastDataEntry()
+        {
+            std::cout << "Deleted";
+        }
+
         void update_lifetime(std::size_t cur = util::current_monotonic_tick())
         {
             expire_at = max_expiration_period + cur;
@@ -49,8 +54,7 @@ namespace io
 
         bool is_safe_delete() const
         {
-            return (ref_count_mode && ref_count.load() == 0) ||
-                expire_at < util::current_monotonic_tick();
+            return expire_at < util::current_monotonic_tick();
         }
 
         std::byte* data()
@@ -68,29 +72,12 @@ namespace io
             return registered_buffer.id();
         }
 
-        void set_reference_count_mode(bool flag)
-        {
-            ref_count_mode = flag;
-        }
-
-        void increase_ref()
-        {
-            ref_count.fetch_add(1);
-        }
-
-        void decrease_ref()
-        {
-            ref_count.fetch_sub(1);
-        }
-
     private:
         std::unique_ptr<std::byte[]> _data;
         std::size_t _data_size = 0;
 
         win::RioBufferPool registered_buffer;
 
-        bool ref_count_mode = false;
-        std::atomic<int> ref_count;
         std::size_t expire_at = 0;
     };
 
@@ -100,7 +87,7 @@ namespace io
         MulticastManager()
         { }
 
-        MulticastDataEntry& set_data(io::multicast_tag_id::value, std::unique_ptr<std::byte[]>&& data, std::size_t data_size);
+        std::shared_ptr<MulticastDataEntry> create_data(io::multicast_tag_id::value, std::unique_ptr<std::byte[]>&& data, std::size_t data_size);
 
         void reset_data(io::multicast_tag_id::value);
 

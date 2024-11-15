@@ -450,7 +450,7 @@ namespace io
         {
             is_processing = false;
 
-            if (non_owning_mode)
+            if (is_non_owning_event_data)
                 _event_data.release();
 
             _event_data.reset(other);
@@ -461,13 +461,13 @@ namespace io
             return _event_data.get();
         }
 
-        void set_non_owning_mode()
+        void set_non_owning_event_data()
         {
-            non_owning_mode = true;
+            is_non_owning_event_data = true;
         }
 
     private:
-        bool non_owning_mode = false;
+        bool is_non_owning_event_data = false;
 
         std::unique_ptr<IoEventData> _event_data;
     };
@@ -525,35 +525,28 @@ namespace io
         IoMulticastSendEvent()
             : IoEvent{ &_event_data }
         {
-            IoEvent::set_non_owning_mode();
+            IoEvent::set_non_owning_event_data();
         }
 
         ~IoMulticastSendEvent()
         {
-            set_multicast_data(nullptr);
+            
         }
 
         bool post_rio_event(RegisteredIO&, unsigned connection_id);
 
         virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) override;
 
-        void set_multicast_data(io::MulticastDataEntry* data)
+        void set_multicast_data(std::shared_ptr<io::MulticastDataEntry>& data)
         {
-            if (data) {
-                data->increase_ref();
-                _event_data.set_data(data->data(), data->data_size());
-            }
-
-            if (multicast_data)
-                multicast_data->decrease_ref();
-
+            _event_data.set_data(data->data(), data->data_size());
             multicast_data = data;
         }
 
     private:
         io::IoSendEventReadonlyData _event_data;
 
-        io::MulticastDataEntry* multicast_data = nullptr;
+        std::shared_ptr<io::MulticastDataEntry> multicast_data;
     };
 
     struct RioEvent : IoEvent

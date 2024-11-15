@@ -56,7 +56,7 @@ namespace net
 
         bool post_send_event();
 
-        bool post_multicast_event(io::MulticastDataEntry&);
+        bool post_multicast_event(std::shared_ptr<io::MulticastDataEntry>&);
 
         void free_multicast_event(io::IoMulticastSendEvent* event)
         {

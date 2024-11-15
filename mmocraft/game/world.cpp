@@ -61,15 +61,13 @@ namespace game
         }
     }
 
-    void World::multicast_to_players(const std::vector<game::Player*>& players, io::MulticastDataEntry& entry, void(*successed)(game::Player*))
+    void World::multicast_to_players(const std::vector<game::Player*>& players, std::shared_ptr<io::MulticastDataEntry>& data, void(*successed)(game::Player*))
     {
         for (auto player : players) {
             if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
-                if (connection_io->post_multicast_event(entry) && successed) successed(player);
+                if (connection_io->post_multicast_event(data) && successed) successed(player);
             }
         }
-
-        entry.set_reference_count_mode(true);
     }
 
     /* World task start */
@@ -86,8 +84,8 @@ namespace game
         std::unique_ptr<std::byte[]> level_packet_data;
         auto data_size = level_packet.serialize(level_packet_data);
 
-        auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::level_data, std::move(level_packet_data), data_size);
-        multicast_to_players(level_wait_players, data_entry, [](game::Player* player) {
+        auto multicast_data = std::make_shared<io::MulticastDataEntry>(std::move(level_packet_data), data_size);
+        multicast_to_players(level_wait_players, multicast_data, [](game::Player* player) {
             player->transit_state(game::PlayerState::level_initialized);
         });
     }
@@ -178,8 +176,8 @@ namespace game
             auto block_history_data = block_change_history.get_snapshot_data();
             std::unique_ptr<std::byte[]> copyed_block_history_data(block_history_data.clone());
 
-            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_block, std::move(copyed_block_history_data), block_history_data.size());
-            multicast_to_specific_players<PlayerState::level_initialized>(data_entry);
+            auto multicast_data = std::make_shared<io::MulticastDataEntry>(std::move(copyed_block_history_data), block_history_data.size());
+            multicast_to_specific_players<PlayerState::level_initialized>(multicast_data);
         }
         
         // submit level data to handshaked players.
@@ -202,8 +200,8 @@ namespace game
         // create set player position packets.
         std::unique_ptr<std::byte[]> position_packet_data;
         if (auto data_size = net::PacketSetPlayerPosition::serialize(world_players, position_packet_data)) {
-            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::sync_player_position, std::move(position_packet_data), data_size);
-            multicast_to_players(world_players, data_entry, [](game::Player* player) {
+            auto multicast_data = std::make_shared<io::MulticastDataEntry>(std::move(position_packet_data), data_size);
+            multicast_to_players(world_players, multicast_data, [](game::Player* player) {
                 player->commit_last_transferrd_position();
             });
         }
@@ -214,8 +212,8 @@ namespace game
         if (std::size_t data_size = chat_history_data.size()) {
             std::unique_ptr<std::byte[]> copyed_chat_history_data(chat_history_data.clone());
 
-            auto& data_entry = multicast_manager.set_data(io::multicast_tag_id::common_chat_message, std::move(copyed_chat_history_data), data_size);
-            multicast_to_specific_players<PlayerState::spawned>(data_entry);
+            auto multicast_data = std::make_shared<io::MulticastDataEntry>(std::move(copyed_chat_history_data), data_size);
+            multicast_to_specific_players<PlayerState::spawned>(multicast_data);
         }
     }
 

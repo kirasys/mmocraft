@@ -85,10 +85,10 @@ namespace game
             send_to_players(players, data, successed, failed);
         }
 
-        void multicast_to_players(const std::vector<game::Player*>&, io::MulticastDataEntry&, void(*successed)(game::Player*) = nullptr);
+        void multicast_to_players(const std::vector<game::Player*>&, std::shared_ptr<io::MulticastDataEntry>&, void(*successed)(game::Player*) = nullptr);
 
         template <game::PlayerState::State T>
-        void multicast_to_specific_players(io::MulticastDataEntry& entry)
+        void multicast_to_specific_players(std::shared_ptr<io::MulticastDataEntry>& data)
         {
             std::vector<game::Player*> players;
             players.reserve(connection_env.size_of_max_connections());
@@ -97,7 +97,7 @@ namespace game
                 { return player->state() >= T; },
                 players);
 
-            multicast_to_players(players, entry);
+            multicast_to_players(players, data);
         }
         
         void commit_block_changes(const game::BlockHistory&);

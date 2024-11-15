@@ -7,18 +7,12 @@
 
 namespace io
 {
-    MulticastDataEntry& MulticastManager::set_data(io::multicast_tag_id::value tag, std::unique_ptr<std::byte[]>&& data, std::size_t data_size)
+    std::shared_ptr<io::MulticastDataEntry> MulticastManager::create_data(io::multicast_tag_id::value tag, std::unique_ptr<std::byte[]>&& data, std::size_t data_size)
     {
         if (gc_timeouts[tag] < util::current_monotonic_tick())
             gc(tag);
 
-        auto& data_entry = data_queues[tag].emplace(
-            std::move(data),
-            data_size
-        );
-
-        active_data[tag] = &data_entry;
-        return data_entry;
+        return std::make_shared<io::MulticastDataEntry>(std::move(data), data_size);
     }
 
     void MulticastManager::reset_data(io::multicast_tag_id::value tag)
