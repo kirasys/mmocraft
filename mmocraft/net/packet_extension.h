@@ -5,7 +5,7 @@
 
 namespace net
 {
-    bool is_cpe_support(std::string_view, int version);
+    bool is_available_cpe(std::string_view, int version);
     net::packet_type_id::value cpe_index_of(std::string_view);
 
     struct PacketExtInfo : Packet

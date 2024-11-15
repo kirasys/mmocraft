@@ -173,7 +173,7 @@ namespace net
         net::PacketExtEntry packet(packet_data.data());
 
         if (auto player = conn.associated_player()) {
-            if (net::is_cpe_support(packet.extenstion_name, packet.version))
+            if (net::is_available_cpe(packet.extenstion_name, packet.version))
                 player->register_extension(net::cpe_index_of(packet.extenstion_name));
 
             if (player->decrease_pending_extension_count() == 0)

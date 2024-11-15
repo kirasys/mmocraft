@@ -21,7 +21,7 @@ namespace
 
 namespace net
 {
-    bool is_cpe_support(std::string_view ext_name, int version)
+    bool is_available_cpe(std::string_view ext_name, int version)
     {
         return supported_cpe_map.find(ext_name) != supported_cpe_map.end()
             && supported_cpe_map.at(ext_name).version == version;
