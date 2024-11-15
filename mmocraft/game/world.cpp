@@ -61,7 +61,7 @@ namespace game
         }
     }
 
-    void World::multicast_to_players(const std::vector<game::Player*>& players, std::shared_ptr<io::MulticastDataEntry>& data, void(*successed)(game::Player*))
+    void World::multicast_to_players(const std::vector<game::Player*>& players, std::shared_ptr<io::IoMulticastEventData>& data, void(*successed)(game::Player*))
     {
         for (auto player : players) {
             if (auto connection_io = connection_env.try_acquire_connection_io(player->connection_key())) {
@@ -84,7 +84,7 @@ namespace game
         std::unique_ptr<std::byte[]> level_packet_data;
         auto data_size = level_packet.serialize(level_packet_data);
 
-        auto multicast_data = std::make_shared<io::MulticastDataEntry>(std::move(level_packet_data), data_size);
+        auto multicast_data = std::make_shared<io::IoMulticastEventData>(std::move(level_packet_data), data_size);
         multicast_to_players(level_wait_players, multicast_data, [](game::Player* player) {
             player->transit_state(game::PlayerState::level_initialized);
         });
@@ -176,7 +176,7 @@ namespace game
             auto block_history_data = block_change_history.get_snapshot_data();
             std::unique_ptr<std::byte[]> copyed_block_history_data(block_history_data.clone());
 
-            auto multicast_data = std::make_shared<io::MulticastDataEntry>(std::move(copyed_block_history_data), block_history_data.size());
+            auto multicast_data = std::make_shared<io::IoMulticastEventData>(std::move(copyed_block_history_data), block_history_data.size());
             multicast_to_specific_players<PlayerState::level_initialized>(multicast_data);
         }
         
@@ -200,7 +200,7 @@ namespace game
         // create set player position packets.
         std::unique_ptr<std::byte[]> position_packet_data;
         if (auto data_size = net::PacketSetPlayerPosition::serialize(world_players, position_packet_data)) {
-            auto multicast_data = std::make_shared<io::MulticastDataEntry>(std::move(position_packet_data), data_size);
+            auto multicast_data = std::make_shared<io::IoMulticastEventData>(std::move(position_packet_data), data_size);
             multicast_to_players(world_players, multicast_data, [](game::Player* player) {
                 player->commit_last_transferrd_position();
             });
@@ -212,7 +212,7 @@ namespace game
         if (std::size_t data_size = chat_history_data.size()) {
             std::unique_ptr<std::byte[]> copyed_chat_history_data(chat_history_data.clone());
 
-            auto multicast_data = std::make_shared<io::MulticastDataEntry>(std::move(copyed_chat_history_data), data_size);
+            auto multicast_data = std::make_shared<io::IoMulticastEventData>(std::move(copyed_chat_history_data), data_size);
             multicast_to_specific_players<PlayerState::spawned>(multicast_data);
         }
     }

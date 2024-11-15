@@ -30,7 +30,6 @@
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="util\protobuf_util.cpp" />
     <ClCompile Include="win\file_mapping.cpp" />
-    <ClCompile Include="io\multicast_manager.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\packet_extension.cpp" />
     <ClCompile Include="util\time_util.cpp" />
@@ -84,7 +83,6 @@
     <ClInclude Include="win\file_mapping.h" />
     <ClInclude Include="net\connection_key.h" />
     <ClInclude Include="io\task.h" />
-    <ClInclude Include="io\multicast_manager.h" />
     <ClInclude Include="util\math.h" />
     <ClInclude Include="game\world_generator.h" />
     <ClInclude Include="game\history_buffer.h" />

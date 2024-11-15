@@ -8,7 +8,6 @@
 #include "game/block.h"
 #include "game/player.h"
 #include "game/world_task.h"
-#include "io/multicast_manager.h"
 #include "proto/generated/world_metadata.pb.h"
 #include "net/connection_key.h"
 #include "net/connection_environment.h"
@@ -85,10 +84,10 @@ namespace game
             send_to_players(players, data, successed, failed);
         }
 
-        void multicast_to_players(const std::vector<game::Player*>&, std::shared_ptr<io::MulticastDataEntry>&, void(*successed)(game::Player*) = nullptr);
+        void multicast_to_players(const std::vector<game::Player*>&, std::shared_ptr<io::IoMulticastEventData>&, void(*successed)(game::Player*) = nullptr);
 
         template <game::PlayerState::State T>
-        void multicast_to_specific_players(std::shared_ptr<io::MulticastDataEntry>& data)
+        void multicast_to_specific_players(std::shared_ptr<io::IoMulticastEventData>& data)
         {
             std::vector<game::Player*> players;
             players.reserve(connection_env.size_of_max_connections());
@@ -109,8 +108,6 @@ namespace game
         std::size_t coordinate_to_block_map_index(int x, int y, int z);
 
         net::ConnectionEnvironment& connection_env;
-
-        io::MulticastManager multicast_manager;
 
         game::WorldPlayerTask spawn_player_task;
         game::WorldPlayerTask disconnect_player_task;

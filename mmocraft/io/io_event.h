@@ -8,10 +8,10 @@
 #include <optional>
 #include <limits>
 
-#include "io/multicast_manager.h"
 #include "logging/error.h"
 #include "win/win_type.h"
 #include "win/smart_handle.h"
+#include "win/registered_io.h"
 #include "config/constants.h"
 
 namespace io
@@ -426,6 +426,39 @@ namespace io
         std::size_t _data_size = 0;
     };
 
+    class IoMulticastEventData : util::NonCopyable
+    {
+    public:
+        IoMulticastEventData(std::unique_ptr<std::byte[]>&& data, std::size_t data_size)
+            : _data{ std::move(data) }
+            , _data_size{ data_size }
+            , registered_buffer{ _data.get(), data_size }
+        {
+
+        }
+
+        std::byte* begin()
+        {
+            return _data.get();
+        }
+
+        std::size_t size() const
+        {
+            return _data_size;
+        }
+
+        RIO_BUFFERID registered_buffer_id() const
+        {
+            return registered_buffer.id();
+        }
+
+    private:
+        std::unique_ptr<std::byte[]> _data;
+        std::size_t _data_size = 0;
+
+        win::RioBufferPool registered_buffer;
+    };
+
     struct Event : util::NonCopyable
     {
         WSAOVERLAPPED overlapped = {};
@@ -537,16 +570,16 @@ namespace io
 
         virtual void on_event_complete(IoEventHandler* completion_key, DWORD transferred_bytes) override;
 
-        void set_multicast_data(std::shared_ptr<io::MulticastDataEntry>& data)
+        void set_multicast_data(std::shared_ptr<io::IoMulticastEventData>& data)
         {
-            _event_data.set_data(data->data(), data->data_size());
+            _event_data.set_data(data->begin(), data->size());
             multicast_data = data;
         }
 
     private:
         io::IoSendEventReadonlyData _event_data;
 
-        std::shared_ptr<io::MulticastDataEntry> multicast_data;
+        std::shared_ptr<io::IoMulticastEventData> multicast_data;
     };
 
     struct RioEvent : IoEvent

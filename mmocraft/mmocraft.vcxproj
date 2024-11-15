@@ -29,12 +29,6 @@
     <ClCompile Include="game\world.cpp" />
     <ClCompile Include="game\world_generator.cpp" />
     <ClCompile Include="net\connection_environment.cpp" />
-    <ClCompile Include="io\multicast_manager.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="net\packet_extension.cpp" />
     <ClCompile Include="net\server_communicator.cpp" />
     <ClCompile Include="net\udp_message.cpp" />
@@ -103,12 +97,6 @@
     <ClInclude Include="net\connection_environment.h" />
     <ClInclude Include="net\connection_key.h" />
     <ClInclude Include="net\message_id.h" />
-    <ClInclude Include="io\multicast_manager.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="net\packet_extension.h" />
     <ClInclude Include="net\packet_id.h" />
     <ClInclude Include="net\server_core.h" />

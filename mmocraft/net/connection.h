@@ -11,7 +11,6 @@
 #include "game/player.h"
 #include "io/io_event_pool.h"
 #include "io/io_service.h"
-#include "io/multicast_manager.h"
 #include "net/socket.h"
 #include "net/packet_extension.h"
 #include "net/connection_key.h"
@@ -56,7 +55,7 @@ namespace net
 
         bool post_send_event();
 
-        bool post_multicast_event(std::shared_ptr<io::MulticastDataEntry>&);
+        bool post_multicast_event(std::shared_ptr<io::IoMulticastEventData>&);
 
         void free_multicast_event(io::IoMulticastSendEvent* event)
         {

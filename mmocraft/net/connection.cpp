@@ -234,11 +234,11 @@ namespace net
         return io_send_event->post_rio_event(io_service, connection_id);
     }
 
-    bool ConnectionIO::post_multicast_event(std::shared_ptr<io::MulticastDataEntry>& multicast_data)
+    bool ConnectionIO::post_multicast_event(std::shared_ptr<io::IoMulticastEventData>& event_data)
     {
         // Use send buffer if connection has suffient space.
-        if (multicast_data->data_size() < io_send_event->event_data()->unused_size() / 2 &&
-            send_raw_data(multicast_data->data(), multicast_data->data_size())) {
+        if (event_data->size() < io_send_event->event_data()->unused_size() / 2 &&
+            send_raw_data(event_data->begin(), event_data->size())) {
             return true;
         }
         
@@ -246,7 +246,7 @@ namespace net
             std::lock_guard<std::mutex> lock(multicast_event_lock);
 
             if (auto io_multicast_event = multicast_event_pool.new_object_raw()) {
-                io_multicast_event->set_multicast_data(multicast_data);
+                io_multicast_event->set_multicast_data(event_data);
                 ready_multicast_events.push_back(io_multicast_event);
                 return true;
             }
