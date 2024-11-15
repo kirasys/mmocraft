@@ -83,6 +83,11 @@ namespace net
         error::ErrorCode validate();
 
         bool serialize(io::IoEventData&) const;
+
+        bool has_cpe_support() const
+        {
+            return cpe_magic == 0x42;
+        }
     };
 
     struct PacketPing : Packet
@@ -243,6 +248,11 @@ namespace net
         void parse(const std::byte* buf_start);
 
         bool serialize(io::IoEventData&) const;
+
+        bool is_commmand_message() const
+        {
+            return not message.empty() && message[0] == '/';
+        }
     };
 
     struct PacketDisconnectPlayer : Packet

@@ -72,7 +72,7 @@ namespace net
         ));
 
         if (auto player = conn.associated_player()) {
-            if (packet.cpe_magic == 0x42) // is CPE supported
+            if (packet.has_cpe_support())
                 player->prepare_state_transition(game::PlayerState::ex_handshaking, game::PlayerState::ex_handshaked);
             else
                 player->prepare_state_transition(game::PlayerState::handshaking, game::PlayerState::handshaked);
@@ -142,7 +142,7 @@ namespace net
     {
         net::PacketChatMessage packet(packet_data.data());
 
-        if (packet.message[0] != '/') // if common chat
+        if (not packet.is_commmand_message())
             world.try_add_common_chat(packet_data);
 
         // send chat message to the login server.
