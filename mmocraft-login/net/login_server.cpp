@@ -38,7 +38,7 @@ namespace net
         }
     }
 
-    database::AsyncTask<void> LoginServer::handle_handshake_packet(::net::MessageRequest request)
+    io::DetachedTask LoginServer::handle_handshake_packet(::net::MessageRequest request)
     {
         ::net::PacketMessage<::net::PacketHandshake> packet_msg(request);
 
@@ -88,7 +88,7 @@ namespace net
         }
     }
 
-    database::AsyncTask<void> LoginServer::handle_player_logout_message(::net::MessageRequest& request)
+    io::DetachedTask LoginServer::handle_player_logout_message(::net::MessageRequest& request)
     {
         protocol::PlayerLogoutRequest msg;
         if (not request.parse_message(msg))

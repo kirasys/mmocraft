@@ -24,9 +24,9 @@ namespace login
             virtual bool handle_message(::net::MessageRequest&) override;
 
             // it need to copy MessageRequest to reply handshake results;
-            database::AsyncTask<void> handle_handshake_packet(::net::MessageRequest);
+            io::DetachedTask handle_handshake_packet(::net::MessageRequest);
 
-            database::AsyncTask<void> handle_player_logout_message(::net::MessageRequest&);
+            io::DetachedTask handle_player_logout_message(::net::MessageRequest&);
 
             bool initialize(const char* router_ip, int port);
 
