@@ -164,7 +164,7 @@ namespace io
             client_sock,
             /* MaxOutstandingReceive =*/ 1,
             /* MaxReceiveDataBuffers =*/ 1,
-            /* MaxOutstandingSend =*/ config::network::num_of_multicast_events,
+            /* MaxOutstandingSend =*/ 1,
             /* MaxSendDataBuffers =*/ 1,
             completion_queue.rio_handle(),
             completion_queue.rio_handle(),
@@ -174,7 +174,7 @@ namespace io
         CONSOLE_LOG_IF(error, request_queues[connection_id] == RIO_INVALID_RQ)
             << "Fail to create request queue with " << ::WSAGetLastError();
 
-        //register_event_source(client_sock, client_connection);
+        register_event_source(client_sock, client_connection);
     }
 
     void RegisteredIO::register_event_source(win::Handle event_source, IoEventHandler* event_handler)
