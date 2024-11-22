@@ -12,7 +12,7 @@ namespace config
     namespace network {
         constexpr int udp_message_retransmission_period = 3000; // 3s
 
-        constexpr std::size_t num_of_multicast_events = 32;
+        constexpr std::size_t num_of_multicast_events = 1;
     }
 
     namespace memory {
