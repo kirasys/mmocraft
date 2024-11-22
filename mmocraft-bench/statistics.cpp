@@ -22,6 +22,8 @@ namespace
 
     std::mutex max_ping_update_lock;
     std::atomic<std::size_t> max_ping_rtt{ 0 };
+
+    std::atomic<std::size_t> lastest_ping_rtt{ 0 };
 }
 
 namespace bench
@@ -49,7 +51,11 @@ namespace bench
         net::PacketExtPing packet(packet_data);
         auto ping_rtt = packet.get_rtt_ns();
         
+        lastest_ping_rtt.store(ping_rtt, std::memory_order_relaxed);
+
         total_ping_rtt.fetch_add(ping_rtt, std::memory_order_relaxed);
+
+        // update max ping rtt.
         if (max_ping_rtt.load(std::memory_order_relaxed) < ping_rtt) {
             std::lock_guard guard(max_ping_update_lock);
             // check if max_ping_rtt is still less than ping_rtt.
@@ -78,10 +84,12 @@ namespace bench
         }
 
         if (auto ping_count = total_ping_received.load(std::memory_order_relaxed)) {
-            std::cout << "Average ping RTT (ns): "
-                << total_ping_rtt.load(std::memory_order_relaxed) / ping_count << '\n';
-            std::cout << "Maximum ping RTT (ns): "
-                << max_ping_rtt.load(std::memory_order_relaxed);
+            std::cout << "Lastest ping RTT (ms): "
+                << lastest_ping_rtt.load(std::memory_order_relaxed) / 1000000 << '\n';
+            std::cout << "Average ping RTT (ms): "
+                << total_ping_rtt.load(std::memory_order_relaxed) / ping_count / 1000000 << '\n';
+            std::cout << "Maximum ping RTT (ms): "
+                << max_ping_rtt.load(std::memory_order_relaxed) / 1000000;
         }
     }
 }
